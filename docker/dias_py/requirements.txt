@@ -1,0 +1,10 @@
+lxml
+requests
+pymongo
+psycopg2-binary
+numpy
+pandas
+gdal>=2.2.4
+rasterio
+rasterstats
+boto3
