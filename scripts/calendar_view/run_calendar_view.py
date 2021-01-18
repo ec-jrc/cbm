@@ -33,7 +33,7 @@ from osgeo import ogr
 # setting parameters that are used by the different functions below
 username = ''
 password = ''
-url_base = "http://185.178.85.226"
+url_base = "http://0.0.0.0"
 cloud_categories = [3,8,9,10,11] # 10 is thin cirrus
 # cloud_categories = [3,8,9,11]
 # cloud_categories = []
