@@ -1,0 +1,23 @@
+{
+	"database": {
+		"connection": {
+			"host": "192.168.0.1",
+			"dbname": "postgres",
+			"dbuser": "postgres",
+			"dbpasswd": "",
+			"port": 5432
+		},
+		"tables": {
+			"aoi_table": "aois",
+			"parcel_table": "abc2018",
+			"results_table": "abc2018_c6_signatures"
+		},
+		"args": {
+			"aoi_field": "name",
+			"name": "abc",
+			"startdate": "2018-01-01",
+			"enddate": "2019-01-01"
+		}
+	}
+}
+
