@@ -319,7 +319,7 @@ Example folder structure for parcel with ID 12345 stored in data folder:
 ## Access and configuration for DIAS virtual machine instances.
 The most common Virtual Machines (VMs) structure of DIAS IaaS is as shown in the below figure. VMs are emulations of fully functional computational instances. They are based on computer architectures and provide functionality of a real physical computer. Users obtain VMs with full root access and can implement specialized hardware, software, or a combination based on their needs.
 
-![DIAS infrastructure](docs/img/DIAS_IaaS.png)
+![DIAS infrastructure](media/img/DIAS_IaaS.png)
 
 Simplified structure of DIAS IaaS
 
