@@ -1,0 +1,102 @@
+{
+    "set": {
+        "user": "",
+        "email": "",
+        "institution": "",
+        "update_check": "True",
+        "member_state": "",
+        "polygon": "",
+        "data_source": "1",
+        "db_conn": "1",
+        "ds_conf": "default",
+        "ds_year": "2000",
+        "jupyterlab": "True",
+        "plimit": "25"
+    },
+    "git": {
+        "url": "http://78.128.216.156/GTCAP/cbm.git",
+        "user": "",
+        "pass": ""
+    },
+    "paths": {
+        "data": "data/",
+        "temp": "tmp/"
+    },
+    "files": {
+        "pids_poly": "tmp/pids_from_polygon.txt",
+        "pids_dist": "tmp/pids_from_distance.txt"
+    },
+    "api": {
+        "url": "http://185.178.85.226",
+        "user": "",
+        "pass": "",
+        "options": {
+            "aois": {
+                "Netherlands": "nld",
+                "Nordrhein Westfalen": "nrw",
+                "Spain (NOUR Subset)": "es_ns"
+            },
+            "years": {
+                "nld": [
+                    "2019",
+                    "2018"
+                ],
+                "nrw": [
+                    "2019",
+                    "2018"
+                ],
+                "es_ns": [
+                    "2019"
+                ]
+            }
+        }
+    },
+    "db": {
+        "1": {
+            "desc": "",
+            "conn": {
+                "host": "0.0.0.0",
+                "port": "5432",
+                "name": "postgres",
+                "sche": "public",
+                "user": "postgres",
+                "pass": ""
+            }
+        }
+    },
+    "ds_conf": {
+        "default": {
+            "db": "1",
+            "desc": "",
+            "center": "51.0,14.0",
+            "zoom": "5",
+            "years": {
+                "2000": {
+                    "dates": {
+                        "start": "",
+                        "end": ""
+                    },
+                    "tables": {
+                        "parcels": "parcel",
+                        "dias_catalog": "dias_catalog",
+                        "s2": "s2_sig",
+                        "bs": "bs_sig",
+                        "c6": "c6_sig"
+                    },
+                    "columns": {
+                        "parcels_id": "id",
+                        "crop_names": "name",
+                        "crop_codes": "code"
+                    }
+                }
+            }
+        }
+    },
+    "obst": {
+        "osdias": "",
+        "oshost": "http://",
+        "bucket": "DIAS",
+        "access_key": "",
+        "secret_key": ""
+    }
+}
