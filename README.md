@@ -1,6 +1,6 @@
 **Please note that this work is still in progress**
 
-![Image of European Commission](docs/img/eu_science_hub.png)
+![Image of European Commission](media/img/eu_science_hub.png)
 # Joint Research Centre (JRC) guidelines for:
 # Copernicus DIAS for CAP “checks by monitoring”
 (https://ec.europa.eu/jrc/en)
@@ -12,7 +12,7 @@
 
 To facilitate and standardise access to Copernicus data and information, the European Commission has funded the deployment of five cloud-based platforms, to provide centralised access as well as to processing tools. These platforms are known as the DIAS, or Data and Information Access Services. Four DIAS instances, managed under contract with the European Space Agency (ESA), became operational in 2018 and provide access, amongst others, to high resolution Sentinel-1 and Sentinel-2 data. In 2020, WeKEO, which is managed under an EUMETSAT contract became operational as well. WeKEO uses the infrastructure of CREODIAS (one of the ESA DIAS), however, so is functionally equivalent.
 
-![DIAS](docs/img/dias_0.png)
+![DIAS](media/img/dias_0.png)
 
 The DIAS online platforms allow users to discover, manipulate, process and download Copernicus data and information. All DIAS platforms provide access to Copernicus Sentinel data, as well as to the information products from Copernicus’ six operational services, together with cloud-based tools (open source and/or on a pay-per-use basis).
 
