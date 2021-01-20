@@ -23,6 +23,10 @@ def error(err):
 
 
 def startup():
+    import sys
+    if sys.version_info < (3, 6):
+        print("Not supoted python version, ipycbm needs python version > 3.6")
+        return
 
     paths = config.get_value(['paths'])
     for p in paths:
