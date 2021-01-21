@@ -22,73 +22,6 @@ def get_ndvi_profiles_from_csv(csv_file):
     ndvi_profile = pd.read_csv(csv_file) 
     return ndvi_profile
 
-def display_ndvi_profiles_old_old(csv_file, plotTitle, cropName, outputFolder, 
-                                           addErrorBars = False):
-    """
-    this function plots the NDVI profile for parcelNumber and saves the figures to the outputFolder
-    """
-    ndvi_profile = pd.read_csv(csv_file) 
-    # rename the column names from 'mean' to more meaningful names
-    pProfiles = pProfiles.rename(columns={'mean': 'S2 NDVI'})
-    # pProfiles = pProfiles.rename(columns={'to_date': 'date'})
-
-    # plot the time series
-    ax0 = plt.gca()
-
-    if not pProfiles.empty:
-        if addErrorBars:
-            pProfiles.plot(kind='line', marker='+', x='date',y='S2 NDVI', yerr='std', color = 'blue', ax=ax0, capsize=4,
-                      ecolor='grey', barsabove = 'True')   
-        else:
-            pProfiles.plot(kind='line', marker='+', x='date',y='S2 NDVI', color = 'blue', ax=ax0)
-
-    # format the graph a little bit
-    plt.ylabel('NDVI')
-    plt.title(plotTitle + ", Parcel id: " + str(parcelNumber) + " " + cropName)
-    ax0.set_ylim([0,1])
-    ax0.xaxis.set_major_locator(mdates.MonthLocator(interval=1))
-    ax0.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
-    
-#     ax = plt.axes()        
-    ax0.xaxis.grid() # horizontal lines
-    ax0.yaxis.grid() # horizontal lines
-
-    fig = plt.gcf()
-    fig.autofmt_xdate() # Rotation
-    fig.set_size_inches(13, 7)
-
-    ax0.set_xlim([datetime.date(2019, 3, 1), datetime.date(2019, 8, 30)])
-
-    ax0.text(0.09, 0.9, 
-        'MAR',
-        verticalalignment='bottom', horizontalalignment='center', transform=ax0.transAxes,
-        color='blue', fontsize=15)
-    ax0.text(0.25, 0.9, 
-        'APR',
-        verticalalignment='bottom', horizontalalignment='center', transform=ax0.transAxes,
-        color='blue', fontsize=15)
-    ax0.text(0.42, 0.9, 
-        'MAY',
-        verticalalignment='bottom', horizontalalignment='center', transform=ax0.transAxes,
-        color='blue', fontsize=15)
-    ax0.text(0.59, 0.9, 
-        'JUN',
-        verticalalignment='bottom', horizontalalignment='center', transform=ax0.transAxes,
-        color='blue', fontsize=15)
-    ax0.text(0.75, 0.9, 
-        'JUL',
-        verticalalignment='bottom', horizontalalignment='center', transform=ax0.transAxes,
-        color='blue', fontsize=15)
-    ax0.text(0.91, 0.9, 
-        'AUG',
-        verticalalignment='bottom', horizontalalignment='center', transform=ax0.transAxes,
-        color='blue', fontsize=15)
-
-    # plt.show()
-    
-    # save the figure to a jpg file
-    fig.savefig(outputFolder + '/parcel_id_' + str(parcelNumber) + '_NDVI.jpg')    
-
 def get_current_list_of_months(first_year_month, number_of_year_months):
     textstrs_tuples = [
                        ("201701", "2017\nJAN"),
@@ -139,6 +72,18 @@ def get_current_list_of_months(first_year_month, number_of_year_months):
                        ("202010", "2020\nOCT"),
                        ("202011", "2020\nNOV"),
                        ("202012", "2020\nDEC"),
+                       ("202101", "2021\nJAN"),
+                       ("202102", "2021\nFEB"),
+                       ("202103", "2021\nMAR"),
+                       ("202104", "2021\nAPR"),
+                       ("202105", "2021\nMAY"),
+                       ("202106", "2021\nJUN"),
+                       ("202107", "2021\nJUL"),
+                       ("202108", "2021\nAUG"),
+                       ("202109", "2021\nSEP"),
+                       ("202110", "2021\nOCT"),
+                       ("202111", "2021\nNOV"),
+                       ("202112", "2021\nDEC"),                       
                       ]
 
     # find the index of the first occurrence of first_year_month in textstrs_tuples
@@ -183,19 +128,12 @@ def display_ndvi_profiles(parcel_id, crop, plot_title, out_tif_folder_base, logf
     ndvi_profile = ndvi_profile.rename(columns={'ndvi_mean': 'S2 NDVI'})
     ndvi_profile = ndvi_profile.rename(columns={'acq_date': 'date'})    
         
-    # print(ndvi_profile)
-    # print(ndvi_profile['S2 NDVI'].dtypes)
-    # print(ndvi_profile['ndvi_std'].dtypes)
-    # print("valami")
-    # return
-    # print("akarmi")
     # check if there are real NDVI values and stdev values in the dataframe 
     # (for very small parcels the values in the csv can be None which evaluates as object in 
     # the dataframe, insted of dtype float64
     if not ndvi_profile['S2 NDVI'].dtypes == "float64" or \
         not ndvi_profile['ndvi_std'].dtypes == "float64":
         return    
-    
 
     # plot the time series
     ax0 = pyplot.gca()
@@ -268,7 +206,7 @@ def display_ndvi_profiles(parcel_id, crop, plot_title, out_tif_folder_base, logf
 def display_ndwi_profiles(parcel_id, crop, plot_title, out_tif_folder_base, logfile,
                                            add_error_bars = False):                                         
     """
-    this function plots the ndwi profile and saves the figures to the outputFolder
+    this function plots the NDWI profile and saves the figures to the outputFolder
     """  
     y_tick_spacing = 0.1
     fout = open(logfile, 'a')
@@ -288,19 +226,12 @@ def display_ndwi_profiles(parcel_id, crop, plot_title, out_tif_folder_base, logf
     ndwi_profile = ndwi_profile.rename(columns={'ndwi_mean': 'S2 NDWI'})
     ndwi_profile = ndwi_profile.rename(columns={'acq_date': 'date'})    
         
-    # print(ndwi_profile)
-    # print(ndwi_profile['S2 ndwi'].dtypes)
-    # print(ndwi_profile['ndwi_std'].dtypes)
-    # print("valami")
-    # return
-    # print("akarmi")
     # check if there are real ndwi values and stdev values in the dataframe 
     # (for very small parcels the values in the csv can be None which evaluates as object in 
     # the dataframe, insted of dtype float64
     if not ndwi_profile['S2 NDWI'].dtypes == "float64" or \
         not ndwi_profile['ndwi_std'].dtypes == "float64":
         return    
-    
 
     # plot the time series
     ax0 = pyplot.gca()
@@ -403,12 +334,7 @@ def display_ndvi_profiles_with_mean_profile_of_the_crop(parcel_id, crop, plot_ti
         mean_ndvi_profile = mean_ndvi_profile.rename(columns={'ndvi_mean': 'S2 NDVI mean'})
         mean_ndvi_profile = mean_ndvi_profile.rename(columns={'acq_date': 'date'})    
         
-    # print(ndvi_profile)
-    # print(ndvi_profile['S2 NDVI'].dtypes)
-    # print(ndvi_profile['ndvi_std'].dtypes)
-    # print("valami")
-    # return
-    # print("akarmi")
+
     # check if there are real NDVI values and stdev values in the dataframe 
     # (for very small parcels the values in the csv can be None which evaluates as object in 
     # the dataframe, insted of dtype float64
@@ -459,12 +385,10 @@ def display_ndvi_profiles_with_mean_profile_of_the_crop(parcel_id, crop, plot_ti
                                 calendar.monthrange(max_year, max_month)[1])])
     
     min_year_month = str(min_year) + ('0' + str(min_month))[-2:]
-#     start_x = 0.045
     step_x = 1/number_of_months
     start_x = step_x/2 # positions are in graph coordinate system between 0 and 1
-                                     # so first year_month label is at half the size of the widht of
-                                     # one month
-            
+                       # so first year_month label is at half the size of the widht of
+                       # one month
 
     loc_y = 0.915
     
@@ -490,7 +414,6 @@ def display_ndvi_profiles_with_mean_profile_of_the_crop_with_std(parcel_id, crop
     """
     this function plots the NDVI profile and saves the figures to the outputFolder
     """  
-    # mean_profile_folder = "c:/Users/Csaba/ownCloud/GTCAP/cbm_qa/be_fl/notebooks/output_csv_selected_v02"
     
     fout = open(logfile, 'a')
     start = time.time()
@@ -523,19 +446,13 @@ def display_ndvi_profiles_with_mean_profile_of_the_crop_with_std(parcel_id, crop
         mean_ndvi_profile = mean_ndvi_profile.rename(columns={'ndvi_mean': 'S2 NDVI mean'})
         mean_ndvi_profile = mean_ndvi_profile.rename(columns={'acq_date': 'date'})    
         
-#     print(mean_ndvi_profile)
-    # print(ndvi_profile['S2 NDVI'].dtypes)
-    # print(ndvi_profile['ndvi_std'].dtypes)
-    # print("valami")
-    # return
-    # print("akarmi")
+
     # check if there are real NDVI values and stdev values in the dataframe 
     # (for very small parcels the values in the csv can be None which evaluates as object in 
     # the dataframe, insted of dtype float64
     if not ndvi_profile['S2 NDVI'].dtypes == "float64" or \
         not ndvi_profile['ndvi_std'].dtypes == "float64":
         return    
-    
 
     # plot the time series
     ax0 = pyplot.gca()
@@ -551,14 +468,10 @@ def display_ndvi_profiles_with_mean_profile_of_the_crop_with_std(parcel_id, crop
         if mean_ndvi_csv_file_exists:
             mean_ndvi_profile.plot(kind='line', marker='+', x='date',y='S2 NDVI mean', color = mean_color, ax=ax0)
 
-#                 ax.plot(x, y_est, '-')
-#                 mean_ndvi_profile.plot.fill_between('date', 'S2 NDVI mean' - 'ndvi_std', 'S2 NDVI mean' + 'ndvi_std', alpha=0.2)
             pyplot.fill_between(mean_ndvi_profile['date'], 
                                                   mean_ndvi_profile['S2 NDVI mean']-mean_ndvi_profile['ndvi_stdev'], 
                                                   mean_ndvi_profile['S2 NDVI mean']+mean_ndvi_profile['ndvi_stdev'],
                                                   alpha=0.2, color = mean_color)
-
-    
     
     # format the graph a little bit
     pyplot.ylabel('NDVI')
@@ -589,7 +502,6 @@ def display_ndvi_profiles_with_mean_profile_of_the_crop_with_std(parcel_id, crop
                                 calendar.monthrange(max_year, max_month)[1])])
     
     min_year_month = str(min_year) + ('0' + str(min_month))[-2:]
-#     start_x = 0.045
     step_x = 1/number_of_months
     start_x = step_x/2 # positions are in graph coordinate system between 0 and 1
                                      # so first year_month label is at half the size of the widht of
@@ -613,11 +525,10 @@ def display_ndvi_profiles_with_mean_profile_of_the_crop_with_std(parcel_id, crop
     fout.close()
     return ndvi_profile
 
-
 def display_s1_bs_profiles(parcel_id, crop, plot_title, out_tif_folder_base, logfile,
                                            add_error_bars, polarisation, orbit_orientation):                                         
     """
-    this function plots the NDVI profile and saves the figures to the outputFolder
+    this function plots the backscatter profile and saves the figures to the outputFolder
     """  
     y_tick_spacing = 0.1
     fout = open(logfile, 'a')
@@ -633,23 +544,16 @@ def display_s1_bs_profiles(parcel_id, crop, plot_title, out_tif_folder_base, log
 
     s1_bs_profile['acq_date'] = pd.to_datetime(s1_bs_profile.acq_date)
     s1_bs_profile = s1_bs_profile.sort_values(by=['acq_date'])
-    # rename the column names from 'ndvi_mean' to more meaningful name
+    # rename the column names from 'bs_mean' to more meaningful name
     s1_bs_profile = s1_bs_profile.rename(columns={'bs_mean': 'S1 BS'})
     s1_bs_profile = s1_bs_profile.rename(columns={'acq_date': 'date'})    
         
-    # print(s1_bs_profile)
-    # print(s1_bs_profile['S2 NDVI'].dtypes)
-    # print(s1_bs_profile['ndvi_std'].dtypes)
-    # print("valami")
-    # return
-    # print("akarmi")
-    # check if there are real NDVI values and stdev values in the dataframe 
+    # check if there are real backscatter values and stdev values in the dataframe 
     # (for very small parcels the values in the csv can be None which evaluates as object in 
     # the dataframe, insted of dtype float64
     if not s1_bs_profile['S1 BS'].dtypes == "float64" or \
         not s1_bs_profile['bs_std'].dtypes == "float64":
         return    
-    
 
     # plot the time series
     ax0 = pyplot.gca()
@@ -691,11 +595,11 @@ def display_s1_bs_profiles(parcel_id, crop, plot_title, out_tif_folder_base, log
                                 calendar.monthrange(max_year, max_month)[1])])
     
     min_year_month = str(min_year) + ('0' + str(min_month))[-2:]
-#     start_x = 0.045
+
     step_x = 1/number_of_months
     start_x = step_x/2 # positions are in graph coordinate system between 0 and 1
-                                     # so first year_month label is at half the size of the widht of
-                                     # one month
+                       # so first year_month label is at half the size of the widht of
+                       # one month
             
 
     loc_y = 0.915
@@ -708,10 +612,7 @@ def display_s1_bs_profiles(parcel_id, crop, plot_title, out_tif_folder_base, log
         ax0.text(loc_x, loc_y, t, verticalalignment='bottom', horizontalalignment='center', transform=ax0.transAxes,
                 color='blue', fontsize=13)
 
-
-
     ax0.yaxis.set_major_locator(ticker.MultipleLocator(y_tick_spacing))
-
                 
     # save the figure to a jpg file
     fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id) + '_NDVI.jpg') 
@@ -725,10 +626,7 @@ def display_s1_bs_profiles_together(parcel_id, crop, plot_title, out_tif_folder_
     """
     this function plots the Sentinel-1 backscatter profile and saves the figures to the output_graph_folder
     """  
-    # polarisation, orbit_orientation
-    
-    
-    # y_tick_spacing = 0.1
+
     fout = open(logfile, 'a')
     start = time.time()
     chip_folder = str(parcel_id) + '_' + crop
@@ -739,8 +637,6 @@ def display_s1_bs_profiles_together(parcel_id, crop, plot_title, out_tif_folder_
     
     polarisations = ["VV", "VH"]
     orbit_orientations = ["D", "A"]
-    # polarisation = "VV"
-    # orbit_orientation = "D"
     for polarisation in polarisations:
         for orbit_orientation in orbit_orientations:
         
@@ -749,7 +645,7 @@ def display_s1_bs_profiles_together(parcel_id, crop, plot_title, out_tif_folder_
 
             s1_bs_profile['acq_date'] = pd.to_datetime(s1_bs_profile.acq_date)
             s1_bs_profile = s1_bs_profile.sort_values(by=['acq_date'])
-            # rename the column names from 'ndvi_mean' to more meaningful name
+
             profile_name = 'S1 BS ' + polarisation + " " + orbit_orientation
             s1_bs_profile = s1_bs_profile.rename(columns={'bs_mean': profile_name})
             s1_bs_profile = s1_bs_profile.rename(columns={'acq_date': 'date'})   
@@ -757,7 +653,7 @@ def display_s1_bs_profiles_together(parcel_id, crop, plot_title, out_tif_folder_
             s1_bs_profile[profile_name] = s1_bs_profile[profile_name].map(lambda s: 10.0*np.log10(s))
             
 
-            # check if there are real NDVI values and stdev values in the dataframe 
+            # check if there are real backscatter and stdev values in the dataframe 
             # (for very small parcels the values in the csv can be None which evaluates as object in 
             # the dataframe, insted of dtype float64
             if not s1_bs_profile[profile_name].dtypes == "float64" or \
@@ -779,20 +675,14 @@ def display_s1_bs_profiles_together(parcel_id, crop, plot_title, out_tif_folder_
     pyplot.ylabel(r'Backscattering coefficient, $\gamma\degree$ (dB)')
     parcelNumber = s1_bs_profile.iloc[0]['Field_ID']
     pyplot.title(plot_title + ", Parcel id: " + str(parcelNumber) + " " + crop)
-    # # ax0.set_ylim([0,1])
     ax0.xaxis.set_major_locator(mdates.MonthLocator(interval=1))
-    # ax0.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
     ax0.xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
     
-    # years_fmt = mdates.DateFormatter('%Y')
-
-    # ax0.xaxis.set_major_formatter(years_fmt)
-         
     ax0.xaxis.grid() # horizontal lines
     ax0.yaxis.grid() # vertical lines
 
     fig = pyplot.gcf()
-    # fig.autofmt_xdate() # Rotation
+
     fig_size_x = 13
     fig_size_y = 7
     fig.set_size_inches(fig_size_x, fig_size_y)
@@ -811,11 +701,10 @@ def display_s1_bs_profiles_together(parcel_id, crop, plot_title, out_tif_folder_
                                 calendar.monthrange(max_year, max_month)[1])])
 
     min_year_month = str(min_year) + ('0' + str(min_month))[-2:]
-    #     start_x = 0.045
     step_x = 1/number_of_months
     start_x = step_x/2 # positions are in graph coordinate system between 0 and 1
-                                     # so first year_month label is at half the size of the widht of
-                                     # one month
+                       # so first year_month label is at half the size of the width of
+                       # one month
             
 
     loc_y = 0.915
@@ -828,18 +717,10 @@ def display_s1_bs_profiles_together(parcel_id, crop, plot_title, out_tif_folder_
         ax0.text(loc_x, loc_y, t, verticalalignment='bottom', horizontalalignment='center', transform=ax0.transAxes,
                 color='blue', fontsize=13)
 
-
-
-    # ax0.yaxis.set_major_locator(ticker.MultipleLocator(y_tick_spacing))
-
-                
     # save the figure to a jpg file
     fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id) + '_BS.jpg') 
     pyplot.close(fig)    
     print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "\t", parcel_id,  "\tgraph_utils.display_s1_bs_profiles:\t", "{0:.3f}".format(time.time() - start), file=fout)
     fout.close()
     return s1_bs_profile    
-    # csv_file = "e:/chips/nour2019_new01/ndvi/188779_NON-EFA_ALFALFA_ndvi.csv"
 
-# p = get_ndvi_profiles_from_csv(csv_file)
-# print(p)
