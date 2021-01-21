@@ -11,5 +11,5 @@ RUN apt-get update \
 RUN pip install --upgrade pip
 RUN pip install --user -r requirements.txt
 
-# EXPOSE 5000
+EXPOSE 5000
 CMD python ./src/apicbm/app.py
