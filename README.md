@@ -1,5 +1,6 @@
 **Please note that this work is still in progress**
 
+
 ![Image of European Commission](media/img/eu_science_hub.png)
 # Joint Research Centre (JRC) guidelines for:
 # Copernicus DIAS for CAP “checks by monitoring”
