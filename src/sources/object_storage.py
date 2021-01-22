@@ -27,7 +27,7 @@ Exaple code:
 """
 
 import boto3
-from src.ipycbm.utils import config
+from src.utils import config
 
 try:
     values = config.read()
