@@ -25,7 +25,7 @@ import requests
 from lxml import etree
 import psycopg2
 from datetime import datetime
-from src.ipycbm.sources import database
+from src.sources import database
 
 
 def dias_cat(tb_prefix, aoi, start, end, card, option):

@@ -19,7 +19,7 @@ from rasterio.plot import show
 from descartes import PolygonPatch
 from ipywidgets import (HBox, VBox, Dropdown, Button, Output, Checkbox, Layout)
 
-from src.ipycbm.utils import data_options
+from src.utils import data_options
 from src.ipycbm.ui_view import view_spatial
 
 def available_options(ci_path, pid, ndvi=True, individual=True):

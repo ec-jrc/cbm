@@ -9,7 +9,7 @@
 
 
 from ipywidgets import Tab
-from src.ipycbm.utils import help_docs
+from src.utils import help_docs
 from src.ipycbm.ui_cbm import cbm_settings, cbm_panel
 
 def cbm_widget_box():

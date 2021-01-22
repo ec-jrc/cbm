@@ -14,7 +14,7 @@ import os.path
 import pandas as pd
 from ipywidgets import (Text, Textarea, HTML, BoundedIntText, HBox, VBox, Dropdown, Button, Output, Checkbox, Layout)
 
-from src.ipycbm.utils import config, data_options
+from src.utils import config, data_options
 
 def notes(path, ds=None, parcel=None):
     info = HTML(

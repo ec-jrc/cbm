@@ -10,7 +10,7 @@
 
 from ipywidgets import (HBox, VBox, Dropdown, Button, Output, Checkbox)
 
-from src.ipycbm.utils import config, data_options
+from src.utils import config, data_options
 
 
 def time_series(path):

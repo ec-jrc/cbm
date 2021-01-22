@@ -11,7 +11,7 @@
 from ipywidgets import (HBox, VBox, Layout, Dropdown,
                         Output, HTML, Button, Accordion)
 
-from src.ipycbm.utils import config, settings
+from src.utils import config, settings
 from src.ipycbm.ui_view import view_panel
 from src.ipycbm.ui_proc import proc_func, proc_card2db
 from src.ipycbm.ui_get import get_panel, get_settings

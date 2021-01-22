@@ -9,7 +9,7 @@
 
 
 from ipywidgets import Tab
-from src.ipycbm.utils import help_docs
+from src.utils import help_docs
 from src.ipycbm.ui_get import get_settings, get_panel
 
 

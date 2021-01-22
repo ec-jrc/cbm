@@ -17,7 +17,7 @@ from ipywidgets import (Text, Textarea, Label, HBox, VBox, Dropdown,
                         Button, DatePicker, RadioButtons, IntSlider,
                         Box, HTML, SelectMultiple)
 
-from src.ipycbm.utils import data_handler, config, data_options
+from src.utils import data_handler, config, data_options
 from src.ipycbm.ui_get import get_maps
 
 
@@ -501,13 +501,13 @@ def get():
 def data_source():
     source = int(config.get_value(['set', 'data_source']))
     if source == 0:
-        from src.ipycbm.sources import rest_api
+        from src.sources import rest_api
         return rest_api
     elif source == 1:
-        from src.ipycbm.sources import direct
+        from src.sources import direct
         return direct
 
 
 def error_check(err):
-    from src.ipycbm.utils import check
+    from src.utils import check
     check.error(err)

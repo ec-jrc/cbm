@@ -29,7 +29,7 @@ from yaml import load, FullLoader
 import csv
 from itertools import zip_longest
 
-from src.ipycbm.utils import config
+from src.utils import config
 
 def clip_raster(rast, feature, gt=None, nodata=-1):
     '''

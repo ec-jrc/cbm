@@ -9,7 +9,7 @@
 
 
 from ipywidgets import Tab
-from src.ipycbm.utils import help_docs
+from src.utils import help_docs
 from src.ipycbm.plugins.qa import qa_settings, qa_panel
 
 def qa_widget_box():

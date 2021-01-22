@@ -10,7 +10,7 @@
 
 from ipywidgets import (Label, VBox, HBox, Dropdown, Button, Layout)
 
-from src.ipycbm.utils import config
+from src.utils import config
 from src.ipycbm.ui_proc import proc_func, proc_card2db
 
 

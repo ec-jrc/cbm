@@ -14,7 +14,7 @@ from IPython.display import display
 from ipywidgets import (Label, VBox, HBox, Layout, Dropdown, SelectMultiple,
                         ToggleButtons, Output, Box, RadioButtons, Button)
 
-from src.ipycbm.utils import config
+from src.utils import config
 from src.ipycbm.ui_view import view_notes
 
 

@@ -12,10 +12,10 @@ from IPython.display import display
 from ipywidgets import (Text, Label, HBox, VBox, Layout, Dropdown,
                         Output, Button, DatePicker, RadioButtons)
 
-from src.ipycbm.utils import config, data_options
+from src.utils import config, data_options
 from src.ipycbm.ui_proc.card2db import creodiasMeta2DB as meta2DB
 from src.ipycbm.ui_proc import proc_func
-from src.ipycbm.sources import database
+from src.sources import database
 
 def dias_cat():
 

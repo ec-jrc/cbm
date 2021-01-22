@@ -13,7 +13,7 @@ from ipywidgets import (Text, Label, Password, Button,
                         Output, HBox, VBox)
 from IPython.display import display
 
-from src.ipycbm.utils import config
+from src.utils import config
 
 
 def btn_update():
