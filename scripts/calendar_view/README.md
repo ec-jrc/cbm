@@ -31,3 +31,6 @@ The following custom libraries are called by the *run_calendar_view.py* script:
 - **extract_utils**: functions for the calculation of the NDVI and NDWI indexes. The functions in this library are called by *batch_utils*.
 
 The call graph of the run_calendar_view script is provided in Figure 1.
+
+![Call graph of the run_calendar_view script.](media/img/calendar_view_fun.png)
+**Figure 1: Call graph of the run_calendar_view script.** 
