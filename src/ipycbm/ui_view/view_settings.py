@@ -11,7 +11,7 @@
 from ipywidgets import (Text, VBox, Label, Password, 
                         Button, Checkbox, Layout)
 
-from src.ipycbm.utils import config, update, settings
+from src.utils import config, update, settings
 
 def widget_box():
 

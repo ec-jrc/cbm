@@ -15,7 +15,7 @@ __email__ = ""
 __status__ = "Development"
 
 
-from src.ipycbm.utils import check
+from src.utils import check
 check.startup()
 
 def cbm(*args):

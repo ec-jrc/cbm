@@ -20,8 +20,8 @@ from fiona import open as fopen
 import fiona
 from yaml import load, FullLoader
 
-from src.ipycbm.utils import config
-from src.ipycbm.sources import database
+from src.utils import config
+from src.sources import database
 
 
 def proc(vector_file, raster_file, yaml_file, pre_min_het, pre_max_het, area_threshold):

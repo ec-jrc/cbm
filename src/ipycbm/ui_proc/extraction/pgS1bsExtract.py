@@ -20,8 +20,8 @@ from rasterstats import zonal_stats
 from datetime import datetime
 import pandas as pd
 
-from src.ipycbm.utils import config
-from src.ipycbm.sources import database, object_storage
+from src.utils import config
+from src.sources import database, object_storage
 
 def extractS1bs(startdate, enddate):
     start = time.time()

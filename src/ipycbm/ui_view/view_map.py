@@ -18,7 +18,7 @@ from ipywidgets import (HBox, VBox, Dropdown, Play, Layout, Label,
 from ipyleaflet import (Map, ImageOverlay, Popup, basemap_to_tiles,
                         Polygon, WidgetControl, basemaps)
 
-from src.ipycbm.utils import config
+from src.utils import config
 from src.ipycbm.ui_view import view_spatial, view_images
 
 

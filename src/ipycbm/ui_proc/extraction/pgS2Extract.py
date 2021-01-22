@@ -46,8 +46,8 @@ import psycopg2.extras
 import rasterio
 from rasterstats import zonal_stats
 
-from src.ipycbm.utils import config
-from src.ipycbm.sources import database, object_storage
+from src.utils import config
+from src.sources import database, object_storage
 
 
 def extractS2(startdate, enddate):

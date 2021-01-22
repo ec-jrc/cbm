@@ -19,7 +19,7 @@ from descartes import PolygonPatch
 from ipywidgets import (HBox, VBox, Dropdown, Button, Output,
                         Checkbox, Layout, IntRangeSlider)
 
-from src.ipycbm.utils import data_options
+from src.utils import data_options
 from src.ipycbm.ui_view import view_spatial, view_images
 
 from skimage import exposure

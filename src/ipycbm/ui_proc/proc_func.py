@@ -13,8 +13,8 @@ import glob
 from ipywidgets import (Text, Label, HBox, VBox, Layout, Tab, Dropdown,
                         Output, Button, FileUpload, Checkbox, DatePicker)
 
-from src.ipycbm.utils import config
-from src.ipycbm.sources import database
+from src.utils import config
+from src.sources import database
 from src.ipycbm.ui_proc import db_tables
 
 from src.ipycbm.ui_proc.extraction import (pgS2Extract, pgS1bsExtract)

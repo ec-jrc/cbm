@@ -14,8 +14,8 @@ from ipywidgets import (Text, Label, HBox, VBox, Layout, Tab, Dropdown,
                         ToggleButtons, Output, SelectMultiple, HTML, Button,
                         FileUpload, Checkbox, Accordion, IntText, RadioButtons)
 
-from src.ipycbm.utils import config, settings
-from src.ipycbm.sources import database
+from src.utils import config, settings
+from src.sources import database
 from src.ipycbm.ui_proc import proc_func
 from src.ipycbm.plugins.foi import foi_proc
 from src.ipycbm.plugins.foi import foi_proc_v2

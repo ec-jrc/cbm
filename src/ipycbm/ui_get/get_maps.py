@@ -8,7 +8,7 @@
 # License   : 3-Clause BSD
 
 
-from src.ipycbm.utils import config
+from src.utils import config
 
 def base_map(area, source):
     from ipyleaflet import Map, Marker
