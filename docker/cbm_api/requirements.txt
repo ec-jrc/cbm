@@ -20,3 +20,4 @@ pip
 py-bcrypt
 psycopg2-binary
 bcrypt
+pandas
