@@ -32,5 +32,6 @@ The following custom libraries are called by the *run_calendar_view.py* script:
 
 The call graph of the run_calendar_view script is provided in Figure 1.
 
-![Call graph of the run_calendar_view script.](media/img/calendar_view_fun.png)
-**Figure 1: Call graph of the run_calendar_view script.** 
+![Figure 1: Call graph of the run_calendar_view script.](https://github.com/borioda/cbm/blob/main/media/img/calendar_view_fun.png)
+
+
