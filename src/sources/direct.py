@@ -8,8 +8,8 @@
 # License   : 3-Clause BSD
 
 
-from src.ipycbm.sources import database
-from src.ipycbm.utils import config
+from src.sources import database
+from src.utils import config
 import json
 
 def ploc(aoi, year, lon, lat, geom=False):
@@ -85,7 +85,7 @@ def rcbl(parcel, start_date, end_date, bands, sat, chipsize, filespath):
     from pandas import DataFrame
     from osgeo import ogr, osr
     from concurrent.futures import ProcessPoolExecutor, as_completed
-    from src.ipycbm.sources import object_storage
+    from src.sources import object_storage
 
     start = time.time()
     parcel_id = parcel['ogc_fid'][0]

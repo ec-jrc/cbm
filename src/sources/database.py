@@ -28,7 +28,7 @@ Options:
 
 import psycopg2
 import pandas as pd
-from src.ipycbm.utils import config
+from src.utils import config
 
 
 # Database conection configurations
