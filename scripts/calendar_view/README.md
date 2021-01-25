@@ -38,7 +38,35 @@ The call graph of the run_calendar_view script is provided in Figure 1.
 The *run_calendar_view* script is organized in two main parts: the initialization block and the main processing loop. The input parameters and processing settings are defined in the initialization block whereas the actual processing is performed in the main loop that performs the different tasks by considering individual parcels. The main processing loop is further divided in two parts: download and processing of Sentinel-2 data and download and processing of Sentinel-1 data. The overall structure of the script and the different tasks performed by the main processing loop are illustrated in Figure 2. 
 The different parts of the script are better detailed in the following sections.
 
-![Figure 2: Overall structure of the run_calendar_view script.](https://github.com/borioda/cbm/blob/main/media/img/run_calendar_view.png)
+## Overall structure of the run_calendar_view script.
+    run_calendar_view
+### Initialization:
+
+- Authentication and RESTful API access
+- Cloud masking settings
+- Parcel data input (shape file)
+- Band selection
+- Time interval selection
+- Output image properties
+
+### Main processing loop**
+*For each parcel:*
+
+**Sentinel-2 processing**
+- get and download SCL imagettes
+- create a list tiles to be downloaded (based on cloud cover)
+- get and download band imagettes
+- merge bands and apply stretching
+- crete calendar views
+- generetes derived products: NDVI profiles, histograms, Red-NIR scatter plots, ...
+
+**Sentinel-1 processing**
+- get and download Sentinel-1 backscattering imagettes
+- rescale and stretch imagettes
+- for each polarization (VV and VH) and for the two orientations (D and A) 
+    - provide calendar views
+    - compute statistics
+- plot joint profiles
 
 ## 3.1 Initialization
 The variables in the initialization part of the script allows one to define inputs and outputs and to customize the different operations performed by the script. 
