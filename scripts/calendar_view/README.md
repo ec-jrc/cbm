@@ -62,3 +62,28 @@ The date range for the data search can be set through the *search_window_start_d
 ## 3.2 Main Processing Loop
 The different operations performed in the main loop are listed in the second part of the “Overall structure of the run_calendar_view script” section above These operations are performed through the functions called in Figure 1. While the *run_calendar_view* script demonstrates most of the functionalities implemented in the different libraries, the main loop has a modular structure and functions can be commented if specific operations are not needed.  
 
+## Output examples
+### Calendar view of Sentinel-2 imagettes
+False Colour Composite (FCC), 8,11,4 RGB, LUT stretched (generic)
+![Calendar view of Sentinel-2 imagettes](https://github.com/CsabaWirnhardt/cbm_media/blob/main/01_calendar_view_of_s2_imagettes.jpg)
+### Calendar view of Sentinel-2 NDVI imagettes
+![Calendar view of Sentinel-2 NDVI imagettes](https://github.com/CsabaWirnhardt/cbm_media/blob/main/02_calendar_view_of_ndvi_imagettes.jpg)
+### Calendar view of Sentinel-2 NDVI histograms
+![Calendar view of Sentinel-2 NDVI histograms](https://github.com/CsabaWirnhardt/cbm_media/blob/main/03_calendar_view_of_ndvi_histograms.jpg)
+### Calendar view of Sentinel-2 cumulative scatterplots
+Cumulative scatter plot of Red (horizontal axis) and NIR (vertical axis) bands within the parcel
+Red dots: scatter plot of current date
+Blue dots: scatter plot of all previous dates
+![Calendar view of Sentinel-2 cumulative scatterplots](https://github.com/CsabaWirnhardt/cbm_media/blob/main/04_calendar_view_of_cumulative_scatterplots.jpg)
+### Graph of Sentinel-2 NDVI values
+![NDVI graph](output_examples_compressed/05_graph_s2_ndvi.jpg)
+### Graph of Sentinel-1 backscatter values
+![BS graph](output_examples_compressed/06_graph_s1_backscatter.jpg)
+### Calendar view of Sentinel-1 backscatter imagettes, VH polarisation, Ascending orbit
+![Calendar view of Sentinel-1 backscatter imagettes VH A](https://github.com/CsabaWirnhardt/cbm_media/blob/main/07_calendar_view_of_s1_backscatter_imagettes_VH_A.jpg)
+### Calendar view of Sentinel-1 backscatter imagettes, VH polarisation, Descending orbit
+![Calendar view of Sentinel-1 backscatter imagettes VH D](https://github.com/CsabaWirnhardt/cbm_media/blob/main/08_calendar_view_of_s1_backscatter_imagettes_VH_D.jpg)
+### Calendar view of Sentinel-1 backscatter imagettes, VV polarisation, Ascending orbit
+![Calendar view of Sentinel-1 backscatter imagettes VV A](https://github.com/CsabaWirnhardt/cbm_media/blob/main/09_calendar_view_of_s1_backscatter_imagettes_VV_A.jpg)
+### Calendar view of Sentinel-1 backscatter imagettes, VV polarisation, Descending orbit
+![Calendar view of Sentinel-1 backscatter imagettes VV D](https://github.com/CsabaWirnhardt/cbm_media/blob/main/10_calendar_view_of_s1_backscatter_imagettes_VV_D.jpg)
