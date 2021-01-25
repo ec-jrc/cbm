@@ -19,7 +19,7 @@ from flask import (Flask, request, send_from_directory, abort, make_response,
                    render_template, flash, redirect)
 
 
-import queryHandler as qh
+import query_handler as qh
 import users
 
 app = Flask(__name__)
