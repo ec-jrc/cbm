@@ -76,9 +76,9 @@ Red dots: scatter plot of current date
 Blue dots: scatter plot of all previous dates
 ![Calendar view of Sentinel-2 cumulative scatterplots](https://github.com/CsabaWirnhardt/cbm_media/blob/main/04_calendar_view_of_cumulative_scatterplots.jpg)
 ### Graph of Sentinel-2 NDVI values
-![NDVI graph](output_examples_compressed/05_graph_s2_ndvi.jpg)
+![NDVI graph](https://github.com/CsabaWirnhardt/cbm_media/blob/main/05_graph_s2_ndvi.jpg)
 ### Graph of Sentinel-1 backscatter values
-![BS graph](output_examples_compressed/06_graph_s1_backscatter.jpg)
+![BS graph](https://github.com/CsabaWirnhardt/cbm_media/blob/main/06_graph_s1_backscatter.jpg)
 ### Calendar view of Sentinel-1 backscatter imagettes, VH polarisation, Ascending orbit
 ![Calendar view of Sentinel-1 backscatter imagettes VH A](https://github.com/CsabaWirnhardt/cbm_media/blob/main/07_calendar_view_of_s1_backscatter_imagettes_VH_A.jpg)
 ### Calendar view of Sentinel-1 backscatter imagettes, VH polarisation, Descending orbit
