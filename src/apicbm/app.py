@@ -12,10 +12,9 @@ import os
 import json
 import logging
 from logging.handlers import TimedRotatingFileHandler
-from time import strftime
 from functools import wraps
 from werkzeug.utils import secure_filename
-from flask import (Flask, request, send_from_directory, abort, make_response,
+from flask import (Flask, request, send_from_directory, make_response,
                    render_template, flash, redirect)
 
 
@@ -173,6 +172,8 @@ def parcelsByPolygon_query():
 # -------- Uploader ---------------------------------------------------------- #
 
 app.config['UPLOAD_FOLDER'] = 'uploads'
+
+
 def allowed_file(filename):
     # Allow specific file types.
     return '.' in filename and \
@@ -213,6 +214,7 @@ def uploaded_file(filename):
         return send_from_directory(app.config['UPLOAD_FOLDER'],
                                    filename)
 
+
 # ======== Main ============================================================== #
 if __name__ == "__main__":
     logname = 'logs/app.log'
@@ -221,5 +223,5 @@ if __name__ == "__main__":
     logger = logging.getLogger('tdm')
     logger.setLevel(logging.INFO)
     logger.addHandler(handler)
-    app.run(debug=True, use_reloader=True, host='0.0.0.0', port=5000, threaded=True)
-
+    app.run(debug=True, use_reloader=True,
+            host='0.0.0.0', port=5000, threaded=True)
