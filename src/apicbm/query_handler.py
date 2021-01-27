@@ -20,16 +20,17 @@ conn_str = database.conn_str()
 # conn_str = "host='0.0.0.0' dbname='postgres' user='postgres' port=5432 password=''"
 
 logging.basicConfig(filename='queryHandler.log', filemode='w',
-                    format='%(name)s - %(levelname)s - %(message)s', level=logging.ERROR)
+                    format='%(name)s - %(levelname)s - %(message)s',
+                    level=logging.ERROR)
 
 
 def db_connect():
     try:
         conn = psycopg2.connect(conn_str)
         cur = conn.cursor()
-        db_par = conn.get_dsn_parameters()
+        # db_par = conn.get_dsn_parameters()
         cur.execute("SELECT version();")
-        record = cur.fetchone()
+        # record = cur.fetchone()
         status = """! Connected to the database. !<br>"""
     except Exception:
         status = "! Unable to connect to the database. !"
@@ -47,22 +48,18 @@ def is_number(s):
         return False
 
 
-def getParcelTimeSeries(aoi, year, pid, tstype, band=None):
+def getParcelTimeSeries(dias_cat, year, pid, tstype, band=None):
     conn = psycopg2.connect(conn_str)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
-    # temporary fix for variation in dias_catalogue
-    if aoi in ('by', 'es'):
-        dias_cat = aoi
-    else:
-        dias_cat = 'eosc'
 
     try:
         if band:
             getTableDataSql = f"""
                 SELECT extract('epoch' from obstime), count,
                     mean, std, min, p25, p50, p75, max
-                FROM {aoi}{year}_{tstype}_signatures s, dias_catalogue_{dias_cat}{year} d
+                FROM {aoi}{year}_{tstype}_signatures s,
+                    dias_catalogue_{dias_cat}{year} d
                 WHERE s.obsid = d.id and
                 pid = {pid} and
                 band = '{band}'
@@ -72,7 +69,8 @@ def getParcelTimeSeries(aoi, year, pid, tstype, band=None):
             getTableDataSql = f"""
                 SELECT extract('epoch' from obstime), band,
                     count, mean, std, min, p25, p50, p75, max
-                FROM {aoi}{year}_{tstype}_signatures s, dias_catalogue_{dias_cat}{year} d
+                FROM {aoi}{year}_{tstype}_signatures s,
+                    dias_catalogue_{dias_cat}{year} d
                 WHERE s.obsid = d.id and
                 pid = {pid}
                 ORDER By obstime, band asc;
@@ -87,13 +85,12 @@ def getParcelTimeSeries(aoi, year, pid, tstype, band=None):
             for r in rows:
                 data.append(tuple(r))
         else:
-            print(
-                f"No time series found for {pid} in {aoi}{year}_{tstype}_signatures")
+            print(f"No time series found for {pid} in {aoi}{year}_{tstype}_signatures")
         return data
 
     except Exception as err:
         print("Did not find data, please select the right database and table: ", err)
-        return data.append('Ended With Crap')
+        return data.append('Ended with no data')
 
 
 def getParcelPeers(parcelTable, pid, distance, maxPeers):
@@ -112,14 +109,18 @@ def getParcelPeers(parcelTable, pid, distance, maxPeers):
         cropname = row[0]
 
         getTableDataSql = f"""
-            WITH current_parcel AS (select {cropname}, wkb_geometry from {parcelTable} where ogc_fid = {pid})
-            SELECT ogc_fid as pid, 
-              st_distance(wkb_geometry, (SELECT wkb_geometry FROM current_parcel)) as distance from {parcelTable} 
-            where {cropname} = (select {cropname} from current_parcel)
+            WITH current_parcel AS (SELECT {cropname}, wkb_geometry
+            FROM {parcelTable} where ogc_fid = {pid})
+            SELECT ogc_fid as pid, st_distance(wkb_geometry,
+                (SELECT wkb_geometry FROM current_parcel))
+                as distance from {parcelTable}
+            where {cropname} = (SELECT {cropname} from current_parcel)
             And ogc_fid != {pid}
-            And st_dwithin(wkb_geometry, (SELECT wkb_geometry FROM current_parcel), {distance})
+            And st_dwithin(wkb_geometry,
+                (SELECT wkb_geometry FROM current_parcel), {distance})
             And st_area(wkb_geometry) > 3000.0
-            order by st_distance(wkb_geometry, (SELECT wkb_geometry FROM current_parcel)) asc
+            Order by st_distance(wkb_geometry,
+                (SELECT wkb_geometry FROM current_parcel)) asc
             LIMIT {maxPeers};
             """
         #  Return a list of tuples
@@ -132,14 +133,13 @@ def getParcelPeers(parcelTable, pid, distance, maxPeers):
             for r in rows:
                 data.append(tuple(r))
         else:
-            logging.debug(
-                f"No parcel peers found in {parcelTable} within {distance} meters from parcel {pid}")
+            logging.debug(f"No parcel peers found in {parcelTable} within {distance} meters from parcel {pid}")
         return data
 
     except Exception as err:
         logging.debug(
             "Did not find data, please select the right database and table: ", err)
-        return data.append('Ended With Crap')
+        return data.append('Ended with no data')
 
 
 def getParcelByLocation(parcelTable, lon, lat, withGeometry=False):
@@ -179,7 +179,7 @@ def getParcelByLocation(parcelTable, lon, lat, withGeometry=False):
                 st_Y(st_transform(st_centroid(wkb_geometry), 4326)) as clat
             FROM {parcelTable}
             WHERE st_intersects(wkb_geometry,
-                    st_transform(st_geomfromtext('POINT({lon} {lat})', 4326), {srid}));
+            st_transform(st_geomfromtext('POINT({lon} {lat})', 4326), {srid}));
         """
 
         #  Return a list of tuples
@@ -222,7 +222,7 @@ def getParcelById(parcelTable, parcelid, withGeometry=False):
         row = cur.fetchone()
         cropname = row[0]
         cropcode = row[1]
-        codetype = row[2]
+        # codetype = row[2]
 
         if withGeometry:
             geometrySql = ", st_asgeojson(wkb_geometry) as geom"
@@ -248,7 +248,8 @@ def getParcelById(parcelTable, parcelid, withGeometry=False):
             for r in rows:
                 data.append(tuple(r))
         else:
-            logging.debug(f"No parcel found in {parcelTable} with id ({parcelid}).")
+            logging.debug(
+                f"No parcel found in {parcelTable} with id ({parcelid}).")
         return data
 
     except Exception as err:
@@ -279,7 +280,7 @@ def getParcelsByPolygon(parcelTable, polygon, withGeometry=False, only_ids=True)
         row = cur.fetchone()
         cropname = row[0]
         cropcode = row[1]
-        codetype = row[2]
+        # codetype = row[2]
 
         if withGeometry:
             geometrySql = ", st_asgeojson(wkb_geometry) as geom"
@@ -299,7 +300,7 @@ def getParcelsByPolygon(parcelTable, polygon, withGeometry=False, only_ids=True)
             SELECT {selectSql}
             FROM {parcelTable}
             WHERE st_intersects(wkb_geometry,
-                    st_transform(st_geomfromtext('POLYGON(({poly}))', 4326), {srid}))
+            st_transform(st_geomfromtext('POLYGON(({poly}))', 4326), {srid}))
             LIMIT 100;
         """
 
@@ -318,4 +319,3 @@ def getParcelsByPolygon(parcelTable, polygon, withGeometry=False, only_ids=True)
     except Exception as err:
         print("Did not find data, please select the right database and table: ", err)
         return data.append('Ended with no data')
-
