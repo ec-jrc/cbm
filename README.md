@@ -4,13 +4,13 @@
 
 **This work is in progress and may be subject to frequent changes**
 
-The European Commission promoted the use of new technologies through many conferences and workshops and provided bilateral support to many Paying Agencies (PA) to use the Copernicus Sentinel data to check aid applications for some schemes and some groups of beneficiaries “checks by monitoring” (CbM).
+The European Commission promotes the use of new technologies in the context of the Common Agricultural Policy (CAP) and the Integrated Administration and Control Systems (IACS) which are managed by the European Union Member States. In 2018, "Checks by Monitoring" (CbM) were introduced for area-based support schemes. The EU  Paying Agencies (PA) who adapt CbM will migrate to the use of Copernicus Sentinel data to check aid applications.
 
-CbM solutions developed by the European Commission's science and knowledge service, the Joint Research Center (JRC) are modular and built exclusively on open source components. Although the modules are tailored to use on a cloud infrastructure, such as Copernicus DIAS (Data and Information Access Services), most can run on single platform solutions as well. Central to the modules is the use of a spatial database component for storage of PA parcel data sets, metadata storage and process control. Most processes read from the database, execute relevant tasks, and (may) store results back in the database.
+CbM applies to the complete territory of the Member States and makes use of continuously updated data streams from the Sentinel-1 and -2 sensors. This implies the use of Big Data Analytics solutions, that require parallel processing compute infrastructure, such as cloud services. In support to CbM implementation the European Commission's science and knowledge service, the Joint Research Center (JRC), demonstrates compute solutions that are modular and built exclusively on open source components. Although the modules are tailored to use on a cloud infrastructure, such as Copernicus DIAS (Data and Information Access Services), most can run on single platform solutions as well. Central to the modules is the use of a spatial database component for storage of PA parcel data sets, metadata storage and process control. Most processes read from the database, execute relevant tasks, and (may) store results back in the database.
 
 A core concept in CbM is reduction. This is currently implemented primarily as statistics extraction, which can then be used in subsequent analytics. Examples modules that apply machine learning for outlier analysis have been developed. Other components are aimed at providing access to users that need analytical outputs for reporting, or data extraction, including image extracts, for further client-side detailed analysis.
 
-This code repository with the documentation in the Wiki pages will get a copy of the CbM project up and running on an inhouse or cloud computing infrastructure for development and testing purposes.
+This code repository provides access to the CbM project code, which can be set up, configured and run on an in-house or cloud computing infrastructure for development and testing purposes. The modular approach is the documented in the Wiki pages. 
 
 
 ## Prerequisites
@@ -19,30 +19,26 @@ To start CbM it is essential to have:
 
 1. Computing resources
 2. Copernicus Analysis Ready Data (CARD)
-3. Valid parcel data
-
+3. Valid agricultural parcel data (FOI compliant)
 
 ## Deployment
 
-There are many steps that need to be completed for Checks by Monitoring. these steps require many different types of technical expertise.
+There are several steps to set up the core components for Checks by Monitoring. These steps require different types of technical expertise. 
 
-
-- Setup server applications.
+- Setup server applications
     - Docker (containerization system)
     - Postgres database with PostGIS extension
-    - Jupyter (interactive computing environment)
-
+    - Jupyter (interactive analysis and visualization environment)
 
 - Adding data to the database.
     - Parcels data to database
     - CARD Metadata and other required data
 
-
 - Running code examples.
     - Parcel extraction routines
     - Machine learning algorithms
     - Database backups
-
+    - Analytical routines (e.g. market detection)
 
 - Accessing and viewing results.
     - Building RESTFul API
@@ -54,7 +50,7 @@ See the documentation in the [**Wiki Pages**](https://github.com/ec-jrc/cbm/wiki
 
 ## CbM code repository structure
 
-This repository (cbm) contains example scripts and documentation to get started with  “CAP checks by monitoring”. Some of them are:
+This repository (cbm) contains example scripts and documentation to get started with  CbM. Some of them are:
 
 - Command line scripts (scripts/) [Extraction routines](https://github.com/ec-jrc/cbm/wiki/3.1.-Parcel-extraction.-Parcel-extraction-routines-for-use-in-non-interactive-workflow), [TS calandar](https://github.com/ec-jrc/cbm/tree/main/scripts/calendar_view).
 - Interactive notebook tools, inclouds QA and FOI tools (src/ipycbm/) [Wiki 6.1.](https://github.com/ec-jrc/cbm/wiki/6.1.-Jupyter-Notebooks.-Interactive-python-library-for-CbM-'ipycbm'.).
