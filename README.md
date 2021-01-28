@@ -4,9 +4,9 @@
 
 **This work is in progress and may be subject to frequent changes**
 
-The European Commission promoted the use of new technologies through many conferences and workshops and provided bilateral support to many paying agencies to use the Copernicus Sentinel data to check aid applications for some schemes and some groups of beneficiaries “checks by monitoring” (CbM).
+The European Commission promoted the use of new technologies through many conferences and workshops and provided bilateral support to many Paying Agencies (PA) to use the Copernicus Sentinel data to check aid applications for some schemes and some groups of beneficiaries “checks by monitoring” (CbM).
 
-CbM solutions developed by the European Commission's science and knowledge service, the Joint Research Center (JRC) are modular and built exclusively on open source components. Although the modules are tailored to use on a cloud infrastructure, such as DIAS, most can run on single platform solutions as well. Central to the modules is the use of a spatial database component for storage of PA parcel data sets, metadata storage and process control. Most processes read from the database, execute relevant tasks, and (may) store results back in the database.
+CbM solutions developed by the European Commission's science and knowledge service, the Joint Research Center (JRC) are modular and built exclusively on open source components. Although the modules are tailored to use on a cloud infrastructure, such as Copernicus DIAS (Data and Information Access Services), most can run on single platform solutions as well. Central to the modules is the use of a spatial database component for storage of PA parcel data sets, metadata storage and process control. Most processes read from the database, execute relevant tasks, and (may) store results back in the database.
 
 A core concept in CbM is reduction. This is currently implemented primarily as statistics extraction, which can then be used in subsequent analytics. Examples modules that apply machine learning for outlier analysis have been developed. Other components are aimed at providing access to users that need analytical outputs for reporting, or data extraction, including image extracts, for further client-side detailed analysis.
 
