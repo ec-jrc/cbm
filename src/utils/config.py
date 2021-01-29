@@ -14,7 +14,7 @@ import json
 import uuid
 from os.path import dirname, abspath
 
-folder_repo = os.path.dirname(dirname(dirname(dirname(abspath(__file__)))))
+folder_repo = os.path.dirname(dirname(dirname(abspath(__file__))))
 file_config = f"_config.json"
 
 
@@ -194,17 +194,18 @@ def update_keys():
     with open(file_default, 'r') as f:
         dict2 = json.load(f)
 
-    for key in dict2.keys():
+    for idx, key in enumerate(dict2.keys()):
         if key not in dict1:
             dict1[key] = dict2[key]
-            print(f"The key '{key}' was added in the configuratoin file.")
         for k in dict2[key].keys():
             if k not in dict1[key]:
                 dict1[key][k] = dict2[key][k]
-                print(f"The subkey '{k}' was added in the configuratoin file.")
 
     with open(file_config, 'w') as f:
         json.dump(dict1, f, indent=4)
+
+    if idx > 0:
+        print(f"{idx+1} new json configuration objects are added to the configuration file.")
 
 
 def credentials(service):

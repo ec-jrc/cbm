@@ -28,15 +28,16 @@ def startup():
         print("Not supoted python version, ipycbm needs python version > 3.6")
         return
 
-    paths = config.get_value(['paths'])
-    for p in paths:
-        os.makedirs(paths[p], exist_ok=True)
     try:
         config.update_keys()
     except Exception as err:
         folder_repo = os.path.dirname(dirname(dirname(abspath(__file__))))
         print("The repossitory's folder is: ", folder_repo)
         print("!Warning! Could not update config file:", err)
+
+    paths = config.get_value(['paths'])
+    for p in paths:
+        os.makedirs(paths[p], exist_ok=True)
 
     update.check()
     display(config.clean_temp(True))
