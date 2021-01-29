@@ -40,7 +40,7 @@ df = pd.read_csv('{file_ts[0]}', index_col=0)<br>
 df.plot.scatter(x='date_part', y='max')</code><br>
 
 <b>To view and edit a more advanced code to plot the time series, copy the <br>
-contents of the file 'ipycbm/ui_view/view_time_series' to a new cell and <br>
+contents of the file 'ipycbm/ipy_view/view_time_series' to a new cell and <br>
 the below code to another cell and run the cells:</b><br>
 path = '{path}'<br>
 time_series(path)<br>
@@ -71,7 +71,7 @@ for i in range(1, columns * rows + 1):<br>
 plt.show()</code><br>
 
 <b>To view and edit a more advanced code to view the images, copy the <br>
-contents of the file 'ipycbm/ui_view/view_calendar' to a new cell and the <br>
+contents of the file 'ipycbm/ipy_view/view_calendar' to a new cell and the <br>
 below code to another cell and run the cells:</b><br>
 path = '{path}'<br>
 calendar(path)<br>

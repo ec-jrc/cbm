@@ -9,7 +9,7 @@
 
 
 from ipywidgets import Tab
-from src.ipycbm.plugins.foi import foi_settings, foi_panel, foi_help
+from src.ipycbm.ipy_foi import foi_settings, foi_panel, foi_help
 
 def foi_widget_box():
 

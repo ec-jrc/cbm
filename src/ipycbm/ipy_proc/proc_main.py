@@ -10,14 +10,14 @@
 
 from ipywidgets import Tab
 from src.utils import help_docs
-from src.ipycbm.plugins.qa import qa_settings, qa_panel
+from src.ipycbm.ipy_proc import proc_settings, proc_panel
 
-def qa_widget_box():
+def proc_widget_box():
 
-    tab_box = Tab(children=[qa_panel.qa(), help_docs.widget_box(),
-                  qa_settings.widget_box()])
+    tab_box = Tab(children=[proc_panel.proc(), help_docs.widget_box(),
+                  proc_settings.widget_box()])
 
-    tab_box.set_title(0, 'Quality assessment')
+    tab_box.set_title(0, 'Process Data')
     tab_box.set_title(1, 'Help')
     tab_box.set_title(2, 'Settings')
 

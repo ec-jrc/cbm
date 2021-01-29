@@ -19,7 +19,7 @@ from ipyleaflet import (Map, ImageOverlay, Popup, basemap_to_tiles,
                         Polygon, WidgetControl, basemaps)
 
 from src.utils import config
-from src.ipycbm.ui_view import view_spatial, view_images
+from src.ipycbm.ipy_view import view_spatial, view_images
 
 
 def widget_box(path):
