@@ -10,7 +10,7 @@ CbM applies to the complete territory of the Member States and makes use of cont
 
 A core concept in CbM is reduction. This is currently implemented primarily as statistics extraction, which can then be used in subsequent analytics. Examples modules that apply machine learning for outlier analysis have been developed. Other components are aimed at providing access to users that need analytical outputs for reporting, or data extraction, including image extracts, for further client-side detailed analysis.
 
-This code repository provides access to the CbM project code, which can be set up, configured and run on an in-house or cloud computing infrastructure for development and testing purposes. The modular approach is the documented in the Wiki pages. 
+This code repository provides access to the CbM project code, which can be set up, configured and run on an in-house or cloud computing infrastructure for development and testing purposes. The modular approach is documented in the Wiki pages. 
 
 
 ## Prerequisites
@@ -30,17 +30,17 @@ There are several steps to set up the core components for Checks by Monitoring. 
     - Postgres database with PostGIS extension
     - Jupyter (interactive analysis and visualization environment)
 
-- Adding data to the database.
+- Adding data to the database
     - Parcels data to database
     - CARD Metadata and other required data
 
-- Running code examples.
+- Running code examples
     - Parcel extraction routines
     - Machine learning algorithms
     - Database backups
     - Analytical routines (e.g. market detection)
 
-- Accessing and viewing results.
+- Accessing and viewing results
     - Building RESTFul API
     - Using Jupyter Notebooks
 
@@ -48,21 +48,21 @@ There are several steps to set up the core components for Checks by Monitoring. 
 See the documentation in the [**Wiki Pages**](https://github.com/ec-jrc/cbm/wiki) for more details and setup instructions.
 
 
-## CbM code repository structure
+## Repository structure
 
 This repository (cbm) contains example scripts and documentation to get started with  CbM. Some of them are:
 
 - Command line scripts (scripts/) [Extraction routines](https://github.com/ec-jrc/cbm/wiki/3.1.-Parcel-extraction.-Parcel-extraction-routines-for-use-in-non-interactive-workflow), [TS calandar](https://github.com/ec-jrc/cbm/tree/main/scripts/calendar_view).
-- Interactive notebook tools, inclouds QA and FOI tools (src/ipycbm/) [Wiki 6.1.](https://github.com/ec-jrc/cbm/wiki/6.1.-Jupyter-Notebooks.-Interactive-python-library-for-CbM-'ipycbm'.).
-- Stand alone Jupyter Notebook examples (src/ipynb/) [Wiki 6.2.](https://github.com/ec-jrc/cbm/wiki/6.2.-Jupyter-Notebooks.-Examples'.).
-- RESTful API modules (stc/apicbm/) [Wiki 5.1.](https://github.com/ec-jrc/cbm/wiki/5.1.-RESTful-API.-Build-a-RESTful-API-with-Flask-for-CbM.).
+- Interactive notebook tools, inclouds QA and FOI tools (src/ipycbm/) [Wiki 6.1.](https://github.com/ec-jrc/cbm/wiki/6.1.-Jupyter-Notebooks.-Interactive-python-library-for-CbM-'ipycbm'.)
+- Stand alone Jupyter Notebook examples (src/ipynb/) [Wiki 6.2.](https://github.com/ec-jrc/cbm/wiki/6.2.-Jupyter-Notebooks.-Examples'.)
+- RESTful API modules (stc/apicbm/) [Wiki 5.1.](https://github.com/ec-jrc/cbm/wiki/5.1.-RESTful-API.-Build-a-RESTful-API-with-Flask-for-CbM.)
 - Docker image files for parallel extraction, jupyter notebooks server and RESTful API server (docker/).
 - Test scripts for testing a variety of functionalities (tests/).
 
 
 ## Contributing
 
-Please read [creating-a-pull-request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request) for details on the process for submitting pull requests to us.
+Please read ["creating-a-pull-request"](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request) for details on the process for submitting pull requests to us.
 
 
 ## Authors
