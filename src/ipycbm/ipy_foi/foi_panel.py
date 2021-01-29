@@ -16,9 +16,9 @@ from ipywidgets import (Text, Label, HBox, VBox, Layout, Tab, Dropdown,
 
 from src.utils import config, settings
 from src.sources import database
-from src.ipycbm.ui_proc import proc_func
-from src.ipycbm.plugins.foi import foi_proc
-from src.ipycbm.plugins.foi import foi_proc_v2
+from src.ipycbm.ipy_proc import proc_func
+from src.ipycbm.ipy_foi import foi_proc
+from src.ipycbm.ipy_foi import foi_proc_v2
 
 
 def foi():

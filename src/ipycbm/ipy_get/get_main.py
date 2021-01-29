@@ -10,25 +10,25 @@
 
 from ipywidgets import Tab
 from src.utils import help_docs
-from src.ipycbm.ui_view import view_settings, view_panel
+from src.ipycbm.ipy_get import get_settings, get_panel
 
 
-def view_widget_box():
+def get_widget_box():
 
     try:
-        tab_box = Tab(children=[view_panel.view(), help_docs.widget_box(),
-                                view_settings.widget_box()])
+        tab_box = Tab(children=[get_panel.get(), help_docs.widget_box(),
+                                get_settings.widget_box()])
 
-        tab_box.set_title(0, 'View Data')
+        tab_box.set_title(0, 'Get Data')
         tab_box.set_title(1, 'Help')
         tab_box.set_title(2, 'Settings')
 
     except Exception as err:
         tab_box = Tab(children=[help_docs.widget_box(),
-                                view_settings.widget_box()])
+                                get_settings.widget_box()])
 
-        tab_box.set_title(1, 'Help')
-        tab_box.set_title(2, 'Settings')
-        print("Could not show 'View panel'.", err)
+        tab_box.set_title(0, 'Help')
+        tab_box.set_title(1, 'Settings')
+        print("Could not show 'Get panel'.", err)
 
     return tab_box

@@ -15,7 +15,7 @@ from ipywidgets import (Label, VBox, HBox, Layout, Dropdown, SelectMultiple,
                         ToggleButtons, Output, Box, RadioButtons, Button)
 
 from src.utils import config
-from src.ipycbm.ui_view import view_notes
+from src.ipycbm.ipy_view import view_notes
 
 
 def view():
@@ -221,35 +221,35 @@ def view():
             elif select_option.value == 1:
                 data_path = f'{paths.value}{select_table.value}/{selection_single.value}/'
                 if obj['new'] == 1:
-                    from src.ipycbm.ui_view import view_code
+                    from src.ipycbm.ipy_view import view_code
                     display(view_code.code(data_path))
                 elif obj['new'] == 2:
-                    from src.ipycbm.ui_view import view_time_series
+                    from src.ipycbm.ipy_view import view_time_series
                     display(view_time_series.time_series(data_path))
                 elif obj['new'] == 3:
-                    from src.ipycbm.ui_view import view_calendar
+                    from src.ipycbm.ipy_view import view_calendar
                     display(view_calendar.calendar(data_path))
                 elif obj['new'] == 4:
-                    from src.ipycbm.ui_view import view_map
+                    from src.ipycbm.ipy_view import view_map
                     display(view_map.widget_box(data_path))
 
             elif select_option.value == 2 and len(selection_multi.value) > 0:
                 data_path = f'{paths.value}{select_table.value}/'
                 data_paths = [f'{data_path}{s}/' for s in selection_multi.value]
                 if obj['new'] == 1:
-                    from src.ipycbm.ui_view import view_code
+                    from src.ipycbm.ipy_view import view_code
                     display(view_code.code(data_paths[0]))
                     pass
                 elif obj['new'] == 2:
-                    from src.ipycbm.ui_view import view_time_series
+                    from src.ipycbm.ipy_view import view_time_series
                     # display(view_time_series.time_series(data_list[0]))
                     pass
                 elif obj['new'] == 3:
-                    from src.ipycbm.ui_view import view_calendar
+                    from src.ipycbm.ipy_view import view_calendar
                     # display(view_chip_images.calendar(data_path))
                     pass
                 elif obj['new'] == 4:
-                    from src.ipycbm.ui_view import view_maps
+                    from src.ipycbm.ipy_view import view_maps
                     display(view_maps.with_polygons(data_paths))
 
 

@@ -94,7 +94,7 @@ def polygon(area, source):
 
     @bt_get_ids.on_click
     def bt_get_ids_on_click(b):
-        # from src.ipycbm.ui_get import get_requests
+        # from src.ipycbm.ipy_get import get_requests
         try:
             print(polygon_map.feature_collection['features'][0]['geometry'])
 #             polyids = get_requests()

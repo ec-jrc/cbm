@@ -12,9 +12,9 @@ from ipywidgets import (HBox, VBox, Layout, Dropdown,
                         Output, HTML, Button, Accordion)
 
 from src.utils import config, settings
-from src.ipycbm.ui_view import view_panel
-from src.ipycbm.ui_proc import proc_func, proc_card2db
-from src.ipycbm.ui_get import get_panel, get_settings
+from src.ipycbm.ipy_view import view_panel
+from src.ipycbm.ipy_proc import proc_func, proc_card2db
+from src.ipycbm.ipy_get import get_panel, get_settings
 
 
 def qa():

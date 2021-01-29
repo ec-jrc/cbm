@@ -18,26 +18,23 @@ __status__ = "Development"
 from src.utils import check
 check.startup()
 
-def cbm(*args):
-    from src.ipycbm.ui_cbm import cbm_main
-    return cbm_main.cbm_widget_box(*args)
 
 def get(*args):
-    from src.ipycbm.ui_get import get_main
+    from src.ipycbm.ipy_get import get_main
     return get_main.get_widget_box(*args)
 
 def view(*args):
-    from src.ipycbm.ui_view import view_main
+    from src.ipycbm.ipy_view import view_main
     return view_main.view_widget_box(*args)
 
 def proc(*args):
-    from src.ipycbm.ui_proc import proc_main
+    from src.ipycbm.ipy_proc import proc_main
     return proc_main.proc_widget_box(*args)
 
 def foi(*args):
-    from src.ipycbm.plugins.foi import foi_main
+    from src.ipycbm.ipy_foi import foi_main
     return foi_main.foi_widget_box(*args)
 
 def qa(*args):
-    from src.ipycbm.plugins.qa import qa_main
+    from src.ipycbm.ipy_qa import qa_main
     return qa_main.qa_widget_box(*args)

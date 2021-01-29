@@ -18,7 +18,7 @@ from ipywidgets import (Text, Textarea, Label, HBox, VBox, Dropdown,
                         Box, HTML, SelectMultiple)
 
 from src.utils import data_handler, config, data_options
-from src.ipycbm.ui_get import get_maps
+from src.ipycbm.ipy_get import get_maps
 
 
 def get():
