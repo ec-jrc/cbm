@@ -172,7 +172,7 @@ def create(file=file_config):
     if os.path.isfile(filepath) is False:
         try:
             # Default configuration file
-            file_default = "src/utils/config_default.json"
+            file_default = "cbm/utils/config_default.json"
             with open(file_default, 'r') as f:
                 config_default = json.load(f)
             with open(filepath, 'w') as f:
@@ -188,7 +188,7 @@ def create(file=file_config):
 def update_keys():
     """Update missing keys of old configuration files."""
     create()
-    file_default = "src/utils/config_default.json"
+    file_default = "cbm/utils/config_default.json"
     with open(file_config, 'r') as f:
         dict_config = json.load(f)
     with open(file_default, 'r') as f:

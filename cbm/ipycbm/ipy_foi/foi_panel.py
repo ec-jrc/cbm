@@ -23,7 +23,7 @@ from cbm.ipycbm.ipy_foi import foi_proc_v2
 
 
 def foi():
-    path_plug = "src/foi/foi_db_func/"
+    path_plug = "cbm/foi/foi_db_func/"
     path_data = f"{config.get_value(['paths', 'temp'])}foi/"
 
     progress = Output()

@@ -20,7 +20,7 @@ from cbm.ipycbm.ipy_get import get_panel, get_settings
 
 
 def qa():
-    # path_plug = "src/foi/foi_db_func/"
+    # path_plug = "cbm/foi/foi_db_func/"
     path_data = f"{config.get_value(['paths', 'temp'])}qa/"
 
     progress = Output()
