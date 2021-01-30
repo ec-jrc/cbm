@@ -17,7 +17,7 @@ from src.utils import config
 from src.sources import database
 from src.ipycbm.ipy_proc import db_tables
 
-from src.ipycbm.ipy_proc.extraction import (pgS2Extract, pgS1bsExtract)
+from src.extraction import (pgS2Extract, pgS1bsExtract)
 
 
 def upload_shp(path_data):

@@ -11,14 +11,16 @@
 from ipywidgets import (HBox, VBox, Layout, Dropdown,
                         Output, HTML, Button, Accordion)
 
-from src.utils import config, settings
+from src.utils import config
+from src.ipycbm.utils import settings
+
 from src.ipycbm.ipy_view import view_panel
 from src.ipycbm.ipy_proc import proc_func, proc_card2db
 from src.ipycbm.ipy_get import get_panel, get_settings
 
 
 def qa():
-    # path_plug = "ipycbm/plugins/foi/foi_db_func/"
+    # path_plug = "src/foi/foi_db_func/"
     path_data = f"{config.get_value(['paths', 'temp'])}qa/"
 
     progress = Output()

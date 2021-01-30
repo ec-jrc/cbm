@@ -14,7 +14,8 @@ from ipywidgets import (Text, Label, HBox, VBox, Layout, Tab, Dropdown,
                         ToggleButtons, Output, SelectMultiple, HTML, Button,
                         FileUpload, Checkbox, Accordion, IntText, RadioButtons)
 
-from src.utils import config, settings
+from src.utils import config
+from src.ipycbm.utils import settings
 from src.sources import database
 from src.ipycbm.ipy_proc import proc_func
 from src.ipycbm.ipy_foi import foi_proc
@@ -22,7 +23,7 @@ from src.ipycbm.ipy_foi import foi_proc_v2
 
 
 def foi():
-    path_plug = "ipycbm/plugins/foi/foi_db_func/"
+    path_plug = "src/foi/foi_db_func/"
     path_data = f"{config.get_value(['paths', 'temp'])}foi/"
 
     progress = Output()

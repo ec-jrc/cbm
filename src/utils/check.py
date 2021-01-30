@@ -12,7 +12,8 @@ import os
 from os.path import dirname, abspath
 from IPython.display import display
 
-from src.utils import update, config
+from src.utils import config
+from src.ipycbm.utils import update
 
 def error(err):
     if config.get_value(['api', 'pass']) == '':
