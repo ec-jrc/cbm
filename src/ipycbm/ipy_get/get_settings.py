@@ -12,7 +12,7 @@ from ipywidgets import (Text, VBox, HBox, Label, Password, RadioButtons,
                         Button, Layout, Box, Tab, Output, Dropdown,
                         FloatText, BoundedIntText, Combobox)
 
-from src.utils import config, settings, data_options
+from src.utils import config, data_options
 from src.ipycbm.utils import settings
 from src.sources import database
 
