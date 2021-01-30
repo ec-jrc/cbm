@@ -190,22 +190,23 @@ def update_keys():
     create()
     file_default = "src/utils/config_default.json"
     with open(file_config, 'r') as f:
-        dict1 = json.load(f)
+        dict_config = json.load(f)
     with open(file_default, 'r') as f:
-        dict2 = json.load(f)
+        dict_default = json.load(f)
 
-    for idx, key in enumerate(dict2.keys()):
-        if key not in dict1:
-            dict1[key] = dict2[key]
-        for k in dict2[key].keys():
-            if k not in dict1[key]:
-                dict1[key][k] = dict2[key][k]
-
+    updated_keys = 0
+    for key in dict_default.keys():
+        if key not in dict_config:
+            dict_config[key] = dict_default[key]
+            updated_keys += 1
+        for k in dict_default[key].keys():
+            if k not in dict_config[key]:
+                dict_config[key][k] = dict_default[key][k]
     with open(file_config, 'w') as f:
-        json.dump(dict1, f, indent=4)
+        json.dump(dict_config, f, indent=4)
 
-    if idx > 0:
-        print(f"{idx+1} new json configuration objects are added to the configuration file.")
+    if updated_keys > 0:
+        print(f"{updated_keys+1} new json configuration objects are added to the configuration file.")
 
 
 def credentials(service):
