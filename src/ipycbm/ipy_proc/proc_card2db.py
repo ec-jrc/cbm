@@ -13,7 +13,7 @@ from ipywidgets import (Text, Label, HBox, VBox, Layout, Dropdown,
                         Output, Button, DatePicker, RadioButtons)
 
 from src.utils import config, data_options
-from src.ipycbm.ipy_proc.card2db import creodiasMeta2DB as meta2DB
+from src.card2db import creodiasMeta2DB as meta2DB
 from src.ipycbm.ipy_proc import proc_func
 from src.sources import database
 

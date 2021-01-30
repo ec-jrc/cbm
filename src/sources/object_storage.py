@@ -17,7 +17,7 @@ Options:
     --version     Show version.
 
 Exaple code:
-    from src.utils import object_storage
+    from src.sources import object_storage
     s3file = ''  # The file from the s3 storage # noqa
     localfile = ''  # The new name of the file on the local storage. Use only if 'to_memory' is False
     progress_bar = True  # Disable or enable the progress bar, accepts True or False (Default False).

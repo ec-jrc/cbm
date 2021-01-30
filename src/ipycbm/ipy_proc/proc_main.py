@@ -9,7 +9,7 @@
 
 
 from ipywidgets import Tab
-from src.utils import help_docs
+from src.ipycbm.utils import help_docs
 from src.ipycbm.ipy_proc import proc_settings, proc_panel
 
 def proc_widget_box():
