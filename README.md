@@ -46,6 +46,7 @@ To start CbM it is essential to have:
 2. Copernicus Analysis Ready Data (CARD)
 3. Valid agricultural parcel data (FOI compliant)
 
+
 ## Deployment
 
 There are several steps to set up the core components for Checks by Monitoring.
@@ -56,15 +57,18 @@ These steps require different types of technical expertise.
     - Postgres database with PostGIS extension
     - Jupyter (interactive analysis and visualization environment)
 
+
 - Adding data to the database
     - Parcels data to database
     - CARD Metadata and other required data
+
 
 - Running code examples
     - Parcel extraction routines
     - Machine learning algorithms
     - Database backups
     - Analytical routines (e.g. market detection)
+
 
 - Accessing and viewing results
     - Building RESTFul API
@@ -81,19 +85,19 @@ This repository (cbm) contains example scripts and documentation to get started
 with  CbM, includes:
 
 - scripts/: Command line scripts for:
-    - Extraction routines [Wiki 3.1.](https://github.com/ec-jrc/cbm/wiki/3.1.-Parcel-extraction.-Parcel-extraction-routines-for-use-in-non-interactive-workflow)
+    - Parcel extraction routines [Wiki 3.1.](https://github.com/ec-jrc/cbm/wiki/3.1.-Parcel-extraction.-Parcel-extraction-routines-for-use-in-non-interactive-workflow)
     - Time series Calendar view [TS calandar](https://github.com/ec-jrc/cbm/tree/main/scripts/calendar_view).
-- cbm/: Python library for Checks by Monitoring [Wiki 6.1.](https://github.com/ec-jrc/cbm/wiki/6.1.-CbM-Python-library.), includes:
-    - api - RESTful API modules (cbm/apicbm/) [Wiki 5.1.](https://github.com/ec-jrc/cbm/wiki/5.1.-RESTful-API.-Build-a-RESTful-API-with-Flask-for-CbM.)
-    - card2db - Transfer metadata from the DIAS catalog [Wiki 2.2.](https://github.com/ec-jrc/cbm/wiki/2.2.-Data-preparation.-Transfer-metadata-from-the-DIAS-catalog)
-    - extraction - Parcel extraction routines [Wiki 3.1.](https://github.com/ec-jrc/cbm/wiki/3.1.-Parcel-extraction.-Parcel-extraction-routines-for-use-in-non-interactive-workflow)
+- cbm: Python library for Checks by Monitoring [Wiki 6.1.](https://github.com/ec-jrc/cbm/wiki/6.1.-CbM-Python-library.), includes:
+    - api - RESTful API modules (cbm/apicbm/)
+    - card2db - Transfer metadata from the DIAS catalog
+    - extraction - Parcel extraction routines
     - foi - FOI comand line module
     - ipycbm - Interactive notebook tools. Includes graphic notebook widgets for: FOI, QA and Extraction.
 - ipynb/: Jupyter Notebook examples
 - docker/: Docker image files for:
-    - Parallel extraction (Dockerhub:[dias_py](https://hub.docker.com/r/glemoine62/dias_py))
-    - Jupyter notebooks server (Dockerhub: [cbm_jupyter](https://hub.docker.com/r/gtcap/cbm_jupyter))
-    - RESTful API server (Dockerhub: [cbm_api](https://hub.docker.com/r/gtcap/cbm_api))
+    - [dias_py](https://hub.docker.com/r/glemoine62/dias_py)/: Parallel extraction
+    - [cbm_jupyter](https://hub.docker.com/r/gtcap/cbm_jupyter)/: Jupyter notebooks server
+    - [cbm_api](https://hub.docker.com/r/gtcap/cbm_api)/: RESTful API server
 - tests/: Test scripts for testing a variety of functionalities.
 
 
@@ -111,7 +115,7 @@ for details on the process for submitting pull requests to us.
 See also the list of [contributors](https://github.com/ec-jrc/cbm/contributors)
 who participated in this project.
 
+
 ## License
 
-This project is licensed under the [3-Clause BSD](https://opensource.org/
-licenses/BSD-3-Clause) License - see the [LICENSE](LICENSE) file for details
+This project is licensed under the [3-Clause BSD](https://opensource.org/licenses/BSD-3-Clause) License - see the [LICENSE](LICENSE) file for details
