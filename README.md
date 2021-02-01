@@ -4,13 +4,38 @@
 
 **This work is in progress and may be subject to frequent changes**
 
-The European Commission promotes the use of new technologies in the context of the Common Agricultural Policy (CAP) and the Integrated Administration and Control Systems (IACS) which are managed by the European Union Member States. In 2018, "Checks by Monitoring" (CbM) were introduced for area-based support schemes. The EU  Paying Agencies (PA) who adapt CbM will migrate to the use of Copernicus Sentinel data to check aid applications.
+The European Commission promotes the use of new technologies in the context of
+the Common Agricultural Policy (CAP) and the Integrated Administration and
+Control Systems (IACS) which are managed by the European Union Member States.
+In 2018, "Checks by Monitoring" (CbM) were introduced for area-based support
+schemes. The EU  Paying Agencies (PA) who adapt CbM will migrate to the use of
+Copernicus Sentinel data to check aid applications.
 
-CbM applies to the complete territory of the Member States and makes use of continuously updated data streams from the Sentinel-1 and -2 sensors. This implies the use of Big Data Analytics solutions, that require parallel processing compute infrastructure, such as cloud services. In support to CbM implementation the European Commission's science and knowledge service, the Joint Research Center (JRC), demonstrates compute solutions that are modular and built exclusively on open source components. Although the modules are tailored to use on a cloud infrastructure, such as Copernicus DIAS (Data and Information Access Services), most can run on single platform solutions as well. Central to the modules is the use of a spatial database component for storage of PA parcel data sets, metadata storage and process control. Most processes read from the database, execute relevant tasks, and (may) store results back in the database.
+CbM applies to the complete territory of the Member States and makes use of
+continuously updated data streams from the Sentinel-1 and -2 sensors. This
+implies the use of Big Data Analytics solutions, that require parallel
+processing compute infrastructure, such as cloud services. In support to CbM
+implementation the European Commission's science and knowledge service, the
+Joint Research Center (JRC), demonstrates compute solutions that are modular
+and built exclusively on open source components. Although the modules are
+tailored to use on a cloud infrastructure, such as Copernicus DIAS (Data and
+Information Access Services), most can run on single platform solutions as well.
+Central to the modules is the use of a spatial database component for storage of
+PA parcel data sets, metadata storage and process control. Most processes read
+from the database, execute relevant tasks, and (may) store results back in the
+database.
 
-A core concept in CbM is reduction. This is currently implemented primarily as statistics extraction, which can then be used in subsequent analytics. Examples modules that apply machine learning for outlier analysis have been developed. Other components are aimed at providing access to users that need analytical outputs for reporting, or data extraction, including image extracts, for further client-side detailed analysis.
+A core concept in CbM is reduction. This is currently implemented primarily as
+statistics extraction, which can then be used in subsequent analytics. Examples
+modules that apply machine learning for outlier analysis have been developed.
+Other components are aimed at providing access to users that need analytical
+outputs for reporting, or data extraction, including image extracts, for further
+client-side detailed analysis.
 
-This code repository provides access to the CbM project code, which can be set up, configured and run on an in-house or cloud computing infrastructure for development and testing purposes. The modular approach is documented in the Wiki pages. 
+This code repository provides access to the CbM project code, which can be set
+up, configured and run on an in-house or cloud computing infrastructure for
+development and testing purposes. The modular approach is documented in the Wiki
+pages. 
 
 
 ## Prerequisites
@@ -23,7 +48,8 @@ To start CbM it is essential to have:
 
 ## Deployment
 
-There are several steps to set up the core components for Checks by Monitoring. These steps require different types of technical expertise. 
+There are several steps to set up the core components for Checks by Monitoring.
+These steps require different types of technical expertise. 
 
 - Setup server applications
     - Docker (containerization system)
@@ -45,24 +71,36 @@ There are several steps to set up the core components for Checks by Monitoring. 
     - Using Jupyter Notebooks
 
 
-See the documentation in the [**Wiki Pages**](https://github.com/ec-jrc/cbm/wiki) for more details and setup instructions.
+See the documentation in the [Wiki Pages](https://github.com/ec-jrc/cbm/wiki)
+for more details and setup instructions.
 
 
-## Repository structure
+## Structure
 
-This repository (cbm) contains example scripts and documentation to get started with  CbM. Some of them are:
+This repository (cbm) contains example scripts and documentation to get started
+with  CbM, includes:
 
-- Command line scripts (scripts/) [Extraction routines](https://github.com/ec-jrc/cbm/wiki/3.1.-Parcel-extraction.-Parcel-extraction-routines-for-use-in-non-interactive-workflow), [TS calandar](https://github.com/ec-jrc/cbm/tree/main/scripts/calendar_view).
-- Interactive notebook tools, inclouds QA and FOI tools (src/ipycbm/) [Wiki 6.1.](https://github.com/ec-jrc/cbm/wiki/6.1.-Jupyter-Notebooks.-Interactive-python-library-for-CbM-'ipycbm'.)
-- Stand alone Jupyter Notebook examples (src/ipynb/) [Wiki 6.2.](https://github.com/ec-jrc/cbm/wiki/6.2.-Jupyter-Notebooks.-Examples'.)
-- RESTful API modules (stc/apicbm/) [Wiki 5.1.](https://github.com/ec-jrc/cbm/wiki/5.1.-RESTful-API.-Build-a-RESTful-API-with-Flask-for-CbM.)
-- Docker image files for parallel extraction, jupyter notebooks server and RESTful API server (docker/).
-- Test scripts for testing a variety of functionalities (tests/).
+- scripts/: Command line scripts for:
+    - Extraction routines [Wiki 3.1.](https://github.com/ec-jrc/cbm/wiki/3.1.-Parcel-extraction.-Parcel-extraction-routines-for-use-in-non-interactive-workflow)
+    - Time series Calendar view [TS calandar](https://github.com/ec-jrc/cbm/tree/main/scripts/calendar_view).
+- cbm/: Python library for Checks by Monitoring [Wiki 6.1.](https://github.com/ec-jrc/cbm/wiki/6.1.-CbM-Python-library.), includes:
+    - api - RESTful API modules (cbm/apicbm/) [Wiki 5.1.](https://github.com/ec-jrc/cbm/wiki/5.1.-RESTful-API.-Build-a-RESTful-API-with-Flask-for-CbM.)
+    - card2db - Transfer metadata from the DIAS catalog [Wiki 2.2.](https://github.com/ec-jrc/cbm/wiki/2.2.-Data-preparation.-Transfer-metadata-from-the-DIAS-catalog)
+    - extraction - Parcel extraction routines [Wiki 3.1.](https://github.com/ec-jrc/cbm/wiki/3.1.-Parcel-extraction.-Parcel-extraction-routines-for-use-in-non-interactive-workflow)
+    - foi - FOI comand line module
+    - ipycbm - Interactive notebook tools. Includes graphic notebook widgets for: FOI, QA and Extraction.
+- ipynb/: Jupyter Notebook examples
+- docker/: Docker image files for:
+    - Parallel extraction (Dockerhub:[dias_py](https://hub.docker.com/r/glemoine62/dias_py))
+    - Jupyter notebooks server (Dockerhub: [cbm_jupyter](https://hub.docker.com/r/gtcap/cbm_jupyter))
+    - RESTful API server (Dockerhub: [cbm_api](https://hub.docker.com/r/gtcap/cbm_api))
+- tests/: Test scripts for testing a variety of functionalities.
 
 
 ## Contributing
 
-Please read ["creating-a-pull-request"](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request) for details on the process for submitting pull requests to us.
+Please read ["creating-a-pull-request"](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request)
+for details on the process for submitting pull requests to us.
 
 
 ## Authors
@@ -70,8 +108,10 @@ Please read ["creating-a-pull-request"](https://docs.github.com/en/github/collab
 * **Guido Lemoine** - *Initial work* - [glemoine62](https://github.com/glemoine62)
 * **Konstantinos Anastasakis** - *Initial work* - [konanast](https://github.com/konanast)
 
-See also the list of [contributors](https://github.com/ec-jrc/cbm/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/ec-jrc/cbm/contributors)
+who participated in this project.
 
 ## License
 
-This project is licensed under the [3-Clause BSD](https://opensource.org/licenses/BSD-3-Clause) License - see the [LICENSE](LICENSE) file for details
+This project is licensed under the [3-Clause BSD](https://opensource.org/
+licenses/BSD-3-Clause) License - see the [LICENSE](LICENSE) file for details
