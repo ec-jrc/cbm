@@ -1,6 +1,6 @@
 ![Image of European Commission](media/img/eu_science_hub.png)
 # Code examples for "CAP Checks by Monitoring” (CbM)
-### 2021 European Commission, Joint Research Center
+### European Commission, Joint Research Center
 
 **This work is in progress and may be subject to frequent changes**
 
@@ -84,14 +84,14 @@ for more details and setup instructions.
 This repository (cbm) contains example scripts and documentation to get started
 with  CbM, includes:
 
-- scripts/: Command line scripts for:
+- scripts/: Python scripts for:
     - Parcel extraction routines [Wiki 3.1.](https://github.com/ec-jrc/cbm/wiki/3.1.-Parcel-extraction.-Parcel-extraction-routines-for-use-in-non-interactive-workflow)
     - Time series Calendar view [TS calandar](https://github.com/ec-jrc/cbm/tree/main/scripts/calendar_view).
 - cbm: Python library for Checks by Monitoring [Wiki 6.1.](https://github.com/ec-jrc/cbm/wiki/6.1.-CbM-Python-library.), includes:
     - api - RESTful API modules (cbm/apicbm/)
     - card2db - Transfer metadata from the DIAS catalog
     - extraction - Parcel extraction routines
-    - foi - FOI comand line module
+    - foi - FOI module
     - ipycbm - Interactive notebook tools. Includes graphic notebook widgets for: FOI, QA and Extraction.
 - ipynb/: Jupyter Notebook examples
 - docker/: Docker image files for:
@@ -118,4 +118,9 @@ who participated in this project.
 
 ## License
 
-This project is licensed under the [3-Clause BSD](https://opensource.org/licenses/BSD-3-Clause) License - see the [LICENSE](LICENSE) file for details
+This project is licensed under the [3-Clause BSD](https://opensource.org/licenses/BSD-3-Clause)
+License - see the [LICENSE](LICENSE) file for details.
+
+
+Copyright (c) 2021, [European Commission](https://ec.europa.eu/),
+Joint Research Centre. All rights reserved.
