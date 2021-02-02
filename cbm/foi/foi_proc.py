@@ -25,6 +25,34 @@ from cbm.sources import database
 
 
 def proc(vector_file, raster_file, yaml_file, pre_min_het, pre_max_het, area_threshold):
+    """FOI assessment is based on spatial analysis of a “thematic” raster
+    produced in advance.
+
+    The thematic raster can be the result of a any image/raster processing
+    method yielding a class label for each pixel - crop classification, behavior
+    analysis of land phenomenon, gridded data on soil, slope, humidity, etc.
+    The starting point was the idea that inside of an homgeneous parcel we
+    should have only one type of pixel.
+    For example if the thematic raster is the result of a crop classification,
+    inside a parcel we should have only one type of pixels that represent the
+    respective crop
+    If the thematic raster is the result of a behaviour analysis, all the pixels
+    inside a parcel should behave in the same way during a period of time.
+    The FOI assessment is based on the analysis made on the presence and
+    distribution of different types of pixels inside the FOI.
+
+    Args:
+        vector_file (str): The parcels poligons in .shp file format.
+        raster_file (str): The raster file <...>.
+        yaml_file: YAML file that holds the classes of thematic raster file.
+        pre_min_het: Minimum thresholds for heterogeneity checks.
+        pre_max_het: Maximum thresholds for heterogeneity checks.
+        area_threshold: Minimum area for clusters selection.
+
+    Returns:
+        bool: True if successful, False otherwise.
+
+    """
     
     path_data = f"{config.get_value(['paths', 'temp'])}foi/"
     # database connection string
