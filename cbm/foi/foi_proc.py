@@ -25,6 +25,7 @@ from cbm.sources import database
 
 
 def proc(vector_file, raster_file, yaml_file, pre_min_het, pre_max_het, area_threshold):
+    
     path_data = f"{config.get_value(['paths', 'temp'])}foi/"
     # database connection string
     db_connection = f"PG:{database.conn_str(db=1)}"

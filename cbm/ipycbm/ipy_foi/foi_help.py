@@ -48,7 +48,7 @@ The 'view' function is to load local files and display them with different metho
     return wbox
 
 def about():
-    from src import __version__
+    from cbm import __version__
     html = f"""
     <H1>About</H1>
 <H3>JRC D5 Food security - GTCAP</H3>

@@ -18,8 +18,8 @@ from cbm.utils import config
 from cbm.ipycbm.utils import settings
 from cbm.sources import database
 from cbm.ipycbm.ipy_proc import proc_func
-from cbm.ipycbm.ipy_foi import foi_proc
-from cbm.ipycbm.ipy_foi import foi_proc_v2
+from cbm.foi import foi_proc
+from cbm.foi import foi_proc_v2
 
 
 def foi():
