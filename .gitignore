@@ -1,7 +1,8 @@
 # itignore CbM files
 
 _config.json
-
+ipynb/tests/*
+ipynb/test*
 data/
 tmp/
 
