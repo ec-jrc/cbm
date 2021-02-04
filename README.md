@@ -1,4 +1,4 @@
-![Image of European Commission](https://github.com/ec-jrc/cbm/blob/main/docs/media/img/eu_science_hub.png)
+![Image of European Commission](https://github.com/ec-jrc/cbm/blob/main/docs/img/eu_science_hub.png)
 # Code examples for "CAP Checks by Monitoring” (CbM)
 ### European Commission, Joint Research Center
 
