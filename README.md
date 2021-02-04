@@ -1,4 +1,4 @@
-![Image of European Commission](media/img/eu_science_hub.png)
+![Image of European Commission](https://github.com/ec-jrc/cbm/blob/main/docs/media/img/eu_science_hub.png)
 # Code examples for "CAP Checks by Monitoring” (CbM)
 ### European Commission, Joint Research Center
 
@@ -75,7 +75,7 @@ These steps require different types of technical expertise.
     - Using Jupyter Notebooks
 
 
-See the documentation in the [Wiki Pages](https://github.com/ec-jrc/cbm/wiki)
+See the documentation at [jrc-cbm.readthedocs.io](https://jrc-cbm.readthedocs.io)
 for more details and setup instructions.
 
 
@@ -87,12 +87,18 @@ with  CbM, includes:
 - scripts/: Python scripts for:
     - Parcel extraction routines [Wiki 3.1.](https://github.com/ec-jrc/cbm/wiki/3.1.-Parcel-extraction.-Parcel-extraction-routines-for-use-in-non-interactive-workflow)
     - Time series Calendar view [TS calandar](https://github.com/ec-jrc/cbm/tree/main/scripts/calendar_view).
+- docs/: Documentation pages (see [jrc-cbm.readthedocs.io](https://jrc-cbm.readthedocs.io))
 - cbm: Python library for Checks by Monitoring [Wiki 6.1.](https://github.com/ec-jrc/cbm/wiki/6.1.-CbM-Python-library.), includes:
     - api - RESTful API modules (cbm/apicbm/)
     - card2db - Transfer metadata from the DIAS catalog
     - extraction - Parcel extraction routines
     - foi - FOI module
-    - ipycbm - Interactive notebook tools. Includes graphic notebook widgets for: FOI, QA and Extraction.
+    - ipycbm - Interactive notebook widgets for:
+        - FOI
+        - QA
+        - Extraction
+        - Downloading data
+        - Viewing data
 - ipynb/: Jupyter Notebook examples
 - docker/: Docker image files for:
     - [dias_py](https://hub.docker.com/r/glemoine62/dias_py)/: Parallel extraction
@@ -104,7 +110,7 @@ with  CbM, includes:
 ## Contributing
 
 Please read ["creating-a-pull-request"](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request)
-for details on the process for submitting pull requests to us.
+for details on the process for submitting pull requests.
 
 
 ## Authors
