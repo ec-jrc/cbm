@@ -15,18 +15,18 @@ import uuid
 from os.path import dirname, abspath
 
 folder_repo = os.path.dirname(dirname(dirname(abspath(__file__))))
-file_config = f"_config.json"
+folder_config = f"{folder_repo}/config/"
+main_config = f"{folder_config}/main.json"
+main_default = f"{folder_repo}/utils/main_default.json"
 
-
-def get_value(dict_keys={}, file=file_config, var_name=None, help_text=True):
-    """Get value from config.json file, with an arbitrary length key.
+def get_value(dict_keys={}, file=main_config, var_name=None, help_text=True):
+    """Get value from a configuration file, with an arbitrary length key.
 
     Examples:
-
         config.get_value(['information', 'aoi'])
 
         To display the variable name and and some information use:
-        config.get_value(['information', 'aoi'], 'AOI' config.file_config, False)
+        config.get_value(['information', 'aoi'], 'AOI' config.main_config, False)
 
     Arguments:
         dict_keys, list of keys to add
@@ -64,11 +64,10 @@ def get_value(dict_keys={}, file=file_config, var_name=None, help_text=True):
         print(f"Could not get value from file '{file}': {err}")
 
 
-def update(dict_keys={}, val=None, file=file_config):
-    """Update config.json file, with an arbitrary length key.
+def update(dict_keys={}, val=None, file=main_config):
+    """Update configuration file, with an arbitrary length key.
 
     Example:
-
         config.update(['information', 'aoi'], val='test')
 
     Arguments:
@@ -92,7 +91,7 @@ def update(dict_keys={}, val=None, file=file_config):
         _x[dict_keys[-1]] = val
         # create randomly named temporary file to avoid
         # interference with other thread/asynchronous request
-        tempfile = os.path.join(folder_repo, str(uuid.uuid4()))
+        tempfile = os.path.join(folder_config, str(uuid.uuid4()))
         with open(tempfile, 'w') as f:
             json.dump(config_dict, f, indent=4)
 
@@ -102,11 +101,10 @@ def update(dict_keys={}, val=None, file=file_config):
         print(f"Could not update key in the file '{file}': {err}")
 
 
-def delete(dict_keys={}, file=file_config):
-    """Delete keys from config.json file.
+def delete(dict_keys={}, file=main_config):
+    """Delete keys from the configuration file.
 
     Example:
-
         config.delete(['information', 'aoi'])
 
     Arguments:
@@ -128,7 +126,7 @@ def delete(dict_keys={}, file=file_config):
                 _x = _x.get(key)
         del _x[dict_keys[-1]]
 
-        tempfile = os.path.join(folder_repo, str(uuid.uuid4()))
+        tempfile = os.path.join(folder_config, str(uuid.uuid4()))
         with open(tempfile, 'w') as f:
             json.dump(config_dict, f, indent=4)
 
@@ -138,8 +136,13 @@ def delete(dict_keys={}, file=file_config):
         print(f"Could not delete key in the file '{file}': {err}")
 
 
-def read(file=file_config):
-    """Read <file>.json file
+def read(file=main_config):
+    """Read configuration file
+    Example:
+        config.read("main.json")
+
+    Arguments:
+        file (str): the name of the configuration file
 
     Returns:
         data - A python dict of the selected file.
@@ -151,7 +154,7 @@ def read(file=file_config):
             data = json.load(f)
             return data
     except Exception as err:
-        if file == file_config:
+        if file == main_config:
             try:
                 create(file)
                 with open(file, 'r') as f:
@@ -163,17 +166,16 @@ def read(file=file_config):
             print(f"Could not read file '{file}': {err}")
 
 
-def create(file=file_config):
+def create(file=main_config):
     """Automatically create a config file if it does not exist.
     """
-    filepath = f"{folder_repo}/{file}"
+    filepath = f"{folder_config}/{file}"
 
     # if file does not exist, create it
     if os.path.isfile(filepath) is False:
         try:
             # Default configuration file
-            file_default = "cbm/utils/config_default.json"
-            with open(file_default, 'r') as f:
+            with open(main_default, 'r') as f:
                 config_default = json.load(f)
             with open(filepath, 'w') as f:
                 json.dump(config_default, f, indent=4)
@@ -185,13 +187,14 @@ def create(file=file_config):
             print(f"Could not create the configuration file: {err}")
 
 
-def update_keys():
+def update_keys(from_file=main_default, to_file=main_config):
     """Update missing keys of old configuration files."""
-    create()
-    file_default = "cbm/utils/config_default.json"
-    with open(file_config, 'r') as f:
+    if os.path.isfile(to_file) is False:
+        create()
+    
+    with open(main_config, 'r') as f:
         dict_config = json.load(f)
-    with open(file_default, 'r') as f:
+    with open(main_default, 'r') as f:
         dict_default = json.load(f)
 
     updated_keys = 0
@@ -202,8 +205,18 @@ def update_keys():
         for k in dict_default[key].keys():
             if k not in dict_config[key]:
                 dict_config[key][k] = dict_default[key][k]
-    with open(file_config, 'w') as f:
+
+    with open(main_config, 'w') as f:
         json.dump(dict_config, f, indent=4)
+
+    # create randomly named temporary file to avoid
+    # interference with other thread/asynchronous request
+    tempfile = os.path.join(folder_config, str(uuid.uuid4()))
+    with open(tempfile, 'w') as f:
+        json.dump(dict_config, f, indent=4)
+
+    # rename temporary file replacing old file
+    os.rename(tempfile, file)
 
     if updated_keys > 0:
         print(f"{updated_keys+1} new json configuration objects are added to the configuration file.")
