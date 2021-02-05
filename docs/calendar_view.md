@@ -1,8 +1,7 @@
 # Calendar view
 
-## JRC Ispra Unit Food security
-
-#### Main author(s): Csaba Wirnhardt
+JRC Ispra Unit Food security
+----------------------------
 
 ## 1. Introduction
 The “**calendar_view**” python library provides a set of functions that allows one to download, process and display Sentinel-1 and Sentinel-2 data products. The library is designed to operate on “**parcels**” provided as input in a ESRI shape file. Sentinel-1 and -2 data are extracted for the specific parcels and are displayed in a “**calendar view**”, which as been designed and optimized to provide an immediate and intuitive access to both temporal and spatial dimensions of Sentinel-derived data.
@@ -115,3 +114,6 @@ Blue dots: scatter plot of all previous dates
 ![Calendar view of Sentinel-1 backscatter imagettes VV A](https://github.com/CsabaWirnhardt/cbm_media/blob/main/09_calendar_view_of_s1_backscatter_imagettes_VV_A.jpg)
 ### Calendar view of Sentinel-1 backscatter imagettes, VV polarisation, Descending orbit
 ![Calendar view of Sentinel-1 backscatter imagettes VV D](https://github.com/CsabaWirnhardt/cbm_media/blob/main/10_calendar_view_of_s1_backscatter_imagettes_VV_D.jpg)
+
+
+**Author(s): Csaba Wirnhardt**
