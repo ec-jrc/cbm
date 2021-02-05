@@ -9,6 +9,19 @@
    :maxdepth: 2
    :caption: Contents:
 
+   introduction
+   prerequisites
+   data_preparation
+   parcel_extraction
+   machine_learning
+   api_build
+   api_ts
+   api_img
+   api_analytics
+   api_post
+   calendar_view
+   cbm_library
+   foi
 
 
 Indices and tables
