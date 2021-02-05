@@ -116,4 +116,4 @@ Blue dots: scatter plot of all previous dates
 ![Calendar view of Sentinel-1 backscatter imagettes VV D](https://github.com/CsabaWirnhardt/cbm_media/blob/main/10_calendar_view_of_s1_backscatter_imagettes_VV_D.jpg)
 
 
-**Author(s): Csaba Wirnhardt**
+**Author of calendar view package: Csaba Wirnhardt**
