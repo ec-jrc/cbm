@@ -25,7 +25,7 @@ for more information.
 
 The table *roi_YYYY* will be spatially indexed after upload, which significantly speeds up spatial querying.
 
-You are now ready to [start transfering metadata from the catalogue](https://github.com/ec-jrc/cbm/wiki/1.-Transfer-metadata-from-the-DIAS-catalog) and then [run extracts](https://github.com/ec-jrc/cbm/wiki/2.-Parcel-extraction-routines-for-use-in-non-interactive-workflow).
+You are now ready to [start transfering metadata from the catalogue](https://jrc-cbm.readthedocs.io/en/latest/data_preparation.html#transfer-metadata-from-the-dias-catalog) and then [run extracts](https://jrc-cbm.readthedocs.io/en/latest/parcel_extraction.html).
 
 
 ## Transfer metadata from the DIAS catalog

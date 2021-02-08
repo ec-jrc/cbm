@@ -1,6 +1,9 @@
-# VM configuration
+# Prerequisites
 
-## Access and configuration for DIAS virtual machine instances.
+## DIAS VMs configuration
+
+**Access and configuration for DIAS virtual machine instances.**
+
 The most common Virtual Machines (VMs) structure of DIAS IaaS is as shown in the below figure. VMs are emulations of fully functional computational instances. They are based on computer architectures and provide functionality of a real physical computer. Users obtain VMs with full root access and can implement specialized hardware, software, or a combination based on their needs.
 
 ![DIAS infrastructure](https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/DIAS_IaaS.png)
@@ -24,8 +27,10 @@ Recommended OS for the VMs is **Ubuntu 18.04 LTS**.
 Some VMs can be combined e.g. the RESTful API VM with Jupyter VM or Worker Manager VM with one of the workers VM, but it is recommended to keep the database VM separated and secured with regular backups.
 
 
-### Connecting to the 'tenant host' vm via SSH
+## Connecting to the 'tenant host' vm via SSH
+
 **From Linux (recommended):**
+
 To be able to remotely connect to an SSH server an SSH client program is needed. It can be installed on Ubuntu with the following command:
    
     sudo apt install openssh-client
@@ -78,7 +83,8 @@ If everything is configured correctly it will be able to connect to the virtual 
     ssh my_vm01
  
 
-### From Windows:
+**From Windows:**
+
 There are many different tools for window e.g.:
 PuTTY(https://www.putty.org), Bitvise(https://www.bitvise.com), Solar-Putty, KiTTY, MobaXterm, mRemoteNG, Xshell 6 Client, PuttyTray and SuperPutty.
 Documentation can be found in there website.
@@ -162,7 +168,7 @@ and exit and reconnect (you are now in schema *public*). List the default tables
 
 These tables are required for the handling of spatial constructs (geometries, raster data, projection information).
 
-### Create the essential CbM tables
+### Essential CbM tables
 
 We now need to create the tables that we will use in the CbM context:
 
@@ -205,7 +211,7 @@ Generate a new *aoi_s2_signatures* table for each aoi. This will typically be ne
 For Sentinel-1 time series create the equivalent tables with *bs* (backscattering coefficients) and *c6* (6-day coherence) instead of *s2* in the table name.
 
 
-## Jupyter (Optional)
+## Jupyter server
 
 The Jupyter Server is an open source web application that allows to create and share documents that contain live code, equations, visualizations and narrative text. Uses include: data cleaning and transformation, numerical simulation, statistical modeling, data visualization, machine learning, and much more (https://jupyter.org). JupyterLab is the next-generation user interface for Project Jupyter offering all the familiar building blocks of the classic Jupyter Notebook (notebook, terminal, text editor, file browser, rich outputs, etc.) in a flexible and powerful user interface. JupyterLab will eventually replace the classic Jupyter Notebook (https://jupyterlab.readthedocs.io).
 
@@ -263,5 +269,3 @@ Notebooks currently running will have a green dot, while non-running ones will n
 To run a cell with a script, click on the run icon or press Shift+Enter
 
 More information can be found at: https://jupyter.org/documentation
-
-Jupyter Notebook CheatSheet: https://www.edureka.co/blog/wp-content/uploads/2018/10/Jupyter_Notebook_CheatSheet_Edureka.pdf

@@ -13,14 +13,20 @@
    data_preparation
    parcel_extraction
    machine_learning
+   calendar_view
+   cbm_library
+   foi
+
+
+.. toctree::
+   :maxdepth: 3
+   :caption: RESTful API:
+
    api_build
    api_ts
    api_img
    api_analytics
    api_post
-   calendar_view
-   cbm_library
-   foi
 
 
 Indices and tables
