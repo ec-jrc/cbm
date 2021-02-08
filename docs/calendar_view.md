@@ -71,7 +71,7 @@ The different parts of the script are better detailed in the following sections.
 The variables in the initialization part of the script allows one to define inputs and outputs and to customize the different operations performed by the script. 
 
 ### Authentication and data access
-These scripts are using RESTful API for CbM. There are instructions provided on how to build a RESTful API for CbM at the wiki page [https://github.com/ec-jrc/cbm/wiki/Build-RESTful-API-with-Flask-for-CbM](https://jrc-cbm.readthedocs.io/en/latest/api_build.html). To access the RESTful services it is necessary to provide login information. In this respect, the username, password and the data url (url_base variable) have to be properly configured.
+These scripts are using RESTful API for CbM. See the [documentation on how to "Build RESTful API with Flask for CbM"](https://jrc-cbm.readthedocs.io/en/latest/api_build.html). To access the RESTful services it is necessary to provide login information. In this respect, the username, password and the data url (url_base variable) have to be properly configured.
 Alternatively JRC’s RESTful API for CbM provides limited sample open datasets and can be used for testing and demonstration purposes. A temporary account can be requested from JRC GTCAP.
 
 ### Cloud categories

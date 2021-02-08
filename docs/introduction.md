@@ -38,7 +38,7 @@ To get an idea of the data and processing volume, CARD processing for Denmark (a
 ## Time series extraction
 
 The availability of Sentinel CARD ensures that the spectral and temporal information (i.e. time series) for a geographical position, e.g. as delineated by an agricultural parcel, can be extracted consistently. In CbM, time series play an essential role in marker generation. Although it is technically feasible to generate a CARD time series on demand, it is often convenient to extract large sets of parcels, for pre-selected bands, in a batch process. DIAS use is specifically tailored to these kind of tasks, since extraction is typically a massively parallel processing step that can benefit from the use of multiple machines.
-Technical details are given in [the WIKI page on parcel extraction](http://jrc-ntb.vm.cesnet.cz/DIAS/jrc-dias/wiki/3.-Parcel-extraction-routines-for-use-in-non-interactive-workflow)
+Technical details are given in [the documentation page on parcel extraction](https://jrc-cbm.readthedocs.io/en/latest/parcel_extraction.html)
 
 Time series extraction fits in the overall concept of "reduction", which is an essential element of CbM. Since CbM covers 100% of the territory, it needs to be supported by smart, automated analytics that filter out the most relevant anomalies quickly and consistently. Reduction generates the signal statistics that can be used in such analytics, e.g. to support outlier identification, detection of heterogeneity, marker generation, etc. At all times, the direct link to the CARD inputs is maintained, which means that the source of the particular indicator can be (automatically) retrieved, e.g. for more detailed inspection.
 
@@ -56,7 +56,7 @@ For a wider range of users, who do not necessary need a DIAS account, the DIAS p
 * a Jupyter Hub server, configured to hide the intrinsic access protocols, and supporting interactive scripting and data visualization;
 * A mixture of those (e.g. a Jupyter notebook running on the Jupyter Hub, which uses a mix of direct access to the data base and RESTful services)
 
-An essential character of the RESTful services is that they follow standard calling conventions, which allow their use both in interactive testing and scriptable machine access. RESTful services are further described in [the WIKI pages on RESTful service use](http://jrc-ntb.vm.cesnet.cz/DIAS/jrc-dias/wiki/6.-Using-RESTful-services-to-get-parcel-time-series) and subsequent pages. 
+An essential character of the RESTful services is that they follow standard calling conventions, which allow their use both in interactive testing and scriptable machine access. RESTful services are further described in [the documentation pages on RESTful service use](https://jrc-cbm.readthedocs.io/en/latest/api_ts.html) and subsequent pages. 
 
 An alternative use pattern would be to transfer the time series data base (eventually including other reductions) to a dedicated server set up outside the DIAS cloud infrastructure, for instance, into the PA's ICT infrastructure. RESTful services running on DIAS can then be used to maintain access to the DIAS CARD data store to support on demand generation of image fragments, for instance.
 
