@@ -31,7 +31,7 @@ The following custom libraries are called by the *run_calendar_view.py* script:
 
 The call graph of the run_calendar_view script is provided in Figure 1.
 
-![Figure 1: Call graph of the run_calendar_view script.](https://github.com/borioda/cbm/blob/main/media/img/calendar_view_fun.png)
+![Figure 1: Call graph of the run_calendar_view script.](https://github.com/borioda/cbm/blob/main/media/img/calendar_view_fun.png?raw=true)
 
 ## 3 Structure of the code
 The *run_calendar_view* script is organized in two main parts: the initialization block and the main processing loop. The input parameters and processing settings are defined in the initialization block whereas the actual processing is performed in the main loop that performs the different tasks by considering individual parcels. The main processing loop is further divided in two parts: download and processing of Sentinel-2 data and download and processing of Sentinel-1 data. The overall structure of the script and the different tasks performed by the main processing loop are illustrated in Figure 2. 
@@ -71,7 +71,7 @@ The different parts of the script are better detailed in the following sections.
 The variables in the initialization part of the script allows one to define inputs and outputs and to customize the different operations performed by the script. 
 
 ### Authentication and data access
-These scripts are using RESTful API for CbM. There are instructions provided on how to build a RESTful API for CbM at the wiki page [https://github.com/ec-jrc/cbm/wiki/Build-RESTful-API-with-Flask-for-CbM](https://github.com/ec-jrc/cbm/wiki/Build-RESTful-API-with-Flask-for-CbM). To access the RESTful services it is necessary to provide login information. In this respect, the username, password and the data url (url_base variable) have to be properly configured.
+These scripts are using RESTful API for CbM. There are instructions provided on how to build a RESTful API for CbM at the wiki page [https://github.com/ec-jrc/cbm/wiki/Build-RESTful-API-with-Flask-for-CbM](https://jrc-cbm.readthedocs.io/en/latest/api_build.html). To access the RESTful services it is necessary to provide login information. In this respect, the username, password and the data url (url_base variable) have to be properly configured.
 Alternatively JRC’s RESTful API for CbM provides limited sample open datasets and can be used for testing and demonstration purposes. A temporary account can be requested from JRC GTCAP.
 
 ### Cloud categories
@@ -92,28 +92,31 @@ The different operations performed in the main loop are listed in the second par
 ## Output examples
 ### Calendar view of Sentinel-2 imagettes
 False Colour Composite (FCC), 8,11,4 RGB, LUT stretched (generic)
-![Calendar view of Sentinel-2 imagettes](https://github.com/CsabaWirnhardt/cbm_media/blob/main/01_calendar_view_of_s2_imagettes.jpg)
+![Calendar view of Sentinel-2 imagettes](https://github.com/CsabaWirnhardt/cbm_media/blob/main/01_calendar_view_of_s2_imagettes.jpg?raw=true)
 ### Calendar view of Sentinel-2 NDVI imagettes
-![Calendar view of Sentinel-2 NDVI imagettes](https://github.com/CsabaWirnhardt/cbm_media/blob/main/02_calendar_view_of_ndvi_imagettes.jpg)
+![Calendar view of Sentinel-2 NDVI imagettes](https://github.com/CsabaWirnhardt/cbm_media/blob/main/02_calendar_view_of_ndvi_imagettes.jpg?raw=true)
 ### Calendar view of Sentinel-2 NDVI histograms
-![Calendar view of Sentinel-2 NDVI histograms](https://github.com/CsabaWirnhardt/cbm_media/blob/main/03_calendar_view_of_ndvi_histograms.jpg)
+![Calendar view of Sentinel-2 NDVI histograms](https://github.com/CsabaWirnhardt/cbm_media/blob/main/03_calendar_view_of_ndvi_histograms.jpg?raw=true)
 ### Calendar view of Sentinel-2 cumulative scatterplots
 Cumulative scatter plot of Red (horizontal axis) and NIR (vertical axis) bands within the parcel
 Red dots: scatter plot of current date
 Blue dots: scatter plot of all previous dates
-![Calendar view of Sentinel-2 cumulative scatterplots](https://github.com/CsabaWirnhardt/cbm_media/blob/main/04_calendar_view_of_cumulative_scatterplots.jpg)
+![Calendar view of Sentinel-2 cumulative scatterplots](https://github.com/CsabaWirnhardt/cbm_media/blob/main/04_calendar_view_of_cumulative_scatterplots.jpg?raw=true)
 ### Graph of Sentinel-2 NDVI values
 ![NDVI graph](https://github.com/CsabaWirnhardt/cbm_media/blob/main/05_graph_s2_ndvi.jpg)
 ### Graph of Sentinel-1 backscatter values
-![BS graph](https://github.com/CsabaWirnhardt/cbm_media/blob/main/06_graph_s1_backscatter.jpg)
+![BS graph](https://github.com/CsabaWirnhardt/cbm_media/blob/main/06_graph_s1_backscatter.jpg?raw=true)
 ### Calendar view of Sentinel-1 backscatter imagettes, VH polarisation, Ascending orbit
-![Calendar view of Sentinel-1 backscatter imagettes VH A](https://github.com/CsabaWirnhardt/cbm_media/blob/main/07_calendar_view_of_s1_backscatter_imagettes_VH_A.jpg)
+![Calendar view of Sentinel-1 backscatter imagettes VH A](https://github.com/CsabaWirnhardt/cbm_media/blob/main/07_calendar_view_of_s1_backscatter_imagettes_VH_A.jpg?raw=true)
 ### Calendar view of Sentinel-1 backscatter imagettes, VH polarisation, Descending orbit
-![Calendar view of Sentinel-1 backscatter imagettes VH D](https://github.com/CsabaWirnhardt/cbm_media/blob/main/08_calendar_view_of_s1_backscatter_imagettes_VH_D.jpg)
+![Calendar view of Sentinel-1 backscatter imagettes VH D](https://github.com/CsabaWirnhardt/cbm_media/blob/main/08_calendar_view_of_s1_backscatter_imagettes_VH_D.jpg?raw=true)
 ### Calendar view of Sentinel-1 backscatter imagettes, VV polarisation, Ascending orbit
-![Calendar view of Sentinel-1 backscatter imagettes VV A](https://github.com/CsabaWirnhardt/cbm_media/blob/main/09_calendar_view_of_s1_backscatter_imagettes_VV_A.jpg)
+![Calendar view of Sentinel-1 backscatter imagettes VV A](https://github.com/CsabaWirnhardt/cbm_media/blob/main/09_calendar_view_of_s1_backscatter_imagettes_VV_A.jpg?raw=true)
 ### Calendar view of Sentinel-1 backscatter imagettes, VV polarisation, Descending orbit
-![Calendar view of Sentinel-1 backscatter imagettes VV D](https://github.com/CsabaWirnhardt/cbm_media/blob/main/10_calendar_view_of_s1_backscatter_imagettes_VV_D.jpg)
+![Calendar view of Sentinel-1 backscatter imagettes VV D](https://github.com/CsabaWirnhardt/cbm_media/blob/main/10_calendar_view_of_s1_backscatter_imagettes_VV_D.jpg?raw=true)
+
+?raw=true
+https://github.com/ec-jrc/cbm/blob/main/docs/img/eu_science_hub.png
+https://github.com/ec-jrc/cbm/blob/main/docs/img/eu_science_hub.png?raw=true
 
 
-**Author of calendar view package: Csaba Wirnhardt**
