@@ -29,27 +29,7 @@
     "api": {
         "url": "http://185.178.85.226",
         "user": "",
-        "pass": "",
-        "options": {
-            "aois": {
-                "Netherlands": "nld",
-                "Nordrhein Westfalen": "nrw",
-                "Spain (NOUR Subset)": "es_ns"
-            },
-            "years": {
-                "nld": [
-                    "2019",
-                    "2018"
-                ],
-                "nrw": [
-                    "2019",
-                    "2018"
-                ],
-                "es_ns": [
-                    "2019"
-                ]
-            }
-        }
+        "pass": ""
     },
     "db": {
         "1": {

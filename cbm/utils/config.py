@@ -17,7 +17,10 @@ from os.path import dirname, abspath
 folder_repo = os.path.dirname(dirname(dirname(abspath(__file__))))
 folder_config = f"{folder_repo}/config/"
 main_config = f"{folder_config}/main.json"
-main_default = f"{folder_repo}/utils/main_default.json"
+main_default = f"{dirname(abspath(__file__))}/main_default.json"
+
+if not os.path.exists(folder_config):
+    os.makedirs(folder_config)
 
 def get_value(dict_keys={}, file=main_config, var_name=None, help_text=True):
     """Get value from a configuration file, with an arbitrary length key.
@@ -166,35 +169,31 @@ def read(file=main_config):
             print(f"Could not read file '{file}': {err}")
 
 
-def create(file=main_config):
+def create(from_file=main_default, to_file=main_config):
     """Automatically create a config file if it does not exist.
     """
-    filepath = f"{folder_config}/{file}"
 
     # if file does not exist, create it
-    if os.path.isfile(filepath) is False:
-        try:
-            # Default configuration file
-            with open(main_default, 'r') as f:
-                config_default = json.load(f)
-            with open(filepath, 'w') as f:
-                json.dump(config_default, f, indent=4)
-            time.sleep(0.5)  # Sleep for half second to run the function.
-            file_name = filepath.split('/')[-1]
-            print("The configuration file did not exist, a new default "
-                  f"{file_name} file was created.")
-        except Exception as err:
-            print(f"Could not create the configuration file: {err}")
+    if os.path.isfile(to_file) is False:
+        # Read from default configuration file
+        with open(from_file, 'r') as f:
+            config_default = json.load(f)
+        with open(to_file, 'w') as f:
+            json.dump(config_default, f, indent=4)
+        time.sleep(0.5)  # Sleep for half second to run the function.
+        file_name = to_file.split('/')[-1]
+        print("The configuration file did not exist, a new default "
+              f"{file_name} file was created.")
 
 
 def update_keys(from_file=main_default, to_file=main_config):
     """Update missing keys of old configuration files."""
     if os.path.isfile(to_file) is False:
-        create()
+        create(from_file, to_file)
     
-    with open(main_config, 'r') as f:
+    with open(to_file, 'r') as f:
         dict_config = json.load(f)
-    with open(main_default, 'r') as f:
+    with open(from_file, 'r') as f:
         dict_default = json.load(f)
 
     updated_keys = 0
@@ -216,7 +215,7 @@ def update_keys(from_file=main_default, to_file=main_config):
         json.dump(dict_config, f, indent=4)
 
     # rename temporary file replacing old file
-    os.rename(tempfile, file)
+    os.rename(tempfile, to_file)
 
     if updated_keys > 0:
         print(f"{updated_keys+1} new json configuration objects are added to the configuration file.")
