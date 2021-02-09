@@ -8,14 +8,15 @@ If the query is not valid, and empty dictionary will be returned ({}).
 
 In this page, we keep a list of actual queries and provide some use examples.
 
-## Current queries
+
+**Current queries**
 
 The server of JRC RESTful example currently runs from a CloudFerro server. The root URL of the RESTful server is http://185.178.85.226/query/
 The URL requires authentication with a username and password (which has been provided to users upon request).
 
 Query parameters are either **required** or *optional*. The order of parameters is not significant. 
 
-### parcelByLocation
+## parcelByLocation
 
 Find a parcel ID for a geographical location. The parcels in the annual declaration sets have unique IDs, but these are not consistent between years (also, the actual parcel geometries may have changed). Thus, a query is needed to "discover" which parcel ID is at a particular geographical coordinate. Agricultural parcels are supposed to be without overlap, a unique ID will normally be returned (this is, however, not a pre-condition).
 
@@ -50,7 +51,7 @@ returns
 
 
 
-### parcelTimeSeries
+## parcelTimeSeries
 
 Get the time series for a parcel ID. 
 
@@ -195,7 +196,7 @@ plt.show()
 ```
 
 
-### parcelPeers
+## parcelPeers
 
 Get the parcel "peers" for a known parcel ID, i.e. parcels with the same crop type as the reference within a certain distance. This can be useful for checking the relative behavior of a parcel against its nearest neighbors (with the use of *parcelTimeSeries*)
 

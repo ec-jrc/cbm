@@ -43,6 +43,7 @@ A JSON dictionary with date labels and relative URLs to cached GeoTIFFs.
 
 You need a client script to transfer the GeoTIFFs and run analysis on it.
 
+
 ## Example test script
 
 Based on the result of the example script for *rawChipByLocation* the following script retrieves the bands B04, B08 and B11 for the 3 scenes for which the parcel histogram showed that they are without cloud masked SCL pixels. Instead of downloading the bands from cache, we generate NDVI directly from the cached bands B08 and B04, and scale the result to a byte image which will be given a [matplotlib color map](https://matplotlib.org/3.1.0/gallery/color/colormap_reference.html) of choice.
@@ -99,6 +100,7 @@ The scaled NDVI output of 2019-06-25 rendered as a PNG.
 
 
 **Home work**: derive the NDVI histogram for parcel at this location and create a plot with the color map of the scaled version.
+
 
 ## rawS1ChipsBatch
 

@@ -1,11 +1,13 @@
-# Build a RESTful API for CbM.
+# Build
+
+**Build a RESTful API for CbM.**
 
 In order to facilitate the access to parcel time series, also for users who do not have a DIAS account, a RESTful API with [Flask](https://www.fullstackpython.com/flask.html) can be build. Flask is a micro web frameworks servers that can handle [RESTful](https://en.wikipedia.org/wiki/Representational_state_transfer) requests/responses written in Python.
 
 ## Prerequisites
 
- - Installed Docker (see [1.2](https://github.com/ec-jrc/cbm/wiki/1.2.-Pre-Requirements.-Installation-instructions-for-the-required-tools-used-for-CbM-development.)).
- - Database with extractions (see [3.1](https://github.com/ec-jrc/cbm/wiki/3.1.-Parcel-extraction.-Parcel-extraction-routines-for-use-in-non-interactive-workflow)).
+ - Installed Docker (see [1.2](https://jrc-cbm.readthedocs.io/en/latest/prerequisites.html)).
+ - Database with extractions (see [3.1](https://jrc-cbm.readthedocs.io/en/latest/parcel_extraction.html)).
 
 To build a RESTful API with flask first enter the virtual machine and download the CbM repository:
 
