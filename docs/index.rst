@@ -12,6 +12,7 @@
    prerequisites
    data_preparation
    parcel_extraction
+   db_backup
    machine_learning
    calendar_view
    cbm_library
@@ -20,7 +21,7 @@
 
 .. toctree::
    :maxdepth: 3
-   :caption: RESTful API:
+   :caption: API:
 
    api_build
    api_ts

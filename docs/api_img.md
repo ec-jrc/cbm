@@ -4,9 +4,7 @@
 
 Please read up on the [generic characteristics of the RESTful service](https://github.com/ec-jrc/cbm/wiki/5.-Using-RESTful-services-to-get-parcel-time-series) before using the queries described here.
 
-**WARNING**
-
-The query described here is **resource intensive**. It starts a complex task that involves communication between docker containers and parallel execution on several DIAS VMs. The following limitations apply:
+**WARNING**: The query described here is **resource intensive**. It starts a complex task that involves communication between docker containers and parallel execution on several DIAS VMs. The following limitations apply:
 
 * Chip extraction is for Level-1C (L1C) and Level-2A (L2A) Sentinel-2. L2A is not available everywhere, but generally in the CbM onboarding Member States and those in other pilots (e.g. SEN4CAP, EOSC-EAP) where CREODIAS was used. L1C is available globally.
  
@@ -20,9 +18,7 @@ The query described here is **resource intensive**. It starts a complex task tha
  
 * **Do not refresh the link** if it is still running, as it will start a new selection process and currently screws up the sequence.
 
-**NOTE**
-
-The use of these RESTful queries is meant for occassional use and testing. If you have a use case that requires many chip generations, please contact us for alternative methods.
+**NOTE**: The use of these RESTful queries on JRC RESTful example is meant for occassional use and testing. If you have a use case that requires many chip generations, please contact us for alternative methods.
 
 All requests are logged, using your internet address (IP). Furthermore, the caching is based on a combination of your IP and query parameters. We regularly check the cache and will contact you in case we detect excessive use.
 
@@ -121,6 +117,7 @@ returns
 A JSON dictionary with date labels and relative URLs to cached GeoTIFFs.
 
 You need a client script to transfer the GeoTIFFs and run analysis on it.
+
 
 ## Example client code.
 
@@ -301,6 +298,7 @@ thus, only 3 out of the 11 image in June 2018 are cloud free. One has mixed valu
 You can now decide to go pick up the relevant bands for the 4 cloud free acquisitions. This can, in principle, be done with *rawChipByLocation* but that is not a very efficient procedure, because that query does not benefit well from parallel processing.
 
 Continue on the [next WIKI page](https://github.com/ec-jrc/cbm/wiki/7.-Taking-the-next-step-Using-POST-with-RESTful-services-to-get-tailor-made-selections) to find a more advanced solution.
+
 
 ## Quiz question
 

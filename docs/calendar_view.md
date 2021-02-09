@@ -86,10 +86,13 @@ The bands and the maximum size of the Sentinel-2 imagettes are specified through
 ### Date range
 The date range for the data search can be set through the *search_window_start_date* and *search_window_end_date* variables. 
 
+
 ## 3.2 Main Processing Loop
 The different operations performed in the main loop are listed in the second part of the “Overall structure of the run_calendar_view script” section above These operations are performed through the functions called in Figure 1. While the *run_calendar_view* script demonstrates most of the functionalities implemented in the different libraries, the main loop has a modular structure and functions can be commented if specific operations are not needed.  
 
+
 ## Output examples
+
 ### Calendar view of Sentinel-2 imagettes
 False Colour Composite (FCC), 8,11,4 RGB, LUT stretched (generic)
 ![Calendar view of Sentinel-2 imagettes](https://github.com/CsabaWirnhardt/cbm_media/blob/main/01_calendar_view_of_s2_imagettes.jpg?raw=true)
@@ -114,9 +117,3 @@ Blue dots: scatter plot of all previous dates
 ![Calendar view of Sentinel-1 backscatter imagettes VV A](https://github.com/CsabaWirnhardt/cbm_media/blob/main/09_calendar_view_of_s1_backscatter_imagettes_VV_A.jpg?raw=true)
 ### Calendar view of Sentinel-1 backscatter imagettes, VV polarisation, Descending orbit
 ![Calendar view of Sentinel-1 backscatter imagettes VV D](https://github.com/CsabaWirnhardt/cbm_media/blob/main/10_calendar_view_of_s1_backscatter_imagettes_VV_D.jpg?raw=true)
-
-?raw=true
-https://github.com/ec-jrc/cbm/blob/main/docs/img/eu_science_hub.png
-https://github.com/ec-jrc/cbm/blob/main/docs/img/eu_science_hub.png?raw=true
-
-
