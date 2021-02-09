@@ -56,6 +56,17 @@ def query():
     return "DIAS API"
 
 
+@app.route('/query/options', methods=['GET'])
+@auth_required
+def options():
+    try:
+        with open('api_options.json', 'r') as f:
+            api_options = json.load(f)
+        return make_response(jsonify(api_options), 200)
+    except Exception as err:
+        return str(err)
+
+
 @app.route('/query/parcelTimeSeries', methods=['GET'])
 @auth_required
 def parcelTimeSeries_query():
