@@ -1,6 +1,7 @@
 # itignore CbM files
 
 _config.json
+config/
 ipynb/tests/*
 ipynb/test*
 data/
