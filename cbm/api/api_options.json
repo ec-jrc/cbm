@@ -1,0 +1,12 @@
+{
+    "aois": {
+        "nrw": {
+            "desc": "Nordrhein Westfalen",
+            "years": ["2019","2018"]
+        },
+        "es": {
+            "desc": "Spain",
+            "years": ["2019"]
+        }
+    }
+}
