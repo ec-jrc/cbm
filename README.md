@@ -1,4 +1,4 @@
-![Image of European Commission](https://github.com/ec-jrc/cbm/blob/main/docs/img/eu_science_hub.png)
+![Image of European Commission](https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/eu_science_hub.png)
 # Code examples for "CAP Checks by Monitoring” (CbM)
 ### European Commission, Joint Research Center
 
@@ -85,10 +85,10 @@ This repository (cbm) contains example scripts and documentation to get started
 with  CbM, includes:
 
 - scripts/: Python scripts for:
-    - Parcel extraction routines [Wiki 3.1.](https://github.com/ec-jrc/cbm/wiki/3.1.-Parcel-extraction.-Parcel-extraction-routines-for-use-in-non-interactive-workflow)
-    - Time series Calendar view [TS calandar](https://github.com/ec-jrc/cbm/tree/main/scripts/calendar_view).
+    - Parcel extraction routines
+    - Time series Calendar view
 - docs/: Documentation pages (see [jrc-cbm.readthedocs.io](https://jrc-cbm.readthedocs.io))
-- cbm: Python library for Checks by Monitoring [Wiki 6.1.](https://github.com/ec-jrc/cbm/wiki/6.1.-CbM-Python-library.), includes:
+- cbm: Python library for Checks by Monitoring
     - api - RESTful API modules (cbm/apicbm/)
     - card2db - Transfer metadata from the DIAS catalog
     - extraction - Parcel extraction routines
@@ -105,6 +105,8 @@ with  CbM, includes:
     - [cbm_jupyter](https://hub.docker.com/r/gtcap/cbm_jupyter)/: Jupyter notebooks server
     - [cbm_api](https://hub.docker.com/r/gtcap/cbm_api)/: RESTful API server
 - tests/: Test scripts for testing a variety of functionalities.
+
+See the documentation at [jrc-cbm.readthedocs.io](https://jrc-cbm.readthedocs.io) for more details.
 
 
 ## Contributing
