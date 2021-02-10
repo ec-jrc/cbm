@@ -21,7 +21,7 @@
 
 .. toctree::
    :maxdepth: 3
-   :caption: API:
+   :caption: RESTful API:
 
    api_build
    api_ts

@@ -1,4 +1,4 @@
-# API POST
+# POST requests
 
 **Taking the next step: Using POST with RESTful services to get tailor made selections**
 

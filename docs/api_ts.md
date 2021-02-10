@@ -1,4 +1,4 @@
-# API Time series
+# Time series
 
 **Using RESTful services to get parcel time series**
 
@@ -20,20 +20,20 @@ Query parameters are either **required** or *optional*. The order of parameters 
 
 Find a parcel ID for a geographical location. The parcels in the annual declaration sets have unique IDs, but these are not consistent between years (also, the actual parcel geometries may have changed). Thus, a query is needed to "discover" which parcel ID is at a particular geographical coordinate. Agricultural parcels are supposed to be without overlap, a unique ID will normally be returned (this is, however, not a pre-condition).
 
-| Parameters  | Description   | Example call                  |
+| Parameters  | Description   | Example call |
 | ----------- | --------------------- | ------------------------ |
 | **parcels**     | parcel table name     |   |
-| **lon**         | longitude in decimal degrees  | [default](http://185.178.85.226/query/parcelByLocation?parcels=nld2018&lon=6.32&lat=52.34)                         |
-| **lat**         | latitude in decimal degrees |  [empty](http://185.178.85.226/query/parcelByLocation?parcels=nld2018&lon=6.31&lat=52.34)              |
-| *withGeometry=True*  | adds geometry   |  [+option](http://185.178.85.226/query/parcelByLocation?parcels=nld2018&lon=6.32&lat=52.34&withGeometry=True)                        |
+| **lon**         | longitude in decimal degrees  | [default](http://185.178.85.226/query/parcelByLocation?parcels=nld2018&lon=6.32&lat=52.34) |
+| **lat**         | latitude in decimal degrees | [empty](http://185.178.85.226/query/parcelByLocation?parcels=nld2018&lon=6.31&lat=52.34) |
+| *withGeometry=True*  | adds geometry   | [+option](http://185.178.85.226/query/parcelByLocation?parcels=nld2018&lon=6.32&lat=52.34&withGeometry=True) |
 
 
 Currently, parameter values can be as follows:
 
 | Parameters  | Values   | Description                  |
 | ----------- | --------------------- | ------------------------ |
-| **parcels**         | nld2018, nld2019, nrw2018, nrw2019   | Netherlands, Nordrhein Westfalen, 2018 or 2019 |
-| **lon, lat**         |       | Any geographical coordinate inside the respective territories            |
+| **parcels** | nld2018, nld2019, nrw2018, nrw2019   | Netherlands, Nordrhein Westfalen, 2018 or 2019 |
+| **lon, lat** |       | Any geographical coordinate inside the respective territories |
 
 
 returns
@@ -55,13 +55,13 @@ returns
 
 Get the time series for a parcel ID. 
 
-| Parameters  | Description   | Example call                  |
+| Parameters  | Description   | Example call |
 | ----------- | --------------------- | ------------------------ |
-| **aoi**         | area of interest       |                          |
-| **year**         | year               |                          |
-| **pid**         | parcel ID              |     [default](http://185.178.85.226/query/parcelTimeSeries?aoi=nld&year=2018&pid=324792&tstype=c6)                     |
-| **tstype**         | time series type    |       [empty](http://185.178.85.226/query/parcelTimeSeries?aoi=nld&year=2018&pid=5000000&tstype=c6)                   |
-| *band*         | a selected band              |   [+option](http://185.178.85.226/query/parcelTimeSeries?aoi=nld&year=2018&pid=324792&tstype=c6&band=VV)                       |
+| **aoi** | area of interest | |
+| **year** | year | |
+| **pid** | parcel ID |     [default](http://185.178.85.226/query/parcelTimeSeries?aoi=nld&year=2018&pid=324792&tstype=c6) |
+| **tstype** | time series type | [empty](http://185.178.85.226/query/parcelTimeSeries?aoi=nld&year=2018&pid=5000000&tstype=c6) |
+| *band* | a selected band | [+option](http://185.178.85.226/query/parcelTimeSeries?aoi=nld&year=2018&pid=324792&tstype=c6&band=VV) |
 
 Currently, parameter values can be as follows:
 
