@@ -1,8 +1,8 @@
-# API image chips
+# Image chips
 
 **Using RESTful services to get parcel time series as image chips**
 
-Please read up on the [generic characteristics of the RESTful service](https://github.com/ec-jrc/cbm/wiki/5.-Using-RESTful-services-to-get-parcel-time-series) before using the queries described here.
+Please read up on the [generic characteristics of the RESTful service](https://jrc-cbm.readthedocs.io/en/latest/api_ts.html) before using the queries described here.
 
 **WARNING**: The query described here is **resource intensive**. It starts a complex task that involves communication between docker containers and parallel execution on several DIAS VMs. The following limitations apply:
 
@@ -121,7 +121,7 @@ You need a client script to transfer the GeoTIFFs and run analysis on it.
 
 ## Example client code.
 
-The code example builds on the [client code of the basic RESTful services](https://github.com/ec-jrc/cbm/wiki/5.-Using-RESTful-services-to-get-parcel-time-series), and integrates some more advanced processing concepts that help build up to more advanced logic in the next steps.
+The code example builds on the [client code of the basic RESTful services](https://jrc-cbm.readthedocs.io/en/latest/api_ts.html), and integrates some more advanced processing concepts that help build up to more advanced logic in the next steps.
 
 First, we locate a parcel by location, as before, but now use the geometry that is (optionally) returned by *parcelByLocation* to refine the positioning of the chip selection. This introduces some basic feature geometry handling that is possible with the GDAL python libraries, including geometry creation for JSON, reprojection and centroid extraction. For the centroid position, the *rawChipByLocation* is launched to retrieve the SCL band for the Sentinel-2 Level-2A data. SCL is produced in the atmospheric correction step of SEN2COR, and contains mask values that link to the Scene CLassification. These mask values are useful to determine whether a pixel (in the parcel) is cloud free.
 

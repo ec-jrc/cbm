@@ -1,4 +1,4 @@
-# API analytics
+# Data analytics
 
 **Using the RESTful services to support data analytics for CbM**
 
