@@ -20,20 +20,16 @@ Then go to the repository folder:
 
 ## Create RESTful API users
 
-To create users that can access the RESTful API for CbM. Enter the running 'api' container:
-
-    docker exec -it api bash
-
-and then execute: (Change the 'name','user' with a username and spasword)
+To create users that can access the RESTful API for CbM, execute in the terminal: (Change the 'name','user' with a username and spasword)
 
     python3 -c "from src.apicbm import users; users.add('user','pass')"
 
 
-## Database configuration
+## Database connection
 
 If the ipycbm is used and configured this step may not be needed.
-RESTful API for CbM uses the same structured _config.json file as ipycbm that store the database connection information as well.
-Navigate to the db section and set the database connection information. if the file does not exist create the file _config.json in the cbm folder and add:
+RESTful API for CbM uses the same structured main.json file that store the database connection information.
+Navigate to the db section and set the database connection information. if the file does not exist create the file **main.json** in the **config/** folder and add:
 
     {
         "db": {
@@ -54,12 +50,37 @@ Navigate to the db section and set the database connection information. if the f
 
 ## Deploy the RESTful API docker container
 
-A docker image is available on docker hub with flask and all the required python libraries needed to build a RESTful API For CbM. It can be easily deployed with:
+A docker image is available on docker hub with flask and all the required python libraries needed to build a RESTful API For CbM. It can be easily deployed while in the cbm folder, with:
 
     docker run -it --name api -v "$PWD":/app -p 5000:5000 gtcap/cbm_api
 
-## Important notes
+<!-- $ -->
 
-1. **In case the tables names are different and not as proposed in the [Chapter 1.2.](https://github.com/ec-jrc/cbm/wiki/1.2.-Pre-Requirements.-Installation-instructions-for-the-required-tools-used-for-CbM-development.) the table names of the Postges queries in the file [query_handler.py](https://github.com/ec-jrc/cbm/blob/main/cbm/api/query_handler.py) will need to be changed accordingly with the database tables names.**
+## Set available options (Optional)
 
-2. **For production use a more secure method to store the password should be considered**
+To make it easier for the users to retrieve the available options, create a .json file "api_options.json" in the **"config/"** folder with the available options in the below format:
+
+
+    {
+        "aois": {
+            "nrw": {
+                "desc": "Nordrhein Westfalen",
+                "years": ["2019","2018"]
+            },
+            "es": {
+                "desc": "Spain",
+                "years": ["2019"]
+            }
+        }
+    }
+
+This can be retrieved from the users with the request:
+
+    http(s):/Host.Name.Or.IP/query/options
+
+
+**Important notes**
+
+* In case the tables names are different and not as proposed in the [Chapter 1.2.](https://github.com/ec-jrc/cbm/wiki/1.2.-Pre-Requirements.-Installation-instructions-for-the-required-tools-used-for-CbM-development.) the table names of the Postges queries in the file [query_handler.py](https://github.com/ec-jrc/cbm/blob/main/cbm/api/query_handler.py) will need to be changed accordingly with the database tables names.
+
+* This is for testing and development purposes, for production use a more secure method to store the password should be considered
