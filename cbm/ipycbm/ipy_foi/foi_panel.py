@@ -18,11 +18,11 @@ from cbm.utils import config
 from cbm.ipycbm.utils import settings
 from cbm.sources import database
 from cbm.ipycbm.ipy_proc import proc_func
-from cbm.foi import foi_proc
-from cbm.foi import foi_proc_v2
+from cbm.foi import foi_v1
+from cbm.foi import foi_v2
 
 
-def foi():
+def foi_tab_v1():
     path_plug = "cbm/foi/foi_db_func/"
     path_data = f"{config.get_value(['paths', 'temp'])}foi/"
 
@@ -33,10 +33,10 @@ def foi():
 
     foi_info = HTML(
         value="""FOI procedures need direct access to the database. <br>
-        In case there no image is provided, access to object storage will be needed to generate the base image from sentinel images.
         """,
         placeholder='FOI Information',
     )
+#         In case there no image is provided, access to object storage will be needed to generate the base image from sentinel images.
 
     # Connect to database
     db_info = Label(
@@ -224,13 +224,13 @@ def foi():
     ])
 
     # Run procedures
-    run_info = Label("5. Run FOI procedure.")
+    run_info = Label("5. Start the FOI analysis.")
     run_proc = Button(
-        description='Run FOI procedure',
+        description='Run FOI v1',
         value=False,
         disabled=False,
         button_style='info',
-        tooltip='Run',
+        tooltip='Run FOI analysis version 1',
         icon='play',
     )
     run_box = HBox([run_proc])
@@ -311,7 +311,7 @@ def foi():
     @run_proc.on_click
     def run_proc_on_click(b):
         with progress:
-            foi_proc.proc(vector_file.value, raster_file.value, yaml_file.value,
+            foi_v1.main(vector_file.value, raster_file.value, yaml_file.value,
                 pre_min_het.value, pre_max_het.value, pre_min_area.value)
 
 
@@ -326,7 +326,7 @@ def foi():
 
     return wbox
 
-def foi_v2():
+def foi_tab_v2():
     path_data = f"{config.get_value(['paths', 'temp'])}foi/"
 
     progress = Output()
@@ -498,13 +498,13 @@ def foi_v2():
     ])
 
     # Run procedures
-    run_info = Label("5. Run FOI procedure.")
+    run_info = Label("5. Start the FOI analysis.")
     run_proc = Button(
-        description='Run FOI procedure version 2',
+        description='Run FOI v2',
         value=False,
         disabled=False,
         button_style='info',
-        tooltip='Run v2 FOI',
+        tooltip='Run FOI analysis version 2',
         icon='play',
     )
     run_box = HBox([run_proc])
@@ -560,7 +560,7 @@ def foi_v2():
     @run_proc.on_click
     def run_proc_on_click(b):
         with progress:
-            foi_proc_v2.proc(vector_file.value, raster_file.value, yaml_file.value, pre_negative_buffer.value, pre_min_het.value, pre_max_het.value, pre_pixel_connectivity.value, pre_min_cluster_size.value)            
+            foi_v2.main(vector_file.value, raster_file.value, yaml_file.value, pre_negative_buffer.value, pre_min_het.value, pre_max_het.value, pre_pixel_connectivity.value, pre_min_cluster_size.value)            
 
 
     wbox_v2 = VBox([proc_func.upload_shp(path_data),
@@ -571,3 +571,7 @@ def foi_v2():
                  progress])
 
     return wbox_v2
+
+
+if __name__ == "__main__":
+    pass
