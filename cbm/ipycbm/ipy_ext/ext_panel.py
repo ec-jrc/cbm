@@ -11,10 +11,10 @@
 from ipywidgets import (Label, VBox, HBox, Dropdown, Button, Layout)
 
 from cbm.utils import config
-from cbm.ipycbm.ipy_proc import proc_func, proc_card2db
+from cbm.ipycbm.ipy_ext import ext_func, ext_card2db
 
 
-def proc():
+def extract():
 
     l_connec = Label("1. Connect to database and object storage.")
     l_create = Label("2. Create the essential CbM tables. The parcels table name will be added as prefix.")
@@ -22,7 +22,7 @@ def proc():
     l_carddb = Label("4. Add CARD metadata to databse tabel 'xx_dias_catalogue'.")
     l_extrac = Label("5. Run parcel extraction routines.")
 
-    path_data = f"{config.get_value(['paths', 'temp'])}proc/"
+    path_data = f"{config.get_value(['paths', 'temp'])}extract/"
     # Connect
     db_select = Dropdown(
         options=[db for db in config.get_value(['db'])],
@@ -49,9 +49,9 @@ def proc():
         else:
             db_conf_box.children = ()
     wbox = VBox([l_connec, VBox([db_box, db_conf_box]),
-                 l_create, proc_func.create_tables(),
-                 l_upload, proc_func.upload_shp(path_data),
-                 l_carddb, proc_card2db.dias_cat(),
-                 l_extrac, proc_func.extraction()])
+                 l_create, ext_func.create_tables(),
+                 l_upload, ext_func.upload_shp(path_data),
+                 l_carddb, ext_card2db.dias_cat(),
+                 l_extrac, ext_func.extraction()])
 
     return wbox

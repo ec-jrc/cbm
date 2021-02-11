@@ -23,6 +23,3 @@ def foi_widget_box():
 
     return tab_box
 
-
-if __name__ == "__main__":
-    main()

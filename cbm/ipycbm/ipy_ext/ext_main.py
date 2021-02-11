@@ -10,12 +10,12 @@
 
 from ipywidgets import Tab
 from cbm.ipycbm.utils import help_docs
-from cbm.ipycbm.ipy_proc import proc_settings, proc_panel
+from cbm.ipycbm.ipy_ext import ext_settings, ext_panel
 
-def proc_widget_box():
+def ext_widget_box():
 
-    tab_box = Tab(children=[proc_panel.proc(), help_docs.widget_box(),
-                  proc_settings.widget_box()])
+    tab_box = Tab(children=[ext_panel.extract(), help_docs.widget_box(),
+                  ext_settings.widget_box()])
 
     tab_box.set_title(0, 'Process Data')
     tab_box.set_title(1, 'Help')

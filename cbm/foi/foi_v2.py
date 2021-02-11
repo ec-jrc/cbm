@@ -165,7 +165,8 @@ def clip_raster(rast, feature, gt=None, nodata=-1):
 #parameters: raster_name, reference_data_name, yaml_file_name, connectivity_option, cluster_threshold, 
 #min_heterogeneity_threshold, max_heterogeneity_threshold, negative_buffer
 def main(vector_file, raster_file, yaml_file, negative_buffer, min_heterogeneity_threshold, max_heterogeneity_threshold, connectivity_option, cluster_threshold):
-    path_data = f"{config.get_value(['paths', 'temp'])}foi/"
+    path_temp = f"{config.get_value(['paths', 'temp'])}foi/"
+    path_data = f"{config.get_value(['paths', 'data'])}foi/"
     
     # Spatial data to be tested - parcels that will be checked for heterogeneity and cardinality
     reference_data = vector_file
@@ -175,7 +176,7 @@ def main(vector_file, raster_file, yaml_file, negative_buffer, min_heterogeneity
     raster_classif_file = raster_file
     
     # Path for storing the processed data - final spatial data that will be exported after database processing
-    processed_data = f'{path_data}processed_data/'
+    processed_data = f'{path_temp}processed_data/'
     os.makedirs(processed_data, exist_ok=True)
     
     output_data = f'{path_data}output_data/'

@@ -27,9 +27,9 @@ def view(*args):
     from cbm.ipycbm.ipy_view import view_main
     return view_main.view_widget_box(*args)
 
-def proc(*args):
-    from cbm.ipycbm.ipy_proc import proc_main
-    return proc_main.proc_widget_box(*args)
+def extract(*args):
+    from cbm.ipycbm.ipy_ext import ext_main
+    return ext_main.ext_widget_box(*args)
 
 def foi(*args):
     from cbm.ipycbm.ipy_foi import foi_main

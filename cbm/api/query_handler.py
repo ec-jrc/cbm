@@ -8,6 +8,7 @@
 # License   : 3-Clause BSD
 
 
+# import paramiko
 import sys
 import psycopg2
 import psycopg2.extras
@@ -47,7 +48,93 @@ def is_number(s):
     else:
         return False
 
+# Parcel Images
+def getChipsByLocation(lon, lat, start_date, end_date, unique_id, lut='5_95', bands='B08_B04_B03', plevel='LEVEL2A'):
+    logging.debug(lut)
+    logging.debug(bands)
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect('remote_dias_py', password='dias_py')
+    logging.debug(
+        f"ssh on remote_dias_py python chipGenerate.py {lon} {lat} {start_date} {end_date} {unique_id} {lut} {bands} {plevel}")
+    stdin, stdout, stderr = ssh.exec_command(
+        f"cd /usr/src/app && python chipGenerate.py {lon} {lat} {start_date} {end_date} {unique_id} {lut} {bands} {plevel}")
+    logging.debug(stdout.readlines())
+    stdout.channel.recv_exit_status()
+    ssh.close()
+    return True
 
+def getBackgroundByLocation(lon, lat, chipsize, chipextend, tms, unique_id):
+    logging.debug(unique_id)
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect('remote_dias_py', password='dias_py')
+    logging.debug(
+        f"ssh on remote_dias_py python backgroundGenerate.py {lon} {lat} {chipsize} {chipextend} {tms} {unique_id}")
+    stdin, stdout, stderr = ssh.exec_command(
+        f"cd /usr/src/app && python backgroundGenerate.py {lon} {lat} {chipsize} {chipextend} {tms} {unique_id}")
+    logging.debug(stdout.readlines())
+    stdout.channel.recv_exit_status()
+    ssh.close()
+    return True
+
+def getChipsByParcelId(aoi, year, parcelid, start_date, end_date, unique_id, lut='5_95', bands='B08_B04_B03', plevel='LEVEL2A'):
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect('remote_dias_py', password='dias_py')
+    logging.debug(
+        f"ssh on remote_dias_py python chipGenerate4Parcel.py {aoi} {year} {parcelid} {start_date} {end_date} {unique_id} {lut} {bands} {plevel}")
+    stdin, stdout, stderr = ssh.exec_command(
+        f"cd /usr/src/app && python chipGenerate4Parcel.py {aoi} {year} {parcelid} {start_date} {end_date} {unique_id} {lut} {bands} {plevel}")
+    logging.debug(stdout.readlines())
+    stdout.channel.recv_exit_status()
+    ssh.close()
+    return True
+
+
+def getRawChipByLocation(lon, lat, start_date, end_date, unique_id, band, chipsize='1280', plevel='LEVEL2A'):
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect('remote_dias_py', password='dias_py')
+    logging.debug(
+        f"ssh on remote_dias_py python rawChipGenerate.py {lon} {lat} {start_date} {end_date} {unique_id} {band} {plevel}")
+    stdin, stdout, stderr = ssh.exec_command(
+        f"cd /usr/src/app && python rawChipGenerate.py {lon} {lat} {start_date} {end_date} {unique_id} {band} {chipsize} {plevel}")
+    logging.debug(stdout.readlines())
+    stdout.channel.recv_exit_status()
+    ssh.close()
+    return True
+
+
+def getRawChipsBatch(unique_id):
+    # params are dumped in params.json on unique_id directory
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect('remote_dias_py', password='dias_py')
+    logging.debug(f"ssh on remote_dias_py python rawChipBatch.py {unique_id}")
+    stdin, stdout, stderr = ssh.exec_command(
+        f"cd /usr/src/app && python rawChipBatch.py {unique_id}")
+    logging.debug(stdout.readlines())
+    stdout.channel.recv_exit_status()
+    ssh.close()
+    return True
+
+
+def getRawS1ChipsBatch(unique_id):
+    # params are dumped in params.json on unique_id directory
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect('remote_dias_py', password='dias_py')
+    logging.debug(
+        f"ssh on remote_dias_py python rawS1ChipBatch.py {unique_id}")
+    stdin, stdout, stderr = ssh.exec_command(
+        f"cd /usr/src/app && python rawS1ChipBatch.py {unique_id}")
+    logging.debug(stdout.readlines())
+    stdout.channel.recv_exit_status()
+    ssh.close()
+    return True
+
+# Parcel Time Series
 def getParcelTimeSeries(dias_cat, year, pid, tstype, band=None):
     conn = psycopg2.connect(conn_str)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)

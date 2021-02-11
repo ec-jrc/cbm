@@ -15,9 +15,9 @@ from ipywidgets import (Text, Label, HBox, VBox, Layout, Tab, Dropdown,
 
 from cbm.utils import config
 from cbm.sources import database
-from cbm.ipycbm.ipy_proc import db_tables
+from cbm.extract import db_tables
 
-from cbm.extraction import (pgS2Extract, pgS1bsExtract)
+from cbm.extract import (pgS2Extract, pgS1bsExtract)
 
 
 def upload_shp(path_data):
