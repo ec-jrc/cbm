@@ -52,7 +52,7 @@ For the heterogeneity analysis the following steps are required.
 Heterogeneity thresholds: in order to exclude the influence of „noise” pixels, the user can specify the heterogeneity thresholds (for example only the FOIs where one class of pixels have a percentage between 30 and 70 is considered heterogeneous).
 Minimum area for clusters selection: the user can specify the minimum area of the cluster that are considered a cardinality issue, in square meters. Of example the clusters smaller than 2000 square meters can be considered as not influencing the FOI cardinality.
 
-6. Run FOI procedure. Starts the FOI analysis.
+6. Run the FOI analysis.
 
 The result of the analysis is represented by three shapefiles that are stored on the “output_data” folder (/cbm/tmp/foi/output_data).
 name of the shapefile dataset (without extension) that needs to be tested + foih_v1.shp – represents the initial shapefile and during the analysis the following attributes are added:
@@ -98,7 +98,7 @@ These steps correspond to the numbering on the graphical interface provided:
     a. Upload the reference data shapefile to the server.
     b. Import uploaded shapefile to the database and specifying the name for the table that will be created in the database.
 2. Upload the raster "thematic" image. The accepted files are tif or tiff files.
-3. Prepare FOI procedure – Allows the user to create the database functions on the database server. This procedure creates the necessary function and stored procedures on the database server.
+3. FOI Prerequisites – Allows the user to create the database functions on the database server. This procedure creates the necessary function and stored procedures on the database server.
 4. Select the required files for analysis:
     a. Vector file: the data on which the analysis will be applied. In case that we have more shapefiles uploaded on the server, this functionality allows us to select the one that we want to analyze.
     b. Thematic raster: the thematic raster provided. In case that we have more rasters uploaded on the server, this functionality allows us to select the one that we want to use on the analysis.
@@ -109,7 +109,7 @@ These steps correspond to the numbering on the graphical interface provided:
     - Minimum area for clusters selection.
 
 
-6. Run FOI procedure.
+6. Run FOI analysis.
 Starts the FOI analysis. The result of the analysis is represented by three shapefiles that are stored on the “output_data” folder (/cbm/tmp/foi/output_data).
 name of the shapefile dataset (without extension) that needs to be tested + foih_v1.shp – represents the initial shapefile and during the analysis the following attributes are added:
 
@@ -139,16 +139,16 @@ name of the shapefile dataset (without extension) that needs to be tested + foic
 **Code non interactive**
 
     import cbm
-
-    vector_file = “data/parcels2020.shp”
+    
+    vector_file = “data/parcels.shp”
     raster_file = “data/raster.tif”
     yaml_file = “pixelvalues_classes.yml”
-    negative_buffer = 
-    min_heterogeneity_threshold = 
-    max_heterogeneity_threshold = 
-    connectivity_option = 
-    cluster_threshold = 
-        
+    negative_buffer = -10
+    min_heterogeneity_threshold = 30
+    max_heterogeneity_threshold = 70
+    connectivity_option = 8
+    cluster_threshold = 20
+    
     cbm.foi_v2(vector_file, raster_file, yaml_file, negative_buffer, min_heterogeneity_threshold,
         max_heterogeneity_threshold, connectivity_option, cluster_threshold)
 
