@@ -164,7 +164,7 @@ def clip_raster(rast, feature, gt=None, nodata=-1):
 
 #parameters: raster_name, reference_data_name, yaml_file_name, connectivity_option, cluster_threshold, 
 #min_heterogeneity_threshold, max_heterogeneity_threshold, negative_buffer
-def proc(vector_file, raster_file, yaml_file, negative_buffer, min_heterogeneity_threshold, max_heterogeneity_threshold, connectivity_option, cluster_threshold):
+def main(vector_file, raster_file, yaml_file, negative_buffer, min_heterogeneity_threshold, max_heterogeneity_threshold, connectivity_option, cluster_threshold):
     path_data = f"{config.get_value(['paths', 'temp'])}foi/"
     
     # Spatial data to be tested - parcels that will be checked for heterogeneity and cardinality
@@ -378,3 +378,7 @@ def proc(vector_file, raster_file, yaml_file, negative_buffer, min_heterogeneity
         print("Selected raster cannot be used in analisys")
     
     print("Analysis finished!")
+
+
+if __name__ == "__main__":
+    main()

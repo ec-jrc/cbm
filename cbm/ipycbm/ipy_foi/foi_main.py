@@ -13,7 +13,7 @@ from cbm.ipycbm.ipy_foi import foi_settings, foi_panel, foi_help
 
 def foi_widget_box():
 
-    tab_box = Tab(children=[foi_panel.foi(), foi_panel.foi_v2(), foi_help.widget_box_foi(),
+    tab_box = Tab(children=[foi_panel.foi_tab_v1(), foi_panel.foi_tab_v2(), foi_help.widget_box_foi(),
                   foi_settings.widget_box()])
 
     tab_box.set_title(0, 'FOI Assessment V1')
@@ -22,3 +22,7 @@ def foi_widget_box():
     tab_box.set_title(3, 'Settings')
 
     return tab_box
+
+
+if __name__ == "__main__":
+    main()

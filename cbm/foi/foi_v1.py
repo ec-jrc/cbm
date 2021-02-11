@@ -24,7 +24,7 @@ from cbm.utils import config
 from cbm.sources import database
 
 
-def proc(vector_file, raster_file, yaml_file, pre_min_het, pre_max_het, area_threshold):
+def main(vector_file, raster_file, yaml_file, pre_min_het, pre_max_het, area_threshold):
     """FOI assessment is based on spatial analysis of a “thematic” raster
     produced in advance.
 
@@ -261,3 +261,7 @@ def proc(vector_file, raster_file, yaml_file, pre_min_het, pre_max_het, area_thr
     subprocess.call(["ogr2ogr", "-f", "ESRI Shapefile",
                      cardinality_output, db_connection, processed_cardinality])
     print("Cardinality analysis output downloaded")
+
+
+if __name__ == "__main__":
+    main()
