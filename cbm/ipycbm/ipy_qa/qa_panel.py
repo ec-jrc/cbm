@@ -15,7 +15,7 @@ from cbm.utils import config
 from cbm.ipycbm.utils import settings
 
 from cbm.ipycbm.ipy_view import view_panel
-from cbm.ipycbm.ipy_proc import proc_func, proc_card2db
+from cbm.ipycbm.ipy_ext import ext_func, ext_card2db
 from cbm.ipycbm.ipy_get import get_panel, get_settings
 
 
@@ -67,11 +67,11 @@ def qa():
 
     accor = Accordion(children=[
         VBox([db_box, db_conf_box]),
-        proc_func.upload_shp(path_data),
-        proc_func.create_tables(),
-        proc_card2db.dias_cat(),
+        ext_func.upload_shp(path_data),
+        ext_func.create_tables(),
+        ext_card2db.dias_cat(),
         get_settings.direct_settings(),
-        proc_func.extraction(),
+        ext_func.extraction(),
         VBox([get_panel.get()],
              layout=Layout(border='1px solid black')),
         view_panel.view()])

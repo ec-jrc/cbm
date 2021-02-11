@@ -14,7 +14,7 @@ from ipywidgets import (Text, Label, HBox, VBox, Layout, Dropdown,
 
 from cbm.utils import config, data_options
 from cbm.card2db import creodiasMeta2DB as meta2DB
-from cbm.ipycbm.ipy_proc import proc_func
+from cbm.ipycbm.ipy_ext import ext_func
 from cbm.sources import database
 
 def dias_cat():

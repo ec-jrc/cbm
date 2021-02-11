@@ -17,13 +17,13 @@ from ipywidgets import (Text, Label, HBox, VBox, Layout, Tab, Dropdown,
 from cbm.utils import config
 from cbm.ipycbm.utils import settings
 from cbm.sources import database
-from cbm.ipycbm.ipy_proc import proc_func
+from cbm.ipycbm.ipy_ext import ext_func
 from cbm.foi import foi_v1
 from cbm.foi import foi_v2
 
 
 def foi_tab_v1():
-    path_plug = "cbm/foi/foi_db_func/"
+    path_foi = "cbm/foi/foi_db_func/"
     path_data = f"{config.get_value(['paths', 'temp'])}foi/"
 
     progress = Output()
@@ -140,8 +140,8 @@ def foi_tab_v1():
     )
     yml_box = HBox([yml_select, yml_clear, yml_upload])
 
-    # Prepare procedures
-    pre_info = Label("4. Prepare FOI procedure.")
+    # FOI Prerequisites
+    pre_info = Label("4. FOI v1 Prerequisites.")
     pre_ins_func = Button(
         value=False,
         disabled=False,
@@ -223,9 +223,9 @@ def foi_tab_v1():
             "Minimum area for clusters selection - only clusters bigger from this threshold will be counted.")])
     ])
 
-    # Run procedures
-    run_info = Label("5. Start the FOI analysis.")
-    run_proc = Button(
+    # Run FOI analysis
+    run_info = Label("5. Run the FOI analysis.")
+    run_analysis = Button(
         description='Run FOI v1',
         value=False,
         disabled=False,
@@ -233,7 +233,7 @@ def foi_tab_v1():
         tooltip='Run FOI analysis version 1',
         icon='play',
     )
-    run_box = HBox([run_proc])
+    run_box = HBox([run_analysis])
 
     def on_img_option_change(change):
         if img_option.value == 'Upload':
@@ -295,7 +295,7 @@ def foi_tab_v1():
     def pre_ins_func_on_click(b):
         progress.clear_output()
         try:
-            functions = glob.glob(f"{path_plug}*.func")
+            functions = glob.glob(f"{path_foi}*.func")
             db = config.get_value(['set', 'db_conn'])        
             sche = config.get_value(['db', db, 'conn', 'sche'])
             user = config.get_value(['db', db, 'conn', 'user'])
@@ -308,8 +308,8 @@ def foi_tab_v1():
         except Exception as err:
             outlog("Could not add functions to dattabase.", err)
 
-    @run_proc.on_click
-    def run_proc_on_click(b):
+    @run_analysis.on_click
+    def run_analysis_on_click(b):
         with progress:
             foi_v1.main(vector_file.value, raster_file.value, yaml_file.value,
                 pre_min_het.value, pre_max_het.value, pre_min_area.value)
@@ -317,7 +317,7 @@ def foi_tab_v1():
 
     wbox = VBox([foi_info,
                  db_info, db_box, db_conf_box,
-                 proc_func.upload_shp(path_data),
+                 ext_func.upload_shp(path_data),
                  img_info, img_option, img_box,
                  pre_box,
                  run_info, 
@@ -414,8 +414,8 @@ def foi_tab_v2():
     )
     yml_box = HBox([yml_select, yml_clear, yml_upload])
 
-    # Prepare procedures
-    pre_info = Label("4. Prepare FOI procedure.")
+    # FOI Prerequisites
+    pre_info = Label("4. FOI v2 Prerequisites.")
     vector_file = Dropdown(
         options=[s for s in glob.glob(f'{path_data}vector/*'
                                       ) if '.shp' in s],
@@ -497,9 +497,9 @@ def foi_tab_v2():
             "Minimum area for clusters selection - only clusters bigger from this threshold will be counted.")])
     ])
 
-    # Run procedures
-    run_info = Label("5. Start the FOI analysis.")
-    run_proc = Button(
+    # Run FOI analysis
+    run_info = Label("5. Run the FOI analysis.")
+    run_analysis = Button(
         description='Run FOI v2',
         value=False,
         disabled=False,
@@ -507,7 +507,7 @@ def foi_tab_v2():
         tooltip='Run FOI analysis version 2',
         icon='play',
     )
-    run_box = HBox([run_proc])
+    run_box = HBox([run_analysis])
 
     def on_img_option_change(change):
         if img_option.value == 'Upload':
@@ -557,13 +557,13 @@ def foi_tab_v2():
                 f.write(content)
         outlog("The yaml file is uploaded.")
 
-    @run_proc.on_click
-    def run_proc_on_click(b):
+    @run_analysis.on_click
+    def run_analysis_on_click(b):
         with progress:
             foi_v2.main(vector_file.value, raster_file.value, yaml_file.value, pre_negative_buffer.value, pre_min_het.value, pre_max_het.value, pre_pixel_connectivity.value, pre_min_cluster_size.value)            
 
 
-    wbox_v2 = VBox([proc_func.upload_shp(path_data),
+    wbox_v2 = VBox([ext_func.upload_shp(path_data),
                  img_info, img_option, img_box,
                  pre_box,
                  run_info, 
@@ -572,6 +572,3 @@ def foi_tab_v2():
 
     return wbox_v2
 
-
-if __name__ == "__main__":
-    pass

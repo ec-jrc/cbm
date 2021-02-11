@@ -54,7 +54,8 @@ def main(vector_file, raster_file, yaml_file, pre_min_het, pre_max_het, area_thr
 
     """
     
-    path_data = f"{config.get_value(['paths', 'temp'])}foi/"
+    path_temp = f"{config.get_value(['paths', 'temp'])}foi/"
+    path_data = f"{config.get_value(['paths', 'data'])}foi/"
     # database connection string
     db_connection = f"PG:{database.conn_str(db=1)}"
     # ogr2ogr options
@@ -64,7 +65,7 @@ def main(vector_file, raster_file, yaml_file, pre_min_het, pre_max_het, area_thr
     output_format = "PostgreSQL"
 
     # Path for storing the processed data - final spatial data that will be exported after database processing
-    processed_data = f'{path_data}processed_data/'
+    processed_data = f'{path_temp}processed_data/'
     os.makedirs(processed_data, exist_ok=True)
     # Spatial data to be tested - parcels that will be checked for heterogeneity and cardinality
     reference_data = vector_file
