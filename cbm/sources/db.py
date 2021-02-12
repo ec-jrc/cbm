@@ -37,12 +37,12 @@ def crls(db=1):
     try:
         # Database
         values = config.read()
-        DB_HOST = values['db'][f'{db}']['conn']['host']
-        DB_NAME = values['db'][f'{db}']['conn']['name']
-        DB_SCHE = values['db'][f'{db}']['conn']['sche']
-        DB_USER = values['db'][f'{db}']['conn']['user']
-        DB_PORT = values['db'][f'{db}']['conn']['port']
-        DB_PASS = values['db'][f'{db}']['conn']['pass']
+        DB_HOST = values['db'][db]['host']
+        DB_NAME = values['db'][db]['name']
+        DB_SCHE = values['db'][db]['sche']
+        DB_USER = values['db'][db]['user']
+        DB_PORT = values['db'][db]['port']
+        DB_PASS = values['db'][db]['pass']
         return DB_HOST, DB_NAME, DB_USER, DB_PORT, DB_PASS
     except Exception as err:
         print(f"Could not read config file: {err}")
@@ -105,7 +105,7 @@ def get_value(dict_keys, var_name=None):
     return value
 
 
-def information(db=1):
+def info(db=1):
     """Get postgres database connection information."""
     try:
         conn = psycopg2.connect(conn_str(db))
