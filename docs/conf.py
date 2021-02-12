@@ -35,7 +35,8 @@ m2r2.setup = patched_m2r2_setup
 
 project = 'cbm'
 copyright = '2021, European Commission, Joint Research Centre'
-author = 'Guido Lemoine, Konstantinos Anastasakis'
+author = 'European Commission, Joint Research Centre'
+authors = 'Guido Lemoine, Konstantinos Anastasakis'
 
 
 # -- General configuration ---------------------------------------------------
@@ -63,7 +64,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store','.ipynb_checkpoints']
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-# sphinx_rtd_theme alabaster
+# Themes: sphinx_rtd_theme, alabaster
 html_theme = 'sphinx_rtd_theme'
 
 # Add any paths that contain custom static files (such as style sheets) here,
