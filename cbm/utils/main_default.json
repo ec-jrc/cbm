@@ -9,12 +9,12 @@
         "data_source": "1",
         "db_conn": "1",
         "ds_conf": "default",
-        "ds_year": "2000",
+        "ds_year": "2020",
         "jupyterlab": "True",
         "plimit": "25"
     },
     "git": {
-        "url": "http://78.128.216.156/GTCAP/cbm.git",
+        "url": "https://github.com/ec-jrc/cbm",
         "user": "",
         "pass": ""
     },
@@ -27,48 +27,42 @@
         "pids_dist": "tmp/pids_from_distance.txt"
     },
     "api": {
-        "url": "http://185.178.85.226",
+        "url": "http://0.0.0.0",
         "user": "",
         "pass": ""
     },
     "db": {
         "1": {
-            "desc": "",
-            "conn": {
-                "host": "0.0.0.0",
-                "port": "5432",
-                "name": "postgres",
-                "sche": "public",
-                "user": "postgres",
-                "pass": ""
-            }
+            "desc": "Main DB",
+            "host": "0.0.0.0",
+            "port": "5432",
+            "name": "postgres",
+            "sche": "public",
+            "user": "postgres",
+            "pass": ""
         }
     },
-    "ds_conf": {
+    "dataset": {
         "default": {
             "db": "1",
             "desc": "",
             "center": "51.0,14.0",
             "zoom": "5",
-            "years": {
-                "2000": {
-                    "dates": {
-                        "start": "",
-                        "end": ""
-                    },
-                    "tables": {
-                        "parcels": "parcel",
-                        "dias_catalog": "dias_catalog",
-                        "s2": "s2_sig",
-                        "bs": "bs_sig",
-                        "c6": "c6_sig"
-                    },
-                    "columns": {
-                        "parcels_id": "id",
-                        "crop_names": "name",
-                        "crop_codes": "code"
-                    }
-                }
+            "year": "2020",
+            "start_date": "",
+            "end_date": "",
+            "tables": {
+                "parcels": "par",
+                "dias_catalog": "dias_cat",
+                "s2": "s2_sig",
+                "bs": "bs_sig",
+                "c6": "c6_sig",
+                "bs_tf": "bs_ten"
+            },
+            "pcolumns": {
+                "parcels_id": "id",
+                "crop_names": "name",
+                "crop_codes": "code"
             }
         }
     },
