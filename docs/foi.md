@@ -68,27 +68,29 @@ name of the shapefile dataset (without extension) that needs to be tested + foic
 
 **Code non interactive**
 
+```python
+import cbm
 
-    import cbm
+vector_file = “data/parcels2020.shp”
+raster_file = “data/raster.tif”
+yaml_file = “pixelvalues_classes.yml”
+pre_min_het = 30
+pre_max_het = 70
+area_threshold = 2000
 
-    vector_file = “data/parcels2020.shp”
-    raster_file = “data/raster.tif”
-    yaml_file = “pixelvalues_classes.yml”
-    pre_min_het = 30
-    pre_max_het = 70
-    area_threshold = 2000
-
-    cbm.foi(vector_file, raster_file, yaml_file,
-        pre_min_het, pre_max_het, area_threshold)
-
+cbm.foi(vector_file, raster_file, yaml_file,
+    pre_min_het, pre_max_het, area_threshold)
+```
 
 **Interactive Jupyter Notebook widget**
 
 
 The subpackage ipycbm.foi() provides a graphical interface for the required steps.
 
-    from cbm import ipycbm
-    ipycbm.foi()
+```python
+from cbm import ipycbm
+ipycbm.foi()
+```
 
 ![ipycbm.foi()](https://raw.githubusercontent.com/konanast/cbm_media/main/ipycbm_foi_v1_01.png)
 
@@ -138,26 +140,29 @@ name of the shapefile dataset (without extension) that needs to be tested + foic
 
 **Code non interactive**
 
-    import cbm
-    
-    vector_file = “data/parcels.shp”
-    raster_file = “data/raster.tif”
-    yaml_file = “pixelvalues_classes.yml”
-    negative_buffer = -10
-    min_heterogeneity_threshold = 30
-    max_heterogeneity_threshold = 70
-    connectivity_option = 8
-    cluster_threshold = 20
-    
-    cbm.foi_v2(vector_file, raster_file, yaml_file, negative_buffer, min_heterogeneity_threshold,
-        max_heterogeneity_threshold, connectivity_option, cluster_threshold)
+```python
+import cbm
 
+vector_file = “data/parcels.shp”
+raster_file = “data/raster.tif”
+yaml_file = “pixelvalues_classes.yml”
+negative_buffer = -10
+min_heterogeneity_threshold = 30
+max_heterogeneity_threshold = 70
+connectivity_option = 8
+cluster_threshold = 20
+
+cbm.foi_v2(vector_file, raster_file, yaml_file, negative_buffer, min_heterogeneity_threshold,
+    max_heterogeneity_threshold, connectivity_option, cluster_threshold)
+```
 
 **Interactive Jupyter Notebook widget**
 
 The subpackage ipycbm.foi() provides a graphical interface for the required steps.
 
-    from cbm import ipycbm
-    ipycbm.foi()
+```python
+from cbm import ipycbm
+ipycbm.foi()
+```
 
 ![ipycbm.foi_v2()](https://raw.githubusercontent.com/konanast/cbm_media/main/ipycbm_foi_v2_01.png)
