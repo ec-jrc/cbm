@@ -15,9 +15,13 @@ __email__ = ""
 __status__ = "Development"
 
 
-from cbm.utils import check
-check.startup()
+from IPython.display import display
+from cbm.ipycbm.utils import settings, update
+from cbm.utils import config
 
+display(settings.clean_temp(True))
+config.update_keys()
+update.check()
 
 def get(*args):
     from cbm.ipycbm.ipy_get import get_main
