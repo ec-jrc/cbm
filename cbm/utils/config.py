@@ -12,15 +12,12 @@ import os
 import time
 import json
 import uuid
-from os.path import dirname, abspath
+from os.path import dirname, abspath, join
 
 folder_repo = os.path.dirname(dirname(dirname(abspath(__file__))))
 folder_config = f"{folder_repo}/config/"
-main_config = f"{folder_config}/main.json"
+main_config = "main.json"
 main_default = f"{dirname(abspath(__file__))}/main_default.json"
-
-if not os.path.exists(folder_config):
-    os.makedirs(folder_config)
 
 def get_value(dict_keys={}, file=main_config, var_name=None, help_text=True):
     """Get value from a configuration file, with an arbitrary length key.
@@ -65,6 +62,7 @@ def get_value(dict_keys={}, file=main_config, var_name=None, help_text=True):
         return value
     except Exception as err:
         print(f"Could not get value from file '{file}': {err}")
+        return ''
 
 
 def update(dict_keys={}, val=None, file=main_config):
@@ -94,12 +92,12 @@ def update(dict_keys={}, val=None, file=main_config):
         _x[dict_keys[-1]] = val
         # create randomly named temporary file to avoid
         # interference with other thread/asynchronous request
-        tempfile = os.path.join(folder_config, str(uuid.uuid4()))
+        tempfile = join(folder_config, str(uuid.uuid4()))
         with open(tempfile, 'w') as f:
             json.dump(config_dict, f, indent=4)
 
         # rename temporary file replacing old file
-        os.rename(tempfile, file)
+        os.rename(tempfile, join(folder_config, file))
     except Exception as err:
         print(f"Could not update key in the file '{file}': {err}")
 
@@ -129,12 +127,12 @@ def delete(dict_keys={}, file=main_config):
                 _x = _x.get(key)
         del _x[dict_keys[-1]]
 
-        tempfile = os.path.join(folder_config, str(uuid.uuid4()))
+        tempfile = join(folder_config, str(uuid.uuid4()))
         with open(tempfile, 'w') as f:
             json.dump(config_dict, f, indent=4)
 
         # rename temporary file replacing old file
-        os.rename(tempfile, file)
+        os.rename(tempfile, join(folder_config, file))
     except Exception as err:
         print(f"Could not delete key in the file '{file}': {err}")
 
@@ -152,19 +150,20 @@ def read(file=main_config):
 
     """
     try:
-        # if os.path.isfile(file) is True:
-        with open(file, 'r') as f:
+        with open(f"{folder_config}{file}", 'r') as f:
             data = json.load(f)
             return data
     except Exception as err:
         if file == main_config:
-            try:
-                create(file)
-                with open(file, 'r') as f:
-                    data = json.load(f)
-                return data
-            except Exception as err:
-                print(f"Could not read file '{file}': {err}")
+            create()
+            with open(join(folder_config, file), 'r') as f:
+                data = json.load(f)
+            return data
+        elif file == 'api_options.json':
+            create(join(folder_repo, '/cbm/api/', file), file)
+            with open(join(folder_config, file), 'r') as f:
+                data = json.load(f)
+            return data
         else:
             print(f"Could not read file '{file}': {err}")
 
@@ -174,48 +173,46 @@ def create(from_file=main_default, to_file=main_config):
     """
 
     # if file does not exist, create it
-    if os.path.isfile(to_file) is False:
+    if os.path.isfile(join(folder_config, to_file)) is False:
         # Read from default configuration file
         with open(from_file, 'r') as f:
-            config_default = json.load(f)
-        with open(to_file, 'w') as f:
-            json.dump(config_default, f, indent=4)
+            dict_default = json.load(f)
+        with open(join(folder_config, to_file), 'w') as f:
+            json.dump(dict_default, f, indent=4)
         time.sleep(0.5)  # Sleep for half second to run the function.
-        file_name = to_file.split('/')[-1]
-        print("The configuration file did not exist, a new default "
-              f"{file_name} file was created.")
+        print("The configuration file did not exist, a new default ",
+              f"{to_file} file was created.")
 
 
 def update_keys(from_file=main_default, to_file=main_config):
     """Update missing keys of old configuration files."""
-    if os.path.isfile(to_file) is False:
+    if os.path.isfile(join(folder_config, to_file)) is False:
         create(from_file, to_file)
-    
-    with open(to_file, 'r') as f:
-        dict_config = json.load(f)
+
     with open(from_file, 'r') as f:
-        dict_default = json.load(f)
+        dict_new = json.load(f)
+    
+    with open(join(folder_config, to_file), 'r') as f:
+        dict_old = json.load(f)
 
     updated_keys = 0
-    for key in dict_default.keys():
-        if key not in dict_config:
-            dict_config[key] = dict_default[key]
+    for key in dict_new.keys():
+        if key not in dict_old:
+            dict_old[key] = dict_new[key]
             updated_keys += 1
-        for k in dict_default[key].keys():
-            if k not in dict_config[key]:
-                dict_config[key][k] = dict_default[key][k]
-
-    with open(main_config, 'w') as f:
-        json.dump(dict_config, f, indent=4)
+        for k in dict_new[key].keys():
+            if k not in dict_old[key]:
+                dict_old[key][k] = dict_new[key][k]
+                updated_keys += 1
 
     # create randomly named temporary file to avoid
     # interference with other thread/asynchronous request
-    tempfile = os.path.join(folder_config, str(uuid.uuid4()))
+    tempfile = join(folder_config, str(uuid.uuid4()))
     with open(tempfile, 'w') as f:
-        json.dump(dict_config, f, indent=4)
+        json.dump(dict_old, f, indent=4)
 
     # rename temporary file replacing old file
-    os.rename(tempfile, to_file)
+    os.rename(tempfile, join(folder_config, to_file))
 
     if updated_keys > 0:
         print(f"{updated_keys+1} new json configuration objects are added to the configuration file.")
@@ -276,52 +273,3 @@ def autoselect(matching_text=None, import_list=[], help_text=True):
         print(f"Could not auto select a value '{matching_text}' for from the list '{import_list[0]} ...': {err}")
         value = None
     return value
-
-
-def clean_temp(hide=False):
-    import shutil
-    from IPython.display import display
-    from ipywidgets import Button, Output, HBox
-
-    progress = Output()
-    def outlog(*text):
-        progress.clear_output()
-        with progress:
-            print(*text)
-
-    temppath = get_value(['paths', 'temp'])
-    directory = os.listdir(temppath)
-
-    if len(directory) > 0:
-        outlog(f"Your temp folder '{temppath}' has old files:",
-              f" '{directory}', do you want to delete them? ")
-
-    clean_temp = Button(
-        value=False,
-        description='Empty temp folder',
-        disabled=False,
-        button_style='danger',
-        tooltip='Delete all data from the temporary folder.',
-        icon='trash'
-    )
-
-    clean_box = HBox([clean_temp, progress])
-
-    @clean_temp.on_click
-    def clean_temp_on_click(b):
-        temppath = get_value(['paths', 'temp'])
-        directory = os.listdir(temppath)
-        for i in directory:
-            try:
-                shutil.rmtree(f'{temppath}{i}')
-            except Exception:
-                os.remove(f'{temppath}{i}')
-        outlog(f"The '{temppath}' folder is now empty.")
-
-    if hide is False:
-        return clean_box
-    elif hide is True and len(directory) > 0:
-        return clean_box
-    else:
-        return HBox([])
-

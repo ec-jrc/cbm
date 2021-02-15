@@ -7,8 +7,8 @@
         "member_state": "",
         "polygon": "",
         "data_source": "1",
-        "db_conn": "1",
-        "ds_conf": "default",
+        "db_conn": "main",
+        "dataset": "default_2020",
         "ds_year": "2020",
         "jupyterlab": "True",
         "plimit": "25"
@@ -20,11 +20,11 @@
     },
     "paths": {
         "data": "data/",
-        "temp": "tmp/"
+        "temp": "temp/"
     },
     "files": {
-        "pids_poly": "tmp/pids_from_polygon.txt",
-        "pids_dist": "tmp/pids_from_distance.txt"
+        "pids_poly": "temp/pids_from_polygon.txt",
+        "pids_dist": "temp/pids_from_distance.txt"
     },
     "api": {
         "url": "http://0.0.0.0",
@@ -32,8 +32,8 @@
         "pass": ""
     },
     "db": {
-        "1": {
-            "desc": "Main DB",
+        "main": {
+            "desc": "Main db",
             "host": "0.0.0.0",
             "port": "5432",
             "name": "postgres",
@@ -43,12 +43,11 @@
         }
     },
     "dataset": {
-        "default": {
-            "db": "1",
-            "desc": "",
+        "default_2020": {
+            "db": "main",
+            "desc": "Dataset description",
             "center": "51.0,14.0",
             "zoom": "5",
-            "year": "2020",
             "start_date": "",
             "end_date": "",
             "tables": {
