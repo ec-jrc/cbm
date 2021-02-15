@@ -16,7 +16,7 @@ from ipywidgets import (Text, Label, HBox, VBox, Layout, Tab, Dropdown,
 
 from cbm.utils import config
 from cbm.ipycbm.utils import settings
-from cbm.sources import database
+from cbm.sources import db
 from cbm.ipycbm.ipy_ext import ext_func
 from cbm.foi import foi_v1
 from cbm.foi import foi_v2
@@ -297,11 +297,11 @@ def foi_tab_v1():
         try:
             functions = glob.glob(f"{path_foi}*.func")
             db = config.get_value(['set', 'db_conn'])        
-            sche = config.get_value(['db', db, 'conn', 'sche'])
-            user = config.get_value(['db', db, 'conn', 'user'])
+            sche = config.get_value(['db', db, 'sche'])
+            user = config.get_value(['db', db, 'user'])
 
             for f in functions:
-                database.insert_function(open(f).read().format(
+                db.insert_function(open(f).read().format(
                     schema=sche, owner=user))
             finc_list = [f"ipycbm_{f.split('/')[-1].split('.')[0]}, " for f in functions]
             outlog(f"The functions: {('').join(finc_list)}where added to the database")
