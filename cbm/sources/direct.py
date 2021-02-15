@@ -8,14 +8,14 @@
 # License   : 3-Clause BSD
 
 
-from cbm.sources import database
+from cbm.sources import db
 from cbm.utils import config
 import json
 
 def ploc(aoi, year, lon, lat, geom=False):
     values = config.read()
-    db = int(values['ds_conf'][aoi]['db'])
-    data = database.getParcelByLocation(aoi, lon, lat, geom, db)
+    db = int(values['dataset'][aoi]['db'])
+    data = db.getParcelByLocation(aoi, lon, lat, geom, db)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -25,8 +25,8 @@ def ploc(aoi, year, lon, lat, geom=False):
 
 def pid(aoi, year, pid, geom=False):
     values = config.read()
-    db = int(values['ds_conf'][aoi]['db'])
-    data = database.getParcelById(aoi, pid, geom, db)
+    db = int(values['dataset'][aoi]['db'])
+    data = db.getParcelById(aoi, pid, geom, db)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -36,8 +36,8 @@ def pid(aoi, year, pid, geom=False):
 
 def ppoly(aoi, year, polygon, geom=False, only_ids=True):
     values = config.read()
-    db = int(values['ds_conf'][aoi]['db'])
-    data = database.getParcelsByPolygon(aoi, polygon, geom, only_ids, db)
+    db = int(values['dataset'][aoi]['db'])
+    data = db.getParcelsByPolygon(aoi, polygon, geom, only_ids, db)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -47,8 +47,8 @@ def ppoly(aoi, year, polygon, geom=False, only_ids=True):
 
 def pts(aoi, year, pid, tstype, band=None):
     values = config.read()
-    db = int(values['ds_conf'][aoi]['db'])
-    data = database.getParcelTimeSeries(aoi, year, pid, tstype, band, db)
+    db = int(values['dataset'][aoi]['db'])
+    data = db.getParcelTimeSeries(aoi, year, pid, tstype, band, db)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -89,8 +89,8 @@ def rcbl(parcel, start_date, end_date, bands, sat, chipsize, filespath):
 
     start = time.time()
     parcel_id = parcel['ogc_fid'][0]
-    reference_list = database.getS2frames(parcel_id, start_date, end_date)
-    df_polygon = database.getPolygonCentroid(parcel_id)
+    reference_list = db.getS2frames(parcel_id, start_date, end_date)
+    df_polygon = db.getPolygonCentroid(parcel_id)
     json_centroid = json.loads(df_polygon['center'][0])
     # json_polygon = json.loads(df_polygon['polygon'][0])
     parcel_center = json_centroid['coordinates']
@@ -100,7 +100,7 @@ def rcbl(parcel, start_date, end_date, bands, sat, chipsize, filespath):
     # Note the SRID in some cases may not be included in the osr
     # SpatialReference list in those cases a EPSG must be entered below.
     # target_EPSG = 32662
-    target_EPSG = database.getSRID('es2019')
+    target_EPSG = db.getSRID('es2019')
     source = osr.SpatialReference()
     source.ImportFromEPSG(4326)
     target = osr.SpatialReference()
