@@ -113,8 +113,8 @@ def centroid(area, source):
     """
     values = config.read()
     if source == 1:
-        center = values['ds_conf'][area]['center'].split(",")
-        zoom = values['ds_conf'][area]['zoom']
+        center = values['dataset'][area]['center'].split(",")
+        zoom = values['dataset'][area]['zoom']
     else:
         if 'nld' in area:
             center, zoom = [52.13, 5.29], 10

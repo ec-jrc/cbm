@@ -27,39 +27,39 @@ def get():
 
     values = config.read()
     # Set the max number of parcels that can be downloaded at once.
-    plimit = int(values['set']['plimit'])
-
+    
     def aois_options():
         values = config.read()
         options = {}
         if values['set']['data_source'] == '0':
-            for desc in values['api']['options']['aois']:
-                aoi = f"{values['api']['options']['aois'][desc]}"
-                options[(desc, aoi)] = values['api']['options']['years'][aoi]
+            values = config.read('api_options.json')
+            for aoi in values['aois']:
+                desc = f"{values['aois'][aoi]['desc']}"
+                options[(desc, aoi)] = values['aois'][aoi]['year']
         elif values['set']['data_source'] == '1':
-            for aoi in values['ds_conf']:
-                desc = f"{values['ds_conf'][aoi]['desc']}"
-                confgs = values['ds_conf'][aoi]['years']
-                options[(f'{desc} ({aoi})', aoi)] = [y for y in confgs]
+            values = config.read()
+            for aoi in values['dataset']:
+                desc = f"{values['dataset'][aoi]['desc']}"
+                options[(f"{desc} ({aoi})", aoi)] = [aoi.split('_')[-1]]
         return options
 
     def aois_years():
         values = config.read()
         years = {}
         if values['set']['data_source'] == '0':
-            for desc in values['api']['options']['aois']:
-                aoi = values['api']['options']['aois'][desc]
-                years[aoi] = values['api']['options']['years'][aoi]
+            values = config.read('api_options.json')
+            for aoi in values['aois']:
+                years[aoi] = values['aois'][aoi]['year']
         elif values['set']['data_source'] == '1':
-            for aoi in values['ds_conf']:
-                desc = f"{values['ds_conf'][aoi]['desc']}"
-                years[aoi] = [y for y in values['ds_conf'][aoi]['years']]
+            values = config.read()
+            for aoi in values['dataset']:
+                years[aoi] = [aoi.split('_')[-1]]
         return years
 
     try:
         aois = Dropdown(
             options=tuple(aois_options()),
-            value=values['set']['ds_conf'],
+            value=values['set']['dataset'],
             description='AOI:',
             disabled=False,
         )
@@ -70,10 +70,17 @@ def get():
             disabled=False,
         )
 
+    def years_disabled():
+        values = config.read()
+        if values['set']['data_source'] == '1':
+            return True
+        else:
+            return False
+
     year = Dropdown(
         options=next(iter(aois_options().values())),
         description='Year:',
-        disabled=False,
+        disabled=years_disabled(),
     )
     button_refresh = Button(layout=Layout(width='35px'),
                                     icon='fa-refresh')
@@ -82,16 +89,19 @@ def get():
     def button_refresh_on_click(b):
         aois.options = tuple(aois_options())
         year.options = aois_years()[aois.value]
+        year.disabled = years_disabled()
 
     def table_options_change(change):
         try:
             year.options = aois_years()[change.new]
+            year.disabled = years_disabled()
         except:
             aois.options = tuple(aois_options())
             year.options = aois_years()[aois.value]
+            year.disabled = years_disabled()
     aois.observe(table_options_change, 'value')
 
-    info_method = Label("2. Select a method to get the data.")
+    info_method = Label("2. Select a method to download parcel data.")
     
     method = ToggleButtons(
         options=[('Parcel ID', 2),
@@ -390,8 +400,8 @@ def get():
         if source == 0:
             datapath = f'{paths.value}{aois.value}{year.value}/parcel_{pid}/'
         elif source == 1:
-            ds_conf = config.get_value(['set', 'ds_conf'])
-            datapath = f'{paths.value}{ds_conf}/parcel_{pid}/'
+            dataset = config.get_value(['set', 'dataset'])
+            datapath = f'{paths.value}{dataset}/parcel_{pid}/'
         file_pinf = f"{datapath}{pid}_information"
 
         outlog(data_handler.export(parcel, 10, file_pinf))
@@ -478,6 +488,7 @@ def get():
                 outlog(f"Could not get parcel information: {err}")
         elif method.value == 4:
             try:
+                plimit = int(values['set']['plimit'])
                 file = config.get_value(['files', 'pids_poly'])
                 with open(file, "r") as text_file:
                     pids = text_file.read().split('\n')
