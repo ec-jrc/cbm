@@ -25,7 +25,7 @@ import requests
 from lxml import etree
 import psycopg2
 from datetime import datetime
-from cbm.sources import database
+from cbm.sources import db
 
 
 def dias_cat(tb_prefix, aoi, start, end, card, option):
@@ -85,7 +85,7 @@ def dias_cat(tb_prefix, aoi, start, end, card, option):
         print(f"{len(entries)} CARD entries found ...")
 
     try:
-        conn = database.connection()
+        conn = db.connection()
         cur = conn.cursor()
     except Exception:
         print("Can not connect to the database")
