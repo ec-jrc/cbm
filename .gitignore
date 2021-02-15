@@ -1,9 +1,10 @@
 # itignore CbM files
 
-_config.json
+*.json
 config/
 ipynb/tests/*
 ipynb/test*
+ipynb/*.json
 data/
 tmp/
 
