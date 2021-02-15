@@ -14,7 +14,7 @@ from ipywidgets import (Text, Label, HBox, VBox, Layout, Tab, Dropdown,
                         Output, Button, FileUpload, Checkbox, DatePicker)
 
 from cbm.utils import config
-from cbm.sources import database
+from cbm.sources import db
 from cbm.extract import db_tables
 
 from cbm.extract import (pgS2Extract, pgS1bsExtract)
@@ -141,7 +141,7 @@ def upload_shp(path_data):
             if subprocess.call(command) == 0:
                 progress.clear_output()
                 outlog(f"Completed. Total number of rows in table '{tb_name}':",
-                       database.exact_count(tb_name))
+                       db.exact_count(tb_name))
             else:
                 outlog("Could not import shp file.")
         else:
@@ -217,11 +217,11 @@ def create_tables():
         if tb_prefix.value != '':
             for key in tbs:
                 if checkboxes[key].value is True:
-                    if database.tb_exist(
+                    if db.tb_exist(
                             f"{tb_prefix_clean}_{tbs[key]['table']}") is False:
                         sql = tbs[key]['sql'].replace(
                             '\n', '').replace('  ', '')
-                        database.execute_sql(sql.format(tb_prefix_clean))
+                        db.execute_sql(sql.format(tb_prefix_clean))
                         outlog(
                             f"The table {tb_prefix_clean}_{tbs[key]['table']} is created..")
                     else:

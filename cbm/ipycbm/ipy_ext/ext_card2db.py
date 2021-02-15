@@ -15,7 +15,7 @@ from ipywidgets import (Text, Label, HBox, VBox, Layout, Dropdown,
 from cbm.utils import config, data_options
 from cbm.card2db import creodiasMeta2DB as meta2DB
 from cbm.ipycbm.ipy_ext import ext_func
-from cbm.sources import database
+from cbm.sources import db
 
 def dias_cat():
 
@@ -34,7 +34,7 @@ def dias_cat():
         description='AOI:',
     )
     tb = Dropdown(
-        options=database.tables(),
+        options=db.tables(),
         tooltip="Select table",
         description='Table:',
     )
@@ -112,7 +112,7 @@ def dias_cat():
 
     @tb_refresh.on_click
     def tb_refresh_on_click(b):
-        tb.options=database.tables()
+        tb.options = db.tables()
 
     @bt_card2db.on_click
     def bt_card2db_on_click(b):
@@ -124,11 +124,11 @@ def dias_cat():
             tb_prefix = ''
 
         dc_table = f'{tb_prefix}_dias_catalogue'
-        if database.tb_exist(dc_table) is True:
+        if db.tb_exist(dc_table) is True:
             if aoi_method.value == 1:
                 polygon = ms.value.replace(' ','+')
             elif aoi_method.value == 2:
-                polygon = database.tb_extent(tb.value)
+                polygon = db.tb_extent(tb.value)
             elif aoi_method.value == 3:
                 polygon = ms.value.replace(' ','+')
 

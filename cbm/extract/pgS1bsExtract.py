@@ -21,20 +21,19 @@ from datetime import datetime
 import pandas as pd
 
 from cbm.utils import config
-from cbm.sources import database, object_storage
+from cbm.sources import db, object_storage
 
 def extractS1bs(startdate, enddate):
     start = time.time()
     frootpath = 'tmp'
 
     values = config.read()
-    dsc = values['set']['ds_conf']
-    dsy = values['set']['ds_year']
-    dias_catalogue = values['ds_conf'][dsc]['years'][dsy]['tables']['dias_catalog']
-    parcels_table = values['ds_conf'][dsc]['years'][dsy]['tables']['parcels']
-    results_table = values['ds_conf'][dsc]['years'][dsy]['tables']['s2']
+    dsc = values['set']['dataset']
+    dias_catalogue = values['dataset'][dsc]['tables']['dias_catalog']
+    parcels_table = values['dataset'][dsc]['tables']['parcels']
+    results_table = values['dataset'][dsc]['tables']['s1']
 
-    inconn = database.connection()
+    inconn = db.connection()
     if not inconn:
         print("No in connection established")
         sys.exit(1)
@@ -179,9 +178,8 @@ def extractS1bs(startdate, enddate):
     # Open a named cursor
     incurs = inconn.cursor(name='fetch_image_coverage', cursor_factory=psycopg2.extras.DictCursor)
 
-    ds_conf = config.get_value(['set', 'ds_conf'])
-    ds_year = config.get_value(['set', 'ds_year'])
-    pid_column = config.get_value(['ds_conf', ds_conf, 'years', ds_year, 'columns', 'parcels_id'])
+    dataset = config.get_value(['set', 'dataset'])
+    pid_column = config.get_value(['dataset', dataset, 'columns', 'parcels_id'])
 
     parcelsql = f"""
     SELECT p.{pid_column}, ST_AsGeoJSON(st_transform(p.wkb_geometry,
