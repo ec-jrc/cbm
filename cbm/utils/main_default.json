@@ -6,7 +6,7 @@
         "update_check": "True",
         "member_state": "",
         "polygon": "",
-        "data_source": "1",
+        "data_source": "api",
         "db_conn": "main",
         "dataset": "default_2020",
         "ds_year": "2020",

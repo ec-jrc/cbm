@@ -11,11 +11,11 @@
 """
 Project: Copernicus DIAS for CAP 'checks by monitoring'.
 Functions:
-  connection(db=1)
+  connection(db='main')
       - Create a new database session and return a new connection object.
-  connection_cursor(db=1):
+  connection_cursor(db='main'):
       - Create a cursor to execute PostgreSQL command in a database session.
-  information(db=1)
+  information(db='main')
       - Get database connection information.
   get_value(dict_keys, var_name=None)
       - Get value a table's name as value based on the given dictionary keys.
@@ -33,7 +33,7 @@ from cbm.utils import config
 
 # Database conection configurations
 # #############################################################################
-def crls(db=1):
+def crls(db='main'):
     try:
         # Database
         values = config.read()
@@ -45,10 +45,10 @@ def crls(db=1):
         DB_PASS = values['db'][db]['pass']
         return DB_HOST, DB_NAME, DB_USER, DB_PORT, DB_PASS
     except Exception as err:
-        print(f"Could not read config file: {err}")
+        print(f"Err: Could not read config file: {err}")
 
 
-def conn_str(db=1):
+def conn_str(db='main'):
     """Get the database connection string to connect the application to the database.\
     You will need the database credentials for this to work (database server address,\
     port, databese name, username and password)."""
@@ -57,7 +57,7 @@ def conn_str(db=1):
     return postgres
 
 
-def connection(db=1):
+def connection(db='main'):
     """Create a new database session and return a new connection object."""
     try:
         conn = psycopg2.connect(conn_str(db))
@@ -67,7 +67,7 @@ def connection(db=1):
         return ''
 
 
-def connection_cursor(db=1):
+def connection_cursor(db='main'):
     """Create a cursor to execute PostgreSQL command in a database session"""
     try:
         conn = psycopg2.connect(conn_str(db))
@@ -79,7 +79,7 @@ def connection_cursor(db=1):
 
 # Geting informationand and data
 # #############################################################################
-def get_value(dict_keys, var_name=None):
+def get_value(dict_keys, var_name='', db='main'):
     """Get value for tables.
 
     Example:
@@ -91,12 +91,8 @@ def get_value(dict_keys, var_name=None):
         var_name, the name ofthe variable
 
     """
-    if dict_keys[0][-1] == '2':
-        config_value = config.get_value(dict_keys)
-        value = config.autoselect(config_value, tables(2), True)
-    else:
-        config_value = config.get_value(dict_keys)
-        value = config.autoselect(config_value, tables(1), True)
+    config_value = config.get_value(dict_keys)
+    value = config.autoselect(config_value, tables(db), True)
     if var_name is not None:
         if value == None:
             print(f"!WARNING! The value for table '{var_name}' is: '{value}'.")
@@ -105,7 +101,7 @@ def get_value(dict_keys, var_name=None):
     return value
 
 
-def info(db=1):
+def info(db='main'):
     """Get postgres database connection information."""
     try:
         conn = psycopg2.connect(conn_str(db))
@@ -121,7 +117,7 @@ def info(db=1):
         print("Be sure the credentials are correct and restart the notebook.")
 
 
-def tables(db=1, matching_text=None, print_list=False):
+def tables(db='main', matching_text=None, print_list=False):
     """Get the database tables as a python list"""
     list_ = []
     try:
@@ -153,7 +149,7 @@ def tables(db=1, matching_text=None, print_list=False):
         return []
 
 
-def table_data(table, where, db=1):
+def table_data(table, where, db='main'):
     """Get the rows from a table with a limit 1000"""
     conn = psycopg2.connect(conn_str(db))
     try:
@@ -169,7 +165,7 @@ def table_data(table, where, db=1):
     return df_data
 
 
-def table_columns(table, db=1, matching_text=None):
+def table_columns(table, db='main', matching_text=None):
     """Get a list of the columns from a table."""
     conn = psycopg2.connect(conn_str(db))
     try:
@@ -217,20 +213,20 @@ def close_connection(close_1='', close_2=''):
 
 # Requests
 
-def getParcelByLocation(dsc, lon, lat, withGeometry=False, db=1):
+def getParcelByLocation(dsc, lon, lat, withGeometry=False, db='main'):
     """Find the parcel under the given coordinates"""
     conn = psycopg2.connect(conn_str(db))
     cur = conn.cursor()
     data = []
     values = config.read()
-    dsc = values['set']['ds_conf']
+    dsc = values['set']['dataset']
     dsy = values['set']['ds_year']
     try:
         values = config.read()
-        parcels_table = values['ds_conf'][dsc]['years'][dsy]['tables']['parcels']
-        crop_names = values['ds_conf'][dsc]['columns']['crop_names']
-        crop_codes = values['ds_conf'][dsc]['columns']['crop_codes']
-        parcels_id = values['ds_conf'][dsc]['columns']['parcels_id']
+        parcels_table = values['dataset'][dsc]['tables']['parcels']
+        crop_names = values['dataset'][dsc]['columns']['crop_names']
+        crop_codes = values['dataset'][dsc]['columns']['crop_codes']
+        parcels_id = values['dataset'][dsc]['columns']['parcels_id']
 
         getTableSrid = f"""
             SELECT srid FROM geometry_columns
@@ -272,20 +268,20 @@ def getParcelByLocation(dsc, lon, lat, withGeometry=False, db=1):
         return data.append('Ended with no data')
 
 
-def getParcelById(dsc, pid, withGeometry=False, db=1):
+def getParcelById(dsc, pid, withGeometry=False, db='main'):
     """Get parcel information for the given parcel id"""
     conn = psycopg2.connect(conn_str(db))
     cur = conn.cursor()
     data = []
     values = config.read()
-    dsc = values['set']['ds_conf']
+    dsc = values['set']['dataset']
     dsy = values['set']['ds_year']
     try:
         values = config.read()
-        parcels_table = values['ds_conf'][dsc]['years'][dsy]['tables']['parcels']
-        crop_names = values['ds_conf'][dsc]['years'][dsy]['columns']['crop_names']
-        crop_codes = values['ds_conf'][dsc]['years'][dsy]['columns']['crop_codes']
-        parcels_id = values['ds_conf'][dsc]['years'][dsy]['columns']['parcels_id']
+        parcels_table = values['dataset'][dsc]['tables']['parcels']
+        crop_names = values['dataset'][dsc]['columns']['crop_names']
+        crop_codes = values['dataset'][dsc]['columns']['crop_codes']
+        parcels_id = values['dataset'][dsc]['columns']['parcels_id']
 
         getTableSrid = f"""
             SELECT srid FROM geometry_columns
@@ -325,7 +321,7 @@ def getParcelById(dsc, pid, withGeometry=False, db=1):
         return data.append('Ended with no data')
 
 
-def getParcelsByPolygon(dsc, polygon, withGeometry=False, only_ids=True, db=1):
+def getParcelsByPolygon(dsc, polygon, withGeometry=False, only_ids=True, db='main'):
     """Get list of parcels within the given polygon"""
     poly = polygon.replace('_', ' ').replace('-', ',')
 
@@ -333,14 +329,14 @@ def getParcelsByPolygon(dsc, polygon, withGeometry=False, only_ids=True, db=1):
     cur = conn.cursor()
     data = []
     values = config.read()
-    dsc = values['set']['ds_conf']
+    dsc = values['set']['dataset']
     dsy = values['set']['ds_year']
     try:
         values = config.read()
-        parcels_table = values['ds_conf'][dsc]['years'][dsy]['tables']['parcels']
-        crop_names = values['ds_conf'][dsc]['years'][dsy]['columns']['crop_names']
-        crop_codes = values['ds_conf'][dsc]['years'][dsy]['columns']['crop_codes']
-        parcels_id = values['ds_conf'][dsc]['years'][dsy]['columns']['parcels_id']
+        parcels_table = values['dataset'][dsc]['tables']['parcels']
+        crop_names = values['dataset'][dsc]['columns']['crop_names']
+        crop_codes = values['dataset'][dsc]['columns']['crop_codes']
+        parcels_id = values['dataset'][dsc]['columns']['parcels_id']
 
         getTableSrid = f"""
             SELECT srid FROM geometry_columns
@@ -387,18 +383,18 @@ def getParcelsByPolygon(dsc, polygon, withGeometry=False, only_ids=True, db=1):
         return data.append('Ended with no data')
 
 
-def getParcelTimeSeries(dsc, year, pid, tstype, band=None, db=1):
+def getParcelTimeSeries(dsc, year, pid, tstype, band=None, db='main'):
     """Get the time series for the given parcel"""
     conn = psycopg2.connect(conn_str(db))
     cur = conn.cursor()
     data = []
     values = config.read()
-    dsc = values['set']['ds_conf']
+    dsc = values['set']['dataset']
     dsy = values['set']['ds_year']
     try:
         values = config.read()
-        dias_catalog = values['ds_conf'][dsc]['years'][dsy]['tables']['dias_catalog']
-        signatures_tb = values['ds_conf'][dsc]['years'][dsy]['tables'][tstype]
+        dias_catalog = values['dataset'][dsc]['tables']['dias_catalog']
+        signatures_tb = values['dataset'][dsc]['tables'][tstype]
 
         if band:
             getTableDataSql = f"""
@@ -437,7 +433,7 @@ def getParcelTimeSeries(dsc, year, pid, tstype, band=None, db=1):
         return data.append('Ended with no data')
 
 
-def getParcelPeers(parcels_table, pid, distance, maxPeers, db=1):
+def getParcelPeers(parcels_table, pid, distance, maxPeers, db='main'):
     conn = psycopg2.connect(conn_str(db))
     cur = conn.cursor()
     data = []
@@ -482,15 +478,15 @@ def getParcelPeers(parcels_table, pid, distance, maxPeers, db=1):
         return data.append('Ended with no data')
 
 
-def getS2frames(parcel_id, start, end, db=1):
+def getS2frames(parcel_id, start, end, db='main'):
     """Get the sentinel images frames from dias cataloge for the given parcel"""
     conn = psycopg2.connect(conn_str(db))
     values = config.read()
-    dsc = values['set']['ds_conf']
+    dsc = values['set']['dataset']
     dsy = values['set']['ds_year']
-    dias_catalog = values['ds_conf'][dsc]['years'][dsy]['tables']['dias_catalog']
-    parcels_table = values['ds_conf'][dsc]['years'][dsy]['tables']['parcels']
-    parcels_id = values['ds_conf'][dsc]['years'][dsy]['columns']['parcels_id']
+    dias_catalog = values['dataset'][dsc]['tables']['dias_catalog']
+    parcels_table = values['dataset'][dsc]['tables']['parcels']
+    parcels_id = values['dataset'][dsc]['columns']['parcels_id']
     # Get the S2 frames that cover a parcel identified by parcel
     # ID from the dias_catalogue for the selected date.
 
@@ -512,14 +508,14 @@ def getS2frames(parcel_id, start, end, db=1):
     return df_s2frames['reference'].tolist()
 
 
-def getSRID(dsc, db=1):
+def getSRID(dsc, db='main'):
     """Get the SRID"""
     # Get parcels SRID.
     conn = psycopg2.connect(conn_str(db))
     values = config.read()
-    dsc = values['set']['ds_conf']
+    dsc = values['set']['dataset']
     dsy = values['set']['ds_year']
-    parcels_table = values['ds_conf'][dsc]['years'][dsy]['tables']['parcels']
+    parcels_table = values['dataset'][dsc]['tables']['parcels']
 
     pgq_srid = f"""
         SELECT ST_SRID(wkb_geometry) FROM {parcels_table} LIMIT 1;
@@ -532,14 +528,14 @@ def getSRID(dsc, db=1):
     return target_EPSG
 
 
-def getPolygonCentroid(parcel_id, db=1):
+def getPolygonCentroid(parcel_id, db='main'):
     """Get the centroid of the given polygon"""
     conn = psycopg2.connect(conn_str(db))
     values = config.read()
-    dsc = values['set']['ds_conf']
+    dsc = values['set']['dataset']
     dsy = values['set']['ds_year']
-    parcels_table = values['ds_conf'][dsc]['years'][dsy]['tables']['parcels']
-    parcels_id = values['ds_conf'][dsc]['years'][dsy]['columns']['parcels_id']
+    parcels_table = values['dataset'][dsc]['tables']['parcels']
+    parcels_id = values['dataset'][dsc]['columns']['parcels_id']
 
     getParcelPolygonSql = f"""
         SELECT ST_Asgeojson(ST_transform(ST_Centroid(wkb_geometry), 4326)) as center,
@@ -555,7 +551,7 @@ def getPolygonCentroid(parcel_id, db=1):
     return df_pcent
 
 
-def getTableCentroid(parcels_table, db=1):
+def getTableCentroid(parcels_table, db='main'):
     conn = psycopg2.connect(conn_str(db))
 
     getTablePolygonSql = f"""
@@ -569,7 +565,7 @@ def getTableCentroid(parcels_table, db=1):
     return df_tcent
 
 
-def insert_function(func, db=1):
+def insert_function(func, db='main'):
     """
     Insert functions to database.
     Args:
@@ -587,7 +583,7 @@ def insert_function(func, db=1):
     cur.execute(func)
 
 
-def exact_count(table, db=1):
+def exact_count(table, db='main'):
     """Return the exact count of rown of the given table"""
     conn = psycopg2.connect(conn_str(db))
     cur = conn.cursor()
@@ -598,7 +594,7 @@ def exact_count(table, db=1):
     cur.execute(getExactCount)
     return cur.fetchall()[0][0]
 
-def execute_query(query, db=1):
+def execute_query(query, db='main'):
     """Return query"""
     conn = psycopg2.connect(conn_str(db))
     cur = conn.cursor()
@@ -608,7 +604,7 @@ def execute_query(query, db=1):
     cur.close()
     return data
 
-def execute_sql(sql, db=1):
+def execute_sql(sql, db='main'):
     """Execute sql"""
     try:
         conn = psycopg2.connect(conn_str(db))
@@ -622,7 +618,7 @@ def execute_sql(sql, db=1):
         return 1
 
 
-def tb_extent(table, db=1):
+def tb_extent(table, db='main'):
     """Get the extent of the table"""
     data = []
     try:
@@ -644,7 +640,7 @@ def tb_extent(table, db=1):
         return err
 
 
-def tb_exist(table, db=1):
+def tb_exist(table, db='main'):
     """Check if table exist"""
     tbExistSql = f"""
         SELECT * FROM information_schema.tables

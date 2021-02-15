@@ -15,9 +15,9 @@ import psycopg2.extras
 import logging
 
 sys.path.append('/app')
-from cbm.sources import database
+from cbm.sources import db
 
-conn_str = database.conn_str()
+conn_str = db.conn_str()
 # conn_str = "host='0.0.0.0' dbname='postgres' user='postgres' port=5432 password=''"
 
 logging.basicConfig(filename='queryHandler.log', filemode='w',
