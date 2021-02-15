@@ -21,7 +21,7 @@ import fiona
 from yaml import load, FullLoader
 
 from cbm.utils import config
-from cbm.sources import database
+from cbm.sources import db
 
 
 def main(vector_file, raster_file, yaml_file, pre_min_het, pre_max_het, area_threshold):
@@ -57,7 +57,7 @@ def main(vector_file, raster_file, yaml_file, pre_min_het, pre_max_het, area_thr
     path_temp = f"{config.get_value(['paths', 'temp'])}foi/"
     path_data = f"{config.get_value(['paths', 'data'])}foi/"
     # database connection string
-    db_connection = f"PG:{database.conn_str(db=1)}"
+    db_connection = f"PG:{db.conn_str(db=1)}"
     # ogr2ogr options
     geom_field_name = "GEOMETRY_NAME=geom"
     overwrite_option = "-OVERWRITE"
@@ -160,7 +160,7 @@ def main(vector_file, raster_file, yaml_file, pre_min_het, pre_max_het, area_thr
     # Calling the PostgreSQL function wich checks the heterogeneity. The function calculates the percentages
     # and sets an attribute "foi_h" to 1 when the percentage of pixels is between thresholds
     try:
-        ps_connection = database.connection()
+        ps_connection = db.connection()
 
         ps_connection.autocommit = True
 
@@ -229,7 +229,7 @@ def main(vector_file, raster_file, yaml_file, pre_min_het, pre_max_het, area_thr
     # TO DO: put the unique identifier as function param
 
     try:
-        ps_connection = database.connection()
+        ps_connection = db.connection()
 
         ps_connection.autocommit = True
 
