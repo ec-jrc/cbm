@@ -7,7 +7,8 @@
 # Copyright : 2021 European Commission, Joint Research Centre
 # License   : 3-Clause BSD
 
-
+import os
+from IPython.display import display
 from ipywidgets import (Text, VBox, HBox, Label, Password, Dropdown,
                         Button, Checkbox, Layout, Output, BoundedIntText)
 
@@ -170,44 +171,44 @@ def widget_box():
             config.update(['git', 'pass'], str(git_pass.value))
         outlog("The new settings are saved.")
 
-    wbox = VBox([config.clean_temp(), wbox_user, wbox_sys,
+    wbox = VBox([clean_temp(), wbox_user, wbox_sys,
                  wbox_git, HBox([btn_save, update.btn_update()]),
                  progress])
 
     return wbox
 
 
-def direct_conn(db='1'):
+def direct_conn(db='main'):
     values = config.read()
 
     info_db = Label("Database connection settings.")
 
     db_host = Text(
-        value=values['db'][db]['conn']['host'],
+        value=values['db'][db]['host'],
         placeholder='Database host',
         description='db Host:',
         disabled=False
     )
     db_port = Text(
-        value=values['db'][db]['conn']['port'],
+        value=values['db'][db]['port'],
         placeholder='Database port',
         description='db Port:',
         disabled=False
     )
     db_name = Text(
-        value=values['db'][db]['conn']['name'],
+        value=values['db'][db]['name'],
         placeholder='Database name',
         description='db Name:',
         disabled=False
     )
     db_user = Text(
-        value=values['db'][db]['conn']['user'],
+        value=values['db'][db]['user'],
         placeholder='Database user',
         description='db User:',
         disabled=False
     )
     db_pass = Password(
-        value=values['db'][db]['conn']['pass'],
+        value=values['db'][db]['pass'],
         placeholder='******',
         description='db Pass:',
         disabled=False
@@ -261,10 +262,10 @@ def direct_conn(db='1'):
     def wb_save_on_click(b):
         progress.clear_output()
         # Save database connection information
-        config.update(['db', db, 'conn', 'host'], str(db_host.value))
-        config.update(['db', db, 'conn', 'port'], str(db_port.value))
-        config.update(['db', db, 'conn', 'name'], str(db_name.value))
-        config.update(['db', db, 'conn', 'user'], str(db_user.value))
+        config.update(['db', db, 'host'], str(db_host.value))
+        config.update(['db', db, 'port'], str(db_port.value))
+        config.update(['db', db, 'name'], str(db_name.value))
+        config.update(['db', db, 'user'], str(db_user.value))
         if db_pass.value != '':
             config.update(['db', db, 'conn', 'pass'], str(db_pass.value))
         # Save Object storage connection information
@@ -282,3 +283,46 @@ def direct_conn(db='1'):
                  os_secret_key, wb_save, progress])
 
     return wbox
+
+
+def clean_temp(hide=False):
+    import shutil
+    progress = Output()
+    def outlog(*text):
+        progress.clear_output()
+        with progress:
+            print(*text)
+
+    temppath = config.get_value(['paths', 'temp'])
+    directory = os.listdir(os.path.join(config.folder_repo, temppath))
+
+    if len(directory) > 0:
+        outlog(f"Your temp folder '{temppath}' has old files:",
+              f" '{directory}', do you want to delete them? ")
+
+    bt_clean = Button(
+        value=False,
+        description='Empty temp folder',
+        disabled=False,
+        button_style='danger',
+        tooltip='Delete all data from the temporary folder.',
+        icon='trash'
+    )
+
+    clean_box = HBox([bt_clean, progress])
+
+    @bt_clean.on_click
+    def bt_clean_on_click(b):
+        for i in directory:
+            try:
+                shutil.rmtree(f'{temppath}{i}')
+            except Exception:
+                os.remove(f'{temppath}{i}')
+        outlog(f"The '{temppath}' folder is now empty.")
+
+    if hide is False:
+        return clean_box
+    elif hide is True and len(directory) > 0:
+        return clean_box
+    else:
+        return HBox([])

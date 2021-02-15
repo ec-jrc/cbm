@@ -31,12 +31,12 @@ def get():
     def aois_options():
         values = config.read()
         options = {}
-        if values['set']['data_source'] == '0':
+        if values['set']['data_source'] == 'api':
             values = config.read('api_options.json')
             for aoi in values['aois']:
                 desc = f"{values['aois'][aoi]['desc']}"
                 options[(desc, aoi)] = values['aois'][aoi]['year']
-        elif values['set']['data_source'] == '1':
+        elif values['set']['data_source'] == 'direct':
             values = config.read()
             for aoi in values['dataset']:
                 desc = f"{values['dataset'][aoi]['desc']}"
@@ -46,11 +46,11 @@ def get():
     def aois_years():
         values = config.read()
         years = {}
-        if values['set']['data_source'] == '0':
+        if values['set']['data_source'] == 'api':
             values = config.read('api_options.json')
             for aoi in values['aois']:
                 years[aoi] = values['aois'][aoi]['year']
-        elif values['set']['data_source'] == '1':
+        elif values['set']['data_source'] == 'direct':
             values = config.read()
             for aoi in values['dataset']:
                 years[aoi] = [aoi.split('_')[-1]]
@@ -72,7 +72,7 @@ def get():
 
     def years_disabled():
         values = config.read()
-        if values['set']['data_source'] == '1':
+        if values['set']['data_source'] == 'direct':
             return True
         else:
             return False
@@ -200,10 +200,10 @@ def get():
                 display(wbox_pids)
             elif obj['new'] == 3:
                 display(get_maps.base_map(aois.value,
-                    int(config.get_value(['set', 'data_source']))))
+                    config.get_value(['set', 'data_source'])))
             elif obj['new'] == 4:
                 display(VBox([get_maps.polygon(aois.value,
-                    int(config.get_value(['set', 'data_source']))),
+                    config.get_value(['set', 'data_source'])),
                     get_ids_box, ppoly_out]))
 
     method.observe(method_options, 'value')
@@ -396,7 +396,7 @@ def get():
         values = config.read()
         get_requests = data_source()
         pid = parcel['ogc_fid'][0]
-        source = int(config.get_value(['set', 'data_source']))
+        source = config.get_value(['set', 'data_source'])
         if source == 0:
             datapath = f'{paths.value}{aois.value}{year.value}/parcel_{pid}/'
         elif source == 1:
@@ -510,7 +510,7 @@ def get():
 
 
 def data_source():
-    source = int(config.get_value(['set', 'data_source']))
+    source = config.get_value(['set', 'data_source'])
     if source == 0:
         from cbm.sources import rest_api
         return rest_api

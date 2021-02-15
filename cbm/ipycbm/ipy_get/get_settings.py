@@ -19,12 +19,12 @@ from cbm.sources import db
 
 def widget_box():
 
-    source = int(config.get_value(['set', 'data_source']))
+    source = config.get_value(['set', 'data_source'])
 
     sources = RadioButtons(
         options=[
-            ("RESTful API for CbM.", 0),
-            ("Direct access to database and object storage.", 1)
+            ("RESTful API for CbM.", 'api'),
+            ("Direct access to database and object storage.", 'direct')
         ],
         value=source,
         layout={'width': 'max-content'}
@@ -40,18 +40,18 @@ def widget_box():
 
     view_options = VBox([info_direct])
 
-    if source == 0:
+    if source == 'api':
         view_options.children = [info_api, rest_api()]
-    elif source == 1:
+    elif source == 'direct':
         view_options.children = [info_direct, direct()]
 
     def on_source_change(change):
         view_options.children = []
-        if sources.value == 0:
+        if sources.value == 'api':
             view_options.children = [info_api, rest_api()]
-        elif sources.value == 1:
+        elif sources.value == 'direct':
             view_options.children = [info_direct, direct()]
-        config.update(['set', 'data_source'], str(sources.value))
+        config.update(['set', 'data_source'], sources.value)
 
     sources.observe(on_source_change, 'value')
 
