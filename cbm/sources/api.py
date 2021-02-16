@@ -212,3 +212,10 @@ def clouds(geom):
 
         histogram = {int(float(k)): v for k, v in properties.items()}
         # print(t, histogram)
+
+def get_options():
+    api_url, api_user, api_pass = config.credentials('api')
+    requrl = """{}/query/options"""
+    response = requests.get(requrl.format(api_url),
+                            auth=(api_user, api_pass))
+    return response.content

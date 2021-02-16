@@ -27,15 +27,27 @@ def get():
 
     values = config.read()
     # Set the max number of parcels that can be downloaded at once.
-    
+
+    ppoly_out = Output()
+
+    progress = Output()
+
+    def outlog(*text):
+        with progress:
+            print(*text)
+
+    def outlog_poly(*text):
+        with ppoly_out:
+            print(*text)
+
     def aois_options():
         values = config.read()
         options = {}
         if values['set']['data_source'] == 'api':
-            values = config.read('api_options.json')
-            for aoi in values['aois']:
-                desc = f"{values['aois'][aoi]['desc']}"
-                options[(desc, aoi)] = values['aois'][aoi]['year']
+            api_values = config.read('api_options.json')
+            for aoi in api_values['aois']:
+                desc = f"{api_values['aois'][aoi]['desc']}"
+                options[(desc, aoi)] = api_values['aois'][aoi]['year']
         elif values['set']['data_source'] == 'direct':
             values = config.read()
             for aoi in values['dataset']:
@@ -47,9 +59,9 @@ def get():
         values = config.read()
         years = {}
         if values['set']['data_source'] == 'api':
-            values = config.read('api_options.json')
-            for aoi in values['aois']:
-                years[aoi] = values['aois'][aoi]['year']
+            api_values = config.read('api_options.json')
+            for aoi in api_values['aois']:
+                years[aoi] = api_values['aois'][aoi]['year']
         elif values['set']['data_source'] == 'direct':
             values = config.read()
             for aoi in values['dataset']:
@@ -87,6 +99,12 @@ def get():
 
     @button_refresh.on_click
     def button_refresh_on_click(b):
+        values = config.read()
+        if values['set']['data_source'] == 'api':
+            get_requests = data_source()
+            available_options = json.loads(get_requests.get_options())
+            outlog(data_handler.export(available_options, 10, f"{config.folder_config}api_options"))
+            outlog(f"The API options are updated.")
         aois.options = tuple(aois_options())
         year.options = aois_years()[aois.value]
         year.disabled = years_disabled()
@@ -154,18 +172,6 @@ def get():
 
     get_ids_box = HBox([bt_get_ids, Label(
         "Find the parcels that are in the polygon.")])
-
-    ppoly_out = Output()
-
-    progress = Output()
-
-    def outlog(*text):
-        with progress:
-            print(*text)
-
-    def outlog_poly(*text):
-        with ppoly_out:
-            print(*text)
 
     @bt_get_ids.on_click
     def bt_get_ids_on_click(b):
@@ -397,9 +403,9 @@ def get():
         get_requests = data_source()
         pid = parcel['ogc_fid'][0]
         source = config.get_value(['set', 'data_source'])
-        if source == 0:
+        if source == 'api':
             datapath = f'{paths.value}{aois.value}{year.value}/parcel_{pid}/'
-        elif source == 1:
+        elif source == 'direct':
             dataset = config.get_value(['set', 'dataset'])
             datapath = f'{paths.value}{dataset}/parcel_{pid}/'
         file_pinf = f"{datapath}{pid}_information"
@@ -511,10 +517,10 @@ def get():
 
 def data_source():
     source = config.get_value(['set', 'data_source'])
-    if source == 0:
-        from cbm.sources import rest_api
-        return rest_api
-    elif source == 1:
+    if source == 'api':
+        from cbm.sources import api
+        return api
+    elif source == 'direct':
         from cbm.sources import direct
         return direct
 
