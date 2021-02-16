@@ -9,12 +9,13 @@
 
 
 from ipywidgets import Tab
-from cbm.ipycbm.ipy_foi import foi_settings, foi_panel, foi_help
+from cbm.ipycbm.ipy_foi import foi_panel, foi_help
+from cbm.ipycbm.utils import settings
 
 def foi_widget_box():
 
     tab_box = Tab(children=[foi_panel.foi_tab_v1(), foi_panel.foi_tab_v2(), foi_help.widget_box_foi(),
-                  foi_settings.widget_box()])
+                  settings.main()])
 
     tab_box.set_title(0, 'FOI Assessment V1')
     tab_box.set_title(1, 'FOI Assessment V2')

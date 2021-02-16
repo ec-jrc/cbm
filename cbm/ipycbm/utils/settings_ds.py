@@ -8,64 +8,14 @@
 # License   : 3-Clause BSD
 
 
-from ipywidgets import (Text, VBox, HBox, Label, Password, RadioButtons,
-                        Button, Layout, Box, Tab, Output, Dropdown,
-                        FloatText, BoundedIntText, Combobox)
+from ipywidgets import (Text, VBox, HBox, Label, Password, Button, Layout, Tab,
+                        Output, Dropdown, FloatText, BoundedIntText, Combobox)
 
 from cbm.utils import config, data_options
-from cbm.ipycbm.utils import settings
 from cbm.sources import db
 
 
-def widget_box():
-
-    source = config.get_value(['set', 'data_source'])
-
-    sources = RadioButtons(
-        options=[
-            ("RESTful API for CbM.", 'api'),
-            ("Direct access to database and object storage.", 'direct')
-        ],
-        value=source,
-        layout={'width': 'max-content'}
-    )
-
-    sources_box = Box([
-        Label(value="Data sources:"),
-        sources]
-    )
-
-    info_api = Label("RESTful API Settings.")
-    info_direct = Label("Direct access settings")
-
-    view_options = VBox([info_direct])
-
-    if source == 'api':
-        view_options.children = [info_api, rest_api()]
-    elif source == 'direct':
-        view_options.children = [info_direct, direct()]
-
-    def on_source_change(change):
-        view_options.children = []
-        if sources.value == 'api':
-            view_options.children = [info_api, rest_api()]
-        elif sources.value == 'direct':
-            view_options.children = [info_direct, direct()]
-        config.update(['set', 'data_source'], sources.value)
-
-    sources.observe(on_source_change, 'value')
-
-    wbox_sources = VBox([sources_box, view_options],
-                        layout=Layout(border='1px solid black'))
-
-    info_general = Label(value="General settings:")
-
-    wbox = VBox([wbox_sources, info_general, settings.widget_box()])
-
-    return wbox
-
-
-def rest_api(mode=None):
+def api(mode=None):
     """"""
     values = config.read()
 
@@ -102,6 +52,7 @@ def rest_api(mode=None):
 
     @wb_save.on_click
     def wb_save_on_click(b):
+        progress.clear_output()
         config.update(['api', 'url'], str(wt_url.value))
         config.update(['api', 'user'], str(wt_user.value))
         if wt_pass.value != '':
@@ -114,12 +65,119 @@ def rest_api(mode=None):
 
 
 def direct():
-    tab_box = Tab(children=[settings.direct_conn(), direct_settings()])
+    tab_box = Tab(children=[direct_conn(), direct_settings()])
 
     tab_box.set_title(0, 'Connection')
     tab_box.set_title(1, 'db Configuration')
 
     return tab_box
+
+
+def direct_conn(db='main'):
+    values = config.read()
+
+    info_db = Label("Database connection settings.")
+
+    db_host = Text(
+        value=values['db'][db]['host'],
+        placeholder='Database host',
+        description='db Host:',
+        disabled=False
+    )
+    db_port = Text(
+        value=values['db'][db]['port'],
+        placeholder='Database port',
+        description='db Port:',
+        disabled=False
+    )
+    db_name = Text(
+        value=values['db'][db]['name'],
+        placeholder='Database name',
+        description='db Name:',
+        disabled=False
+    )
+    db_user = Text(
+        value=values['db'][db]['user'],
+        placeholder='Database user',
+        description='db User:',
+        disabled=False
+    )
+    db_pass = Password(
+        value=values['db'][db]['pass'],
+        placeholder='******',
+        description='db Pass:',
+        disabled=False
+    )
+
+    info_os = Label("Object storage connection settings.")
+    os_dias = Dropdown(
+        options=['EOSC', 'CREODIAS', 'SOBLOO', 'MUNDI', 'ONDA', 'WEKEO', ''],
+        value=values['obst']['osdias'],
+        description='DIAS:',
+        disabled=False,
+    )
+    os_host = Text(
+        value=values['obst']['oshost'],
+        placeholder='Storage host',
+        description='s3 Host:',
+        disabled=False
+    )
+    os_bucket = Text(
+        value=values['obst']['bucket'],
+        placeholder='Bucket name',
+        description='Bucket name:',
+        disabled=False
+    )
+    os_access_key = Text(
+        value=values['obst']['access_key'],
+        placeholder='Access key',
+        description='Access Key:',
+        disabled=False
+    )
+    os_secret_key = Password(
+        value=values['obst']['secret_key'],
+        placeholder='Secret key',
+        description='Secret Key:',
+        disabled=False
+    )
+
+    wb_save = Button(
+        description='Save',
+        disabled=False,
+        icon='save'
+    )
+
+    progress = Output()
+
+    def outlog(*text):
+        with progress:
+            print(*text)
+
+    @wb_save.on_click
+    def wb_save_on_click(b):
+        progress.clear_output()
+        # Save database connection information
+        config.update(['db', db, 'host'], str(db_host.value))
+        config.update(['db', db, 'port'], str(db_port.value))
+        config.update(['db', db, 'name'], str(db_name.value))
+        config.update(['db', db, 'user'], str(db_user.value))
+        if db_pass.value != '':
+            config.update(['db', db, 'conn', 'pass'], str(db_pass.value))
+        # Save Object storage connection information
+        config.update(['obst', 'osdias'], str(os_dias.value))
+        config.update(['obst', 'oshost'], str(os_host.value))
+        config.update(['obst', 'bucket'], str(os_bucket.value))
+        config.update(['obst', 'access_key'], str(os_access_key.value))
+        if os_secret_key.value != '':
+            config.update(['obst', 'secret_key'], str(os_secret_key.value))
+
+        outlog("All changes are saved.")
+
+    wbox = VBox([info_db, db_host, db_port, db_name, db_user, db_pass,
+                 info_os, os_dias, os_host, os_bucket, os_access_key,
+                 os_secret_key, wb_save, progress])
+
+    return wbox
 
 
 def direct_settings():
@@ -205,7 +263,7 @@ def direct_settings():
         ds_code = Combobox(
             value=code_value,
             placeholder='abc',
-            options=[m for m in data_options.eu_ms()]+[''],
+            options=[m for m in data_options.eu_ms()] + [''],
             description='AOI code:',
             ensure_option=False,
             disabled=False,
@@ -265,7 +323,7 @@ def direct_settings():
                         map_cent_lon, bt_get_center, map_zoom])
 
         info_config = Label(
-            """Change 'AOI code' value to create a new configuration set or 
+            """Change 'AOI code' value to create a new configuration set or
             leave the same 'AOI code' value to configure the selected one.""")
 
         db_set = values['dataset'][dsc_value]['db']

@@ -42,3 +42,7 @@ def foi(*args):
 def qa(*args):
     from cbm.ipycbm.ipy_qa import qa_main
     return qa_main.qa_widget_box(*args)
+
+def settings(*args):
+    from cbm.ipycbm.utils import settings
+    return settings.main(*args)

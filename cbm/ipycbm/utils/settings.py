@@ -8,15 +8,66 @@
 # License   : 3-Clause BSD
 
 import os
-from IPython.display import display
 from ipywidgets import (Text, VBox, HBox, Label, Password, Dropdown,
-                        Button, Checkbox, Layout, Output, BoundedIntText)
+                        Button, Checkbox, Layout, Output, BoundedIntText,
+                        RadioButtons, Box)
 
 from cbm.utils import config, data_options
-from cbm.ipycbm.utils import update
+from cbm.ipycbm.utils import update, settings_ds
 
 
-def widget_box():
+def main():
+
+    wbox = VBox([clean_temp(), data_source(), general()])
+
+    return wbox
+
+
+def data_source():
+
+    source = config.get_value(['set', 'data_source'])
+
+    sources = RadioButtons(
+        options=[
+            ("RESTful API for CbM.", 'api'),
+            ("Direct access to database and object storage.", 'direct')
+        ],
+        value=source,
+        layout={'width': 'max-content'}
+    )
+
+    sources_box = Box([
+        Label(value="Data sources:"),
+        sources]
+    )
+
+    info_api = Label("RESTful API Settings.")
+    info_direct = Label("Direct access settings")
+
+    view_options = VBox([info_direct])
+
+    if source == 'api':
+        view_options.children = [info_api, settings_ds.api()]
+    elif source == 'direct':
+        view_options.children = [info_direct, settings_ds.direct()]
+
+    def on_source_change(change):
+        view_options.children = []
+        if sources.value == 'api':
+            view_options.children = [info_api, settings_ds.api()]
+        elif sources.value == 'direct':
+            view_options.children = [info_direct, settings_ds.direct()]
+        config.update(['set', 'data_source'], sources.value)
+
+    sources.observe(on_source_change, 'value')
+
+    wbox_sources = VBox([sources_box, view_options],
+                        layout=Layout(border='1px solid black'))
+
+    return wbox_sources
+
+
+def general():
     """Update the repository.
     Args:
         None
@@ -53,14 +104,14 @@ def widget_box():
     )
     ms_list = data_options.eu_ms()
     ms = Dropdown(
-        options=[(ms_list[m], m) for m in ms_list]+[('','')],
+        options=[(ms_list[m], m) for m in ms_list] + [('', '')],
         value=values['set']['member_state'],
         description='Member state:',
         disabled=False,
     )
     wbox_user = VBox([user_info, user_name, user_email,
                       user_institution, ms],
-                      layout=Layout(border='1px solid black'))
+                     layout=Layout(border='1px solid black'))
 
     # System settings
     sys_info = Label(
@@ -113,8 +164,8 @@ def widget_box():
     )
 
     wbox_sys = VBox([sys_info, jupyterlab, plimit_info, plimit,
-                    paths_info, path_data, path_temp,
-                    files_info, file_pids_poly, file_pids_dist],
+                     paths_info, path_data, path_temp,
+                     files_info, file_pids_poly, file_pids_dist],
                     layout=Layout(border='1px solid black'))
 
     # Git settings
@@ -171,116 +222,9 @@ def widget_box():
             config.update(['git', 'pass'], str(git_pass.value))
         outlog("The new settings are saved.")
 
-    wbox = VBox([clean_temp(), wbox_user, wbox_sys,
+    wbox = VBox([wbox_user, wbox_sys,
                  wbox_git, HBox([btn_save, update.btn_update()]),
                  progress])
-
-    return wbox
-
-
-def direct_conn(db='main'):
-    values = config.read()
-
-    info_db = Label("Database connection settings.")
-
-    db_host = Text(
-        value=values['db'][db]['host'],
-        placeholder='Database host',
-        description='db Host:',
-        disabled=False
-    )
-    db_port = Text(
-        value=values['db'][db]['port'],
-        placeholder='Database port',
-        description='db Port:',
-        disabled=False
-    )
-    db_name = Text(
-        value=values['db'][db]['name'],
-        placeholder='Database name',
-        description='db Name:',
-        disabled=False
-    )
-    db_user = Text(
-        value=values['db'][db]['user'],
-        placeholder='Database user',
-        description='db User:',
-        disabled=False
-    )
-    db_pass = Password(
-        value=values['db'][db]['pass'],
-        placeholder='******',
-        description='db Pass:',
-        disabled=False
-    )
-
-    info_os = Label("Object storage connection settings.")
-    os_dias = Dropdown(
-        options=['EOSC', 'CREODIAS', 'SOBLOO', 'MUNDI', 'ONDA', 'WEKEO', ''],
-        value=values['obst']['osdias'],
-        description='DIAS:',
-        disabled=False,
-    )
-    os_host = Text(
-        value=values['obst']['oshost'],
-        placeholder='Storage host',
-        description='s3 Host:',
-        disabled=False
-    )
-    os_bucket = Text(
-        value=values['obst']['bucket'],
-        placeholder='Bucket name',
-        description='Bucket name:',
-        disabled=False
-    )
-    os_access_key = Text(
-        value=values['obst']['access_key'],
-        placeholder='Access key',
-        description='Access Key:',
-        disabled=False
-    )
-    os_secret_key = Password(
-        value=values['obst']['secret_key'],
-        placeholder='Secret key',
-        description='Secret Key:',
-        disabled=False
-    )
-
-    wb_save = Button(
-        description='Save',
-        disabled=False,
-        icon='save'
-    )
-
-    progress = Output()
-
-    def outlog(*text):
-        with progress:
-            print(*text)
-
-    @wb_save.on_click
-    def wb_save_on_click(b):
-        progress.clear_output()
-        # Save database connection information
-        config.update(['db', db, 'host'], str(db_host.value))
-        config.update(['db', db, 'port'], str(db_port.value))
-        config.update(['db', db, 'name'], str(db_name.value))
-        config.update(['db', db, 'user'], str(db_user.value))
-        if db_pass.value != '':
-            config.update(['db', db, 'conn', 'pass'], str(db_pass.value))
-        # Save Object storage connection information
-        config.update(['obst', 'osdias'], str(os_dias.value))
-        config.update(['obst', 'oshost'], str(os_host.value))
-        config.update(['obst', 'bucket'], str(os_bucket.value))
-        config.update(['obst', 'access_key'], str(os_access_key.value))
-        if os_secret_key.value != '':
-            config.update(['obst', 'secret_key'], str(os_secret_key.value))
-
-        outlog("All changes are saved.")
-
-    wbox = VBox([info_db, db_host, db_port, db_name, db_user, db_pass,
-                 info_os, os_dias, os_host, os_bucket, os_access_key,
-                 os_secret_key, wb_save, progress])
 
     return wbox
 
@@ -288,6 +232,7 @@ def direct_conn(db='main'):
 def clean_temp(hide=False):
     import shutil
     progress = Output()
+
     def outlog(*text):
         progress.clear_output()
         with progress:
@@ -298,7 +243,7 @@ def clean_temp(hide=False):
 
     if len(directory) > 0:
         outlog(f"Your temp folder '{temppath}' has old files:",
-              f" '{directory}', do you want to delete them? ")
+               f" '{directory}', do you want to delete them? ")
 
     bt_clean = Button(
         value=False,
