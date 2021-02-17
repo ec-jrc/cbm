@@ -23,26 +23,32 @@ display(settings.clean_temp(True))
 config.update_keys()
 update.check()
 
+
 def get(*args):
     from cbm.ipycbm.ipy_get import get_main
     return get_main.get_widget_box(*args)
+
 
 def view(*args):
     from cbm.ipycbm.ipy_view import view_main
     return view_main.view_widget_box(*args)
 
+
 def extract(*args):
     from cbm.ipycbm.ipy_ext import ext_main
     return ext_main.ext_widget_box(*args)
+
 
 def foi(*args):
     from cbm.ipycbm.ipy_foi import foi_main
     return foi_main.foi_widget_box(*args)
 
+
 def qa(*args):
     from cbm.ipycbm.ipy_qa import qa_main
     return qa_main.qa_widget_box(*args)
 
-def settings(*args):
+
+def config(*args):
     from cbm.ipycbm.utils import settings
     return settings.main(*args)
