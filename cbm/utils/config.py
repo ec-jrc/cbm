@@ -14,19 +14,20 @@ import json
 import uuid
 from os.path import dirname, abspath, join
 
-folder_repo = os.path.dirname(dirname(dirname(abspath(__file__))))
-folder_config = f"{folder_repo}/config/"
-main_config = "main.json"
-main_default = f"{dirname(abspath(__file__))}/main_default.json"
+path_work = abspath(os.curdir)
+path_repo = dirname(dirname(abspath(__file__)))
+path_conf = f"config/"
+conf_main = "main.json"
+conf_default = join(dirname(abspath(__file__)), 'main_default.json')
 
-def get_value(dict_keys={}, file=main_config, var_name=None, help_text=True):
+def get_value(dict_keys={}, file=conf_main, var_name=None, help_text=True):
     """Get value from a configuration file, with an arbitrary length key.
 
     Examples:
         config.get_value(['information', 'aoi'])
 
         To display the variable name and and some information use:
-        config.get_value(['information', 'aoi'], 'AOI' config.main_config, False)
+        config.get_value(['information', 'aoi'], 'AOI' config.conf_main, False)
 
     Arguments:
         dict_keys, list of keys to add
@@ -65,7 +66,7 @@ def get_value(dict_keys={}, file=main_config, var_name=None, help_text=True):
         return ''
 
 
-def update(dict_keys={}, val=None, file=main_config):
+def update(dict_keys={}, val=None, file=conf_main):
     """Update configuration file, with an arbitrary length key.
 
     Example:
@@ -92,17 +93,17 @@ def update(dict_keys={}, val=None, file=main_config):
         _x[dict_keys[-1]] = val
         # create randomly named temporary file to avoid
         # interference with other thread/asynchronous request
-        tempfile = join(folder_config, str(uuid.uuid4()))
+        tempfile = join(path_conf, str(uuid.uuid4()))
         with open(tempfile, 'w') as f:
             json.dump(config_dict, f, indent=4)
 
         # rename temporary file replacing old file
-        os.rename(tempfile, join(folder_config, file))
+        os.rename(tempfile, join(path_conf, file))
     except Exception as err:
         print(f"Could not update key in the file '{file}': {err}")
 
 
-def delete(dict_keys={}, file=main_config):
+def delete(dict_keys={}, file=conf_main):
     """Delete keys from the configuration file.
 
     Example:
@@ -127,17 +128,17 @@ def delete(dict_keys={}, file=main_config):
                 _x = _x.get(key)
         del _x[dict_keys[-1]]
 
-        tempfile = join(folder_config, str(uuid.uuid4()))
+        tempfile = join(path_conf, str(uuid.uuid4()))
         with open(tempfile, 'w') as f:
             json.dump(config_dict, f, indent=4)
 
         # rename temporary file replacing old file
-        os.rename(tempfile, join(folder_config, file))
+        os.rename(tempfile, join(path_conf, file))
     except Exception as err:
         print(f"Could not delete key in the file '{file}': {err}")
 
 
-def read(file=main_config):
+def read(file=conf_main):
     """Read configuration file
     Example:
         config.read("main.json")
@@ -150,49 +151,51 @@ def read(file=main_config):
 
     """
     try:
-        with open(f"{folder_config}{file}", 'r') as f:
+        with open(f"{path_conf}{file}", 'r') as f:
             data = json.load(f)
             return data
     except Exception as err:
-        if file == main_config:
+        if file == conf_main:
             create()
-            with open(join(folder_config, file), 'r') as f:
+            with open(join(path_conf, file), 'r') as f:
                 data = json.load(f)
             return data
         elif file == 'api_options.json':
-            create(join(folder_repo, '/cbm/api/', file), file)
-            with open(join(folder_config, file), 'r') as f:
+            create(join(dirname(dirname(abspath(__file__))), f'api/{file}'), file)
+            with open(join(path_conf, file), 'r') as f:
                 data = json.load(f)
             return data
         else:
             print(f"Could not read file '{file}': {err}")
 
 
-def create(from_file=main_default, to_file=main_config):
+def create(from_file=conf_default, to_file=conf_main):
     """Automatically create a config file if it does not exist.
     """
-
+    if not os.path.exists(join(join(path_work, path_conf))):
+        os.makedirs(join(path_work, path_conf))
     # if file does not exist, create it
-    if os.path.isfile(join(folder_config, to_file)) is False:
+    if os.path.isfile(join(path_conf, to_file)) is False:
         # Read from default configuration file
         with open(from_file, 'r') as f:
             dict_default = json.load(f)
-        with open(join(folder_config, to_file), 'w') as f:
+        # Create a new config file
+        with open(join(path_work, path_conf, to_file), 'w') as f:
             json.dump(dict_default, f, indent=4)
         time.sleep(0.5)  # Sleep for half second to run the function.
         print("The configuration file did not exist, a new default ",
               f"{to_file} file was created.")
 
 
-def update_keys(from_file=main_default, to_file=main_config):
+def update_keys(from_file=conf_default, to_file=conf_main):
     """Update missing keys of old configuration files."""
-    if os.path.isfile(join(folder_config, to_file)) is False:
+    if os.path.isfile(join(path_conf, to_file)) is False:
         create(from_file, to_file)
 
     with open(from_file, 'r') as f:
         dict_new = json.load(f)
     
-    with open(join(folder_config, to_file), 'r') as f:
+    with open(join(path_conf, to_file), 'r') as f:
         dict_old = json.load(f)
 
     updated_keys = 0
@@ -207,12 +210,12 @@ def update_keys(from_file=main_default, to_file=main_config):
 
     # create randomly named temporary file to avoid
     # interference with other thread/asynchronous request
-    tempfile = join(folder_config, str(uuid.uuid4()))
+    tempfile = join(path_conf, str(uuid.uuid4()))
     with open(tempfile, 'w') as f:
         json.dump(dict_old, f, indent=4)
 
     # rename temporary file replacing old file
-    os.rename(tempfile, join(folder_config, to_file))
+    os.rename(tempfile, join(path_conf, to_file))
 
     if updated_keys > 0:
         print(f"{updated_keys+1} new json configuration objects are added to the configuration file.")

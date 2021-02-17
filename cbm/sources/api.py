@@ -8,8 +8,8 @@
 # License   : 3-Clause BSD
 
 
-from cbm.utils import config
 import requests
+from cbm.utils import config
 
 
 def ploc(area, year, lon, lat, geom=False):

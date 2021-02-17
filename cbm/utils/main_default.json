@@ -11,12 +11,8 @@
         "dataset": "default_2020",
         "ds_year": "2020",
         "jupyterlab": "True",
-        "plimit": "25"
-    },
-    "git": {
-        "url": "https://github.com/ec-jrc/cbm",
-        "user": "",
-        "pass": ""
+        "plimit": "25",
+        "url": "https://github.com/ec-jrc/cbm"
     },
     "paths": {
         "data": "data/",
