@@ -2,6 +2,9 @@
 
 *.json
 config/
+ipynb/temp/*
+ipynb/config/*
+ipynb/data/*
 ipynb/tests/*
 ipynb/test*
 ipynb/*.json
