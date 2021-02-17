@@ -9,8 +9,8 @@
 
 
 from ipywidgets import Tab
-from cbm.ipycbm.utils import help_docs, settings
-from cbm.ipycbm.ipy_view import view_settings, view_panel
+from cbm.ipycbm.utils import settings, help_docs, settings
+from cbm.ipycbm.ipy_view import view_panel
 
 
 def view_widget_box():
