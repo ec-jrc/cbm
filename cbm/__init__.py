@@ -9,29 +9,40 @@ __author__ = ["Guido Lemoine", "Konstantinos Anastasakis"]
 __copyright__ = "Copyright 2021, European Commission Joint Research Centre"
 __credits__ = ["GTCAP Team"]
 __license__ = "3-Clause BSD"
-__version__ = "01/2021"
 __maintainer__ = ["Guido Lemoine", "Konstantinos Anastasakis"]
 __email__ = ""
 __status__ = "Development"
 
 import os
-import sys
-from os.path import dirname, abspath, join
+import os.path
 from cbm.utils import config
+from pkg_resources import get_distribution, DistributionNotFound
 
+import sys
 if sys.version_info < (3, 6):
     print("Not supoted python version, cbm needs python version > 3.6")
     sys.exit()
 
-paths = config.get_value(['paths'])
-paths['config'] = 'config'
+try:
+    _dist = get_distribution('cbm')
+    # Normalize case for Windows systems
+    dist_loc = os.path.normcase(_dist.location)
+    here = os.path.normcase(__file__)
+    if not here.startswith(os.path.join(dist_loc, 'cbm')):
+        # not installed, but there is another version that *is*
+        raise DistributionNotFound
+except DistributionNotFound:
+    __version__ = 'Please install this project with setup.py'
+else:
+    __version__ = _dist.version
 
+paths = config.get_value(['paths'])
 for p in paths:
     try:
-        if not os.path.exists(join(config.folder_repo, paths[p])):
-            os.makedirs(join(config.folder_repo, paths[p]))
+        if not os.path.exists(os.path.join(config.path_work, paths[p])):
+            os.makedirs(os.path.join(config.path_work, paths[p]))
             print(f"Directory {p} created successfully")
-    except OSError as error:
-        print(f"Directory {p} can not be created")
+    except OSError as err:
+        print(f"Directory {p} can not be created: ", err)
 
 config.create()
