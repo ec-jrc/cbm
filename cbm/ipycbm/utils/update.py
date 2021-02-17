@@ -51,26 +51,28 @@ def btn_update():
 
     @wb_fupdate.on_click
     def wb_fupdate_on_click(b):
-        git_url, git_user, git_pass = config.credentials('git')
-        url = git_url.replace('http://', '')
-        url = url.replace('https://', '')
-        with progress:
-            run_update(['git', '-C', './', 'reset', '--hard', 'HEAD'])
-            run_update(['git', '-C', './', 'pull',
-                        f'http://{git_user}:{git_pass}@{url}'])
+        pass
+#         git_url, git_user, git_pass = config.credentials('git')
+#         url = git_url.replace('http://', '')
+#         url = url.replace('https://', '')
+#         with progress:
+#             run_update(['git', '-C', './', 'reset', '--hard', 'HEAD'])
+#             run_update(['git', '-C', './', 'pull',
+#                         f'http://{git_user}:{git_pass}@{url}'])
 
     @wb_update.on_click
     def wb_update_on_click(b):
-        git_url, git_user, git_pass = config.credentials('git')
-        url = git_url.replace('http://', '')
-        url = url.replace('https://', '')
-        with progress:
-            if git_pass == '':
-                outlog("Please add the password for the git server.")
-            else:
-                run_update(['git', '-C', './', 'pull',
-                            f'http://{git_user}:{git_pass}@{url}'],
-                           wb_fupdate)
+        pass
+#         git_url, git_user, git_pass = config.credentials('git')
+#         url = git_url.replace('http://', '')
+#         url = url.replace('https://', '')
+#         with progress:
+#             if git_pass == '':
+#                 outlog("Please add the password for the git server.")
+#             else:
+#                 run_update(['git', '-C', './', 'pull',
+#                             f'http://{git_user}:{git_pass}@{url}'],
+#                            wb_fupdate)
 
     return wbox
 
@@ -99,17 +101,17 @@ def check():
         with progress:
             print(*text)
 
-    git_url, git_user, git_pass = config.credentials('git')
-    url = git_url.replace('http://', '')
-    url = url.replace('https://', '')
-    command = ['git', '-C', './', 'remote', 'show',
-               f'http://{git_user}:{git_pass}@{url}']
-    out = subprocess.Popen(command,
-                           stdout=subprocess.PIPE,
-                           stderr=subprocess.STDOUT)
-    stdout, stderr = out.communicate()
-    if 'out of date' in stdout.decode():
-        display(progress)
-        outlog("There is an new version CbM.",
-              "Do you want to update your local CbM repository?")
-        display(btn_update())
+#     git_url, git_user, git_pass = config.credentials('git')
+#     url = git_url.replace('http://', '')
+#     url = url.replace('https://', '')
+#     command = ['git', '-C', './', 'remote', 'show',
+#                f'http://{git_user}:{git_pass}@{url}']
+#     out = subprocess.Popen(command,
+#                            stdout=subprocess.PIPE,
+#                            stderr=subprocess.STDOUT)
+#     stdout, stderr = out.communicate()
+#     if 'out of date' in stdout.decode():
+#         display(progress)
+#         outlog("There is an new version CbM.",
+#               "Do you want to update your local CbM repository?")
+#         display(btn_update())

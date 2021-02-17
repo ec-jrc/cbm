@@ -10,7 +10,7 @@
 import os
 from ipywidgets import (Text, VBox, HBox, Label, Password, Dropdown,
                         Button, Checkbox, Layout, Output, BoundedIntText,
-                        RadioButtons, Box)
+                        RadioButtons, Box, Tab)
 
 from cbm.utils import config, data_options
 from cbm.ipycbm.utils import update, settings_ds
@@ -18,7 +18,12 @@ from cbm.ipycbm.utils import update, settings_ds
 
 def main():
 
-    wbox = VBox([clean_temp(), data_source(), general()])
+    tab_box = Tab(children=[data_source(), general()])
+
+    tab_box.set_title(0, 'DataSource')
+    tab_box.set_title(1, 'General')
+
+    wbox = VBox([clean_temp(), tab_box])
 
     return wbox
 
@@ -168,29 +173,15 @@ def general():
                      files_info, file_pids_poly, file_pids_dist],
                     layout=Layout(border='1px solid black'))
 
-    # Git settings
-    git_info = Label(
-        "Git Settings. (To easily get the latest version of notebooks and scripts.)")
-
-    git_url, git_user, git_pass = config.credentials('git')
-
+    # Git
     git_url = Text(
-        value=git_url,
-        description='Url:'
-    )
-    git_user = Text(
-        value=git_user,
-        description='User name:'
-    )
-    git_pass = Password(
-        value=git_pass,
-        placeholder='******',
-        description='Password:'
+        value=config.get_value(['set', 'url']),
+        disabled=True,
+        description='Git url:'
     )
 
-    wbox_git = VBox([git_info, git_url,
-                     git_user, git_pass],
-                    layout=Layout(border='1px solid black'))
+    wbox_git = HBox([git_url, update.btn_update()],
+                     layout=Layout(border='1px solid black'))
 
     btn_save = Button(
         description='Save',
@@ -212,18 +203,14 @@ def general():
         config.update(['set', 'institution'], str(user_institution.value))
         config.update(['set', 'member_state'], str(user_email.value))
         config.update(['set', 'plimit'], str(plimit.value))
-        config.update(['git', 'url'], str(git_url.value))
-        config.update(['git', 'user'], str(git_user.value))
         config.update(['paths', 'data'], str(path_data.value))
         config.update(['paths', 'temp'], str(path_temp.value))
         config.update(['files', 'pids_poly'], str(file_pids_poly.value))
         config.update(['files', 'pids_dist'], str(file_pids_dist.value))
-        if git_pass.value != '':
-            config.update(['git', 'pass'], str(git_pass.value))
         outlog("The new settings are saved.")
 
     wbox = VBox([wbox_user, wbox_sys,
-                 wbox_git, HBox([btn_save, update.btn_update()]),
+                 HBox([btn_save]),
                  progress])
 
     return wbox
@@ -239,7 +226,7 @@ def clean_temp(hide=False):
             print(*text)
 
     temppath = config.get_value(['paths', 'temp'])
-    directory = os.listdir(os.path.join(config.folder_repo, temppath))
+    directory = os.listdir(os.path.join(config.path_work, temppath))
 
     if len(directory) > 0:
         outlog(f"Your temp folder '{temppath}' has old files:",
