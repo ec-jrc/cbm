@@ -12,11 +12,11 @@ from ipywidgets import (HBox, VBox, Layout, Dropdown,
                         Output, HTML, Button, Accordion)
 
 from cbm.utils import config
-from cbm.ipycbm.utils import settings
+from cbm.ipycbm.utils import settings, settings_ds
 
 from cbm.ipycbm.ipy_view import view_panel
 from cbm.ipycbm.ipy_ext import ext_func, ext_card2db
-from cbm.ipycbm.ipy_get import get_panel, get_settings
+from cbm.ipycbm.ipy_get import get_panel
 
 
 def qa():
@@ -70,7 +70,7 @@ def qa():
         ext_func.upload_shp(path_data),
         ext_func.create_tables(),
         ext_card2db.dias_cat(),
-        get_settings.direct_settings(),
+        settings_ds.direct(),
         ext_func.extraction(),
         VBox([get_panel.get()],
              layout=Layout(border='1px solid black')),

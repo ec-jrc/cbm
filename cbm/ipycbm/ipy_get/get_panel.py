@@ -103,7 +103,7 @@ def get():
         if values['set']['data_source'] == 'api':
             get_requests = data_source()
             available_options = json.loads(get_requests.get_options())
-            outlog(data_handler.export(available_options, 10, f"{config.folder_config}api_options"))
+            outlog(data_handler.export(available_options, 10, f"{config.path_conf}api_options"))
             outlog(f"The API options are updated.")
         aois.options = tuple(aois_options())
         year.options = aois_years()[aois.value]
