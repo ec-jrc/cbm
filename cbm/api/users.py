@@ -17,7 +17,34 @@ import os
 users_file = '_users.json'
 
 def auth(username, password):
-    """Authentication check with hashed passwords"""
+    """Authentication check with hashed passwords
+    
+    To be used in authentication decorator of flask app.
+
+    Example:
+        # Authentication decorator.
+        def auth_required(f):
+            @wraps(f)
+            def decorated(*args, **kwargs):
+                auth = request.authorization
+                if auth and users.auth(auth.username, auth.password) is True:
+                    return f(*args, **kwargs)
+                return make_response('Could not verify.', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
+            return decorated
+
+        @app.route('/query/', methods=['GET'])
+            @auth_required
+            def query():
+                return "DIAS API"
+
+    Arguments:
+        username, The user name (str)
+        password, Tee user password (str)
+
+    Return:
+        True or False
+
+    """
     try:
         users = get_users()
         user = users[username.lower()]
@@ -43,9 +70,16 @@ def auth(username, password):
 def add(username, password=''):
     """Add a new user
     
-    from cbm.apicbm import users
-    users.add('admin','admin')
+    Example:
+        from cbm.apicbm import users
+        users.add('admin','admin')
+    or in terminal:
     python3 -c "from cbm.apicbm import users; users.add('admin','admin')"
+
+    Arguments:
+        username, The user name (str)
+        password, Tee user password (str)
+
     """
     users = get_users()
     if users is None:
@@ -63,7 +97,15 @@ def add(username, password=''):
 
 
 def get_users():
-    """Get the list of active users"""
+    """Get the list of active users
+
+    Example:
+        users.get_users('MyUserName')
+
+    Return:
+        A json object with the users
+
+    """
     try:
         with open(users_file, 'r') as u:
             users = json.load(u)
@@ -81,7 +123,10 @@ def delete(username):
     """Delete user from users_file file.
 
     Example:
-        config.delete('MyUserName')
+        users.delete('MyUserName')
+
+    Arguments:
+        username, The user name to be deleted (str)
 
     """
     users = get_users()
