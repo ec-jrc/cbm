@@ -19,7 +19,8 @@ from ipyleaflet import (Map, ImageOverlay, Popup, basemap_to_tiles,
                         Polygon, WidgetControl, basemaps)
 
 from cbm.utils import config
-from cbm.ipycbm.ipy_view import view_spatial, view_images
+from cbm.view import spatial_utils
+from cbm.ipycbm.ipy_view import view_images
 
 
 def widget_box(path):
@@ -70,14 +71,14 @@ def widget_box(path):
 
         multipoly = []
         multycent = []
-        geom = view_spatial.trasform_geometry(info_data)
+        geom = spatial_utils.transform_geometry(info_data)
         poly = geom['coordinates'][0][0]
-    #     poly = view_spatial.swap_xy(geom['coordinates'][0])[0]
+    #     poly = spatial_utils.swap_xy(geom['coordinates'][0])[0]
         multipoly.append(poly)
-        cent = view_spatial.centroid(poly)
+        cent = spatial_utils.centroid(poly)
         multycent.append(cent)
 
-        cent = view_spatial.centroid(multycent)
+        cent = spatial_utils.centroid(multycent)
         m = Map(center=cent, zoom=16, basemap=basemaps.OpenStreetMap.Mapnik)
 
         polygon = Polygon(
@@ -151,7 +152,7 @@ def widget_box(path):
             df = view_images.create_df(ci_path, pid, ci_band.value)
 
             geotiff = f"{ci_path}{df['imgs'][0]}.{ci_band.value[0]}.tif"
-            bounds = view_spatial.bounds(geotiff)
+            bounds = spatial_utils.bounds(geotiff)
 
             images = {}
             for i, row in df.iterrows():
