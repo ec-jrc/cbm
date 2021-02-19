@@ -41,6 +41,7 @@ The main configuration file for cbm library ‘main.json’ is used in all the s
     "files": {}, // Location of files used it some functions
     "api": {}, // The RESTful API access information
     "db": {}, // Database access information
+    "dataset": {}, // Dataset information and tables configuration
     "obst": {} // the object storage credentials
 }
 ```
