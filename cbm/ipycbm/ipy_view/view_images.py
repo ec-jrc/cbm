@@ -20,7 +20,6 @@ from descartes import PolygonPatch
 from ipywidgets import (HBox, VBox, Dropdown, Button, Output, Checkbox, Layout)
 
 from cbm.utils import data_options
-from cbm.ipycbm.ipy_view import view_spatial
 
 def available_options(ci_path, pid, ndvi=True, individual=True):
     """
@@ -93,7 +92,7 @@ def merge_bands(imgs_path, dst_file, bands, percent=(5, 95)):
     Returns:
         None
     Example:
-        view_spatial.merge_bands(images/image_, "TrueColor.tif",
+        merge_bands(images/image_, "TrueColor.tif",
                                 ['B02', 'B03', 'B04'])
 
     """

@@ -118,7 +118,7 @@ def centroid(geom):
     return(round(_x, 4), round(_y, 4))
 
 
-def trasform_geometry(jsondata, target_epsg=4326):
+def transform_geometry(jsondata, target_epsg=4326):
     """
     Args:
         jsondata: Parsel information in json format with geometry.

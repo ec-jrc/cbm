@@ -240,21 +240,16 @@ def autoselect(matching_text=None, import_list=[], help_text=True):
     tables will be returned in case there are more entries in the list with the
     matching text.
 
-    Attributes
-    ----------
-    -Options-    -Type- -Description-
-    matching_text : Str
-        The selected database (1 or 2).
+    Arguments:
+        matching_text :  The selected database (str).
 
-    import_list   : List
-        List of the options.
+        import_list   :  List of the options (List).
 
-    help_text     : Boolean
-        True or False, display or not all the founded tables if more then one.
+        help_text     :  Display or not all the tables if more then one (Boolean).
 
-    Returns
-    -------
-    The selected value that match the input
+    Returns:
+        The selected value that match the input
+
     """
     value = ''
     try:
