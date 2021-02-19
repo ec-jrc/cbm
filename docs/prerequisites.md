@@ -90,9 +90,11 @@ PuTTY(https://www.putty.org), Bitvise(https://www.bitvise.com), Solar-Putty, KiT
 Documentation can be found in there website.
 
 
-# Software Installation.
+# Required software.
 
 ## Docker (Ubuntu 18.04)
+Note these instructions are for Ubuntu 18.04 and may not work for other platforms. Installation instructions for other platforms can be found at [docs.docker.com](https://docs.docker.com/engine/install).
+
 The open virtualization software Docker was used to deploy all the applications required for CbM development. The Docker is a set of platform as a service products that use OS-level virtualization to deliver software in packages called containers.
 To run the extraction routines it is recommended to install the latest version of docker with the below steps:
 
@@ -116,7 +118,6 @@ exit the VM and re-connect, now run
     docker run hello-world
     sudo systemctl enable docker
 
-Note these instructions are for Ubuntu 18.04 and may not work for other GNU/Linux distributions, more information can be found at [docs.docker.com](https://docs.docker.com/engine/install).
 
 ## PostGIS
 

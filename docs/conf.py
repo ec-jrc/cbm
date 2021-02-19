@@ -1,3 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# This file is part of CbM (https://github.com/ec-jrc/cbm).
+# Author    : Konstantinos Anastasakis
+# Credits   : GTCAP Team
+# Copyright : 2021 European Commission, Joint Research Centre
+# License   : 3-Clause BSD
+#
 # Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
@@ -36,7 +45,7 @@ m2r2.setup = patched_m2r2_setup
 project = 'cbm'
 copyright = '2021, European Commission, Joint Research Centre'
 author = 'European Commission, Joint Research Centre'
-authors = 'Guido Lemoine, Konstantinos Anastasakis'
+authors = 'European Commission, Joint Research Centre'
 
 
 # -- General configuration ---------------------------------------------------

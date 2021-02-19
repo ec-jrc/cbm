@@ -1,7 +1,7 @@
 # Introduction
 
 
-## DIAS for CAP CbM
+## DIAS for CAP checks by monitoring (CbM)
 
 The “Data and Information Access Systems” (DIAS) are the European Union’s Copernicus program element funding the deployment of five cloud-based platforms  providing  centralised  access  to  Copernicus  data  and  information,  as  well as to processing tools. Four DIAS instances (CREODIAS, MUNDI, ONDA and SOBLOO), managed under contract with the European Space Agency (ESA), became operational in 2018 and provide access, amongst others, to high resolution Sentinel-1 and Sentinel-2. The fifth is managed by EUMETSAT, and became operational in late 2019. 
 ![DIAS](https://www.copernicus.eu/sites/default/files/DIAS_0.jpg)
