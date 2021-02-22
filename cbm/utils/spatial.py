@@ -21,7 +21,7 @@ Options:
   --version     Show version.
 """
 
-def swap_xy(geom):
+def swap_xy(indata):
     """
     A general function to swap (x,y) for any spatial geometry type,
     it also preserves z coordinates (if present)
@@ -39,6 +39,15 @@ def swap_xy(geom):
         table.geometry = table.geometry.map(spatial.swap_xy)
     """
 #     print(type(geom))
+    if type(indata) is str:
+        indata = eval(indata)
+    if 'geom' in indata:
+        if type(indata['geom'][0]) is dict:
+            geom = indata['geom'][0]
+        else:
+            geom = eval(indata['geom'][0])
+    else:
+        geom = indata
 
     def swap_xy_coords(coords):
         if len(coords) == 2:
@@ -52,15 +61,19 @@ def swap_xy(geom):
         # Process coordinates from each supported geometry type
         if geom['type'] in ('Point', 'LineString', 'LinearRing', 'Polygon'):
             coords_list = geom['coordinates'][0]
-            return [swap_xy_coords(coords) for coords in coords_list]
+            geom['coordinates'][0] = [swap_xy_coords(coords) for coords in coords_list]
         elif geom['type'].startswith('Multi') or geom['type'] == 'GeometryCollection':
             geom_list = []
             for sub_geom in geom['coordinates'][0]:
                 geom_list.append([swap_xy_coords(coords)
                                   for coords in sub_geom])
-            return geom_list[0]
+                geom['coordinates'] = geom_list
         else:
             raise ValueError("Type {geom['type']} not recognized")
+        if 'geom' in indata:
+            indata['geom'] = geom
+            return indata
+        else:
             return geom
     elif type(geom) is list:
         if list_depth(geom) == 2:
@@ -72,6 +85,15 @@ def swap_xy(geom):
                 geom_list.append([swap_xy_coords(coords)
                                   for coords in sub_geom])
             return geom_list
+        elif list_depth(geom) == 4:
+            geom_all = []
+            for sub_geom in geom[0]:
+                geom_list = []
+                for sub_geom in geom[0]:
+                    geom_list.append([swap_xy_coords(coords)
+                                      for coords in sub_geom])
+                geom_all.append(geom_list)
+            return geom_all
     else:
         print("Unrecognized geometry type")
 
