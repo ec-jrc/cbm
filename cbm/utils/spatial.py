@@ -20,7 +20,6 @@ Options:
   -h, --help    Show this screen.
   --version     Show version.
 """
-import json
 
 def swap_xy(geom):
     """
@@ -84,10 +83,10 @@ def list_depth(lsit_):
         return 0
 
 
-def centroid(geom):
+def centroid(indata):
     """
     Args:
-        geom: A list of coordinates.
+        geom: json data or list with coordinates.
     Returns:
         _x, _y: Coordinates of the center point.
     Raises:
@@ -101,7 +100,19 @@ def centroid(geom):
         _y = sum(_y_list) / _len
         return [_x, _y]
 
-#     print(list_depth(geom))
+    if type(indata) is str:
+        indata = eval(indata)
+    if 'geom' in indata:
+        if type(indata['geom'][0]) is dict:
+            geom = indata['geom'][0]['coordinates']
+        else:
+            indata['geom'][0] = eval(indata['geom'][0])
+            geom = indata['geom'][0]['coordinates']
+    elif 'coordinates' in indata:
+        geom = indata['coordinates']
+    elif type(indata) is list:
+        geom = indata
+
     if list_depth(geom) == 1:
         try:
             geom_ = [list(c) for c in geom]
@@ -112,9 +123,11 @@ def centroid(geom):
         _x, _y = xy_center(geom)
     elif list_depth(geom) == 3:
         _x, _y = xy_center(geom[0])
+    elif list_depth(geom) == 4:
+        _x, _y = xy_center(geom[0][0])
     else:
         print("Not recognized coordinates format.")
-
+    
     return(round(_x, 4), round(_y, 4))
 
 def transform_geometry(indata, target_epsg=4326, source_epsg=None):
