@@ -13,10 +13,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from rasterio.plot import show
 from descartes import PolygonPatch
+from mpl_toolkits.axes_grid1 import ImageGrid
 
 from cbm.sources import api
-from cbm.view import spatial_utils
-from mpl_toolkits.axes_grid1 import ImageGrid
+from cbm.utils import spatial
 
 def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms='Google',
                 prefix='', path='temp', quiet=False):
@@ -44,8 +44,8 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms='Google',
     with open(f'{path}/{prefix}info.json', "w") as f:
         json.dump(json_data, f)
 
-    lat, lon = spatial_utils.centroid(
-        spatial_utils.transform_geometry(json_data))
+    lat, lon = spatial.centroid(
+        spatial.transform_geometry(json_data))
     if type(tms) is list:
         for t in tms:
             img_overlay(aoi, year, lon, lat, chipsize,
@@ -82,8 +82,8 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms='Google', prefix='',
     with open(f'{path}/{prefix}info.json', "w") as f:
         json.dump(json_data, f)
 
-    lat, lon = spatial_utils.centroid(
-        spatial_utils.transform_geometry(json_data))
+    lat, lon = spatial.centroid(
+        spatial.transform_geometry(json_data))
     if type(tms) is list:
         for t in tms:
             img_overlay(aoi, year, lon, lat, chipsize,
@@ -126,7 +126,7 @@ def img_overlay(aoi, year, lon, lat, chipsize=512, extend=512, tms='Google',
     with rasterio.open(bk_file) as img:
         def overlay_parcel(img, json_data):
             img_epsg = img.crs.to_epsg()
-            geo_json = spatial_utils.transform_geometry(
+            geo_json = spatial.transform_geometry(
                 json_data, img_epsg)
             patche = [PolygonPatch(feature, edgecolor="yellow",
                                    facecolor="none", linewidth=2
