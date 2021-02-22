@@ -16,7 +16,7 @@ from descartes import PolygonPatch
 
 from cbm.sources import api
 from cbm.view import spatial_utils
-
+from mpl_toolkits.axes_grid1 import ImageGrid
 
 def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms='Google',
                 prefix='', path='temp', quiet=False):
@@ -50,6 +50,7 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms='Google',
         for t in tms:
             img_overlay(aoi, year, lon, lat, chipsize,
                         extend, t, prefix, path, True)
+        view_all(tms, prefix, path)
     else:
         img_overlay(aoi, year, lon, lat, chipsize,
                     extend, tms, prefix, path, quiet)
@@ -87,6 +88,7 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms='Google', prefix='',
         for t in tms:
             img_overlay(aoi, year, lon, lat, chipsize,
                         extend, t, prefix, path, True)
+        view_all(tms, prefix, path)
     else:
         img_overlay(aoi, year, lon, lat, chipsize,
                     extend, tms, prefix, path, quiet)
@@ -147,3 +149,21 @@ def img_overlay(aoi, year, lon, lat, chipsize=512, extend=512, tms='Google',
             plt.cla()
             plt.close()
 
+
+def view_all(tms, prefix='', path='temp'):
+
+    columns = 5
+    rows = int(len(tms) // columns + (len(tms) % columns > 0))
+    fig = plt.figure(figsize=(25, 5 * rows))
+    grid = ImageGrid(fig, 111,  # similar to subplot(111)
+                     nrows_ncols=(rows, columns),  # creates 2x2 grid of axes
+                     axes_pad=0.1,  # pad between axes in inch.
+                     )
+
+    for ax, im in zip(grid, tms):
+        # Iterating over the grid returns the Axes.
+        ax.axis('off')
+        ax.imshow(plt.imread(f'temp/{im.lower()}.png', 3))
+        ax.set_title(im)
+
+    plt.show()
