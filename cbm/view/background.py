@@ -7,24 +7,26 @@
 # Copyright : 2021 European Commission, Joint Research Centre
 # License   : 3-Clause BSD
 
-import re
 import json
 import rasterio
-import requests
+import numpy as np
 import matplotlib.pyplot as plt
 from rasterio.plot import show
 from descartes import PolygonPatch
 
-from cbm.get import background
 from cbm.sources import api
 from cbm.view import spatial_utils
 
-def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms='Google', prefix='', folder='temp', quiet=True):
-    """Download the background image with parcels polygon overlay by selected location.
+
+def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms='Google',
+                prefix='', path='temp', quiet=False):
+    """Download the background image with parcels polygon overlay by selected
+    location. This function will get an image from the center of the polygon.
 
     Examples:
         from cbm.view import background
-        background.by_location(aoi, year, lon, lat, 512, 512, 'Google', 'temp/test.tif', True)
+        background.by_location(aoi, year, lon, lat, 512, 512, 'Google',
+                                'temp/test.tif', True)
 
     Arguments:
         aoi, the area of interest e.g.: es, nld (str)
@@ -34,46 +36,34 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms='Google', pre
         extend, size of the chip in meters  (float).
         tms, tile map server Google or Bing (str).
         prefix, the name of the output file (str).
-        folder, the folder to be stored (str).
+        path, the path to be stored (str).
         quiet, print or not procedure information (Boolean).
 
     """
     json_data = json.loads(api.ploc(aoi, year, lon, lat, True))
-    with open(f'{folder}/{prefix}info.json', "w") as f:
+    with open(f'{path}/{prefix}info.json', "w") as f:
         json.dump(json_data, f)
 
-    background.main(lon, lat, chipsize, extend, tms, f'{folder}{tms}.tif')
+    lat, lon = spatial_utils.centroid(
+        spatial_utils.transform_geometry(json_data))
+    if type(tms) is list:
+        for t in tms:
+            img_overlay(aoi, year, lon, lat, chipsize,
+                        extend, t, prefix, path, True)
+    else:
+        img_overlay(aoi, year, lon, lat, chipsize,
+                    extend, tms, prefix, path, quiet)
 
-    with rasterio.open(f'{folder}/{prefix}{tms}.tif') as img:
-        def overlay_parcel(img, json_data):
-            img_epsg = img.crs.to_epsg()
-            geo_json = spatial_utils.transform_geometry(
-                json_data, img_epsg)
-            patche = [PolygonPatch(feature, edgecolor="yellow",
-                                   facecolor="none", linewidth=2
-                                   ) for feature in [geo_json]]
-            return patche
 
-        ax = plt.gca()
-        for p in overlay_parcel(img, json_data):
-            ax.add_patch(p)
-
-        show(img, ax=ax)
-
-        if prefix:
-            plt.savefig(f'{folder}/{prefix}{tms}.png', dpi=None, facecolor='w', edgecolor='w',
-                    orientation='portrait', format=None,
-                    transparent=False, bbox_inches=None, pad_inches=0.1,
-                    metadata=None)
-        else:
-            plt.show()
-
-def by_pid(aoi, year, pid, chipsize=512, extend=512, tms='Google', prefix='', folder='temp'):
-    """Download the background image with parcels polygon overlay by selected location.
+def by_pid(aoi, year, pid, chipsize=512, extend=512, tms='Google', prefix='',
+           path='temp', quiet=False):
+    """Download the background image with parcels polygon overlay by selected
+    location.
 
     Examples:
         from cbm.view import background
-        background.by_location(aoi, year, lon, lat, 512, 512, 'Google', 'temp/test.tif', True)
+        background.by_location(aoi, year, lon, lat, 512, 512, 'Google',
+                                'temp/test.tif', True)
 
     Arguments:
         aoi, the area of interest e.g.: es, nld (str)
@@ -83,42 +73,77 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms='Google', prefix='', fo
         extend, size of the chip in meters  (float).
         tms, tile map server Google or Bing (str).
         prefix, the name of the output file (str).
-        folder, the folder to be stored (str).
+        path, the path to be stored (str).
         quiet, print or not procedure information (Boolean).
 
     """
     json_data = json.loads(api.pid(aoi, year, pid, True))
-    with open(f'{folder}{prefix}info.json', "w") as f:
+    with open(f'{path}/{prefix}info.json', "w") as f:
         json.dump(json_data, f)
-    
-    lon, lat = spatial_utils.centroid(json.loads(json_data['geom'][0])['coordinates'][0])
-    background.main(lon, lat, chipsize, extend, tms, f'{folder}{tms}.tif')
 
-    with rasterio.open(f'{folder}/{prefix}{tms}.tif') as img:
+    lat, lon = spatial_utils.centroid(
+        spatial_utils.transform_geometry(json_data))
+    if type(tms) is list:
+        for t in tms:
+            img_overlay(aoi, year, lon, lat, chipsize,
+                        extend, t, prefix, path, True)
+    else:
+        img_overlay(aoi, year, lon, lat, chipsize,
+                    extend, tms, prefix, path, quiet)
+
+
+def img_overlay(aoi, year, lon, lat, chipsize=512, extend=512, tms='Google',
+                prefix='', path='temp', quiet=False):
+    """Main function to download the background image with parcels polygon
+    overlay by selected location. This function will get an image from the
+    given coordinates not the center of the polygon that was founded.
+
+    Examples:
+        from cbm.view import background
+        background.img_overlay(aoi, year, lon, lat, 512, 512, 'Google',
+                                'temp/test.tif', True)
+
+    Arguments:
+        aoi, the area of interest e.g.: es, nld (str)
+        year, the year of the parcels dataset (int)
+        lon, lat, longitude and latitude in decimal degrees (float).
+        chipsize, size of the chip in pixels (int).
+        extend, size of the chip in meters  (float).
+        tms, tile map server Google or Bing (str).
+        prefix, the name of the output file (str).
+        path, the path to be stored (str).
+        quiet, print or not procedure information (Boolean).
+
+    """
+
+    bk_file = api.background(lon, lat, chipsize, extend, tms, prefix, path)
+
+    with open(f'{path}/{prefix}info.json', "r") as f:
+        json_data = json.load(f)
+
+    with rasterio.open(bk_file) as img:
         def overlay_parcel(img, json_data):
             img_epsg = img.crs.to_epsg()
             geo_json = spatial_utils.transform_geometry(
                 json_data, img_epsg)
             patche = [PolygonPatch(feature, edgecolor="yellow",
                                    facecolor="none", linewidth=2
-                                   ) for feature in [geo_json]]
+                                   ) for feature in [geo_json['geom'][0]]]
             return patche
 
         ax = plt.gca()
         for p in overlay_parcel(img, json_data):
             ax.add_patch(p)
-
+        plt.axis('off')
         show(img, ax=ax)
 
-        if prefix:
-            plt.savefig(f'{folder}/{prefix}{tms}.png', dpi=None, facecolor='w', edgecolor='w',
-                    orientation='portrait', format=None,
-                    transparent=False, bbox_inches=None, pad_inches=0.1,
-                    metadata=None)
-        else:
-            plt.show()
+        plt.savefig(f"{bk_file.split('.')[0]}.png".lower(), dpi=None,
+                    facecolor='w', edgecolor='w', orientation='portrait',
+                    format=None, transparent=False, bbox_inches='tight',
+                    pad_inches=0.1, metadata=None)
 
+        if quiet is not False:
+            plt.clf()
+            plt.cla()
+            plt.close()
 
-if __name__ == "__main__":
-    import sys
-    main(sys.argv)
