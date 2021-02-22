@@ -19,8 +19,7 @@ from descartes import PolygonPatch
 from ipywidgets import (HBox, VBox, Dropdown, Button, Output,
                         Checkbox, Layout, IntRangeSlider)
 
-from cbm.utils import data_options
-from cbm.view import spatial_utils
+from cbm.utils import data_options, spatial
 from cbm.ipycbm.ipy_view import view_images
 
 from skimage import exposure
@@ -143,7 +142,7 @@ def calendar(path):
 
     def overlay_parcel(img, info_data):
         img_epsg = img.crs.to_epsg()
-        geo_json = spatial_utils.transform_geometry(
+        geo_json = spatial.transform_geometry(
             info_data, img_epsg)
         patche = [PolygonPatch(feature, edgecolor="yellow",
                                facecolor="none", linewidth=2
