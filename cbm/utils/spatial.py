@@ -117,30 +117,51 @@ def centroid(geom):
 
     return(round(_x, 4), round(_y, 4))
 
-def transform_geometry(jsondata, target_epsg=4326):
+def transform_geometry(indata, target_epsg=4326, source_epsg=None):
     """
     Args:
-        jsondata: Parsel information in json format with geometry.
-            Must include srid and geom
+        indata: json or list with coordinates
+        target_epsg default wgs84 (4326)
+        source_epsg default None
     Returns:
-        geom_wgs84: json formated geometry in wgs84.
+        geom: json formated geometry in target_epsg.
     Raises:
     Example:
     """
     from osgeo import ogr, osr
     import json
     try:
-        geom = jsondata['geom'][0]
+        if 'geom' in indata:
+            geom = indata['geom'][0]
+        elif 'coordinates' in indata:
+            geom = indata
+        elif type(indata) is list:
+            geom = {}
+            geom['type'] = 'MultiPolygon'
+            geom['coordinates'] = indata
+            geom = str(geom)
+
         g = ogr.CreateGeometryFromJson(geom)
         source = osr.SpatialReference()
-        source.ImportFromEPSG(jsondata['srid'][0])
+
+        if 'srid' in indata:
+            source.ImportFromEPSG(indata['srid'][0])
+        elif source_epsg is not None:
+            source.ImportFromEPSG(source_epsg)
+        else:
+            print("Please provide source srid.")
+
         target = osr.SpatialReference()
         target.ImportFromEPSG(target_epsg)
         transform = osr.CoordinateTransformation(source, target)
         g.Transform(transform)
-        geom_wgs84 = json.loads(g.ExportToJson())
+        geom_target = json.loads(g.ExportToJson())
 
-        return geom_wgs84
+        if 'geom' in indata:
+            indata['geom'][0] = geom_target
+            return indata
+        else:
+            return geom_target
     except Exception as err:
         print("could not transform geometry", err)
 
