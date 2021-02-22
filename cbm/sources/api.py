@@ -219,3 +219,59 @@ def get_options():
     response = requests.get(requrl.format(api_url),
                             auth=(api_user, api_pass))
     return response.content
+
+
+def background(lon, lat, chipsize=512, extend=512, tms='Google', prefix='',
+               path='temp', quiet=True):
+    """Download the background image.
+
+    Examples:
+        background(lon, lat, 512, 512, 'Google', 'temp/test.tif', True)
+
+    Arguments:
+        lon, lat, longitude and latitude in decimal degrees (float).
+        chipsize, size of the chip in pixels (int).
+        extend, size of the chip in meters  (float).
+        tms, tile map server Google or Bing (str).
+        bk_file, the name of the output file (str).
+        quiet, print or not procedure information (Boolean).
+
+    """
+    import re
+    import json
+    import rasterio
+    import matplotlib.pyplot as plt
+    from rasterio.plot import show
+    from descartes import PolygonPatch
+
+    # Get the api credentials
+    api_url, api_user, api_pass = config.credentials('api')
+
+    # The url to get the background image
+    requrl = f"lon={lon}&lat={lat}&chipsize={chipsize}&extend={extend}&tms={tms}"
+    response = requests.get(f"{api_url}/query/backgroundByLocation?{requrl}",
+                            auth=(api_user, api_pass))
+
+    # Try to get the image link from the html response
+    try:
+        bkgdimg = re.search('src="(.+?)"/>', str(response.content)).group(1)
+    except AttributeError:
+        if not quiet:
+            print("Image found:", bkgdimg)
+        bkgdimg = '' # image not found in html response
+
+    img_url = f"{api_url}{bkgdimg}"
+    res = requests.get(img_url, stream=True)
+    image_name = img_url.split('/')[-1].lower()
+    bk_file = f"{path}/{prefix}{image_name}"
+
+    if not quiet:
+        print(f"Downloading {image_name}")
+    with open(bk_file, "wb") as handle:
+        for chunk in res.iter_content(chunk_size=512):
+            if chunk:  # filter out keep-alive new chunks
+                handle.write(chunk)
+    if not quiet:
+        print("Background image downloaded:", image_name)
+
+    return bk_file
