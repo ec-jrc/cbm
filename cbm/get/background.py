@@ -6,20 +6,20 @@
 # Credits   : GTCAP Team
 # Copyright : 2021 European Commission, Joint Research Centre
 # License   : 3-Clause BSD
-
+import os
+import os.path
 import json
 import rasterio
 import numpy as np
 import matplotlib.pyplot as plt
 from rasterio.plot import show
 from descartes import PolygonPatch
-from mpl_toolkits.axes_grid1 import ImageGrid
 
 from cbm.sources import api
-from cbm.utils import spatial
+from cbm.utils import spatial, config
+from cbm.ipycbm import ipy_view
 
-def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms='Google',
-                prefix='', path='temp', quiet=False):
+def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms='Google', quiet=True):
     """Download the background image with parcels polygon overlay by selected
     location. This function will get an image from the center of the polygon.
 
@@ -35,29 +35,34 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms='Google',
         chipsize, size of the chip in pixels (int).
         extend, size of the chip in meters  (float).
         tms, tile map server Google or Bing (str).
-        prefix, the name of the output file (str).
-        path, the path to be stored (str).
         quiet, print or not procedure information (Boolean).
 
     """
+
+    bk_file = api.background(lon, lat, chipsize, extend, tms)
+
     json_data = json.loads(api.ploc(aoi, year, lon, lat, True))
-    with open(f'{path}/{prefix}info.json', "w") as f:
+    if type(json_data['ogc_fid']) is list:
+        pid = json_data['ogc_fid'][0]
+    else:
+        pid = json_data['ogc_fid']
+
+    workdir = config.get_value(['paths', 'temp'])
+    path = f'{workdir}{aoi}{year}/pid{pid}/'
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    with open(f'{path}info.json', "w") as f:
         json.dump(json_data, f)
 
     lat, lon = spatial.centroid(
         spatial.transform_geometry(json_data))
-    if type(tms) is list:
-        for t in tms:
-            img_overlay(aoi, year, lon, lat, chipsize,
-                        extend, t, prefix, path, True)
-        view_all(tms, prefix, path)
-    else:
-        img_overlay(aoi, year, lon, lat, chipsize,
-                    extend, tms, prefix, path, quiet)
+
+    img_overlay(aoi, year, pid, lon, lat, chipsize,
+                extend, tms, quiet)
 
 
-def by_pid(aoi, year, pid, chipsize=512, extend=512, tms='Google', prefix='',
-           path='temp', quiet=False):
+def by_pid(aoi, year, pid, chipsize=512, extend=512, tms='Google', quiet=True):
     """Download the background image with parcels polygon overlay by selected
     location.
 
@@ -73,29 +78,28 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms='Google', prefix='',
         chipsize, size of the chip in pixels (int).
         extend, size of the chip in meters  (float).
         tms, tile map server Google or Bing (str).
-        prefix, the name of the output file (str).
-        path, the path to be stored (str).
         quiet, print or not procedure information (Boolean).
 
     """
     json_data = json.loads(api.pid(aoi, year, pid, True))
-    with open(f'{path}/{prefix}info.json', "w") as f:
+
+    workdir = config.get_value(['paths', 'temp'])
+    path = f'{workdir}{aoi}{year}/pid{pid}/'
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    with open(f'{path}info.json', "w") as f:
         json.dump(json_data, f)
 
     lat, lon = spatial.centroid(
         spatial.transform_geometry(json_data))
-    if type(tms) is list:
-        for t in tms:
-            img_overlay(aoi, year, lon, lat, chipsize,
-                        extend, t, prefix, path, True)
-        view_all(tms, prefix, path)
-    else:
-        img_overlay(aoi, year, lon, lat, chipsize,
-                    extend, tms, prefix, path, quiet)
+
+    img_overlay(aoi, year, pid, lon, lat, chipsize,
+                    extend, tms, quiet)
 
 
-def img_overlay(aoi, year, lon, lat, chipsize=512, extend=512, tms='Google',
-                prefix='', path='temp', quiet=False):
+def img_overlay(aoi, year, pid, lon, lat, chipsize=512, extend=512,
+                tms='Google', quiet=True):
     """Main function to download the background image with parcels polygon
     overlay by selected location. This function will get an image from the
     given coordinates not the center of the polygon that was founded.
@@ -112,15 +116,18 @@ def img_overlay(aoi, year, lon, lat, chipsize=512, extend=512, tms='Google',
         chipsize, size of the chip in pixels (int).
         extend, size of the chip in meters  (float).
         tms, tile map server Google or Bing (str).
-        prefix, the name of the output file (str).
-        path, the path to be stored (str).
         quiet, print or not procedure information (Boolean).
 
     """
 
-    bk_file = api.background(lon, lat, chipsize, extend, tms, prefix, path)
+    bk_file = api.background(lon, lat, chipsize, extend, tms, aoi, year, pid)
 
-    with open(f'{path}/{prefix}info.json', "r") as f:
+    workdir = config.get_value(['paths', 'temp'])
+    path = f'{workdir}{aoi}{year}/pid{pid}/'
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    with open(f'{path}info.json', "r") as f:
         json_data = json.load(f)
 
     with rasterio.open(bk_file) as img:
@@ -144,26 +151,7 @@ def img_overlay(aoi, year, lon, lat, chipsize=512, extend=512, tms='Google',
                     format=None, transparent=False, bbox_inches='tight',
                     pad_inches=0.1, metadata=None)
 
-        if quiet is not False:
+        if quiet is True:
             plt.clf()
             plt.cla()
             plt.close()
-
-
-def view_all(tms, prefix='', path='temp'):
-
-    columns = 5
-    rows = int(len(tms) // columns + (len(tms) % columns > 0))
-    fig = plt.figure(figsize=(25, 5 * rows))
-    grid = ImageGrid(fig, 111,  # similar to subplot(111)
-                     nrows_ncols=(rows, columns),  # creates 2x2 grid of axes
-                     axes_pad=0.1,  # pad between axes in inch.
-                     )
-
-    for ax, im in zip(grid, tms):
-        # Iterating over the grid returns the Axes.
-        ax.axis('off')
-        ax.imshow(plt.imread(f'temp/{im.lower()}.png', 3))
-        ax.set_title(im)
-
-    plt.show()
