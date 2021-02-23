@@ -37,7 +37,8 @@ def auth_required(f):
         auth = request.authorization
         if auth and users.auth(auth.username, auth.password) is True:
             return f(*args, **kwargs)
-        return make_response('Could not verify.', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
+        return make_response('Could not verify.', 401,
+                             {'WWW-Authenticate': 'Basic realm="Login Required"'})
     return decorated
 
 
@@ -82,9 +83,12 @@ def parcelTimeSeries_query():
     if not data:
         return json.dumps({})
     elif len(data) == 1:
-        return json.dumps(dict(zip(list(data[0]), [[] for i in range(len(data[0]))])))
+        return json.dumps(dict(zip(list(data[0]),
+                                   [[] for i in range(len(data[0]))])))
     else:
-        return json.dumps(dict(zip(list(data[0]), [list(i) for i in zip(*data[1:])])), cls=CustomJsonEncoder)
+        return json.dumps(dict(zip(list(data[0]),
+                                   [list(i) for i in zip(*data[1:])])),
+                          cls=CustomJsonEncoder)
 
 
 @app.route('/query/parcelPeers', methods=['GET'])
@@ -108,9 +112,11 @@ def parcelPeers_query():
     if not data:
         return json.dumps({})
     elif len(data) == 1:
-        return json.dumps(dict(zip(list(data[0]), [[] for i in range(len(data[0]))])))
+        return json.dumps(dict(zip(list(data[0]),
+                                   [[] for i in range(len(data[0]))])))
     else:
-        return json.dumps(dict(zip(list(data[0]), [list(i) for i in zip(*data[1:])])))
+        return json.dumps(dict(zip(list(data[0]),
+                                   [list(i) for i in zip(*data[1:])])))
 
 
 @app.route('/query/parcelByLocation', methods=['GET'])
@@ -128,9 +134,11 @@ def parcelByLocation_query():
     if not data:
         return json.dumps({})
     elif len(data) == 1:
-        return json.dumps(dict(zip(list(data[0]), [[] for i in range(len(data[0]))])))
+        return json.dumps(dict(zip(list(data[0]),
+                                   [[] for i in range(len(data[0]))])))
     else:
-        return json.dumps(dict(zip(list(data[0]), [list(i) for i in zip(*data[1:])])))
+        return json.dumps(dict(zip(list(data[0]),
+                                   [list(i) for i in zip(*data[1:])])))
 
 
 @app.route('/query/parcelById', methods=['GET'])
@@ -149,9 +157,11 @@ def parcelById_query():
     if not data:
         return json.dumps({})
     elif len(data) == 1:
-        return json.dumps(dict(zip(list(data[0]), [[] for i in range(len(data[0]))])))
+        return json.dumps(dict(zip(list(data[0]),
+                                   [[] for i in range(len(data[0]))])))
     else:
-        return json.dumps(dict(zip(list(data[0]), [list(i) for i in zip(*data[1:])])))
+        return json.dumps(dict(zip(list(data[0]),
+                                   [list(i) for i in zip(*data[1:])])))
 
 
 @app.route('/query/parcelsByPolygon', methods=['GET'])
@@ -175,9 +185,11 @@ def parcelsByPolygon_query():
     if not data:
         return json.dumps({})
     elif len(data) == 1:
-        return json.dumps(dict(zip(list(data[0]), [[] for i in range(len(data[0]))])))
+        return json.dumps(dict(zip(list(data[0]),
+                                   [[] for i in range(len(data[0]))])))
     else:
-        return json.dumps(dict(zip(list(data[0]), [list(i) for i in zip(*data[1:])])))
+        return json.dumps(dict(zip(list(data[0]),
+                                   [list(i) for i in zip(*data[1:])])))
 
 
 # -------- Uploader ---------------------------------------------------------- #

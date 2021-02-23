@@ -21,6 +21,7 @@ Options:
   --version     Show version.
 """
 
+
 def swap_xy(indata):
     """
     A general function to swap (x,y) for any spatial geometry type,
@@ -61,7 +62,8 @@ def swap_xy(indata):
         # Process coordinates from each supported geometry type
         if geom['type'] in ('Point', 'LineString', 'LinearRing', 'Polygon'):
             coords_list = geom['coordinates'][0]
-            geom['coordinates'][0] = [swap_xy_coords(coords) for coords in coords_list]
+            geom['coordinates'][0] = [swap_xy_coords(
+                coords) for coords in coords_list]
         elif geom['type'].startswith('Multi') or geom['type'] == 'GeometryCollection':
             geom_list = []
             for sub_geom in geom['coordinates'][0]:
@@ -149,8 +151,9 @@ def centroid(indata):
         _x, _y = xy_center(geom[0][0])
     else:
         print("Not recognized coordinates format.")
-    
+
     return(round(_x, 4), round(_y, 4))
+
 
 def transform_geometry(indata, target_epsg=4326, source_epsg=None):
     """

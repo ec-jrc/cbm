@@ -12,10 +12,11 @@ from ipywidgets import Tab
 from cbm.ipycbm.utils import settings, help_docs
 from cbm.ipycbm.ipy_qa import qa_panel
 
+
 def qa_widget_box():
 
     tab_box = Tab(children=[qa_panel.qa(), help_docs.widget_box(),
-                  settings.main()])
+                            settings.main()])
 
     tab_box.set_title(0, 'Quality assessment')
     tab_box.set_title(1, 'Help')

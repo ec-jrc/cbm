@@ -8,6 +8,7 @@ from mpl_toolkits.axes_grid1 import ImageGrid
 from cbm.utils import config
 from cbm import get
 
+
 def slider(aoi, year, pid, chipsize=512, extend=512, tms=['Google']):
 
     workdir = config.get_value(['paths', 'temp'])
@@ -16,7 +17,7 @@ def slider(aoi, year, pid, chipsize=512, extend=512, tms=['Google']):
     for t in tms:
         if not os.path.isfile(f'{path}{t.lower()}.png'):
             get.background.by_pid(aoi, year, pid, chipsize, extend, t, True)
-        
+
     selection = SelectionSlider(
         options=tms,
         value=tms[0],
@@ -69,4 +70,3 @@ def grid(aoi, year, pid, chipsize=512, extend=512, tms='Google'):
         ax.set_title(im)
 
     plt.show()
-
