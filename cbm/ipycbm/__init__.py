@@ -52,3 +52,13 @@ def qa(*args):
 def config(*args):
     from cbm.ipycbm.utils import settings
     return settings.main(*args)
+
+
+def bg_grid(*args):
+    from cbm.ipycbm.ipy_view import view_background
+    return view_background.grid(*args)
+
+
+def bg_slider(*args):
+    from cbm.ipycbm.ipy_view import view_background
+    return view_background.slider(*args)

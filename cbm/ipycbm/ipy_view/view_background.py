@@ -6,7 +6,7 @@ from ipywidgets import Output, VBox, SelectionSlider
 from mpl_toolkits.axes_grid1 import ImageGrid
 
 from cbm.utils import config
-from cbm import get
+from cbm.get import background as bg
 
 
 def slider(aoi, year, pid, chipsize=512, extend=512, tms=['Google']):
@@ -16,7 +16,7 @@ def slider(aoi, year, pid, chipsize=512, extend=512, tms=['Google']):
 
     for t in tms:
         if not os.path.isfile(f'{path}{t.lower()}.png'):
-            get.background.by_pid(aoi, year, pid, chipsize, extend, t, True)
+            bg.by_pid(aoi, year, pid, chipsize, extend, t, True)
 
     selection = SelectionSlider(
         options=tms,
@@ -53,7 +53,7 @@ def grid(aoi, year, pid, chipsize=512, extend=512, tms='Google'):
 
     for t in tms:
         if not os.path.isfile(f'{path}{t.lower()}.png'):
-            get.background.by_pid(aoi, year, pid, chipsize, extend, t, True)
+            bg.by_pid(aoi, year, pid, chipsize, extend, t, True)
 
     columns = 5
     rows = int(len(tms) // columns + (len(tms) % columns > 0))

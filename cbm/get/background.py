@@ -118,7 +118,8 @@ def img_overlay(aoi, year, pid, lon, lat, chipsize=512, extend=512,
 
     """
 
-    bk_file = api.background(lon, lat, chipsize, extend, tms, aoi, year, pid)
+    bg_file = api.background(lon, lat, chipsize, extend,
+                             tms, aoi, year, pid, quiet)
 
     workdir = config.get_value(['paths', 'temp'])
     path = f'{workdir}{aoi}{year}/pid{pid}/'
@@ -128,7 +129,7 @@ def img_overlay(aoi, year, pid, lon, lat, chipsize=512, extend=512,
     with open(f'{path}info.json', "r") as f:
         json_data = json.load(f)
 
-    with rasterio.open(bk_file) as img:
+    with rasterio.open(bg_file) as img:
         def overlay_parcel(img, json_data):
             img_epsg = img.crs.to_epsg()
             geo_json = spatial.transform_geometry(
@@ -144,7 +145,7 @@ def img_overlay(aoi, year, pid, lon, lat, chipsize=512, extend=512,
         plt.axis('off')
         show(img, ax=ax)
 
-        plt.savefig(f"{bk_file.split('.')[0]}.png".lower(), dpi=None,
+        plt.savefig(f"{bg_file.split('.')[0]}.png".lower(), dpi=None,
                     facecolor='w', edgecolor='w', orientation='portrait',
                     format=None, transparent=False, bbox_inches='tight',
                     pad_inches=0.1, metadata=None)
