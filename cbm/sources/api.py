@@ -221,8 +221,8 @@ def get_options():
     return response.content
 
 
-def background(lon, lat, chipsize=512, extend=512, tms='Google', prefix='',
-               path='temp', quiet=True):
+def background(lon, lat, chipsize=512, extend=512, tms='Google',
+               aoi='undefined', year='', pid='0000', quiet=True):
     """Download the background image.
 
     Examples:
@@ -237,6 +237,8 @@ def background(lon, lat, chipsize=512, extend=512, tms='Google', prefix='',
         quiet, print or not procedure information (Boolean).
 
     """
+    import os
+    import os.path
     import re
     import json
     import rasterio
@@ -260,10 +262,15 @@ def background(lon, lat, chipsize=512, extend=512, tms='Google', prefix='',
             print("Image found:", bkgdimg)
         bkgdimg = '' # image not found in html response
 
+    workdir = config.get_value(['paths', 'temp'])
+    path = f'{workdir}{aoi}{year}/pid{pid}/background/'
+    if not os.path.exists(path):
+        os.makedirs(path)
+
     img_url = f"{api_url}{bkgdimg}"
     res = requests.get(img_url, stream=True)
     image_name = img_url.split('/')[-1].lower()
-    bk_file = f"{path}/{prefix}{image_name}"
+    bk_file = f"{path}{image_name}"
 
     if not quiet:
         print(f"Downloading {image_name}")
