@@ -30,10 +30,10 @@ def qa():
             print(*text)
 
     qa_info = HTML(
-        value="""The CbM Quality Assurance (QA) is a framework intended to enable 
-        the Member State (MS) to report to the Commission about the state of one of 
+        value="""The CbM Quality Assurance (QA) is a framework intended to enable
+        the Member State (MS) to report to the Commission about the state of one of
         the components inside the control and management system.<br>
-        To run the Quality Assessment (QA) procedures direct access to the 
+        To run the Quality Assessment (QA) procedures direct access to the
         database and the object storage with CARD data is required.<br>
         """,
         placeholder='QA Information',
@@ -88,6 +88,7 @@ def qa():
         new_value = accor.children[3].children[2].children[0].value
         accor.children[5].children[0].children[0].value = new_value
     accor.children[3].children[2].children[0].observe(on_start, 'value')
+
     def on_end(change):
         new_value = accor.children[3].children[2].children[1].value
         accor.children[5].children[0].children[1].value = new_value

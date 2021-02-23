@@ -10,16 +10,16 @@ import os
 import os.path
 import json
 import rasterio
-import numpy as np
 import matplotlib.pyplot as plt
 from rasterio.plot import show
 from descartes import PolygonPatch
 
 from cbm.sources import api
 from cbm.utils import spatial, config
-from cbm.ipycbm import ipy_view
 
-def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms='Google', quiet=True):
+
+def by_location(aoi, year, lon, lat, chipsize=512, extend=512,
+                tms='Google', quiet=True):
     """Download the background image with parcels polygon overlay by selected
     location. This function will get an image from the center of the polygon.
 
@@ -38,8 +38,6 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms='Google', qui
         quiet, print or not procedure information (Boolean).
 
     """
-
-    bk_file = api.background(lon, lat, chipsize, extend, tms)
 
     json_data = json.loads(api.ploc(aoi, year, lon, lat, True))
     if type(json_data['ogc_fid']) is list:
@@ -95,7 +93,7 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms='Google', quiet=True):
         spatial.transform_geometry(json_data))
 
     img_overlay(aoi, year, pid, lon, lat, chipsize,
-                    extend, tms, quiet)
+                extend, tms, quiet)
 
 
 def img_overlay(aoi, year, pid, lon, lat, chipsize=512, extend=512,

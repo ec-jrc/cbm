@@ -20,6 +20,7 @@ path_conf = f"config/"
 conf_main = "main.json"
 conf_default = join(dirname(abspath(__file__)), 'main_default.json')
 
+
 def get_value(dict_keys={}, file=conf_main, var_name=None, help_text=True):
     """Get value from a configuration file, with an arbitrary length key.
 
@@ -161,7 +162,8 @@ def read(file=conf_main):
                 data = json.load(f)
             return data
         elif file == 'api_options.json':
-            create(join(dirname(dirname(abspath(__file__))), f'api/{file}'), file)
+            create(
+                join(dirname(dirname(abspath(__file__))), f'api/{file}'), file)
             with open(join(path_conf, file), 'r') as f:
                 data = json.load(f)
             return data
@@ -194,7 +196,7 @@ def update_keys(from_file=conf_default, to_file=conf_main):
 
     with open(from_file, 'r') as f:
         dict_new = json.load(f)
-    
+
     with open(join(path_conf, to_file), 'r') as f:
         dict_old = json.load(f)
 
@@ -218,7 +220,8 @@ def update_keys(from_file=conf_default, to_file=conf_main):
     os.rename(tempfile, join(path_conf, to_file))
 
     if updated_keys > 0:
-        print(f"{updated_keys+1} new json configuration objects are added to the configuration file.")
+        print(f"{updated_keys+1} new json configuration",
+              "objects are added to the configuration file.")
 
 
 def credentials(service):
@@ -243,9 +246,9 @@ def autoselect(matching_text=None, import_list=[], help_text=True):
     Arguments:
         matching_text :  The selected database (str).
 
-        import_list   :  List of the options (List).
+        import_list :  List of the options (List).
 
-        help_text     :  Display or not all the tables if more then one (Boolean).
+        help_text :  Display or not all the tables if more then one (Boolean).
 
     Returns:
         The selected value that match the input
@@ -268,6 +271,7 @@ def autoselect(matching_text=None, import_list=[], help_text=True):
                 print(f"{len(match_list)} values found with the word"
                       f"'{matching_text}' in the list: {match_list}")
     except Exception as err:
-        print(f"Could not auto select a value '{matching_text}' for from the list '{import_list[0]} ...': {err}")
+        print(f"Could not auto select a value '{matching_text}' for from",
+              f"the list '{import_list[0]} ...': {err}")
         value = None
     return value

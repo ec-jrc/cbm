@@ -16,9 +16,10 @@ import os
 
 users_file = '_users.json'
 
+
 def auth(username, password):
     """Authentication check with hashed passwords
-    
+
     To be used in authentication decorator of flask app.
 
     Example:
@@ -29,7 +30,8 @@ def auth(username, password):
                 auth = request.authorization
                 if auth and users.auth(auth.username, auth.password) is True:
                     return f(*args, **kwargs)
-                return make_response('Could not verify.', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
+                return make_response('Could not verify.', 401,
+                        {'WWW-Authenticate': 'Basic realm="Login Required"'})
             return decorated
 
         @app.route('/query/', methods=['GET'])
@@ -69,7 +71,7 @@ def auth(username, password):
 
 def add(username, password=''):
     """Add a new user
-    
+
     Example:
         from cbm.apicbm import users
         users.add('admin','admin')
