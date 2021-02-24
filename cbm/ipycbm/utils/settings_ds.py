@@ -59,7 +59,9 @@ def api(mode=None):
             config.update(['api', 'pass'], str(wt_pass.value).replace(' ', ''))
         outlog("The RESTful API credentials are saved.")
 
-    wbox = VBox([wt_url, wt_user, wt_pass, HBox([wb_save, progress])])
+    wbox = VBox([HBox([wt_url, Label("Format: http://0.0.0.0/ or https://0.0.0.0/")]),
+                 wt_user, wt_pass,
+                 HBox([wb_save, progress])])
 
     return wbox
 
