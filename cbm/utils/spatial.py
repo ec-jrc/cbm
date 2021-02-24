@@ -41,14 +41,15 @@ def swap_xy(indata):
         # Map the function to a geopandas geometry column
         table.geometry = table.geometry.map(spatial.swap_xy)
     """
-#     print(type(geom))
     if type(indata) is str:
         indata = eval(indata)
     if 'geom' in indata:
-        if type(indata['geom'][0]) is dict:
+        if type(indata['geom']) is list:
             geom = indata['geom'][0]
         else:
-            geom = eval(indata['geom'][0])
+            geom = indata['geom']
+        if geom is str:
+            geom = eval(geom)
     else:
         geom = indata
 
@@ -154,7 +155,11 @@ def centroid(indata):
     else:
         print("Not recognized coordinates format.")
 
-    return(round(_x, 4), round(_y, 4))
+    import gdal
+    if int(gdal.VersionInfo()) < 3000000:
+        return(round(_y, 4), round(_x, 4))
+    else:
+        return(round(_x, 4), round(_y, 4))
 
 
 def transform_geometry(indata, target_epsg=4326, source_epsg=None):
