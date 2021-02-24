@@ -259,7 +259,7 @@ def background(lon, lat, chipsize=512, extend=512, tms='Google',
         bkgdimg = re.search('src="(.+?)"/>', str(response.content)).group(1)
     except AttributeError:
         if not quiet:
-            print("Image found:", bkgdimg)
+            print("Image not found...")
         bkgdimg = '' # image not found in html response
 
     workdir = config.get_value(['paths', 'temp'])
@@ -270,15 +270,15 @@ def background(lon, lat, chipsize=512, extend=512, tms='Google',
     img_url = f"{api_url}{bkgdimg}"
     res = requests.get(img_url, stream=True)
     image_name = img_url.split('/')[-1].lower()
-    bk_file = f"{path}{image_name}"
+    bg_file = f"{path}{image_name}"
 
     if not quiet:
         print(f"Downloading {image_name}")
-    with open(bk_file, "wb") as handle:
+    with open(bg_file, "wb") as handle:
         for chunk in res.iter_content(chunk_size=512):
             if chunk:  # filter out keep-alive new chunks
                 handle.write(chunk)
     if not quiet:
         print("Background image downloaded:", image_name)
 
-    return bk_file
+    return bg_file
