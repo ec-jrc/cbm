@@ -28,7 +28,9 @@ def swap_xy(indata):
     it also preserves z coordinates (if present)
 
     Exaple code:
-        from spatial.geometry import Point, Polygon, MultiPoint, MultiLineString
+        from cbm.utils import spatial
+        geom = [[20, 40]]
+        spatial.swap_xy(geom)
 
         # POINT Z (1 2 3) -> POINT Z (2 1 3)
         spatial.swap_xy(Point(1, 2, 3))

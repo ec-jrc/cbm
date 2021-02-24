@@ -53,13 +53,13 @@ def api(mode=None):
     @wb_save.on_click
     def wb_save_on_click(b):
         progress.clear_output()
-        config.update(['api', 'url'], str(wt_url.value))
-        config.update(['api', 'user'], str(wt_user.value))
+        config.update(['api', 'url'], str(wt_url.value).replace(' ', ''))
+        config.update(['api', 'user'], str(wt_user.value).replace(' ', ''))
         if wt_pass.value != '':
-            config.update(['api', 'pass'], str(wt_pass.value))
-        outlog("API information is updated")
+            config.update(['api', 'pass'], str(wt_pass.value).replace(' ', ''))
+        outlog("The RESTful API credentials are saved.")
 
-    wbox = VBox([wt_url, wt_user, wt_pass, wb_save, progress])
+    wbox = VBox([wt_url, wt_user, wt_pass, HBox([wb_save, progress])])
 
     return wbox
 
