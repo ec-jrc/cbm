@@ -8,12 +8,14 @@
 # License   : 3-Clause BSD
 
 
-from ipywidgets import (HTML, HBox, VBox, Checkbox, Layout, widgets)
+from ipywidgets import (HTML, VBox, widgets)
+
 
 def widget_box():
 
     wbox = VBox(children=[ipycbm_help(), about()])
     return wbox
+
 
 def ipycbm_help():
 
@@ -31,21 +33,22 @@ The 'view' function is to load local files and display them with different metho
 <code>ipycbm.view()</code><br>
 <br>
 '**tmp**' folder structure example for parcel with ID 12345:<br>
-    
+
     <code>tmp/
-        cat2019/parcel_12345/12345_information.json
-        cat2019/parcel_12345/12345_time_series.csv
-        cat2019/parcel_12345/12345_chipimages/12345_images_list.csv
-        cat2019/parcel_12345/12345_chipimages/S2A_MSIL2A_2019---.B04.tif
-        cat2019/parcel_12345/12345_chipimages/...</code>
+        cat2019/12345/info.json
+        cat2019/12345/time_series.csv
+        cat2019/12345/chipimages/images_list.csv
+        cat2019/12345/chipimages/S2A_MSIL2A_2019---.B04.tif
+        cat2019/12345/chipimages/...</code>
     """
 
     wbox = widgets.HTML(
         value=html,
         placeholder="Documantation",
         description="")
-    
+
     return wbox
+
 
 def about():
     from cbm import __version__
@@ -155,7 +158,5 @@ Gilbert Voican
         value=html,
         placeholder="Documentation",
         description="")
-    
+
     return wbox
-
-

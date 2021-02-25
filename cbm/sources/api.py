@@ -138,7 +138,7 @@ def rcbl(parcel, start_date, end_date, bands, sat, chipsize, filespath):
         # Directly create a pandas DataFrame from the json response
         df = pd.read_json(response.content)
         os.makedirs(os.path.dirname(filespath), exist_ok=True)
-        df_file = f'{filespath}{pid}_images_list.{band}.csv'
+        df_file = f'{filespath}images_list.{band}.csv'
         df.to_csv(df_file, index=True, header=True)
         # print(f"The response table is saved to: {df_file}")
 
@@ -263,7 +263,7 @@ def background(lon, lat, chipsize=512, extend=512, tms='Google',
         bkgdimg = '' # image not found in html response
 
     workdir = config.get_value(['paths', 'temp'])
-    path = f'{workdir}{aoi}{year}/pid{pid}/background/'
+    path = f'{workdir}{aoi}{year}/pid{pid}/backgrounds/'
     if not os.path.exists(path):
         os.makedirs(path)
 

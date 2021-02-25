@@ -12,6 +12,7 @@ from cbm.sources import db
 from cbm.utils import config
 import json
 
+
 def ploc(aoi, year, lon, lat, geom=False):
     values = config.read()
     db = int(values['dataset'][aoi]['db'])
@@ -22,6 +23,7 @@ def ploc(aoi, year, lon, lat, geom=False):
         return json.dumps(dict(zip(list(data[0]), [[] for i in range(len(data[0]))])))
     else:
         return json.dumps(dict(zip(list(data[0]), [list(i) for i in zip(*data[1:])])))
+
 
 def pid(aoi, year, pid, geom=False):
     values = config.read()
@@ -34,6 +36,7 @@ def pid(aoi, year, pid, geom=False):
     else:
         return json.dumps(dict(zip(list(data[0]), [list(i) for i in zip(*data[1:])])))
 
+
 def ppoly(aoi, year, polygon, geom=False, only_ids=True):
     values = config.read()
     db = int(values['dataset'][aoi]['db'])
@@ -44,6 +47,7 @@ def ppoly(aoi, year, polygon, geom=False, only_ids=True):
         return json.dumps(dict(zip(list(data[0]), [[] for i in range(len(data[0]))])))
     else:
         return json.dumps(dict(zip(list(data[0]), [list(i) for i in zip(*data[1:])])))
+
 
 def pts(aoi, year, pid, tstype, band=None):
     values = config.read()
@@ -88,9 +92,9 @@ def rcbl(parcel, start_date, end_date, bands, sat, chipsize, filespath):
     from cbm.sources import object_storage
 
     start = time.time()
-    parcel_id = parcel['ogc_fid'][0]
-    reference_list = db.getS2frames(parcel_id, start_date, end_date)
-    df_polygon = db.getPolygonCentroid(parcel_id)
+    pid = parcel['ogc_fid'][0]
+    reference_list = db.getS2frames(pid, start_date, end_date)
+    df_polygon = db.getPolygonCentroid(pid)
     json_centroid = json.loads(df_polygon['center'][0])
     # json_polygon = json.loads(df_polygon['polygon'][0])
     parcel_center = json_centroid['coordinates']
@@ -183,35 +187,39 @@ def rcbl(parcel, start_date, end_date, bands, sat, chipsize, filespath):
                 os.makedirs(filespath, exist_ok=True)
                 fname = f"{filespath}{reference.replace('.SAFE', '')}.{band}.tif"
                 img = rasterio.open(fname, 'w', driver='GTiff',
-                                          width=chipsize/10, height=chipsize/10,
-                                          count=1,
-                                          crs=target_EPSG,
-                                          transform=chip_set.get(band)[1],
-                                          dtype=np.uint16
-                                          )
+                                    width=chipsize / 10, height=chipsize / 10,
+                                    count=1,
+                                    crs=target_EPSG,
+                                    transform=chip_set.get(band)[1],
+                                    dtype=np.uint16
+                                    )
 
                 img.write(chip_set.get(band)[0][0, :, :], 1)
                 img.close()
             date = reference.split('_')[2].split('T')[0]
-            print(f"Images for bands: '{bands}', for the date '{date}' are downloaded.")
+            print(f"Images for bands: '{bands}', for the date '{date}'",
+                  "are downloaded.")
 
         # print('{}{}/IMG_DATA/{}'.format(s3path,s3subdir,s))
 
         except Exception as err:
-            print(f"! Warning ! Uneble to downloaded image for: {ref_img}\n", err)
+            print(
+                f"! Warning ! Uneble to downloaded image for: {ref_img}\n", err)
 
     for band in bands:
         dates = [d.split('_')[2] for d in reference_list]
-        chips = [f"/direct/{chipsize}/{d.replace('.SAFE', '')}.{band}.tif" for d in reference_list]
+        chips = [
+            f"/direct/{chipsize}/{d.replace('.SAFE', '')}.{band}.tif" for d in reference_list]
         band_reflist = [dates, chips]
 
         df = DataFrame(band_reflist).transpose()
         df.columns = ['dates', 'chips']
-        df_file = f'{filespath}{parcel_id}_images_list.{band}.csv'
+        df_file = f'{filespath}images_list.{band}.csv'
         df.to_csv(df_file, index=True, header=True)
 
     print("\n------Total time------")
-    print(f"Total time required for {len(bands)} bands: {time.time() - start} seconds")
+    print(f"Total time required for {len(bands)}",
+          f"bands: {time.time() - start} seconds")
 
 
 def clouds(geom):
