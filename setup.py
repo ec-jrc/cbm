@@ -21,7 +21,6 @@ setup(
         'botocore',
         'bqplot',
         'Fiona',
-        'gdal',
         'ipyleaflet',
         'ipywidgets>=7.6.0',
         'matplotlib',
@@ -33,6 +32,7 @@ setup(
         'rasterstats',
         'requests',
         'tqdm',
+        'gdal',
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',

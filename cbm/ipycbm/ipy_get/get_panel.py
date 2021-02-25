@@ -23,7 +23,8 @@ from cbm.ipycbm.ipy_get import get_maps
 
 def get():
     """Get the parcel's dataset for the given location or ids"""
-    info = Label("1. Select the region and the year to get parcel information.")
+    info = Label(
+        "1. Select the region and the year to get parcel information.")
 
     values = config.read()
     # Set the max number of parcels that can be downloaded at once.
@@ -75,7 +76,7 @@ def get():
             description='AOI:',
             disabled=False,
         )
-    except:
+    except Exception:
         aois = Dropdown(
             options=tuple(aois_options()),
             description='AOI:',
@@ -95,7 +96,7 @@ def get():
         disabled=years_disabled(),
     )
     button_refresh = Button(layout=Layout(width='35px'),
-                                    icon='fa-refresh')
+                            icon='fa-refresh')
 
     @button_refresh.on_click
     def button_refresh_on_click(b):
@@ -103,7 +104,8 @@ def get():
         if values['set']['data_source'] == 'api':
             get_requests = data_source()
             available_options = json.loads(get_requests.get_options())
-            outlog(data_handler.export(available_options, 10, f"{config.path_conf}api_options"))
+            outlog(data_handler.export(available_options,
+                                       10, f"{config.path_conf}api_options"))
             outlog(f"The API options are updated.")
         aois.options = tuple(aois_options())
         year.options = aois_years()[aois.value]
@@ -113,14 +115,14 @@ def get():
         try:
             year.options = aois_years()[change.new]
             year.disabled = years_disabled()
-        except:
+        except Exception:
             aois.options = tuple(aois_options())
             year.options = aois_years()[aois.value]
             year.disabled = years_disabled()
     aois.observe(table_options_change, 'value')
 
     info_method = Label("2. Select a method to download parcel data.")
-    
+
     method = ToggleButtons(
         options=[('Parcel ID', 2),
                  ('Coordinates', 1),
@@ -185,9 +187,10 @@ def get():
                                         for c in polygon])
                 outlog_poly(f"Geting parcel ids within the polygon...")
                 polyids = json.loads(get_requests.ppoly(aois.value, year.value,
-                                                           polygon_str, False,
-                                                           True))
-                outlog_poly(f"'{len(polyids['ogc_fid'])}' parcels where found:")
+                                                        polygon_str, False,
+                                                        True))
+                outlog_poly(
+                    f"'{len(polyids['ogc_fid'])}' parcels where found:")
                 outlog_poly(polyids['ogc_fid'])
                 file = config.get_value(['files', 'pids_poly'])
                 with open(file, "w") as text_file:
@@ -206,11 +209,11 @@ def get():
                 display(wbox_pids)
             elif obj['new'] == 3:
                 display(get_maps.base_map(aois.value,
-                    config.get_value(['set', 'data_source'])))
+                                          config.get_value(['set', 'data_source'])))
             elif obj['new'] == 4:
                 display(VBox([get_maps.polygon(aois.value,
-                    config.get_value(['set', 'data_source'])),
-                    get_ids_box, ppoly_out]))
+                                               config.get_value(['set', 'data_source'])),
+                              get_ids_box, ppoly_out]))
 
     method.observe(method_options, 'value')
 
@@ -238,7 +241,7 @@ def get():
         description='TS type:',
         disabled=False,
     )
-    
+
     pts_band = Dropdown(
         options=list(pts_bands['s2']),
         value='',
@@ -252,7 +255,7 @@ def get():
             try:
                 pts_b = change.new[0]
                 pts_band.options = pts_bands[pts_b]
-            except:
+            except Exception:
                 pass
         else:
             pts_band.value = ''
@@ -322,7 +325,7 @@ def get():
         description='Band:',
         disabled=False
     )
-    
+
     sats_plevel = HBox([pci_satellite, pci_plevel])
 
     def on_sat_change(change):
@@ -399,52 +402,50 @@ def get():
         return i + 1
 
     def get_data(parcel):
-        values = config.read()
         get_requests = data_source()
         pid = parcel['ogc_fid'][0]
         source = config.get_value(['set', 'data_source'])
         if source == 'api':
-            datapath = f'{paths.value}{aois.value}{year.value}/parcel_{pid}/'
+            datapath = f'{paths.value}{aois.value}{year.value}/{pid}/'
         elif source == 'direct':
             dataset = config.get_value(['set', 'dataset'])
-            datapath = f'{paths.value}{dataset}/parcel_{pid}/'
-        file_pinf = f"{datapath}{pid}_information"
+            datapath = f'{paths.value}{dataset}/{pid}/'
+        file_pinf = f"{datapath}info"
 
         outlog(data_handler.export(parcel, 10, file_pinf))
 
         if pts_bt.value is True:
             outlog(f"Getting time series for parcel: '{pid}',",
-                  f"({pts_tstype.value} {pts_band.value}).")
+                   f"({pts_tstype.value} {pts_band.value}).")
             for pts in pts_tstype.value:
                 ts = json.loads(get_requests.pts(aois.value, year.value,
-                                                     pid, pts,
-                                                     pts_band.value))
+                                                 pid, pts,
+                                                 pts_band.value))
                 band = ''
                 if pts_band.value != '':
                     band = f"_{pts_band.value}"
-                file_ts = f"{datapath}{pid}_time_series_{pts}{band}"
+                file_ts = f"{datapath}time_series_{pts}{band}"
                 outlog(data_handler.export(ts, 11, file_ts))
         if pci_bt.value is True:
-            files_pci = f"{datapath}{pid}_chip_images/"
+            files_pci = f"{datapath}chip_images/"
             outlog(f"Getting '{pci_band.value}' chip images for parcel: {pid}")
             with progress:
                 get_requests.rcbl(parcel, pci_start_date.value,
                                   pci_end_date.value, pci_band.value,
                                   pci_satellite.value,
                                   pci_chipsize.value, files_pci)
-            filet = f'{datapath}/{pid}_chip_images/{pid}_images_list.{pci_band.value[0]}.csv'
+            filet = f'{datapath}/chip_images/images_list.{pci_band.value[0]}.csv'
             if file_len(filet) > 1:
                 outlog(f"Completed, all GeoTIFFs for bands '{pci_band.value}' are ",
-                      f"downloaded in the folder: '{datapath}/{pid}_chip_images'")
+                       f"downloaded in the folder: '{datapath}/chip_images'")
             else:
                 outlog("No files where downloaded, please check your configurations")
-
 
     def get_from_location(lon, lat):
         get_requests = data_source()
         outlog(f"Finding parcel information for coordinates: {lon}, {lat}")
         parcel = json.loads(get_requests.ploc(aois.value, year.value,
-                                                  lon, lat, True))
+                                              lon, lat, True))
         pid = parcel['ogc_fid'][0]
         outlog(f"The parcel '{pid}' was found at this location.")
         try:
@@ -470,11 +471,11 @@ def get():
         if method.value == 1:
             try:
                 with progress:
-                    get_requests = data_source()
                     lon, lat = plon.value, plat.value
                     get_from_location(lon, lat)
             except Exception as err:
-                outlog(f"Could not get parcel information for location '{lon}', '{lat}': {err}")
+                outlog(
+                    f"Could not get parcel information for location '{lon}', '{lat}': {err}")
 
         elif method.value == 2:
             try:
@@ -504,7 +505,7 @@ def get():
                     get_from_id(pids)
                 else:
                     outlog("You exceeded the maximum amount of selected parcels ",
-                          f"({plimit}) to get data. Please select smaller area.")
+                           f"({plimit}) to get data. Please select smaller area.")
             except Exception as err:
                 outlog("No pids file found.", err)
         else:

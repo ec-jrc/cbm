@@ -21,6 +21,7 @@ from ipywidgets import (HBox, VBox, Dropdown, Button, Output, Checkbox, Layout)
 
 from cbm.utils import data_options
 
+
 def available_options(ci_path, pid, ndvi=True, individual=True):
     """
     Get available band combination options.
@@ -28,9 +29,9 @@ def available_options(ci_path, pid, ndvi=True, individual=True):
     ci_path: Images path
     pid: Parcel id
     """
-    
-    ci_path = f"{ci_path}{pid}_chip_images/"
-    csv_lists = glob.glob(f"{ci_path}{pid}_images_list.*.csv")
+
+    ci_path = f"{ci_path}chip_images/"
+    csv_lists = glob.glob(f"{ci_path}images_list.*.csv")
     bands_list = [i.split('.')[-2] for i in csv_lists]
 
     available = []
@@ -40,7 +41,7 @@ def available_options(ci_path, pid, ndvi=True, individual=True):
     options['False color 2'] = ['B03', 'B04', 'B08']
     if ndvi:
         options['NDVI'] = ['B04', 'B08']
-    
+
     for key in options:
         if all(b in bands_list for b in options[key]):
             available.append((f"{key} ({(', ').join(options[key])})",
@@ -56,7 +57,7 @@ def create_df(ci_path, pid, bands):
     """
     Create dataframe with the available downloaded images.
     """
-    csv_list = f"{ci_path}{pid}_images_list.{bands[0]}.csv"
+    csv_list = f"{ci_path}images_list.{bands[0]}.csv"
     df = pd.read_csv(csv_list, index_col=0)
     df['date'] = df['dates'].str[0:8]
     df['date'] = pd.to_datetime(df['date'], format='%Y%m%d')
@@ -64,7 +65,7 @@ def create_df(ci_path, pid, bands):
     # Filter df to remove dates with missing bands.
     if len(bands) > 1:
         for b in bands:
-            csv_list_b = f"{ci_path}{pid}_images_list.{b}.csv"
+            csv_list_b = f"{ci_path}images_list.{b}.csv"
             df_b = pd.read_csv(csv_list_b, index_col=0)
             df_b['date'] = df_b['dates'].str[0:8]
             df_b['date'] = pd.to_datetime(df_b['date'], format='%Y%m%d')
@@ -98,22 +99,22 @@ def merge_bands(imgs_path, dst_file, bands, percent=(5, 95)):
     """
     trsfrm = False
 
-    bafs = {} # Band files
-    bads = {} # rasterio opened files
-    bash = {} # Image pixel size
+    bafs = {}  # Band files
+    bads = {}  # rasterio opened files
+    bash = {}  # Image pixel size
     for b in bands:
         bafs[b] = f"{imgs_path}.{b}.tif"
         bads[b] = rasterio.open(bafs[b], format='GTiff')
         bash[b] = (bads[b].width, bads[b].height)
         if next(iter(bash)) != bash[b]:
             trsfrm = True
-    
+
     if trsfrm is True:
         from rasterio.enums import Resampling
         maxw = max([bash[w][0] for w in bash])
         maxh = max([bash[h][1] for h in bash])
-        blist = [bads[bands[bands.index(b)]].read(out_shape=(bads[bands[bands.index(b)]].count,maxw,maxh),
-                     resampling=Resampling.bilinear)[0,:,:] for b in bands]
+        blist = [bads[bands[bands.index(b)]].read(out_shape=(bads[bands[bands.index(b)]].count, maxw, maxh),
+                                                  resampling=Resampling.bilinear)[0, :, :] for b in bands]
     else:
         blist = [bads[bands[bands.index(b)]].read(1) for b in bands]
 
@@ -140,9 +141,9 @@ def merge_bands(imgs_path, dst_file, bands, percent=(5, 95)):
 
     with rasterio.open(dst_file, 'w', **profile) as dst:
         for b in bands:
-            rindex = (len(bands)-1)-bands.index(b)
+            rindex = (len(bands) - 1) - bands.index(b)
             img = img_tc[:, rindex]
-            dst.write(img, bands.index(b)+1)
+            dst.write(img, bands.index(b) + 1)
 
     for b in bands:
         bads[b].close()

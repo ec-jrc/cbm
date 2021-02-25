@@ -12,7 +12,7 @@ from cbm.get import background as bg
 def slider(aoi, year, pid, chipsize=512, extend=512, tms=['Google']):
 
     workdir = config.get_value(['paths', 'temp'])
-    path = f'{workdir}/{aoi}{year}/pid{pid}/background/'
+    path = f'{workdir}/{aoi}{year}/pid{pid}/backgrounds/'
 
     for t in tms:
         if not os.path.isfile(f'{path}{t.lower()}.png'):
@@ -46,10 +46,39 @@ def slider(aoi, year, pid, chipsize=512, extend=512, tms=['Google']):
     return VBox([selection, output])
 
 
-def grid(aoi, year, pid, chipsize=512, extend=512, tms='Google'):
+def grid(aoi, year, pid, chipsize=512, extend=512, tms=['Google']):
+
+    columns = 5
+    if len(tms) < columns:
+        columns = len(tms)
 
     workdir = config.get_value(['paths', 'temp'])
-    path = f'{workdir}/{aoi}{year}/pid{pid}/background/'
+    path = f'{workdir}/{aoi}{year}/pid{pid}/backgrounds/'
+
+    for t in tms:
+        if not os.path.isfile(f'{path}{t.lower()}.png'):
+            bg.by_pid(aoi, year, pid, chipsize, extend, t, True)
+
+    rows = int(len(tms) // columns + (len(tms) % columns > 0))
+    fig = plt.figure(figsize=(25, 5 * rows))
+    grid = ImageGrid(fig, 111,  # similar to subplot(111)
+                     nrows_ncols=(rows, columns),  # creates 2x2 grid of axes
+                     axes_pad=0.1,  # pad between axes in inch.
+                     )
+
+    for ax, im in zip(grid, tms):
+        # Iterating over the grid returns the Axes.
+        ax.axis('off')
+        ax.imshow(plt.imread(f'{path}{im.lower()}.png', 3))
+        ax.set_title(im)
+
+    plt.show()
+
+
+def leaflet(aoi, year, pid, chipsize=512, extend=512, tms='Google'):
+
+    workdir = config.get_value(['paths', 'temp'])
+    path = f'{workdir}/{aoi}{year}/pid{pid}/backgrounds/'
 
     for t in tms:
         if not os.path.isfile(f'{path}{t.lower()}.png'):

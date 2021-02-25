@@ -23,17 +23,16 @@ def time_series(path):
 
     confvalues = config.read()
     inst = confvalues['set']['institution']
-    file_info = glob.glob(f"{path}*_information.json")[0]
+    file_info = f"{path}info.json"
 
     with open(file_info, 'r') as f:
         info_data = json.loads(f.read())
     pid = info_data['ogc_fid'][0]
     crop_name = info_data['cropname'][0]
     area = info_data['area'][0]
-    figure_dpi = 50
 
     def plot_ts_s2(cloud):
-        file_ts = glob.glob(f"{path}*_time_series_s2.csv")[0]
+        file_ts = f"{path}time_series_s2.csv"
         df = pd.read_csv(file_ts, index_col=0)
 
         df['date'] = pd.to_datetime(df['date_part'], unit='s')
@@ -116,7 +115,7 @@ def time_series(path):
 
     def plot_ts_bs():
         import numpy as np
-        file_ts = glob.glob(f"{path}*_time_series_bs.csv")[0]
+        file_ts = f"{path}time_series_bs.csv"
         df = pd.read_csv(file_ts, index_col=0)
 
         df['date'] = pd.to_datetime(df['date_part'], unit='s')
@@ -168,7 +167,7 @@ def time_series(path):
         return plt.show()
 
     def plot_ts_c6():
-        file_ts = glob.glob(f"{path}*_time_series_c6.csv")[0]
+        file_ts = f"{path}time_series_c6.csv"
         df = pd.read_csv(file_ts, index_col=0)
 
         df['date'] = pd.to_datetime(df['date_part'], unit='s')

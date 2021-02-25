@@ -31,11 +31,11 @@ The 'view' function is to load local files and display them with different metho
 <code>ipycbm.view()</code><br>
 <br>
 '**tmp**' folder structure example for parcel with ID 12345:<br>
-    
+
     <code>tmp/
         cat2019/parcel_12345/12345_information.json
         cat2019/parcel_12345/12345_time_series.csv
-        cat2019/parcel_12345/12345_chipimages/12345_images_list.csv
+        cat2019/parcel_12345/12345_chipimages/images_list.csv
         cat2019/parcel_12345/12345_chipimages/S2A_MSIL2A_2019---.B04.tif
         cat2019/parcel_12345/12345_chipimages/...</code>
     """
@@ -44,7 +44,7 @@ The 'view' function is to load local files and display them with different metho
         value=html,
         placeholder="Documantation",
         description="")
-    
+
     return wbox
 
 def about():
@@ -150,7 +150,5 @@ The result of the analysis is represented by two shapefiles that are stored on t
         value=html,
         placeholder="Documentation",
         description="")
-    
+
     return wbox
-
-

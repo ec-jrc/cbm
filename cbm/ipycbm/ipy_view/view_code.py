@@ -13,9 +13,9 @@ import glob
 
 def code(path):
     from ipywidgets import HTML
-    file_info = glob.glob(f"{path}*_information.json")[0]
-    file_ts = glob.glob(f"{path}*_time_series_*.csv")
-    folder_ci = glob.glob(f"{path}*_chip_images")
+    file_info = f"{path}info.json"
+    file_ts = glob.glob(f"{path}time_series_*.csv")
+    folder_ci = f"{path}chip_images"
 
     code = f"""
         <H2>Get and display data for the selected parcel.</H2>
@@ -54,8 +54,8 @@ time_series(path)<br>
 import numpy as np<br>
 from osgeo import gdal<br>
 import matplotlib.pyplot as plt<br>
-folder_ci = glob.glob(f'{path}*_chip_images')[0]<br>
-image_list = glob.glob(f'{folder_ci[0]}/*.tif')<br>
+folder_ci = f'{path}chip_images'<br>
+image_list = glob.glob(f'{folder_ci}/*.tif')<br>
 fig = plt.figure(figsize=(8, 8))<br>
 columns = 4<br>
 rows = 5<br>
@@ -71,10 +71,10 @@ for i in range(1, columns * rows + 1):<br>
 plt.show()</code><br>
 
 <b>To view and edit a more advanced code to view the images, copy the <br>
-contents of the file 'ipycbm/ipy_view/view_calendar' to a new cell and the <br>
+contents of the file 'ipycbm/ipy_view/view_grid' to a new cell and the <br>
 below code to another cell and run the cells:</b><br>
 path = '{path}'<br>
-calendar(path)<br>
+imgs_grid(path)<br>
         """
 
     code_widget = HTML(

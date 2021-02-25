@@ -31,7 +31,8 @@ def view():
         description='',
         disabled=True,
         button_style='info',
-        tooltips=['View data that are stored on the local drive.', 'View data from memory.']
+        tooltips=['View data that are stored on the local drive.',
+                  'View data from memory.']
     )
 
     paths = RadioButtons(
@@ -98,7 +99,7 @@ def view():
         icon='trash',
         layout=Layout(width='35px')
     )
-    
+
     code_info = Label()
     single_box = HBox([selection_single, rm_parcel])
     select_box = Box([single_box])
@@ -125,7 +126,8 @@ def view():
         view_box.clear_output()
         tables_first = [f for f in os.listdir(
             paths.value) if os.path.isdir(os.path.join(paths.value, f))]
-        select_table.options = [f for f in tables_first if not f.startswith('.')]
+        select_table.options = [
+            f for f in tables_first if not f.startswith('.')]
         if select_table.value is not None:
             parcels = f"{paths.value}{select_table.value}"
             parcels_list = [f for f in os.listdir(
@@ -227,15 +229,16 @@ def view():
                     from cbm.ipycbm.ipy_view import view_time_series
                     display(view_time_series.time_series(data_path))
                 elif obj['new'] == 3:
-                    from cbm.ipycbm.ipy_view import view_calendar
-                    display(view_calendar.calendar(data_path))
+                    from cbm.ipycbm.ipy_view import view_grid
+                    display(view_grid.imgs_grid(data_path))
                 elif obj['new'] == 4:
                     from cbm.ipycbm.ipy_view import view_map
                     display(view_map.widget_box(data_path))
 
             elif select_option.value == 2 and len(selection_multi.value) > 0:
                 data_path = f'{paths.value}{select_table.value}/'
-                data_paths = [f'{data_path}{s}/' for s in selection_multi.value]
+                data_paths = [
+                    f'{data_path}{s}/' for s in selection_multi.value]
                 if obj['new'] == 1:
                     from cbm.ipycbm.ipy_view import view_code
                     display(view_code.code(data_paths[0]))
@@ -245,13 +248,12 @@ def view():
                     # display(view_time_series.time_series(data_list[0]))
                     pass
                 elif obj['new'] == 3:
-                    from cbm.ipycbm.ipy_view import view_calendar
-                    # display(view_chip_images.calendar(data_path))
+                    from cbm.ipycbm.ipy_view import view_grid
+                    # display(view_chip_images.imgs_grid(data_path))
                     pass
                 elif obj['new'] == 4:
                     from cbm.ipycbm.ipy_view import view_maps
                     display(view_maps.with_polygons(data_paths))
-
 
     selection_single.observe(method_options, 'value')
     selection_multi.observe(method_options, 'value')
@@ -267,13 +269,14 @@ def view():
         icon='sticky-note'
     )
     notes_box = VBox([])
+
     @notes_bt.on_click
     def notes_bt_on_click(b):
         if notes_box.children == ():
             notes_box.children = [view_notes.notes(
                 f"{paths.value}{select_table.value}/",
                 select_table.value,
-                selection_single.value.replace('parcel_',''))]
+                selection_single.value)]
         else:
             notes_box.children = []
 
@@ -281,4 +284,3 @@ def view():
                  HBox([notes_info, notes_bt]), notes_box])
 
     return wbox
-

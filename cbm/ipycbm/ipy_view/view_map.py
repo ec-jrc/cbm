@@ -7,11 +7,9 @@
 # Copyright : 2021 European Commission, Joint Research Centre
 # License   : 3-Clause BSD
 
-
-import glob
+import os
 import json
 import os.path
-import pandas as pd
 from IPython.display import display
 from ipywidgets import (HBox, VBox, Dropdown, Play, Layout, Label,
                         Checkbox, IntSlider, jslink, HTML, Output)
@@ -24,7 +22,7 @@ from cbm.ipycbm.ipy_view import view_images
 
 def widget_box(path):
     map_view_box = Output()
-    file_info = glob.glob(f"{path}*_information.json")[0]
+    file_info = f"{path}info.json"
 
     with open(file_info, 'r') as f:
         info_data = json.loads(f.read())
@@ -33,25 +31,16 @@ def widget_box(path):
     crop_name = info_data['cropname'][0]
     area = info_data['area'][0]
 
-    ci_path = f"{path}{pid}_chip_images/"
-    csv_lists = glob.glob(f"{ci_path}{pid}_images_list.*.csv")
-    bands_list = [i.split('.')[-2] for i in csv_lists]
+    ci_path = f"{path}chip_images/"
 
     ci_band = Dropdown(
         options=view_images.available_options(path, pid, False, False),
         disabled=False,
         layout=Layout(width='140px')
     )
-    ci_cloud = Checkbox(
-        value=False,
-        description='Cloud free',
-        disabled=True,
-        indent=False,
-        layout=Layout(width='140px')
-    )
 
     def ci_band_changed(b):
-#         m.substitute_layer()
+        #         m.substitute_layer()
         map_view_box.clear_output()
 #         m.clear_layers()
 #         m.clear_controls()
@@ -61,7 +50,7 @@ def widget_box(path):
 
     parcel_info = Label(
         f"Crop ID: {pid} Crop type: {crop_name},  Area: {area:.2f} sqm")
-    
+
     display(HBox([parcel_info, ci_band]))
 
 #     if os.path.exists(ci_path):
@@ -71,14 +60,15 @@ def widget_box(path):
         multipoly = []
         multycent = []
         geom = spatial.transform_geometry(info_data)
-        poly = geom['coordinates'][0][0]
+        poly = geom['geom'][0]['coordinates'][0]
     #     poly = spatial.swap_xy(geom['coordinates'][0])[0]
         multipoly.append(poly)
-        cent = spatial.centroid(poly)
-        multycent.append(cent)
+        centroid = spatial.centroid(poly)
+        multycent.append(centroid)
 
-        cent = spatial.centroid(multycent)
-        m = Map(center=cent, zoom=16, basemap=basemaps.OpenStreetMap.Mapnik)
+        centroid = spatial.centroid(multycent)
+        m = Map(center=centroid, zoom=16,
+                basemap=basemaps.OpenStreetMap.Mapnik)
 
         polygon = Polygon(
             locations=multipoly,
@@ -94,7 +84,7 @@ def widget_box(path):
         poly_text.value = f"""Parcel ID: {pid}<br>
                                     Crop name: {crop_name}<br>
                                     Area: {area:.2f} sqm<br>
-                                    Coordinates: {cent}
+                                    Coordinates: {centroid}
                                     """
         poly_text.placeholder = "HTML"
         poly_text.description = ""
@@ -108,24 +98,22 @@ def widget_box(path):
         )
         m.add_layer(poly_popup)
 
-        # Popup associated to a layer
-        polygon.popup = poly_popup
+        polygon.popup = poly_popup  # Popup associated to a layer
 
         # Layers control
         show_poly = Checkbox(
             value=True,
             description='Polygon',
-            disabled=False,
             indent=False,
             layout=Layout(width='140px')
         )
         show_sat = Checkbox(
             value=False,
             description='High res basemap',
-            disabled=False,
             indent=False,
             layout=Layout(width='140px')
         )
+
         def polygon_changed(b):
             try:
                 if show_poly.value is True:
@@ -147,7 +135,6 @@ def widget_box(path):
         show_sat.observe(show_sat_changed)
 
         try:
-            csv_list = f"{ci_path}{pid}_images_list.{ci_band.value[0]}.csv"
             df = view_images.create_df(ci_path, pid, ci_band.value)
 
             geotiff = f"{ci_path}{df['imgs'][0]}.{ci_band.value[0]}.tif"
@@ -156,7 +143,6 @@ def widget_box(path):
             images = {}
             for i, row in df.iterrows():
                 str_date = str(row['date'].date()).replace('-', '')
-                workdir = os.getcwd().split('/')[-1]
                 img_tc = f"{ci_path}{('').join(ci_band.value)}_{str_date}.png"
 
                 # Create false color image if it does not exist
@@ -164,14 +150,15 @@ def widget_box(path):
                 if not os.path.isfile(img_tc):
                     imgs_path = f"{ci_path}{row['imgs']}"
                     view_images.merge_bands(imgs_path, img_tc,
-                                             ci_band.value)
-                values = config.read()
+                                            ci_band.value)
 
-                # Set the current environment
-                if eval(values['set']['jupyterlab']) is True:
-                    image_path = f'files/{workdir}/{img_tc}'
+                if bool(config.get_value(['set', 'jupyterlab'])) is True:
+                    jlab_path = os.getcwd().replace(os.path.expanduser("~"), '')
+                    image_path = f'files{jlab_path}/{img_tc}'
                 else:
                     image_path = img_tc
+
+                # print('image_path: ', image_path)
                 images[i] = ImageOverlay(
                     url=image_path,
                     name=str_date,
@@ -185,7 +172,6 @@ def widget_box(path):
                 max=len(images),
                 step=1,
                 description=str(df['date'][0].date()),
-                disabled=False,
                 continuous_update=False,
                 orientation='horizontal',
                 readout=True,
@@ -194,7 +180,6 @@ def widget_box(path):
             show_chip = Checkbox(
                 value=True,
                 description='Chip image',
-                disabled=False,
                 indent=False,
                 layout=Layout(width='140px')
             )
@@ -221,7 +206,6 @@ def widget_box(path):
                 step=1,
                 interval=1000,
                 description="Press play",
-                disabled=False
             )
 
             def slider_changed(b):
@@ -231,12 +215,14 @@ def widget_box(path):
                             images[b['old'] - 1], images[b['new'] - 1])
                     except Exception:
                         pass
-                    slider.description = str(df['date'][slider.value - 1].date())
+                    slider.description = str(
+                        df['date'][slider.value - 1].date())
 
             slider.observe(slider_changed)
             jslink((play, 'value'), (slider, 'value'))
             time_box = HBox([slider, play])
-            time_control = WidgetControl(widget=time_box, position='bottomleft')
+            time_control = WidgetControl(
+                widget=time_box, position='bottomleft')
             m.add_control(time_control)
             m.add_layer(images[0])
 
@@ -249,7 +235,7 @@ def widget_box(path):
             widget=map_options, position='topright', max_width=150)
         m.add_control(layers_control)
         return m
-    
+
     with map_view_box:
         display(show_m())
 

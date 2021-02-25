@@ -8,7 +8,6 @@
 # License   : 3-Clause BSD
 
 
-import glob
 import json
 import os.path
 import numpy as np
@@ -25,7 +24,7 @@ from cbm.ipycbm.ipy_view import view_images
 from skimage import exposure
 
 
-def calendar(path):
+def imgs_grid(path):
 
     def show_imgs():
         print(f"Crop name: {crop_name},  Area: {area:.2f} sqm")
@@ -48,7 +47,6 @@ def calendar(path):
                                             bands)
 
                 with rasterio.open(img_png, format='PNG') as img:
-                    """extracts the EPSG spatial reference"""
                     overlay_date(img, row['date'].date())  # Add date overlay.
                     ax = plt.gca()
                     if show_parcel.value:
@@ -130,33 +128,33 @@ def calendar(path):
             multi_bands_imgs(ci_band.value, ('').join(ci_band.value))
 
     def overlay_date(img, date):
-        date_text = plt.text(img.bounds.left +
-                             ((img.bounds.right - img.bounds.left) / 6.5),
-                             img.bounds.top -
-                             ((img.bounds.top - img.bounds.bottom) / 6.5),
-                             date, color='yellow',
-                             weight='bold', size=12, bbox=dict(
-                                 boxstyle="round", ec='yellow',
-                                 fc='black', alpha=0.2))
+        date_text = plt.text(
+            img.bounds.left + ((img.bounds.right - img.bounds.left) / 6.5),
+            img.bounds.top - ((img.bounds.top - img.bounds.bottom) / 6.5),
+            date, color='yellow', weight='bold', size=12, bbox=dict(
+                boxstyle="round", ec='yellow', fc='black', alpha=0.2))
+
         return date_text
 
-    def overlay_parcel(img, info_data):
+    def overlay_parcel(img, geom):
+        with open(file_info, 'r') as f:
+            info_data = json.loads(f.read())
         img_epsg = img.crs.to_epsg()
-        geo_json = spatial.transform_geometry(
-            info_data, img_epsg)
+        geo_json = spatial.transform_geometry(info_data, img_epsg)
         patche = [PolygonPatch(feature, edgecolor="yellow",
                                facecolor="none", linewidth=2
-                               ) for feature in [geo_json]]
+                               ) for feature in [geo_json['geom'][0]]]
         return patche[0]
 
     # Images options.
-    file_info = glob.glob(f"{path}*_information.json")[0]
+    file_info = f"{path}info.json"
     with open(file_info, 'r') as f:
         info_data = json.loads(f.read())
+    # print(info_data)
     pid = info_data['ogc_fid'][0]
     crop_name = info_data['cropname'][0]
     area = info_data['area'][0]
-    ci_path = f"{path}{pid}_chip_images/"
+    ci_path = f"{path}chip_images/"
     columns = 4
 
     available_options = view_images.available_options(path, pid)
