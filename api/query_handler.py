@@ -9,97 +9,81 @@
 
 
 # import paramiko
-import sys
 import psycopg2
 import psycopg2.extras
 import logging
 
-sys.path.append('/app')
-from cbm.sources import db
-
+import db
 conn_str = db.conn_str()
-# conn_str = "host='0.0.0.0' dbname='postgres' user='postgres' port=5432 password=''"
+# conn_str = "host='0.0.0.0' port=5432 dbname='postgres' user='pg' password=''"
 
 logging.basicConfig(filename='queryHandler.log', filemode='w',
                     format='%(name)s - %(levelname)s - %(message)s',
                     level=logging.ERROR)
 
 
-def db_connect():
-    try:
-        conn = psycopg2.connect(conn_str)
-        cur = conn.cursor()
-        # db_par = conn.get_dsn_parameters()
-        cur.execute("SELECT version();")
-        # record = cur.fetchone()
-        status = """! Connected to the database. !<br>"""
-    except Exception:
-        status = "! Unable to connect to the database. !"
-    return status
-
-
-def is_number(s):
-    if s is not None:
-        try:
-            float(s)
-            return True
-        except ValueError:
-            return False
-    else:
-        return False
-
 # Parcel Images
-def getChipsByLocation(lon, lat, start_date, end_date, unique_id, lut='5_95', bands='B08_B04_B03', plevel='LEVEL2A'):
+def getChipsByLocation(lon, lat, start_date, end_date, unique_id, lut='5_95',
+                       bands='B08_B04_B03', plevel='LEVEL2A'):
     logging.debug(lut)
     logging.debug(bands)
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect('remote_dias_py', password='dias_py')
-    logging.debug(
-        f"ssh on remote_dias_py python chipGenerate.py {lon} {lat} {start_date} {end_date} {unique_id} {lut} {bands} {plevel}")
+    logging.debug(f"ssh on remote_dias_py python chipGenerate.py {lon} {lat}",
+                  f"{start_date} {end_date} {unique_id} {lut} {bands} {plevel}")
     stdin, stdout, stderr = ssh.exec_command(
-        f"cd /usr/src/app && python chipGenerate.py {lon} {lat} {start_date} {end_date} {unique_id} {lut} {bands} {plevel}")
+        f"cd /usr/src/app && python chipGenerate.py {lon} {lat} {start_date}",
+        f"{end_date} {unique_id} {lut} {bands} {plevel}")
     logging.debug(stdout.readlines())
     stdout.channel.recv_exit_status()
     ssh.close()
     return True
+
 
 def getBackgroundByLocation(lon, lat, chipsize, chipextend, tms, unique_id):
     logging.debug(unique_id)
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect('remote_dias_py', password='dias_py')
-    logging.debug(
-        f"ssh on remote_dias_py python backgroundGenerate.py {lon} {lat} {chipsize} {chipextend} {tms} {unique_id}")
+    logging.debug("ssh on remote_dias_py python backgroundGenerate.py",
+                  f"{lon} {lat} {chipsize} {chipextend} {tms} {unique_id}")
     stdin, stdout, stderr = ssh.exec_command(
-        f"cd /usr/src/app && python backgroundGenerate.py {lon} {lat} {chipsize} {chipextend} {tms} {unique_id}")
-    logging.debug(stdout.readlines())
-    stdout.channel.recv_exit_status()
-    ssh.close()
-    return True
-
-def getChipsByParcelId(aoi, year, parcelid, start_date, end_date, unique_id, lut='5_95', bands='B08_B04_B03', plevel='LEVEL2A'):
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect('remote_dias_py', password='dias_py')
-    logging.debug(
-        f"ssh on remote_dias_py python chipGenerate4Parcel.py {aoi} {year} {parcelid} {start_date} {end_date} {unique_id} {lut} {bands} {plevel}")
-    stdin, stdout, stderr = ssh.exec_command(
-        f"cd /usr/src/app && python chipGenerate4Parcel.py {aoi} {year} {parcelid} {start_date} {end_date} {unique_id} {lut} {bands} {plevel}")
+        "cd /usr/src/app && python backgroundGenerate.py",
+        f"{lon} {lat} {chipsize} {chipextend} {tms} {unique_id}")
     logging.debug(stdout.readlines())
     stdout.channel.recv_exit_status()
     ssh.close()
     return True
 
 
-def getRawChipByLocation(lon, lat, start_date, end_date, unique_id, band, chipsize='1280', plevel='LEVEL2A'):
+def getChipsByParcelId(aoi, year, parcelid, start_date, end_date, unique_id,
+                       lut='5_95', bands='B08_B04_B03', plevel='LEVEL2A'):
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect('remote_dias_py', password='dias_py')
-    logging.debug(
-        f"ssh on remote_dias_py python rawChipGenerate.py {lon} {lat} {start_date} {end_date} {unique_id} {band} {plevel}")
+    logging.debug("ssh on remote_dias_py python chipGenerate4Parcel.py",
+                  f"{aoi} {year} {parcelid} {start_date} {end_date}",
+                  f"{unique_id} {lut} {bands} {plevel}")
     stdin, stdout, stderr = ssh.exec_command(
-        f"cd /usr/src/app && python rawChipGenerate.py {lon} {lat} {start_date} {end_date} {unique_id} {band} {chipsize} {plevel}")
+        f"cd /usr/src/app && python chipGenerate4Parcel.py {aoi} {year}",
+        f"{parcelid} {start_date} {end_date} {unique_id} {lut} {bands} {plevel}")
+    logging.debug(stdout.readlines())
+    stdout.channel.recv_exit_status()
+    ssh.close()
+    return True
+
+
+def getRawChipByLocation(lon, lat, start_date, end_date, unique_id, band,
+                         chipsize='1280', plevel='LEVEL2A'):
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect('remote_dias_py', password='dias_py')
+    logging.debug(f"ssh on remote_dias_py python rawChipGenerate.py {lon}",
+                  f"{lat} {start_date} {end_date} {unique_id} {band} {plevel}")
+    stdin, stdout, stderr = ssh.exec_command(
+        f"cd /usr/src/app && python rawChipGenerate.py {lon} {lat}",
+        f"{start_date} {end_date} {unique_id} {band} {chipsize} {plevel}")
     logging.debug(stdout.readlines())
     stdout.channel.recv_exit_status()
     ssh.close()
@@ -135,6 +119,8 @@ def getRawS1ChipsBatch(unique_id):
     return True
 
 # Parcel Time Series
+
+
 def getParcelTimeSeries(dias_cat, year, pid, tstype, band=None):
     conn = psycopg2.connect(conn_str)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -172,11 +158,13 @@ def getParcelTimeSeries(dias_cat, year, pid, tstype, band=None):
             for r in rows:
                 data.append(tuple(r))
         else:
-            print(f"No time series found for {pid} in {aoi}{year}_{tstype}_signatures")
+            print("No time series found for",
+                  f"{pid} in {aoi}{year}_{tstype}_signatures")
         return data
 
     except Exception as err:
-        print("Did not find data, please select the right database and table: ", err)
+        print("Did not find data, please select the right database and table: ",
+              err)
         return data.append('Ended with no data')
 
 
@@ -220,12 +208,13 @@ def getParcelPeers(parcelTable, pid, distance, maxPeers):
             for r in rows:
                 data.append(tuple(r))
         else:
-            logging.debug(f"No parcel peers found in {parcelTable} within {distance} meters from parcel {pid}")
+            logging.debug(f"No parcel peers found in {parcelTable} within",
+                          "{distance} meters from parcel {pid}")
         return data
 
     except Exception as err:
-        logging.debug(
-            "Did not find data, please select the right database and table: ", err)
+        logging.debug("Did not find data, please select the right",
+                      "database and table: ", err)
         return data.append('Ended with no data')
 
 
@@ -279,12 +268,14 @@ def getParcelByLocation(parcelTable, lon, lat, withGeometry=False):
             for r in rows:
                 data.append(tuple(r))
         else:
-            logging.debug(f"No parcel found in {parcelTable} that intersects with point ({lon}, {lat})")
+            logging.debug(f"No parcel found in {parcelTable} that intersects",
+                          f"with point ({lon}, {lat})")
         logging.debug(data)
         return data
 
     except Exception as err:
-        logging.debug("Did not find data, please select the right database and table: ", err)
+        logging.debug("Did not find data, please select the right database",
+                      "and table: ", err)
         return data.append('Ended with no data')
 
 
@@ -340,11 +331,13 @@ def getParcelById(parcelTable, parcelid, withGeometry=False):
         return data
 
     except Exception as err:
-        logging.debug("Did not find data, please select the right database and table: ", err)
+        logging.debug("Did not find data, please select the right database",
+                      "and table: ", err)
         return data.append('Ended with no data')
 
 
-def getParcelsByPolygon(parcelTable, polygon, withGeometry=False, only_ids=True):
+def getParcelsByPolygon(parcelTable, polygon, withGeometry=False,
+                        only_ids=True):
     poly = polygon.replace('_', ' ').replace('-', ',')
 
     conn = psycopg2.connect(conn_str)
@@ -400,9 +393,11 @@ def getParcelsByPolygon(parcelTable, polygon, withGeometry=False, only_ids=True)
             for r in rows:
                 data.append(tuple(r))
         else:
-            print(f"No parcel found in {parcelTable} that intersects with the polygon.")
+            print(f"No parcel found in {parcelTable} that intersects",
+                  "with the polygon.")
         return data
 
     except Exception as err:
-        print("Did not find data, please select the right database and table: ", err)
+        print("Did not find data, please select the right database and table: ",
+              err)
         return data.append('Ended with no data')

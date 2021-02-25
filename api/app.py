@@ -61,7 +61,7 @@ def query():
 @auth_required
 def options():
     try:
-        with open('api_options.json', 'r') as f:
+        with open('config/options.json', 'r') as f:
             api_options = json.load(f)
         return make_response(jsonify(api_options), 200)
     except Exception as err:
