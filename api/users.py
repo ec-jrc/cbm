@@ -14,7 +14,7 @@ import hashlib
 import json
 import os
 
-users_file = '_users.json'
+users_file = 'config/users.json'
 
 
 def auth(username, password):
