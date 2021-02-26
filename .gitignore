@@ -1,15 +1,15 @@
 # itignore CbM files
 
-*.json
-config/
+main.json
+config/*
 ipynb/temp/*
 ipynb/config/*
 ipynb/data/*
 ipynb/tests/*
 ipynb/test*
 ipynb/*.json
-data/
-tmp/
+data/*
+tmp/*
 
 
 # ---> Python
@@ -156,4 +156,3 @@ ipython_config.py
 
 # Remove previous ipynb_checkpoints
 #   git rm -r .ipynb_checkpoints/
-

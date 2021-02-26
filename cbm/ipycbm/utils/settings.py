@@ -62,7 +62,7 @@ def data_source():
             view_options.children = [info_api, settings_ds.api()]
         elif sources.value == 'direct':
             view_options.children = [info_direct, settings_ds.direct()]
-        config.update(['set', 'data_source'], sources.value)
+        config.set_value(['set', 'data_source'], sources.value)
 
     sources.observe(on_source_change, 'value')
 
@@ -132,7 +132,7 @@ def general():
     )
 
     def on_jupyterlab_change(change):
-        config.update(['set', 'jupyterlab'], str(jupyterlab.value))
+        config.set_value(['set', 'jupyterlab'], str(jupyterlab.value))
     jupyterlab.observe(on_jupyterlab_change, 'value')
 
     path_data = Text(
@@ -198,15 +198,15 @@ def general():
     @btn_save.on_click
     def btn_save_on_click(b):
         progress.clear_output()
-        config.update(['set', 'user'], str(user_name.value))
-        config.update(['set', 'email'], str(user_email.value))
-        config.update(['set', 'institution'], str(user_institution.value))
-        config.update(['set', 'member_state'], str(user_email.value))
-        config.update(['set', 'plimit'], str(plimit.value))
-        config.update(['paths', 'data'], str(path_data.value))
-        config.update(['paths', 'temp'], str(path_temp.value))
-        config.update(['files', 'pids_poly'], str(file_pids_poly.value))
-        config.update(['files', 'pids_dist'], str(file_pids_dist.value))
+        config.set_value(['set', 'user'], str(user_name.value))
+        config.set_value(['set', 'email'], str(user_email.value))
+        config.set_value(['set', 'institution'], str(user_institution.value))
+        config.set_value(['set', 'member_state'], str(user_email.value))
+        config.set_value(['set', 'plimit'], str(plimit.value))
+        config.set_value(['paths', 'data'], str(path_data.value))
+        config.set_value(['paths', 'temp'], str(path_temp.value))
+        config.set_value(['files', 'pids_poly'], str(file_pids_poly.value))
+        config.set_value(['files', 'pids_dist'], str(file_pids_dist.value))
         outlog("The new settings are saved.")
 
     wbox = VBox([wbox_user, wbox_sys,
