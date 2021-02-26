@@ -9,10 +9,11 @@
 
 """Authentication with hashed user passwords."""
 
-from codecs import encode
-import hashlib
-import json
 import os
+import sys
+import json
+import hashlib
+from codecs import encode
 
 users_file = 'config/users.json'
 
@@ -84,8 +85,6 @@ def add(username, password=''):
 
     """
     users = get_users()
-    if users is None:
-        users = {}
 
     salt = os.urandom(32)
     key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
@@ -116,7 +115,7 @@ def get_users():
         try:
             with open(users_file, 'w') as u:
                 users = json.dumps({}, sort_keys=False, indent=2)
-            return users
+            return {}
         except Exception as err:
             return err
 
@@ -133,10 +132,27 @@ def delete(username):
     """
     users = get_users()
 
-    for user in list(users):
-        if user == username:
-            del users[username]
-            print(f"The user '{user}' is deleted.")
+    if username in users:
+        del users[username]
+        print(f"The user '{username}' is deleted.")
+    else:
+        print(f"Err: The user '{username}' was not found.")
 
     with open(users_file, 'w') as u:
         json.dump(users, u, indent=2)
+
+
+if __name__ == '__main__':
+    if sys.argv[1].lower() == 'add':
+        add(sys.argv[2], sys.argv[3])
+    elif sys.argv[1].lower() == 'delete':
+        delete(sys.argv[2])
+    elif sys.argv[1].lower() == 'users':
+        for key in get_users():
+            print(key)
+    else:
+        print("""Not recognized arguments. Available options:
+    'python users.py add user password'  : To add a new user.
+    'python users.py delete user'        : To delete a user.
+    'python users.py users'              : To get added the users.
+        """)
