@@ -1,0 +1,13 @@
+{
+    "db": {
+        "main": {
+            "desc": "Main db",
+            "host": "0.0.0.0",
+            "port": "5432",
+            "sche": "public",
+            "name": "postgres",
+            "user": "postgres",
+            "pass": ""
+        }
+    }
+}
