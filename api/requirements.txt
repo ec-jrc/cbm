@@ -1,0 +1,4 @@
+psycopg2-binary==2.8.5
+boto3==1.14.30
+botocore==1.17.30
+flask

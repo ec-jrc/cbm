@@ -12,4 +12,4 @@ RUN pip install --upgrade pip
 RUN pip install --user -r requirements.txt
 
 EXPOSE 5000
-CMD python ./src/apicbm/app.py
+CMD python app.py
