@@ -84,26 +84,23 @@ for more details and setup instructions.
 This repository (cbm) contains example scripts and documentation to get started
 with  CbM, includes:
 
-- scripts/: Python scripts for:
-    - Parcel extraction routines
-    - Time series Calendar view
-- docs/: Documentation pages (see [jrc-cbm.readthedocs.io](https://jrc-cbm.readthedocs.io))
-- cbm: Python library for Checks by Monitoring
-    - api - RESTful API modules (cbm/apicbm/)
-    - card2db - Transfer metadata from the DIAS catalog
-    - extraction - Parcel extraction routines
-    - foi - FOI module
-    - ipycbm - Interactive notebook widgets for:
-        - FOI
-        - QA
-        - Extraction
-        - Downloading data
-        - Viewing data
-- ipynb/: Jupyter Notebook examples
+- api - Modules to build a RESTful API for CbM
+- cbm: Python library
+    - card2db : Transfer metadata from the DIAS catalog
+    - extract : Parcel extraction routines
+    - foi : FOI modules
+    - get : Download data to local directory
+    - ipycbm : Interactive notebook widgets
+    - report : Export reports
 - docker/: Docker image files for:
-    - [dias_py](https://hub.docker.com/r/glemoine62/dias_py)/: Parallel extraction
-    - [cbm_jupyter](https://hub.docker.com/r/gtcap/cbm_jupyter)/: Jupyter notebooks server
-    - [cbm_api](https://hub.docker.com/r/gtcap/cbm_api)/: RESTful API server
+    - [dias_py](https://hub.docker.com/r/glemoine62/dias_py) : Parallel extraction
+    - [cbm_jupyter](https://hub.docker.com/r/gtcap/cbm_jupyter) : Jupyter notebooks server
+    - [cbm_api](https://hub.docker.com/r/gtcap/cbm_api) : RESTful API server
+- docs/: Documentation pages (see [jrc-cbm.readthedocs.io](https://jrc-cbm.readthedocs.io))
+- ipynb/: Jupyter Notebook examples
+- scripts/: Python scripts for:
+    - extraction : Parcel extraction routines
+    - calendar_view : Time series calendar view
 - tests/: Test scripts for testing a variety of functionalities.
 
 See the documentation at [jrc-cbm.readthedocs.io](https://jrc-cbm.readthedocs.io) for more details.
