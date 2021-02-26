@@ -53,10 +53,10 @@ def api(mode=None):
     @wb_save.on_click
     def wb_save_on_click(b):
         progress.clear_output()
-        config.update(['api', 'url'], str(wt_url.value).replace(' ', ''))
-        config.update(['api', 'user'], str(wt_user.value).replace(' ', ''))
+        config.set_value(['api', 'url'], str(wt_url.value).replace(' ', ''))
+        config.set_value(['api', 'user'], str(wt_user.value).replace(' ', ''))
         if wt_pass.value != '':
-            config.update(['api', 'pass'], str(wt_pass.value).replace(' ', ''))
+            config.set_value(['api', 'pass'], str(wt_pass.value).replace(' ', ''))
         outlog("The RESTful API credentials are saved.")
 
     wbox = VBox([HBox([wt_url, Label("Format: http://0.0.0.0/ or https://0.0.0.0/")]),
@@ -159,19 +159,19 @@ def direct_conn(db='main'):
     def wb_save_on_click(b):
         progress.clear_output()
         # Save database connection information
-        config.update(['db', db, 'host'], str(db_host.value))
-        config.update(['db', db, 'port'], str(db_port.value))
-        config.update(['db', db, 'name'], str(db_name.value))
-        config.update(['db', db, 'user'], str(db_user.value))
+        config.set_value(['db', db, 'host'], str(db_host.value))
+        config.set_value(['db', db, 'port'], str(db_port.value))
+        config.set_value(['db', db, 'name'], str(db_name.value))
+        config.set_value(['db', db, 'user'], str(db_user.value))
         if db_pass.value != '':
-            config.update(['db', db, 'conn', 'pass'], str(db_pass.value))
+            config.set_value(['db', db, 'conn', 'pass'], str(db_pass.value))
         # Save Object storage connection information
-        config.update(['obst', 'osdias'], str(os_dias.value))
-        config.update(['obst', 'oshost'], str(os_host.value))
-        config.update(['obst', 'bucket'], str(os_bucket.value))
-        config.update(['obst', 'access_key'], str(os_access_key.value))
+        config.set_value(['obst', 'osdias'], str(os_dias.value))
+        config.set_value(['obst', 'oshost'], str(os_host.value))
+        config.set_value(['obst', 'bucket'], str(os_bucket.value))
+        config.set_value(['obst', 'access_key'], str(os_access_key.value))
         if os_secret_key.value != '':
-            config.update(['obst', 'secret_key'], str(os_secret_key.value))
+            config.set_value(['obst', 'secret_key'], str(os_secret_key.value))
 
         outlog("All changes are saved.")
 
@@ -220,14 +220,14 @@ def direct_settings():
         dsy.value = int(ds_y)
 
     def on_dsc_change(change):
-        config.update(['set', 'dataset'], dsc.value)
+        config.set_value(['set', 'dataset'], dsc.value)
         values = config.read()
         ds_c = values['set']['dataset']
         dsy.options = [int(y) for y in values['dataset'][ds_c]]
     dsc.observe(on_dsc_change, 'value')
 
     def on_dsy_change(change):
-        config.update(['set', 'ds_year'], str(dsy.value))
+        config.set_value(['set', 'ds_year'], str(dsy.value))
     dsy.observe(on_dsy_change, 'value')
 
     bt_set = Button(layout=Layout(width='40px'), icon='cogs',
@@ -444,32 +444,32 @@ def direct_settings():
         def wb_save_on_click(b):
             progress.clear_output()
             dscode = ds_code.value
-            config.update(['dataset', f'{dscode}_{str(ds_year.value)}',
+            config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
                            'tables', 'dias_catalog'], str(tb_dc.value))
-            config.update(['dataset', f'{dscode}_{str(ds_year.value)}',
+            config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
                            'tables', 'parcels'], str(tb_pr.value))
-            config.update(['dataset', f'{dscode}_{str(ds_year.value)}',
+            config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
                            'pcolumns', 'parcels_id'], str(tc_id.value))
-            config.update(['dataset', f'{dscode}_{str(ds_year.value)}',
+            config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
                            'pcolumns', 'crop_names'], str(tc_cn.value))
-            config.update(['dataset', f'{dscode}_{str(ds_year.value)}',
+            config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
                            'pcolumns', 'crop_codes'], str(tc_cc.value))
-            config.update(['dataset', f'{dscode}_{str(ds_year.value)}',
+            config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
                            'tables', 's2'], str(tb_s2.value))
-            config.update(['dataset', f'{dscode}_{str(ds_year.value)}',
+            config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
                            'tables', 'bs'], str(tb_bs.value))
-            config.update(['dataset', f'{dscode}_{str(ds_year.value)}',
+            config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
                            'tables', 'c6'], str(tb_6c.value))
-            config.update(['dataset', f'{dscode}_{str(ds_year.value)}',
+            config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
                            'db'], str(ds_db.value))
-            config.update(['dataset', f'{dscode}_{str(ds_year.value)}',
+            config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
                            'desc'], str(ds_desc.value))
-            config.update(['dataset', f'{dscode}_{str(ds_year.value)}', 'center'],
+            config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}', 'center'],
                           f"{map_cent_lat.value},{map_cent_lon.value}")
-            config.update(['dataset', f'{dscode}_{str(ds_year.value)}',
+            config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
                            'zoom'], str(map_zoom.value))
-            config.update(['set', 'dataset'], f'{dscode}_{str(ds_year.value)}')
-            config.update(['set', 'ds_year'], str(ds_year.value))
+            config.set_value(['set', 'dataset'], f'{dscode}_{str(ds_year.value)}')
+            config.set_value(['set', 'ds_year'], str(ds_year.value))
             values = config.read()
             ds_c = values['set']['dataset']
             ds_y = values['set']['ds_year']

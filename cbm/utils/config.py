@@ -18,7 +18,7 @@ path_work = abspath(os.curdir)
 path_repo = dirname(dirname(abspath(__file__)))
 path_conf = f"config/"
 conf_main = "main.json"
-conf_default = join(dirname(abspath(__file__)), 'main_default.json')
+path_default = join(dirname(abspath(__file__)), 'default/')
 
 
 def get_value(dict_keys={}, file=conf_main, var_name=None, help_text=True):
@@ -67,11 +67,11 @@ def get_value(dict_keys={}, file=conf_main, var_name=None, help_text=True):
         return ''
 
 
-def update(dict_keys={}, val=None, file=conf_main):
+def set_value(dict_keys={}, val=None, file=conf_main):
     """Update configuration file, with an arbitrary length key.
 
     Example:
-        config.update(['information', 'aoi'], val='test')
+        config.set_value(['information', 'aoi'], 'test')
 
     Arguments:
         dict_keys, list of keys to add
@@ -155,23 +155,14 @@ def read(file=conf_main):
         with open(f"{path_conf}{file}", 'r') as f:
             data = json.load(f)
             return data
-    except Exception as err:
-        if file == conf_main:
-            create()
-            with open(join(path_conf, file), 'r') as f:
-                data = json.load(f)
-            return data
-        elif file == 'api_options.json':
-            create(
-                join(dirname(dirname(abspath(__file__))), f'api/{file}'), file)
-            with open(join(path_conf, file), 'r') as f:
-                data = json.load(f)
-            return data
-        else:
-            print(f"Could not read file '{file}': {err}")
+    except Exception:
+        create(file)
+        with open(join(path_conf, file), 'r') as f:
+            data = json.load(f)
+        return data
 
 
-def create(from_file=conf_default, to_file=conf_main):
+def create(to_file=conf_main, from_=path_default):
     """Automatically create a config file if it does not exist.
     """
     if not os.path.exists(join(join(path_work, path_conf))):
@@ -179,22 +170,23 @@ def create(from_file=conf_default, to_file=conf_main):
     # if file does not exist, create it
     if os.path.isfile(join(path_conf, to_file)) is False:
         # Read from default configuration file
+        from_file = join(from_, to_file)
         with open(from_file, 'r') as f:
             dict_default = json.load(f)
         # Create a new config file
         with open(join(path_work, path_conf, to_file), 'w') as f:
             json.dump(dict_default, f, indent=4)
         time.sleep(0.5)  # Sleep for half second to run the function.
-        print("The configuration file did not exist, a new default ",
-              f"{to_file} file was created.")
+        print(f"The file 'config/{to_file}' did not exist, a new default ",
+              " file was created.")
 
 
-def update_keys(from_file=conf_default, to_file=conf_main):
+def update_keys(from_=path_default, to_file=conf_main):
     """Update missing keys of old configuration files."""
     if os.path.isfile(join(path_conf, to_file)) is False:
-        create(from_file, to_file)
+        create(to_file, from_)
 
-    with open(from_file, 'r') as f:
+    with open(f'{from_}{to_file}', 'r') as f:
         dict_new = json.load(f)
 
     with open(join(path_conf, to_file), 'r') as f:
@@ -236,15 +228,15 @@ def credentials(service):
     return url, user, pass_
 
 
-def autoselect(matching_text=None, import_list=[], help_text=True):
-    """Automatically select the first object that the matching text is included
+def autoselect(match_text=None, import_list=[], help_text=True):
+    """Automatically select the first object that the 'match_text' is included
     in its name. If no object has this word no object will be automatically
     selected. If 'help_text' value is False no output help text for the founded
     tables will be returned in case there are more entries in the list with the
     matching text.
 
     Arguments:
-        matching_text :  The selected database (str).
+        match_text :  The desired text selection (str).
 
         import_list :  List of the options (List).
 
@@ -258,20 +250,20 @@ def autoselect(matching_text=None, import_list=[], help_text=True):
     try:
         if import_list is None:
             value = None
-        elif matching_text in import_list:
-            value = matching_text
+        elif match_text in import_list:
+            value = match_text
         else:
-            match_list = [t for t in import_list if matching_text in t]
-            if len(match_list) == 0 or matching_text == '':
+            match_list = [t for t in import_list if match_text in t]
+            if len(match_list) == 0 or match_text == '':
                 value = None
             else:
                 value = match_list[0]
             # if there is more than one return all matching entries.
-            if len(match_list) > 1 and help_text is True and matching_text != '':
+            if len(match_list) > 1 and help_text is True and match_text != '':
                 print(f"{len(match_list)} values found with the word"
-                      f"'{matching_text}' in the list: {match_list}")
+                      f"'{match_text}' in the list: {match_list}")
     except Exception as err:
-        print(f"Could not auto select a value '{matching_text}' for from",
+        print(f"Could not auto select a value '{match_text}' for from",
               f"the list '{import_list[0]} ...': {err}")
         value = None
     return value
