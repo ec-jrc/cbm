@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='cbm',
-    version='0.0.2',
+    version='0.0.3',
     python_requires='>=3.6',
     description='Checks by Monitoring (CbM)',
     long_description=long_description,
@@ -19,7 +19,6 @@ setup(
     install_requires=[
         'boto3',
         'botocore',
-        'bqplot',
         'Fiona',
         'ipyleaflet',
         'ipywidgets>=7.6.0',
@@ -27,7 +26,6 @@ setup(
         'numpy',
         'pandas',
         'psycopg2-binary',
-        'python-json-logger',
         'rasterio==1.1.5',
         'rasterstats',
         'requests',
