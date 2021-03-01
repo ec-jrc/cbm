@@ -74,10 +74,10 @@ def add(username, password=''):
     """Add a new user
 
     Example:
-        from cbm.apicbm import users
+        import users
         users.add('admin','admin')
     or in terminal:
-    python3 -c "from cbm.apicbm import users; users.add('admin','admin')"
+        python users.py add username password
 
     Arguments:
         username, The user name (str)
@@ -152,7 +152,7 @@ if __name__ == '__main__':
             print(key)
     else:
         print("""Not recognized arguments. Available options:
-    'python users.py add user password'  : To add a new user.
-    'python users.py delete user'        : To delete a user.
-    'python users.py users'              : To get added the users.
+    python users.py add username password  # Add a new user.
+    python users.py delete user            # Delete a user.
+    python users.py users                  # Print a list of the users.
         """)
