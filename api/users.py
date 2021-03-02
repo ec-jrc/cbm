@@ -49,7 +49,7 @@ def auth(username, password):
 
     """
     try:
-        users = get_users()
+        users = get_list()
         user = users[username.lower()]
 
         salt = encode(user['salt'].encode().decode('unicode_escape'),
@@ -70,21 +70,21 @@ def auth(username, password):
         return False
 
 
-def add(username, password=''):
-    """Add a new user
+def create(username, password=''):
+    """Create a new user
 
     Example:
         import users
-        users.add('admin','admin')
+        users.create('admin','admin')
     or in terminal:
-        python users.py add username password
+        python users.py create username password
 
     Arguments:
         username, The user name (str)
         password, Tee user password (str)
 
     """
-    users = get_users()
+    users = get_list()
 
     salt = os.urandom(32)
     key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
@@ -94,14 +94,14 @@ def add(username, password=''):
     }
     with open(users_file, 'w') as u:
         json.dump(users, u, indent=2)
-    print(f"The user '{username}' was added.")
+    print(f"The user '{username}' was created.")
 
 
-def get_users():
+def get_list():
     """Get the list of active users
 
     Example:
-        users.get_users('MyUserName')
+        users.get_list('MyUserName')
 
     Return:
         A json object with the users
@@ -130,7 +130,7 @@ def delete(username):
         username, The user name to be deleted (str)
 
     """
-    users = get_users()
+    users = get_list()
 
     if username in users:
         del users[username]
@@ -143,16 +143,16 @@ def delete(username):
 
 
 if __name__ == '__main__':
-    if sys.argv[1].lower() == 'add':
-        add(sys.argv[2], sys.argv[3])
+    if sys.argv[1].lower() == 'add' or sys.argv[1].lower() == 'create':
+        create(sys.argv[2], sys.argv[3])
     elif sys.argv[1].lower() == 'delete':
         delete(sys.argv[2])
-    elif sys.argv[1].lower() == 'users':
-        for key in get_users():
+    elif sys.argv[1].lower() == 'list':
+        for key in get_list():
             print(key)
     else:
         print("""Not recognized arguments. Available options:
-    python users.py add username password  # Add a new user.
-    python users.py delete user            # Delete a user.
-    python users.py users                  # Print a list of the users.
+    python users.py create username password  # Create a new user.
+    python users.py delete username           # Delete a user.
+    python users.py list                      # Print a list of the users.
         """)
