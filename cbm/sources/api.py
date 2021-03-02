@@ -12,11 +12,11 @@ import requests
 from cbm.utils import config
 
 
-def ploc(area, year, lon, lat, geom=False):
-    if area == 'es_ns':
+def ploc(aoi, year, lon, lat, geom=False):
+    if aoi == 'es_ns':
         parcels = f'es{year}_nour_subset'
     else:
-        parcels = f'{area}{year}'
+        parcels = f'{aoi}{year}'
 
     api_url, api_user, api_pass = config.credentials('api')
     requrl = """{}/query/parcelByLocation?parcels={}&lon={}&lat={}"""
@@ -28,11 +28,11 @@ def ploc(area, year, lon, lat, geom=False):
     return response.content
 
 
-def pid(area, year, pid, geom=False):
-    if area == 'es_ns':
+def pid(aoi, year, pid, geom=False):
+    if aoi == 'es_ns':
         parcels = f'es{year}_nour_subset'
     else:
-        parcels = f'{area}{year}'
+        parcels = f'{aoi}{year}'
 
     api_url, api_user, api_pass = config.credentials('api')
     requrl = """{}/query/parcelById?parcels={}&parcelid={}"""
@@ -44,11 +44,11 @@ def pid(area, year, pid, geom=False):
     return response.content
 
 
-def ppoly(area, year, polygon, geom=False, only_ids=True):
-    if area == 'es_ns':
+def ppoly(aoi, year, polygon, geom=False, only_ids=True):
+    if aoi == 'es_ns':
         parcels = f'es{year}_nour_subset'
     else:
-        parcels = f'{area}{year}'
+        parcels = f'{aoi}{year}'
 
     api_url, api_user, api_pass = config.credentials('api')
     requrl = """{}/query/parcelsByPolygon?parcels={}&polygon={}"""
@@ -61,14 +61,14 @@ def ppoly(area, year, polygon, geom=False, only_ids=True):
     return response.content
 
 
-def pts(area, year, pid, tstype, band=''):
-    if area == 'es_ns':
-        area = f'es'
+def pts(aoi, year, pid, tstype, band=''):
+    if aoi == 'es_ns':
+        aoi = f'es'
 
     api_url, api_user, api_pass = config.credentials('api')
     requrl = """{}/query/parcelTimeSeries?aoi={}&year={}&pid={}&tstype={}&band={}"""
 
-    response = requests.get(requrl.format(api_url, area, year,
+    response = requests.get(requrl.format(api_url, aoi, year,
                                           pid, tstype, band),
                             auth=(api_user, api_pass))
     return response.content
@@ -93,6 +93,7 @@ def cbl(lon, lat, start_date, end_date, bands=None, lut=None, chipsize=None):
 
 def rcbl(parcel, start_date, end_date, bands, sat, chipsize, filespath):
     import os
+    import os.path
     import pandas as pd
     from osgeo import osr, ogr
     import time
@@ -145,13 +146,14 @@ def rcbl(parcel, start_date, end_date, bands, sat, chipsize, filespath):
         # Download the GeoTIFFs that were just created in the user cache
         for c in df.chips:
             url = f"{api_url}{c}"
-            res = requests.get(url, stream=True)
             outf = f"{filespath}{c.split('/')[-1]}"
-            # print(f"Downloading {c.split('/')[-1]}")
-            with open(outf, "wb") as handle:
-                for chunk in res.iter_content(chunk_size=512):
-                    if chunk:  # filter out keep-alive new chunks
-                        handle.write(chunk)
+            if not os.path.isfile(outf):
+                res = requests.get(url, stream=True)
+                # print(f"Downloading {c.split('/')[-1]}")
+                with open(outf, "wb") as handle:
+                    for chunk in res.iter_content(chunk_size=512):
+                        if chunk:  # filter out keep-alive new chunks
+                            handle.write(chunk)
         print(f"Images for band '{band}', for the selected dates are downloaded.")
 
         # if len(df.index) != 0:
