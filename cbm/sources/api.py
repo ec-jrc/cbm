@@ -91,7 +91,7 @@ def cbl(lon, lat, start_date, end_date, bands=None, lut=None, chipsize=None):
     return response
 
 
-def rcbl(parcel, start_date, end_date, bands, sat, chipsize, filespath):
+def rcbl(parcel, start_date, end_date, bands, chipsize, filespath):
     import os
     import os.path
     import pandas as pd

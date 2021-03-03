@@ -432,7 +432,6 @@ def get():
             with progress:
                 get_requests.rcbl(parcel, pci_start_date.value,
                                   pci_end_date.value, pci_band.value,
-                                  pci_satellite.value,
                                   pci_chipsize.value, files_pci)
             filet = f'{datapath}/chip_images/images_list.{pci_band.value[0]}.csv'
             if file_len(filet) > 1:

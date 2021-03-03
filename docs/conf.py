@@ -45,7 +45,7 @@ m2r2.setup = patched_m2r2_setup
 project = 'cbm'
 copyright = '2021, European Commission, Joint Research Centre'
 author = 'European Commission, Joint Research Centre'
-authors = 'European Commission, Joint Research Centre'
+main_authors = 'Guido Lemoine, Konstantinos Anastasakis'
 
 
 # -- General configuration ---------------------------------------------------
