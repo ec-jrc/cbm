@@ -100,7 +100,7 @@ We show a complete example on how to use the RESTful queries in a python script.
 [Get the source](https://github.com/ec-jrc/cbm/tree/main/tests/test_restful.py)
 
 
-```
+```python
 import sys
 import json
 
