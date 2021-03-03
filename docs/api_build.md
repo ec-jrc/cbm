@@ -120,6 +120,6 @@ This can be retrieved from the users with the request:
 
 **Important notes**
 
-* In case the tables names are different and not as proposed in the [Chapter 1.2.](https://github.com/ec-jrc/cbm/wiki/1.2.-Pre-Requirements.-Installation-instructions-for-the-required-tools-used-for-CbM-development.) the table names of the Postges queries in the file [query_handler.py](https://github.com/ec-jrc/cbm/blob/main/cbm/api/query_handler.py) will need to be changed accordingly with the database tables names.
+* In case the tables names are different and not as proposed in the [Chapter 1.2.](https://jrc-cbm.readthedocs.io/en/latest/setup_prerequisites.html#essential-cbm-tables) the table names of the Postges queries in the file [query_handler.py](https://github.com/ec-jrc/cbm/blob/main/api/query_handler.py) will need to be changed accordingly with the database tables names.
 
 * This is for testing and development purposes, for production use a more secure method to store the password should be considered.
