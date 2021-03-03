@@ -4,23 +4,31 @@
 
 .. toctree::
    :maxdepth: 3
-   :caption: introduction:
+   :caption: Concepts:
 
-   intro_dias4cbm
-   intro_prerequisites
-   intro_prepare
-   intro_extract
-   intro_db_backup
-   intro_ml
-   intro_calendar
-   info_foi
+   concept_dias4cbm
+   concept_foi
+
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Concepts:
+
+   setup_prerequisites
+   setup_prepare
+   setup_extract
+   setup_db_backup
+   setup_ml
+   cbm_calendar
 
 
 .. toctree::
    :maxdepth: 3
    :caption: The cbm library:
 
-   cbm
+   cbm_install
+   cbm-overview
+   cbm_config
    cbm_card
    cbm_ext
    cbm_foi

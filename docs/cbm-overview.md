@@ -1,33 +1,3 @@
-# Installation.
-
-## Dependencies
-
-The 'cbm' python library has one C library dependency: GDAL >=2.x. GDAL itself depends on many of other libraries provided by most major operating systems and also depends on the non standard GEOS and PROJ4 libraries.
-
-For GDAL installation see: [pypi.org/project/GDAL](https://pypi.org/project/GDAL/).
-
-## Installing from [PyPI](https://pypi.org/project/cbm/)
-
-```bash
-pip install cbm
-```
-
-## Installing from source:
-
-```bash
-git clone https://github.com/ec-jrc/cbm.git
-cd cbm
-python setup.py install
-```
-
-## Installing for development
-
-```bash
-git clone https://github.com/ec-jrc/cbm.git
-cd cbm
-pip install -e .
-```
-
 # Overview
 The cbm Python library provides an easy and organized way to run a variety of different tasks for checks by monitoring.
 
@@ -71,39 +41,4 @@ A subpackage 'ipycbm' is available for use in Jupyter Notebooks and provides int
 | qa() | The Quality Assessment (QA) notebook graphical interface | D,R |
 
 Use: D=Can be used with direct access, R=Can be used with RESTful API
-
-
-# Configuration
-
-To configure the main configuration file manually, run in the terminal:
-
-```bash
-python3 -c "import cbm"
-nano config/main.json
-```
-
-The main configuration file for cbm library ‘main.json’ is used in all the subpackages:
-
-```json
-{
-    "set": {}, // General configurations
-    "paths": {}, // The data and temp path are configurable and can be changed globally
-    "files": {}, // Location of files used it some functions
-    "api": {}, // The RESTful API access information
-    "db": {}, // Database access information
-    "dataset": {}, // Dataset information and tables configuration
-    "obst": {} // the object storage credentials
-}
-```
-
-## Configuration widget
-To configure the config/main.json file interactively, in the jupyterlab environment create a new notebook and run in a cell:
-
-```python
-# Import ipycbm
-from cbm import ipycbm
-# Open the configuration widget
-ipycbm.config() 
-```
-![](https://raw.githubusercontent.com/konanast/cbm_media/main/ipycbm_config_01.png)
 
