@@ -16,7 +16,7 @@ end = '2019-06-30'    # End date (str)
 card = 's2'           # s2, c6 or bs
 option = 'LEVEL2A'    # s1 ptype CARD-COH6 or CARD-BS, s2 plevel : LEVEL2A or LEVEL2AP
 
-cbm.card2db.creodiasdias(tb_prefix, aoi, start, end, card, option)
+cbm.card2db.creodias(tb_prefix, aoi, start, end, card, option)
 ```
 
 Other DIAS options (future implementations):

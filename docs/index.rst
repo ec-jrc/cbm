@@ -19,7 +19,7 @@
    setup_extract
    setup_db_backup
    setup_ml
-   cbm_calendar
+   setup_calendar
 
 
 .. toctree::
@@ -42,6 +42,6 @@
 
    api_build
    api_ts
-   api_img
+   api_imgs
    api_analytics
    api_post

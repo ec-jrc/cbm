@@ -131,7 +131,7 @@ First, we locate a parcel by location, as before, but now use the geometry that 
 [Get the code](https://github.com/ec-jrc/cbm/tree/main/tests/test_restful_chips.py)
 
 
-```
+```python
 import sys
 import glob
 import json

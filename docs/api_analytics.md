@@ -12,8 +12,15 @@ For the top 10 heterogeneous parcels, we then extract chips for further testing.
 To illustrate that we are dealing with a realistic scenario, we select an arbitrary area in NRW in 2018, and do a direct database extraction of all parcels in a 5000x5000 sqm square buffer around a coordinate of interest. We do not have a dedicated RESTful service for this, but in reality, the parcel IDs should come from the existing registry of the PA.
 
 
-```
-select ogc_fid, mon10_cr_2, st_area(wkb_geometry)/10000.0 as area, st_x(st_transform(st_centroid(wkb_geometry), 4326)) as clon, st_y(st_transform(st_centroid(wkb_geometry), 4326)) as clat from nrw2018 where st_intersects(wkb_geometry, st_envelope(st_buffer(st_transform(st_geomfromtext('POINT(6.365 51.0198)', 4326), 25832), 2500))) order by st_area(wkb_geometry) desc; 
+```sql
+SELECT ogc_fid, mon10_cr_2, st_area(wkb_geometry)/10000.0 As area,
+    st_x(st_transform(st_centroid(wkb_geometry), 4326)) as clon,
+    st_y(st_transform(st_centroid(wkb_geometry), 4326)) as clat
+FROM nrw2018
+WHERE st_intersects(wkb_geometry,
+    st_envelope(st_buffer(st_transform(st_geomfromtext('POINT(6.365 51.0198)',
+                                                       4326), 25832), 2500)))
+ORDER by st_area(wkb_geometry) desc; 
 ```
 
 this produces a list of 840 parcel IDs, sorted by descending parcel area size, which ranges from 30.6 to 0.013 ha. Only 39 parcels are smaller than 0.2 ha, so "small parcel occurrence" is not a very significant issue. In fact, it helps us appreciate the added value of our heterogeniety analysis: detecting a non-compliant subdivide of several hectares in any of the larger parcels is more significant that checking all the "small parcels" together **(focus!)**
