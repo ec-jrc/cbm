@@ -50,14 +50,19 @@ from cbm.utils import config
 from cbm.sources import db, object_storage
 
 
-def extractS2(startdate, enddate):
+def extractS2(startdate, enddate, dias_catalogue=None, parcels_table=None, results_table=None, dias=None):
     start = time.time()
 
     values = config.read()
     dsc = values['set']['dataset']
-    dias_catalogue = values['dataset'][dsc]['tables']['dias_catalog']
-    parcels_table = values['dataset'][dsc]['tables']['parcels']
-    results_table = values['dataset'][dsc]['tables']['s1']
+    if dias_catalogue is None:
+        dias_catalogue = values['dataset'][dsc]['tables']['dias_catalog']
+    if parcels_table is None:
+        parcels_table = values['dataset'][dsc]['tables']['parcels']
+    if results_table is None:
+        results_table = values['dataset'][dsc]['tables']['s2']
+    if dias is None:
+        dias = values['obst']['osdias']
 
     inconn = db.connection()
     if not inconn:
@@ -123,7 +128,6 @@ def extractS2(startdate, enddate):
 
     # Due to some ESA issues with the manifest.safe sometime during 2018, the GRANULE
     # directory need to be checked to understand where image data is located.
-    dias = values['obst']['osdias']
     if dias in ['EOSC', 'CREODIAS']:
         rootpath = 'Sentinel-2/MSI/L2A'
         s3path = "{}/{}/{}/GRANULE/".format(rootpath, obs_path, reference)
@@ -314,3 +318,7 @@ def extractS2(startdate, enddate):
     print("Total time required for {} features and {} bands: {} seconds".format(
         nrows.get('B8'), len(bands), time.time() - start))
 
+
+if __name__ == "__main__":
+    import sys
+    main(sys.argv)
