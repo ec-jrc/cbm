@@ -22,7 +22,7 @@ def by_pid(aoi, year, pid, tstype, band, save=True):
     Arguments:
         aoi, the area of interest e.g.: es, nld (str)
         year, the year of the parcels dataset (int)
-        pid, the parcel id (str).
+        pid, the parcel id (int).
         save, save or not to file (Boolean).
     """
     datapath = config.get_value(['paths', 'temp'])

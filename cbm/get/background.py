@@ -36,7 +36,6 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512,
         extend, size of the chip in meters  (float).
         tms, tile map server Google or Bing (str).
         quiet, print or not procedure information (Boolean).
-
     """
 
     json_data = json.loads(api.ploc(aoi, year, lon, lat, True))
@@ -56,7 +55,7 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512,
     lat, lon = spatial.centroid(
         spatial.transform_geometry(json_data))
 
-    img_overlay(aoi, year, pid, lon, lat, chipsize,
+    add_overlay(aoi, year, pid, lon, lat, chipsize,
                 extend, tms, quiet)
 
 
@@ -92,11 +91,11 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms='Google', quiet=True):
     lat, lon = spatial.centroid(
         spatial.transform_geometry(json_data))
 
-    img_overlay(aoi, year, pid, lon, lat, chipsize,
+    add_overlay(aoi, year, pid, lon, lat, chipsize,
                 extend, tms, quiet)
 
 
-def img_overlay(aoi, year, pid, lon, lat, chipsize=512, extend=512,
+def add_overlay(aoi, year, pid, lon, lat, chipsize=512, extend=512,
                 tms='Google', quiet=True):
     """Main function to download the background image with parcels polygon
     overlay by selected location. This function will get an image from the
@@ -104,7 +103,7 @@ def img_overlay(aoi, year, pid, lon, lat, chipsize=512, extend=512,
 
     Examples:
         from cbm.view import background
-        background.img_overlay(aoi, year, lon, lat, 512, 512, 'Google',
+        background.add_overlay(aoi, year, lon, lat, 512, 512, 'Google',
                                 'temp/test.tif', True)
 
     Arguments:
