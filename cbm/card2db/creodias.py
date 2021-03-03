@@ -28,7 +28,7 @@ from datetime import datetime
 from cbm.sources import db
 
 
-def dias_cat(tb_prefix, aoi, start, end, card, option):
+def main(tb_prefix, aoi, start, end, card, option):
     """
     start, end : 2019-06-01
     option: s1 ptype CARD-COH6 or CARD-BS, s2 plevel : LEVEL2A or LEVEL2AP
@@ -168,3 +168,7 @@ def dias_cat(tb_prefix, aoi, start, end, card, option):
 
     cur.close()
     conn.close()
+
+if __name__ == "__main__":
+    import sys
+    main(sys.argv)

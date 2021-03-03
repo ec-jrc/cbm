@@ -62,3 +62,8 @@ def bg_grid(*args):
 def bg_slider(*args):
     from cbm.ipycbm.ipy_view import view_background
     return view_background.slider(*args)
+
+
+def card2db(*args):
+    from cbm.ipycbm.ipy_ext import ext_card2db
+    return ext_card2db.dias_cat(*args)
