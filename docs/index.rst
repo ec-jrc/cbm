@@ -4,17 +4,28 @@
 
 .. toctree::
    :maxdepth: 3
-   :caption: Contents:
+   :caption: introduction:
 
-   introduction
-   prerequisites
-   data_preparation
-   parcel_extraction
-   db_backup
-   machine_learning
-   calendar_view
-   cbm_library
-   foi
+   intro_dias4cbm
+   intro_prerequisites
+   intro_prepare
+   intro_extract
+   intro_db_backup
+   intro_ml
+   intro_calendar
+   info_foi
+
+
+.. toctree::
+   :maxdepth: 3
+   :caption: The cbm library:
+
+   cbm
+   cbm_card
+   cbm_ext
+   cbm_foi
+   cbm_get
+   cbm_cal
 
 
 .. toctree::
