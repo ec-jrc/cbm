@@ -59,8 +59,9 @@ def grid(aoi, year, pid, chipsize=512, extend=512, tms=['Google']):
             show(img, ax=ax)
             ax.set_title(t, fontsize=20)
 
-    for ax in grid[-((columns * rows - len(tms))):]:
-        ax.remove()
+    if len(tms) > columns:
+        for ax in grid[-((columns * rows - len(tms))):]:
+            ax.remove()
 
     plt.show()
 
