@@ -12,7 +12,7 @@
 
 .. toctree::
    :maxdepth: 3
-   :caption: Concepts:
+   :caption: Setup:
 
    setup_prerequisites
    setup_prepare

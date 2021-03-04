@@ -16,7 +16,6 @@ save = True      # Save to file (bool)
 cbm.get.time_series.by_pid(aoi, year, pid, tstype, band, save)
 ```
 
-
 ## Chipimages
 
 Download the chip image by selected parcel id.
@@ -52,9 +51,7 @@ Arguments
     chipsize, size of the chip in pixels (int).
 
 
-
-
-## Get notebook widget
+## Get widget
 
 The get() function of ipycbm library provides an interactive Jupyter Notebook widget to get data from different sources, with variety of different methods (coordinates, parcels ids, map marker, polygon).
 
@@ -64,6 +61,7 @@ ipycbm.get()
 ```
 
 ![](https://raw.githubusercontent.com/konanast/cbm_media/main/ipycbm_get_01.png)
+
 
 ## Data stracture
 
@@ -79,9 +77,7 @@ temp/
 ```
 
 
-
 ## Background
-
 
 Download the background image with parcels polygon overlay by selected
 location. This function will get an image from the given longitude and latitude of the parcel.
