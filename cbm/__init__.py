@@ -15,7 +15,7 @@ __status__ = "Development"
 
 import os
 import os.path
-from cbm.utils import config
+from cbm.utils import config, update
 from pkg_resources import get_distribution, DistributionNotFound
 
 import sys
@@ -46,3 +46,4 @@ for p in paths:
         print(f"Directory {p} can not be created: ", err)
 
 config.create()
+update.check()
