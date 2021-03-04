@@ -12,7 +12,7 @@ from ipywidgets import (Text, VBox, HBox, Label, Password, Button, Layout, Tab,
                         Output, Dropdown, FloatText, BoundedIntText, Combobox)
 
 from cbm.utils import config, data_options
-from cbm.sources import db
+from cbm.sources import db, db_requests
 
 
 def api(mode=None):
@@ -56,10 +56,12 @@ def api(mode=None):
         config.set_value(['api', 'url'], str(wt_url.value).replace(' ', ''))
         config.set_value(['api', 'user'], str(wt_user.value).replace(' ', ''))
         if wt_pass.value != '':
-            config.set_value(['api', 'pass'], str(wt_pass.value).replace(' ', ''))
+            config.set_value(['api', 'pass'], str(
+                wt_pass.value).replace(' ', ''))
         outlog("The RESTful API credentials are saved.")
 
-    wbox = VBox([HBox([wt_url, Label("Format: http://0.0.0.0/ or https://0.0.0.0/")]),
+    wbox = VBox([HBox([wt_url,
+                       Label("Format: http://0.0.0.0/ or https://0.0.0.0/")]),
                  wt_user, wt_pass,
                  HBox([wb_save, progress])])
 
@@ -185,7 +187,7 @@ def direct_conn(db='main'):
 def direct_settings():
     values = config.read()
     ds_def = values['set']['dataset']
-    ds_dye = values['set']['ds_year']
+    # ds_dye = values['set']['ds_year']
     if ds_def not in [d for d in values['dataset']]:
         ds_def = [d for d in values['dataset']][0]
 
@@ -197,14 +199,6 @@ def direct_settings():
         layout=Layout(width='200px')
     )
 
-    dsy = Dropdown(
-        options=[int(dsc.value.split('_')[-1])],
-        value=int(ds_dye),
-        description='Dataset year:',
-        disabled=False,
-        layout=Layout(width='180px')
-    )
-
     btn_refresh = Button(
         layout=Layout(width='35px'),
         icon='fa-refresh')
@@ -213,32 +207,20 @@ def direct_settings():
     def btn_refresh_on_click(b):
         values = config.read()
         ds_c = values['set']['dataset']
-        ds_y = values['set']['ds_year']
         dsc.options = [d for d in values['dataset']]
-        dsy.options = [int(y) for y in values['dataset']]
         dsc.value = ds_c
-        dsy.value = int(ds_y)
 
     def on_dsc_change(change):
         config.set_value(['set', 'dataset'], dsc.value)
-        values = config.read()
-        ds_c = values['set']['dataset']
-        dsy.options = [int(y) for y in values['dataset'][ds_c]]
     dsc.observe(on_dsc_change, 'value')
-
-    def on_dsy_change(change):
-        config.set_value(['set', 'ds_year'], str(dsy.value))
-    dsy.observe(on_dsy_change, 'value')
 
     bt_set = Button(layout=Layout(width='40px'), icon='cogs',
                     tooltip="Configure this dataset")
     bt_new = Button(layout=Layout(width='40px'), icon='plus',
                     tooltip="Add new dataset configuration")
-    bt_rec = Button(layout=Layout(width='40px'), icon='trash-alt',
+    bt_del = Button(layout=Layout(width='40px'), icon='trash-alt',
                     tooltip='Delete dataset configuration')
-    bt_rey = Button(layout=Layout(width='40px'), icon='trash-alt',
-                    tooltip='Delete only the selected year.')
-    dsc_box = HBox([dsc, btn_refresh, bt_rec, dsy, bt_set, bt_rey, bt_new])
+    dsc_box = HBox([dsc, btn_refresh, bt_del, bt_set, bt_new])
 
     progress = Output()
 
@@ -249,18 +231,18 @@ def direct_settings():
     def dsc_config(dsc_value):
         values = config.read()
         ds_db = Dropdown(
-            options=["1"],
-            value="1",
+            options=list(values['db'].keys()),
+            value="main",
             description='Database:',
             disabled=False,
-            layout=Layout(width='140px')
+            layout=Layout(width='200px')
         )
 
         try:
-            with open(f"{config.get_value(['paths','temp'])}tb_prefix", 'r') as f:
-                code_value = f.read()
+            with open(f"{values['paths']['temp']}tb_prefix", 'r') as f:
+                code_value = f.read().split('_')[0]
         except Exception:
-            code_value = dsc_value
+            code_value = dsc_value.split('_')[0]
 
         ds_code = Combobox(
             value=code_value,
@@ -273,7 +255,7 @@ def direct_settings():
             tooltip='Lowercase AOI code name for the dataset (5chr max).'
         )
         ds_year = BoundedIntText(
-            value=int(dsy.value),
+            value=int(dsc_value.split('_')[1]),
             min=1980,
             max=2100,
             step=1,
@@ -320,12 +302,12 @@ def direct_settings():
             tooltip='Get center point from database.'
         )
 
-        ds_box = HBox([ds_code, ds_year, ds_desc])
+        ds_box = HBox([ds_code, ds_year, ds_desc, ds_db])
         map_box = HBox([Label("Map center: "), map_cent_lat,
                         map_cent_lon, bt_get_center, map_zoom])
 
         info_config = Label(
-            """Change 'AOI code' value to create a new configuration set or
+            """Change 'AOI code' or 'Year' value to create a new configuration set or
             leave the same 'AOI code' value to configure the selected one.""")
 
         db_set = values['dataset'][dsc_value]['db']
@@ -356,7 +338,7 @@ def direct_settings():
 
         def get_pr_columns():
             try:
-                colms = db.table_columns(tb_pr.value, 1, None)
+                colms = db.table_columns(tb_pr.value, ds_db.value, None)
                 if colms is None:
                     return []
                 else:
@@ -398,8 +380,6 @@ def direct_settings():
             tc_cc.options = get_pr_columns()
         tb_pr.observe(on_tb_pr_change, 'value')
 
-        parcel_box = HBox([tb_pr, tc_id, tc_cn, tc_cc])
-
         tb_s2 = Dropdown(
             options=get_tb_list(),
             value=config.autoselect(
@@ -435,7 +415,7 @@ def direct_settings():
         def bt_get_center_on_click(b):
             import json
             center_json = json.loads(
-                db.getTableCentroid(tb_pr.value)['center'][0])
+                db_requests.getTableCentroid(tb_pr.value)['center'][0])
             map_cent_lat.value = round(center_json['coordinates'][1], 2)
             map_cent_lon.value = round(center_json['coordinates'][0], 2)
             map_zoom.value = 10
@@ -445,42 +425,45 @@ def direct_settings():
             progress.clear_output()
             dscode = ds_code.value
             config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
-                           'tables', 'dias_catalog'], str(tb_dc.value))
+                              'tables', 'dias_catalog'], str(tb_dc.value))
             config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
-                           'tables', 'parcels'], str(tb_pr.value))
+                              'tables', 'parcels'], str(tb_pr.value))
             config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
-                           'pcolumns', 'parcels_id'], str(tc_id.value))
+                              'pcolumns', 'parcels_id'], str(tc_id.value))
             config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
-                           'pcolumns', 'crop_names'], str(tc_cn.value))
+                              'pcolumns', 'crop_names'], str(tc_cn.value))
             config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
-                           'pcolumns', 'crop_codes'], str(tc_cc.value))
+                              'pcolumns', 'crop_codes'], str(tc_cc.value))
             config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
-                           'tables', 's2'], str(tb_s2.value))
+                              'tables', 's2'], str(tb_s2.value))
             config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
-                           'tables', 'bs'], str(tb_bs.value))
+                              'tables', 'bs'], str(tb_bs.value))
             config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
-                           'tables', 'c6'], str(tb_6c.value))
+                              'tables', 'c6'], str(tb_6c.value))
             config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
-                           'db'], str(ds_db.value))
+                              'db'], str(ds_db.value))
             config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
-                           'desc'], str(ds_desc.value))
-            config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}', 'center'],
-                          f"{map_cent_lat.value},{map_cent_lon.value}")
+                              'desc'], str(ds_desc.value))
+            config.set_value(
+                ['dataset', f'{dscode}_{str(ds_year.value)}', 'center'],
+                f"{map_cent_lat.value},{map_cent_lon.value}")
             config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
-                           'zoom'], str(map_zoom.value))
-            config.set_value(['set', 'dataset'], f'{dscode}_{str(ds_year.value)}')
+                              'zoom'], str(map_zoom.value))
+            config.set_value(['set', 'dataset'],
+                             f'{dscode}_{str(ds_year.value)}')
             config.set_value(['set', 'ds_year'], str(ds_year.value))
             values = config.read()
             ds_c = values['set']['dataset']
-            ds_y = values['set']['ds_year']
             dsc.options = [d for d in values['dataset']]
-            dsy.options = [int(y) for y in values['dataset'][ds_c]]
             dsc.value = ds_c
-            dsy.value = int(ds_y)
             outlog("The configurations are saved.")
 
-        return VBox([info_config, ds_box, parcel_box,
-                     tb_dc, tb_s2, tb_bs, tb_6c,
+        db_box = HBox([VBox([Label('Tables:'),
+                             tb_pr, tb_dc, tb_s2, tb_bs, tb_6c]),
+                       VBox([Label('Columns:'),
+                             HBox([tc_id, tc_cn, tc_cc])])])
+
+        return VBox([info_config, ds_box, db_box,
                      Label(''.join(info_map_text)), map_box, wb_save])
 
     dsc_new_box = HBox([])
@@ -503,26 +486,14 @@ def direct_settings():
             dsc_new_box.children = ()
             bt_set.icon = 'cogs'
 
-    @bt_rec.on_click
-    def bt_rec_on_click(b):
+    @bt_del.on_click
+    def bt_del_on_click(b):
         progress.clear_output()
         if len(dsc.options) > 1:
             config.delete(['dataset', dsc.value])
             outlog(f"Dataset configuration '{dsc.value}' is deleted.")
             values = config.read()
             dsc.options = [d for d in values['dataset']]
-        else:
-            outlog("Can not remove last configuration.")
-
-    @bt_rey.on_click
-    def bt_rey_on_click(b):
-        progress.clear_output()
-        if len(dsy.options) > 1:
-            config.delete(['dataset', dsc.value, str(dsy.value)])
-            outlog(f"Year {dsy.value} of dataset '{dsc.value}' is deleted.")
-            values = config.read()
-            dsy.options = [int(y) for y in values['dataset']
-                           [str(dsc.value)]]
         else:
             outlog("Can not remove last configuration.")
 

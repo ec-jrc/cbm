@@ -8,12 +8,12 @@
 # License   : 3-Clause BSD
 
 import os
-from ipywidgets import (Text, VBox, HBox, Label, Password, Dropdown,
+from ipywidgets import (Text, VBox, HBox, Label, Dropdown,
                         Button, Checkbox, Layout, Output, BoundedIntText,
                         RadioButtons, Box, Tab)
 
 from cbm.utils import config, data_options
-from cbm.ipycbm.utils import update, settings_ds
+from cbm.ipycbm.utils import settings_ds
 
 
 def main():
@@ -73,7 +73,7 @@ def data_source():
 
 
 def general():
-    """Update the repository.
+    """General settings.
     Args:
         None
     Returns:
@@ -172,16 +172,6 @@ def general():
                      paths_info, path_data, path_temp,
                      files_info, file_pids_poly, file_pids_dist],
                     layout=Layout(border='1px solid black'))
-
-    # Git
-    git_url = Text(
-        value=config.get_value(['set', 'url']),
-        disabled=True,
-        description='Git url:'
-    )
-
-    wbox_git = HBox([git_url, update.btn_update()],
-                     layout=Layout(border='1px solid black'))
 
     btn_save = Button(
         description='Save',
