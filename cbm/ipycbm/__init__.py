@@ -16,12 +16,11 @@ __status__ = "Development"
 
 
 from IPython.display import display
-from cbm.ipycbm.utils import settings, update
+from cbm.ipycbm.utils import settings
 from cbm.utils import config
 
 display(settings.clean_temp(True))
 config.update_keys()
-update.check()
 
 
 def get(*args):
