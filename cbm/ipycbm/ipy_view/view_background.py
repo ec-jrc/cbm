@@ -1,22 +1,93 @@
-import os
+import json
 import os.path
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 from ipywidgets import Output, VBox, SelectionSlider
 from mpl_toolkits.axes_grid1 import ImageGrid
 
-from cbm.utils import config
+import rasterio
+from rasterio.plot import show
+from descartes import PolygonPatch
+from copy import copy
+# import matplotlib.ticker as ticker
+# import numpy as np
+
+from cbm.utils import config, spatial
 from cbm.get import background as bg
+
+
+def grid(aoi, year, pid, chipsize=512, extend=512, tms=['Google']):
+
+    columns = 4
+    if len(tms) < columns:
+        columns = len(tms)
+
+    workdir = config.get_value(['paths', 'temp'])
+    path = f'{workdir}/{aoi}{year}/{pid}/'
+    bg_path = f'{path}/backgrounds/'
+
+    for t in tms:
+        if not os.path.isfile(f'{bg_path}{t.lower()}.tif'):
+            bg.by_pid(aoi, year, pid, chipsize, extend, t, True)
+
+    with open(f'{path}info.json', "r") as f:
+        json_data = json.load(f)
+
+    def overlay_parcel(img, geom):
+        patche = [PolygonPatch(feature, edgecolor="yellow",
+                               facecolor="none", linewidth=2
+                               ) for feature in geom['geom']]
+        return patche
+
+    with rasterio.open(f'{bg_path}{tms[0].lower()}.tif') as img:
+        img_epsg = img.crs.to_epsg()
+        geom = spatial.transform_geometry(json_data, img_epsg)
+        patches = overlay_parcel(img, geom)
+
+    rows = int(len(tms) // columns + (len(tms) % columns > 0))
+    fig = plt.figure(figsize=(30, 10 * rows))
+    grid = ImageGrid(fig, 111,  # similar to subplot(111)
+                     nrows_ncols=(rows, columns),  # creates grid of axes
+                     axes_pad=0.4,  # pad between axes in inch.
+                     )
+
+    for ax, t in zip(grid, tms):
+        with rasterio.open(f'{bg_path}{t.lower()}.tif') as img:
+            for patch in patches:
+                ax.add_patch(copy(patch))
+#             ax.xaxis.set_major_locator(ticker.MultipleLocator(200))
+#             ax.xaxis.set_minor_locator(ticker.MultipleLocator(200))
+            show(img, ax=ax)
+            ax.set_title(t, fontsize=20)
+
+    for ax in grid[-((columns * rows - len(tms))):]:
+        ax.remove()
+
+    plt.show()
 
 
 def slider(aoi, year, pid, chipsize=512, extend=512, tms=['Google']):
 
     workdir = config.get_value(['paths', 'temp'])
-    path = f'{workdir}/{aoi}{year}/pid{pid}/backgrounds/'
+    path = f'{workdir}/{aoi}{year}/{pid}/'
+    bg_path = f'{path}/backgrounds/'
 
     for t in tms:
-        if not os.path.isfile(f'{path}{t.lower()}.png'):
+        if not os.path.isfile(f'{bg_path}{t.lower()}.tif'):
             bg.by_pid(aoi, year, pid, chipsize, extend, t, True)
+
+    with open(f'{path}info.json', "r") as f:
+        json_data = json.load(f)
+
+    def overlay_parcel(img, geom):
+        patche = [PolygonPatch(feature, edgecolor="yellow",
+                               facecolor="none", linewidth=2
+                               ) for feature in geom['geom']]
+        return patche
+
+    with rasterio.open(f'{bg_path}{tms[0].lower()}.tif') as img:
+        img_epsg = img.crs.to_epsg()
+        geom = spatial.transform_geometry(json_data, img_epsg)
+        patches = overlay_parcel(img, geom)
 
     selection = SelectionSlider(
         options=tms,
@@ -28,57 +99,32 @@ def slider(aoi, year, pid, chipsize=512, extend=512, tms=['Google']):
     )
     output = Output()
 
+    fig, ax = plt.subplots(figsize=(10, 10))
     with output:
-        img = mpimg.imread(f'{path}{selection.value.lower()}.png')
-        plt.imshow(img)
-        plt.axis('off')
+        with rasterio.open(f'{bg_path}{selection.value.lower()}.tif') as img:
+            for patch in patches:
+                ax.add_patch(copy(patch))
+            show(img, ax=ax)
         plt.show()
 
     def on_value_change(change):
         with output:
             output.clear_output()
-            img = mpimg.imread(f'{path}{selection.value.lower()}.png')
-            plt.imshow(img)
-            plt.axis('off')
+            fig, ax = plt.subplots(figsize=(10, 10))
+            with rasterio.open(f'{bg_path}{selection.value.lower()}.tif') as im:
+                for patch in patches:
+                    ax.add_patch(copy(patch))
+                show(im, ax=ax)
             plt.show()
 
     selection.observe(on_value_change, names='value')
     return VBox([selection, output])
 
 
-def grid(aoi, year, pid, chipsize=512, extend=512, tms=['Google']):
-
-    columns = 5
-    if len(tms) < columns:
-        columns = len(tms)
+def map(aoi, year, pid, chipsize=512, extend=512, tms='Google'):
 
     workdir = config.get_value(['paths', 'temp'])
-    path = f'{workdir}/{aoi}{year}/pid{pid}/backgrounds/'
-
-    for t in tms:
-        if not os.path.isfile(f'{path}{t.lower()}.png'):
-            bg.by_pid(aoi, year, pid, chipsize, extend, t, True)
-
-    rows = int(len(tms) // columns + (len(tms) % columns > 0))
-    fig = plt.figure(figsize=(25, 5 * rows))
-    grid = ImageGrid(fig, 111,  # similar to subplot(111)
-                     nrows_ncols=(rows, columns),  # creates 2x2 grid of axes
-                     axes_pad=0.1,  # pad between axes in inch.
-                     )
-
-    for ax, im in zip(grid, tms):
-        # Iterating over the grid returns the Axes.
-        ax.axis('off')
-        ax.imshow(plt.imread(f'{path}{im.lower()}.png', 3))
-        ax.set_title(im)
-
-    plt.show()
-
-
-def leaflet(aoi, year, pid, chipsize=512, extend=512, tms='Google'):
-
-    workdir = config.get_value(['paths', 'temp'])
-    path = f'{workdir}/{aoi}{year}/pid{pid}/backgrounds/'
+    path = f'{workdir}/{aoi}{year}/{pid}/backgrounds/'
 
     for t in tms:
         if not os.path.isfile(f'{path}{t.lower()}.png'):
@@ -88,7 +134,7 @@ def leaflet(aoi, year, pid, chipsize=512, extend=512, tms='Google'):
     rows = int(len(tms) // columns + (len(tms) % columns > 0))
     fig = plt.figure(figsize=(25, 5 * rows))
     grid = ImageGrid(fig, 111,  # similar to subplot(111)
-                     nrows_ncols=(rows, columns),  # creates 2x2 grid of axes
+                     nrows_ncols=(rows, columns),  # creates grid of axes
                      axes_pad=0.1,  # pad between axes in inch.
                      )
 

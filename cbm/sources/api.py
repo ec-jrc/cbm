@@ -154,13 +154,15 @@ def rcbl(parcel, start_date, end_date, bands, chipsize, filespath):
                     for chunk in res.iter_content(chunk_size=512):
                         if chunk:  # filter out keep-alive new chunks
                             handle.write(chunk)
-        print(f"Images for band '{band}', for the selected dates are downloaded.")
+        print(
+            f"Images for band '{band}', for the selected dates are downloaded.")
 
         # if len(df.index) != 0:
         #     print(f"All GeoTIFFs for band '{band}' are ",
         #           f"downloaded in the folder: '{filespath}'")
     print("\n------Total time------")
-    print(f"Total time required for {len(bands)} bands: {time.time() - start} seconds.")
+    print(
+        f"Total time required for {len(bands)} bands: {time.time() - start} seconds.")
 
 
 def clouds(geom):
@@ -176,9 +178,9 @@ def clouds(geom):
 
     for t in tiflist:
         with rasterio.open(t) as src:
-            affine = cbm.transform
-            CRS = cbm.crs
-            data = cbm.read(1)
+            affine = src.transform
+            CRS = src.crs
+            data = src.read(1)
 
         # Reproject the parcel geometry in the image crs
         imageCRS = int(str(CRS).split(':')[-1])
@@ -215,6 +217,7 @@ def clouds(geom):
         histogram = {int(float(k)): v for k, v in properties.items()}
         # print(t, histogram)
 
+
 def get_options():
     api_url, api_user, api_pass = config.credentials('api')
     requrl = """{}/query/options"""
@@ -242,11 +245,6 @@ def background(lon, lat, chipsize=512, extend=512, tms='Google',
     import os
     import os.path
     import re
-    import json
-    import rasterio
-    import matplotlib.pyplot as plt
-    from rasterio.plot import show
-    from descartes import PolygonPatch
 
     # Get the api credentials
     api_url, api_user, api_pass = config.credentials('api')
@@ -262,10 +260,10 @@ def background(lon, lat, chipsize=512, extend=512, tms='Google',
     except AttributeError:
         if not quiet:
             print("Image not found...")
-        bkgdimg = '' # image not found in html response
+        bkgdimg = ''  # image not found in html response
 
     workdir = config.get_value(['paths', 'temp'])
-    path = f'{workdir}{aoi}{year}/pid{pid}/backgrounds/'
+    path = f'{workdir}{aoi}{year}/{pid}/backgrounds/'
     if not os.path.exists(path):
         os.makedirs(path)
 
