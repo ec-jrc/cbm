@@ -1,4 +1,4 @@
-# FOI Assessment
+# FOI examples
 
 **FOI Assessment: Heterogeneity and Cardinality**
 
