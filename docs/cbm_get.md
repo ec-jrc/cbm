@@ -1,5 +1,7 @@
 # Get modules
 
+To check individual parcel, the parcel information, time series, background high resolution images can be downloaded to the local storage.
+
 
 ## Time series
 

@@ -4,10 +4,18 @@
 
 .. toctree::
    :maxdepth: 3
-   :caption: Concepts:
+   :caption: Introduction:
 
-   concept_dias4cbm
-   concept_foi
+   intro_dias4cbm
+   
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Use cases:
+
+   uc_calendar
+   uc_foi
+   uc_ml
 
 
 .. toctree::
@@ -18,8 +26,6 @@
    setup_prepare
    setup_extract
    setup_db_backup
-   setup_ml
-   setup_calendar
 
 
 .. toctree::
@@ -27,7 +33,7 @@
    :caption: cbm library:
 
    cbm_install
-   cbm-overview
+   cbm_overview
    cbm_config
    cbm_card
    cbm_ext
