@@ -6,10 +6,10 @@ In order to facilitate the access to parcel time series, also for users who do n
 
 ## Prerequisites
 
-- Installed Docker (see [1.2](https://jrc-cbm.readthedocs.io/en/latest/prerequisites.html)).
-- Database with extractions (see [3.1](https://jrc-cbm.readthedocs.io/en/latest/parcel_extraction.html)).
+- Installed Docker (see: [Software requirements](https://jrc-cbm.readthedocs.io/en/latest/setup_prerequisites.html#required-software)).
+- Database with extractions (see: [Parcel extraction](https://jrc-cbm.readthedocs.io/en/latest/setup_extract.html)).
 
-To build a RESTful API with flask, first [enter the virtual machine](https://jrc-cbm.readthedocs.io/en/latest/prerequisites.html#connecting-to-the-tenant-host-vm-via-ssh) and download the CbM repository:
+To build a RESTful API with flask, first [access the virtual machine](https://jrc-cbm.readthedocs.io/en/latest/setup_prerequisites.html#connecting-to-the-tenant-host-vm-via-ssh) and download the CbM repository:
 ```bash
     git clone https://github.com/ec-jrc/cbm.git
 ```
@@ -34,10 +34,10 @@ Or import the module in a python script or notebook cell:
 ```python
 import users # Import the users module
 # Create a new user with:
-users.create('admin','admin')
+users.create('username', 'password')
 
 # To delete a user.
-users.delete('admin')
+users.delete('username')
 
 # Print a list of the users.
 print(users.get_list())
@@ -52,14 +52,12 @@ and set the database connection information. e.g.:
     "db": {
         "main": {
             "desc": "Main database connection information.",
-            "conn": {
-                "host": "0.0.0.0",
-                "port": "5432",
-                "name": "postgres",
-                "sche": "public",
-                "user": "postgres",
-                "pass": "MyPassword"
-            }
+            "host": "0.0.0.0",
+            "port": "5432",
+            "name": "postgres",
+            "sche": "public",
+            "user": "postgres",
+            "pass": "MyPassword"
         }
     }
 }
@@ -120,6 +118,6 @@ This can be retrieved from the users with the request:
 
 **Important notes**
 
-* In case the tables names are different and not as proposed in the [Chapter 1.2.](https://jrc-cbm.readthedocs.io/en/latest/setup_prerequisites.html#essential-cbm-tables) the table names of the Postges queries in the file [query_handler.py](https://github.com/ec-jrc/cbm/blob/main/api/query_handler.py) will need to be changed accordingly with the database tables names.
+* In case the tables names are different and not as proposed in the ['essential-cbm-tables' chapter](https://jrc-cbm.readthedocs.io/en/latest/setup_prerequisites.html#essential-cbm-tables) the table names of the Postges queries in the file [query_handler.py](https://github.com/ec-jrc/cbm/blob/main/api/query_handler.py) will need to be changed accordingly with the database tables names.
 
 * This is for testing and development purposes, for production use a more secure method to store the password should be considered.

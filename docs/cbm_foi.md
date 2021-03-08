@@ -1,4 +1,4 @@
-# FOI
+# FOI Assessment
 
 **FOI Assessment: Heterogeneity and Cardinality**
 
