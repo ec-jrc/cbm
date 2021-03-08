@@ -12,12 +12,12 @@ import os.path
 from cbm.utils import data_handler, config
 
 
-def by_pid(aoi, year, pid, start_date, end_date, sat, band, chipsize):
+def by_pid(aoi, year, pid, start_date, end_date, band, chipsize):
     """Download the chip image by selected parcel id.
 
     Examples:
         import cbm
-        cbm.get.chip_images.by_pid(aoi, year, pid, start_date, end_date, sat,
+        cbm.get.chip_images.by_pid(aoi, year, pid, start_date, end_date,
                                     band, chipsize)
 
     Arguments:
