@@ -27,3 +27,12 @@ git clone https://github.com/ec-jrc/cbm.git
 cd cbm
 pip install -e .
 ```
+
+## Uninstallation
+
+```bash
+pip uninstall cbm
+```
+
+## Troubleshooting
+
