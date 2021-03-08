@@ -44,6 +44,6 @@ def check():
         cbm_version = compare(cbm.__version__)
         if cbm_version:
             print("There is a new version of 'cbm' library:", cbm_version,
-                  "you can upgrade it with 'pip install cbm -- upgrade'")
+                  "you can upgrade it with 'pip install cbm --upgrade'")
     except Exception:
         pass

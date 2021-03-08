@@ -24,7 +24,7 @@
 
 .. toctree::
    :maxdepth: 3
-   :caption: The cbm library:
+   :caption: cbm library:
 
    cbm_install
    cbm-overview
