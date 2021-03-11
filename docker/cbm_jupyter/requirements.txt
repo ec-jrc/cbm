@@ -8,3 +8,4 @@ geopandas
 matplotlib
 ipywidgets
 ipyleaflet
+cbm
