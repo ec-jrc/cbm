@@ -12,13 +12,13 @@ import os
 import time
 import json
 import uuid
-from os.path import dirname, abspath, join
+from os.path import dirname, abspath, join, normpath, exists, isfile
 
 path_work = abspath(os.curdir)
 path_repo = dirname(dirname(abspath(__file__)))
-path_conf = f"config/"
-conf_main = "main.json"
-path_default = join(dirname(abspath(__file__)), 'default/')
+path_conf = 'config'
+conf_main = 'main.json'
+path_default = normpath(join(dirname(abspath(__file__)), 'default'))
 
 
 def get_value(dict_keys={}, file=conf_main, var_name=None, help_text=True):
@@ -94,12 +94,16 @@ def set_value(dict_keys={}, val=None, file=conf_main):
         _x[dict_keys[-1]] = val
         # create randomly named temporary file to avoid
         # interference with other thread/asynchronous request
-        tempfile = join(path_conf, str(uuid.uuid4()))
+        tempfile = normpath(join(path_conf, str(uuid.uuid4())))
         with open(tempfile, 'w') as f:
             json.dump(config_dict, f, indent=4)
 
         # rename temporary file replacing old file
-        os.rename(tempfile, join(path_conf, file))
+        try:
+            os.rename(tempfile, normpath(join(path_conf, file)))
+        except WindowsError:
+            os.remove(normpath(join(path_conf, file)))
+            os.rename(tempfile, normpath(join(path_conf, file)))
     except Exception as err:
         print(f"Could not update key in the file '{file}': {err}")
 
@@ -129,12 +133,16 @@ def delete(dict_keys={}, file=conf_main):
                 _x = _x.get(key)
         del _x[dict_keys[-1]]
 
-        tempfile = join(path_conf, str(uuid.uuid4()))
+        tempfile = normpath(join(path_conf, str(uuid.uuid4())))
         with open(tempfile, 'w') as f:
             json.dump(config_dict, f, indent=4)
 
         # rename temporary file replacing old file
-        os.rename(tempfile, join(path_conf, file))
+        try:
+            os.rename(tempfile, normpath(join(path_conf, file)))
+        except WindowsError:
+            os.remove(normpath(join(path_conf, file)))
+            os.rename(tempfile, normpath(join(path_conf, file)))
     except Exception as err:
         print(f"Could not delete key in the file '{file}': {err}")
 
@@ -152,12 +160,12 @@ def read(file=conf_main):
 
     """
     try:
-        with open(f"{path_conf}{file}", 'r') as f:
+        with open(normpath(join(path_conf, file)), 'r') as f:
             data = json.load(f)
             return data
     except Exception:
         create(file)
-        with open(join(path_conf, file), 'r') as f:
+        with open(normpath(join(path_conf, file)), 'r') as f:
             data = json.load(f)
         return data
 
@@ -165,16 +173,16 @@ def read(file=conf_main):
 def create(to_file=conf_main, from_=path_default):
     """Automatically create a config file if it does not exist.
     """
-    if not os.path.exists(join(join(path_work, path_conf))):
-        os.makedirs(join(path_work, path_conf))
+    if not exists(normpath(join(path_work, path_conf))):
+        os.makedirs(normpath(join(path_work, path_conf)))
     # if file does not exist, create it
-    if os.path.isfile(join(path_conf, to_file)) is False:
+    if isfile(normpath(join(path_conf, to_file))) is False:
         # Read from default configuration file
-        from_file = join(from_, to_file)
+        from_file = normpath(join(from_, to_file))
         with open(from_file, 'r') as f:
             dict_default = json.load(f)
         # Create a new config file
-        with open(join(path_work, path_conf, to_file), 'w') as f:
+        with open(normpath(join(path_work, path_conf, to_file)), 'w') as f:
             json.dump(dict_default, f, indent=4)
         time.sleep(0.5)  # Sleep for half second to run the function.
         print(f"The file 'config/{to_file}' did not exist, a new default ",
@@ -183,13 +191,13 @@ def create(to_file=conf_main, from_=path_default):
 
 def update_keys(from_=path_default, to_file=conf_main):
     """Update missing keys of old configuration files."""
-    if os.path.isfile(join(path_conf, to_file)) is False:
+    if isfile(normpath(join(path_conf, to_file))) is False:
         create(to_file, from_)
 
-    with open(f'{from_}{to_file}', 'r') as f:
+    with open(normpath(join(from_, to_file)), 'r') as f:
         dict_new = json.load(f)
 
-    with open(join(path_conf, to_file), 'r') as f:
+    with open(normpath(join(path_conf, to_file)), 'r') as f:
         dict_old = json.load(f)
 
     updated_keys = 0
@@ -204,12 +212,16 @@ def update_keys(from_=path_default, to_file=conf_main):
 
     # create randomly named temporary file to avoid
     # interference with other thread/asynchronous request
-    tempfile = join(path_conf, str(uuid.uuid4()))
+    tempfile = normpath(join(path_conf, str(uuid.uuid4())))
     with open(tempfile, 'w') as f:
         json.dump(dict_old, f, indent=4)
 
     # rename temporary file replacing old file
-    os.rename(tempfile, join(path_conf, to_file))
+    try:
+        os.rename(tempfile, normpath(join(path_conf, to_file)))
+    except WindowsError:
+        os.remove(normpath(join(path_conf, to_file)))
+        os.rename(tempfile, normpath(join(path_conf, to_file)))
 
     if updated_keys > 0:
         print(f"{updated_keys+1} new json configuration",
