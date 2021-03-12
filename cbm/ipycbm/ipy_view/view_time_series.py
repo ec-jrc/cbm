@@ -9,6 +9,7 @@
 
 
 from ipywidgets import (HBox, VBox, Dropdown, Button, Output, Checkbox)
+from os.path import join, normpath
 
 from cbm.utils import config, data_options
 
@@ -23,7 +24,7 @@ def time_series(path):
 
     confvalues = config.read()
     inst = confvalues['set']['institution']
-    file_info = f"{path}info.json"
+    file_info = normpath(join(path, 'info.json'))
 
     with open(file_info, 'r') as f:
         info_data = json.loads(f.read())
@@ -32,7 +33,7 @@ def time_series(path):
     area = info_data['area'][0]
 
     def plot_ts_s2(cloud):
-        file_ts = f"{path}time_series_s2.csv"
+        file_ts = normpath(join(path, 'time_series_s2.csv'))
         df = pd.read_csv(file_ts, index_col=0)
 
         df['date'] = pd.to_datetime(df['date_part'], unit='s')
@@ -115,7 +116,7 @@ def time_series(path):
 
     def plot_ts_bs():
         import numpy as np
-        file_ts = f"{path}time_series_bs.csv"
+        file_ts = normpath(join(path, 'time_series_bs.csv'))
         df = pd.read_csv(file_ts, index_col=0)
 
         df['date'] = pd.to_datetime(df['date_part'], unit='s')
@@ -167,7 +168,7 @@ def time_series(path):
         return plt.show()
 
     def plot_ts_c6():
-        file_ts = f"{path}time_series_c6.csv"
+        file_ts = normpath(join(path, 'time_series_c6.csv'))
         df = pd.read_csv(file_ts, index_col=0)
 
         df['date'] = pd.to_datetime(df['date_part'], unit='s')
@@ -220,7 +221,7 @@ def time_series(path):
         indent=False
     )
 
-    ts_files = glob.glob(f"{path}*time_series*.csv")
+    ts_files = glob.glob(normpath(join(path, '*time_series*.csv')))
     ts_file_types = [b.split('_')[-1].split('.')[0] for b in ts_files]
     ts_types = [t for t in data_options.pts_tstype() if t[1] in ts_file_types]
 

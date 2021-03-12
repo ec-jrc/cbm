@@ -11,6 +11,7 @@
 # Get parcels data
 import json
 import datetime
+from os.path import join, normpath
 from IPython.display import display
 from ipywidgets import (Text, Textarea, Label, HBox, VBox, Dropdown,
                         ToggleButtons, ToggleButton, Layout, Output,
@@ -104,8 +105,9 @@ def get():
         if values['set']['data_source'] == 'api':
             get_requests = data_source()
             available_options = json.loads(get_requests.get_options())
-            outlog(data_handler.export(available_options,
-                                       10, f"{config.path_conf}api_options"))
+            outlog(data_handler.export(available_options, 10,
+                                       normpath(join(config.path_conf,
+                                                     'api_options'))))
             outlog(f"The API options are updated.")
         aois.options = tuple(aois_options())
         year.options = aois_years()[aois.value]
@@ -192,7 +194,8 @@ def get():
                 outlog_poly(
                     f"'{len(polyids['ogc_fid'])}' parcels where found:")
                 outlog_poly(polyids['ogc_fid'])
-                file = config.get_value(['files', 'pids_poly'])
+                file = normpath(join(config.get_value(['paths', 'temp']),
+                                     'pids_from_polygon.txt'))
                 with open(file, "w") as text_file:
                     text_file.write('\n'.join(map(str, polyids['ogc_fid'])))
             except Exception as err:
@@ -406,11 +409,12 @@ def get():
         pid = parcel['ogc_fid'][0]
         source = config.get_value(['set', 'data_source'])
         if source == 'api':
-            datapath = f'{paths.value}{aois.value}{year.value}/{pid}/'
+            datapath = normpath(
+                join(paths.value, f'{aois.value}{year.value}', str(pid)))
         elif source == 'direct':
             dataset = config.get_value(['set', 'dataset'])
-            datapath = f'{paths.value}{dataset}/{pid}/'
-        file_pinf = f"{datapath}info"
+            datapath = normpath(join(paths.value, dataset, str(pid)))
+        file_pinf = normpath(join(datapath, 'info'))
 
         outlog(data_handler.export(parcel, 10, file_pinf))
 
@@ -424,16 +428,17 @@ def get():
                 band = ''
                 if pts_band.value != '':
                     band = f"_{pts_band.value}"
-                file_ts = f"{datapath}time_series_{pts}{band}"
+                file_ts = normpath(join(datapath, f'time_series_{pts}{band}'))
                 outlog(data_handler.export(ts, 11, file_ts))
         if pci_bt.value is True:
-            files_pci = f"{datapath}chip_images/"
+            files_pci = normpath(join(datapath, 'chip_images'))
             outlog(f"Getting '{pci_band.value}' chip images for parcel: {pid}")
             with progress:
                 get_requests.rcbl(parcel, pci_start_date.value,
                                   pci_end_date.value, pci_band.value,
                                   pci_chipsize.value, files_pci)
-            filet = f'{datapath}/chip_images/images_list.{pci_band.value[0]}.csv'
+            filet = normpath(join(datapath, 'chip_images',
+                                  f'images_list.{pci_band.value[0]}.csv'))
             if file_len(filet) > 1:
                 outlog(f"Completed, all GeoTIFFs for bands '{pci_band.value}' are ",
                        f"downloaded in the folder: '{datapath}/chip_images'")
@@ -457,8 +462,7 @@ def get():
         outlog(f"Getting parcels information for: '{pids}'")
         for pid in pids:
             try:
-                parcel = json.loads(get_requests.pid(aois.value,
-                                                     year.value,
+                parcel = json.loads(get_requests.pid(aois.value, year.value,
                                                      pid, True))
                 get_data(parcel)
             except Exception as err:
@@ -473,8 +477,8 @@ def get():
                     lon, lat = plon.value, plat.value
                     get_from_location(lon, lat)
             except Exception as err:
-                outlog(
-                    f"Could not get parcel information for location '{lon}', '{lat}': {err}")
+                outlog("Could not get parcel information for location",
+                       f"'{lon}', '{lat}': {err}")
 
         elif method.value == 2:
             try:
@@ -495,7 +499,8 @@ def get():
         elif method.value == 4:
             try:
                 plimit = int(values['set']['plimit'])
-                file = config.get_value(['files', 'pids_poly'])
+                file = normpath(join(config.get_value(['paths', 'temp']),
+                                     'pids_from_polygon.txt'))
                 with open(file, "r") as text_file:
                     pids = text_file.read().split('\n')
                 outlog("Geting data form the parcels:")

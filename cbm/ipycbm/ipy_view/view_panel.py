@@ -11,6 +11,7 @@
 import os
 import shutil
 from IPython.display import display
+from os.path import join, normpath, isdir
 from ipywidgets import (Label, VBox, HBox, Layout, Dropdown,
                         ToggleButtons, Output, Box, RadioButtons, Button)
 
@@ -36,7 +37,7 @@ def view():
     paths_box = Box([Label(value="Select folder:"), paths])
 
     tables_first = [f for f in os.listdir(
-        paths.value) if os.path.isdir(os.path.join(paths.value, f))]
+        paths.value) if isdir(normpath(join(paths.value, f)))]
 
     select_table = Dropdown(
         options=[f for f in tables_first if not f.startswith('.')],
@@ -109,11 +110,11 @@ def view():
     def button_refresh_on_click(b):
         view_box.clear_output()
         tables_first = [f for f in os.listdir(
-            paths.value) if os.path.isdir(os.path.join(paths.value, f))]
+            paths.value) if isdir(normpath(join(paths.value, f)))]
         select_table.options = [
             f for f in tables_first if not f.startswith('.')]
         if select_table.value is not None:
-            parcels = f"{paths.value}{select_table.value}"
+            parcels = normpath(join(paths.value, select_table.value))
             parcels_list = [f for f in os.listdir(
                 parcels) if not f.startswith('.')]
             selection_single.options = parcels_list
@@ -124,7 +125,8 @@ def view():
     @rm_parcel.on_click
     def rm_parcel_on_click(b):
         try:
-            parcel_to_rm = f"{paths.value}{select_table.value}/{selection_single.value}"
+            parcel_to_rm = normpath(join(paths.value, select_table.value,
+                                         selection_single.value))
             try:
                 shutil.rmtree(f'{parcel_to_rm}')
             except Exception:
@@ -134,7 +136,7 @@ def view():
             except Exception:
                 pass
 #             print(f"The parce: '{selection_single.value}' is deleted.")
-            parcels = f"{paths.value}{select_table.value}"
+            parcels = normpath(join(paths.value, select_table.value))
             parcels_list = [f for f in os.listdir(
                 parcels) if not f.startswith('.')]
             selection_single.options = parcels_list
@@ -144,7 +146,7 @@ def view():
 
     def on_datapath_change(change):
         tables = [f for f in os.listdir(
-            paths.value) if os.path.isdir(os.path.join(paths.value, f))]
+            paths.value) if isdir(normpath(join(paths.value, f)))]
         tables = [f for f in tables if not f.startswith('.')]
         select_table.options = tables
 
@@ -152,7 +154,7 @@ def view():
 
     def on_table_change(change):
         if select_table.value is not None:
-            parcels = f"{paths.value}{select_table.value}"
+            parcels = normpath(join(paths.value, select_table.value))
             parcels_list = [f for f in os.listdir(
                 parcels) if not f.startswith('.')]
             selection_single.options = parcels_list
@@ -167,7 +169,8 @@ def view():
         code_info.value = "Select how to view the dataset."
         options_list = [('Get example code', 1)]
         if obj['new'] is not None:
-            parceldata = f"{paths.value}{select_table.value}/{selection_single.value}"
+            parceldata = normpath(join(paths.value, select_table.value,
+                                       selection_single.value))
             data_list = [f for f in os.listdir(
                 parceldata) if not f.startswith('.')]
             if any("time_series" in s for s in data_list):
@@ -182,7 +185,8 @@ def view():
 
     def method_options(obj):
         view_box.clear_output()
-        data_path = f'{paths.value}{select_table.value}/{selection_single.value}/'
+        data_path = normpath(join(paths.value, select_table.value,
+                                  selection_single.value))
         with view_box:
             if obj['new'] == 1:
                 display(view_code.code(data_path))
@@ -211,7 +215,7 @@ def view():
     def notes_bt_on_click(b):
         if notes_box.children == ():
             notes_box.children = [view_notes.notes(
-                f"{paths.value}{select_table.value}/",
+                normpath(join(paths.value, select_table.value)),
                 select_table.value,
                 selection_single.value)]
         else:

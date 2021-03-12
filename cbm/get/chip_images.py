@@ -8,7 +8,7 @@
 # License   : 3-Clause BSD
 
 import json
-import os.path
+from os.path import join, normpath, isfile
 from cbm.utils import data_handler, config
 
 
@@ -35,21 +35,22 @@ def by_pid(aoi, year, pid, start_date, end_date, band, chipsize):
     """
     datapath = config.get_value(['paths', 'temp'])
     get_requests = data_source()
-    pfile = f"{datapath}{aoi}{year}/{pid}/info.json"
-    if not os.path.isfile(pfile):
+    pfile = normpath(join(datapath, f'{aoi}{year}', pid, 'info.json'))
+    if not isfile(pfile):
         parcel = json.loads(get_requests.pid(aoi, year, pid, True))
         print(data_handler.export(parcel, 10, pfile.replace('.json', '')))
     else:
         with open(pfile, "r") as f:
             parcel = json.load(f)
-    files_chips = f"{datapath}{aoi}{year}/{pid}/chip_images/"
+    files_chips = normpath(join(datapath, f'{aoi}{year}', pid, 'chip_images'))
     print(f"Getting '{band}' chip images for parcel: {pid}")
 
     # parcel = json.loads(get_requests.pid(aois, year, pid, True))
     get_requests.rcbl(parcel, start_date, end_date, [band],
                       chipsize, files_chips)
 
-    filet = f'{datapath}{aoi}{year}/{pid}/chip_images/images_list.{band}.csv'
+    filet = normpath(join(datapath, f'{aoi}{year}', pid, 'chip_images',
+                          f'images_list.{band}.csv'))
     if file_len(filet) > 1:
         print(f"Completed, all GeoTIFFs for band '{band}' are downloaded",
               f" in the folder: '{datapath}{aoi}{year}/{pid}/chip_images'")

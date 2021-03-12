@@ -10,6 +10,7 @@
 import os
 import json
 import os.path
+from os.path import join, normpath, isfile
 from IPython.display import display
 from ipywidgets import (HBox, VBox, Dropdown, Play, Layout, Label,
                         Checkbox, IntSlider, jslink, HTML, Output)
@@ -22,7 +23,7 @@ from cbm.ipycbm.ipy_view import view_images
 
 def widget_box(path):
     map_view_box = Output()
-    file_info = f"{path}info.json"
+    file_info = normpath(join(path, 'info.json'))
 
     with open(file_info, 'r') as f:
         info_data = json.loads(f.read())
@@ -31,7 +32,7 @@ def widget_box(path):
     crop_name = info_data['cropname'][0]
     area = info_data['area'][0]
 
-    ci_path = f"{path}chip_images/"
+    ci_path = normpath(join(path, 'chip_images'))
 
     ci_band = Dropdown(
         options=view_images.available_options(path, pid, False, False),
@@ -137,24 +138,26 @@ def widget_box(path):
         try:
             df = view_images.create_df(ci_path, pid, ci_band.value)
 
-            geotiff = f"{ci_path}{df['imgs'][0]}.{ci_band.value[0]}.tif"
+            geotiff = normpath(join(ci_path,
+                                    f"{df['imgs'][0]}.{ci_band.value[0]}.tif"))
             bounds = spatial.bounds(geotiff)
 
             images = {}
             for i, row in df.iterrows():
                 str_date = str(row['date'].date()).replace('-', '')
-                img_tc = f"{ci_path}{('').join(ci_band.value)}_{str_date}.png"
+                img_tc = normpath(join(ci_path,
+                                       f"{('').join(ci_band.value)}_{str_date}.png"))
 
                 # Create false color image if it does not exist
                 # Merge bands (images path, export image path, bands list)
-                if not os.path.isfile(img_tc):
-                    imgs_path = f"{ci_path}{row['imgs']}"
+                if not isfile(img_tc):
+                    imgs_path = normpath(join(ci_path, row['imgs']))
                     view_images.merge_bands(imgs_path, img_tc,
                                             ci_band.value)
 
                 if bool(config.get_value(['set', 'jupyterlab'])) is True:
                     jlab_path = os.getcwd().replace(os.path.expanduser("~"), '')
-                    image_path = f'files{jlab_path}/{img_tc}'
+                    image_path = normpath(join(f'files{jlab_path}', img_tc))
                 else:
                     image_path = img_tc
 

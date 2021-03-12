@@ -8,6 +8,7 @@
 # License   : 3-Clause BSD
 
 
+from os.path import normpath, join
 from ipywidgets import (HBox, VBox, Layout, Dropdown,
                         Output, HTML, Button, Accordion)
 
@@ -21,7 +22,7 @@ from cbm.ipycbm.ipy_get import get_panel
 
 def qa():
     # path_plug = "cbm/foi/foi_db_func/"
-    path_data = f"{config.get_value(['paths', 'temp'])}qa/"
+    path_data = normpath(join(config.get_value(['paths', 'temp']), 'qa'))
 
     progress = Output()
 

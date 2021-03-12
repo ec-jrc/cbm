@@ -8,6 +8,7 @@
 # License   : 3-Clause BSD
 
 import os
+from os.path import join, normpath
 from ipywidgets import (Text, VBox, HBox, Label, Dropdown,
                         Button, Checkbox, Layout, Output, BoundedIntText,
                         RadioButtons, Box, Tab)
@@ -148,15 +149,6 @@ def general():
     files_info = Label(
         "Select where to store the parcel IDs list file from:")
 
-    file_pids_poly = Text(
-        value=values['files']['pids_poly'],
-        description='Polygon:'
-    )
-    file_pids_dist = Text(
-        value=values['files']['pids_dist'],
-        description='Distance:'
-    )
-
     plimit_info = Label(
         "Warning: No more than 25 parcels are tested, unexpected results may occur.")
     plimit = BoundedIntText(
@@ -170,7 +162,7 @@ def general():
 
     wbox_sys = VBox([sys_info, jupyterlab, plimit_info, plimit,
                      paths_info, path_data, path_temp,
-                     files_info, file_pids_poly, file_pids_dist],
+                     files_info],
                     layout=Layout(border='1px solid black'))
 
     btn_save = Button(
@@ -195,8 +187,6 @@ def general():
         config.set_value(['set', 'plimit'], str(plimit.value))
         config.set_value(['paths', 'data'], str(path_data.value))
         config.set_value(['paths', 'temp'], str(path_temp.value))
-        config.set_value(['files', 'pids_poly'], str(file_pids_poly.value))
-        config.set_value(['files', 'pids_dist'], str(file_pids_dist.value))
         outlog("The new settings are saved.")
 
     wbox = VBox([wbox_user, wbox_sys,
@@ -216,7 +206,7 @@ def clean_temp(hide=False):
             print(*text)
 
     temppath = config.get_value(['paths', 'temp'])
-    directory = os.listdir(os.path.join(config.path_work, temppath))
+    directory = os.listdir(normpath(join(config.path_work, temppath)))
 
     if len(directory) > 0:
         outlog(f"Your temp folder '{temppath}' has old files:",

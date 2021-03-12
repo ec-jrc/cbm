@@ -9,6 +9,8 @@
 
 
 import requests
+from os.path import join, normpath, isfile
+
 from cbm.utils import config
 
 
@@ -138,16 +140,16 @@ def rcbl(parcel, start_date, end_date, bands, chipsize, filespath):
 
         # Directly create a pandas DataFrame from the json response
         df = pd.read_json(response.content)
-        os.makedirs(os.path.dirname(filespath), exist_ok=True)
-        df_file = f'{filespath}images_list.{band}.csv'
+        os.makedirs(filespath, exist_ok=True)
+        df_file = normpath(join(filespath, f'images_list.{band}.csv'))
         df.to_csv(df_file, index=True, header=True)
         # print(f"The response table is saved to: {df_file}")
 
         # Download the GeoTIFFs that were just created in the user cache
         for c in df.chips:
             url = f"{api_url}{c}"
-            outf = f"{filespath}{c.split('/')[-1]}"
-            if not os.path.isfile(outf):
+            outf = normpath(join(filespath, c.split('/')[-1]))
+            if not isfile(outf):
                 res = requests.get(url, stream=True)
                 # print(f"Downloading {c.split('/')[-1]}")
                 with open(outf, "wb") as handle:

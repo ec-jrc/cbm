@@ -9,17 +9,8 @@
 
 
 import glob
-import json
-import os.path
-import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import rasterio
-from rasterio.plot import show
-from descartes import PolygonPatch
-from ipywidgets import (HBox, VBox, Dropdown, Button, Output, Checkbox, Layout)
-
-from cbm.utils import data_options
+from os.path import join, normpath
 
 
 def available_options(ci_path, pid, ndvi=True, individual=True):
@@ -30,8 +21,8 @@ def available_options(ci_path, pid, ndvi=True, individual=True):
     pid: Parcel id
     """
 
-    ci_path = f"{ci_path}chip_images/"
-    csv_lists = glob.glob(f"{ci_path}images_list.*.csv")
+    ci_path = normpath(join(ci_path, 'chip_images'))
+    csv_lists = glob.glob(normpath(join(ci_path, 'images_list.*.csv')))
     bands_list = [i.split('.')[-2] for i in csv_lists]
 
     available = []
@@ -57,7 +48,7 @@ def create_df(ci_path, pid, bands):
     """
     Create dataframe with the available downloaded images.
     """
-    csv_list = f"{ci_path}images_list.{bands[0]}.csv"
+    csv_list = normpath(join(ci_path, f'images_list.{bands[0]}.csv'))
     df = pd.read_csv(csv_list, index_col=0)
     df['date'] = df['dates'].str[0:8]
     df['date'] = pd.to_datetime(df['date'], format='%Y%m%d')
@@ -65,7 +56,7 @@ def create_df(ci_path, pid, bands):
     # Filter df to remove dates with missing bands.
     if len(bands) > 1:
         for b in bands:
-            csv_list_b = f"{ci_path}images_list.{b}.csv"
+            csv_list_b = normpath(join(ci_path, f'images_list.{b}.csv'))
             df_b = pd.read_csv(csv_list_b, index_col=0)
             df_b['date'] = df_b['dates'].str[0:8]
             df_b['date'] = pd.to_datetime(df_b['date'], format='%Y%m%d')
@@ -73,7 +64,7 @@ def create_df(ci_path, pid, bands):
 
     df['imgs'] = df['chips'].str.split('/').str[-1]
     df['imgs'] = df['imgs'].str.split('.').str[0]
-    source = df['chips'][0].split('/')[1]
+    # source = df['chips'][0].split('/')[1]
     df = df.drop(['dates', 'chips'], axis=1)
     df = df.sort_values(by='date')
 

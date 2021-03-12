@@ -9,11 +9,11 @@
 
 
 import json
-import os.path
 import numpy as np
 import matplotlib.pyplot as plt
 import rasterio
 from rasterio.plot import show
+from os.path import join, normpath, isfile
 from descartes import PolygonPatch
 from ipywidgets import (HBox, VBox, Dropdown, Button, Output,
                         Checkbox, Layout, IntRangeSlider)
@@ -37,12 +37,12 @@ def imgs_grid(path):
                 fig.add_subplot(rows, columns, i + 1)
 
                 str_date = str(row['date'].date()).replace('-', '')
-                img_png = f"{ci_path}{fname}_{str_date}.png"
+                img_png = normpath(join(ci_path, f'{fname}_{str_date}.png'))
 
                 # Create color image if it does not exist
                 # Merge bands (images path, export image path, bands list)
-                if not os.path.isfile(img_png):
-                    imgs_path = f"{ci_path}{row['imgs']}"
+                if not isfile(img_png):
+                    imgs_path = normpath(join(ci_path, row['imgs']))
                     view_images.merge_bands(imgs_path, img_png,
                                             bands)
 
@@ -74,9 +74,9 @@ def imgs_grid(path):
                 fig.add_subplot(rows, columns, i + 1)
 
                 str_date = str(row['date'].date()).replace('-', '')
-                img_png = f"{ci_path}{fname}_{str_date}.png"
+                img_png = normpath(join(ci_path, f'{fname}_{str_date}.png'))
 
-                imgs_path = f"{ci_path}{row['imgs']}"
+                imgs_path = normpath(join(ci_path, row['imgs']))
                 b4f = f"{imgs_path}.B04.tif"
                 b4 = rasterio.open(b4f, format='GTiff')
 
@@ -101,7 +101,8 @@ def imgs_grid(path):
             rows = round((df.shape[0] / columns) + 0.5)
             fig = plt.figure(figsize=(16, 4 * rows))
             for i, row in df.iterrows():
-                img_gtif = f"{ci_path}{row['imgs']}.{ci_band.value[0]}.tif"
+                img_gtif = normpath(
+                    join(ci_path, f"{row['imgs']}.{ci_band.value[0]}.tif"))
                 with rasterio.open(img_gtif, format='GTiff') as img:
                     fig.add_subplot(rows, columns, i + 1)
                     overlay_date(img, row['date'].date())
@@ -147,14 +148,14 @@ def imgs_grid(path):
         return patche[0]
 
     # Images options.
-    file_info = f"{path}info.json"
+    file_info = normpath(join(path, 'info.json'))
     with open(file_info, 'r') as f:
         info_data = json.loads(f.read())
     # print(info_data)
     pid = info_data['ogc_fid'][0]
     crop_name = info_data['cropname'][0]
     area = info_data['area'][0]
-    ci_path = f"{path}chip_images/"
+    ci_path = normpath(join(path, 'chip_images'))
     columns = 4
 
     available_options = view_images.available_options(path, pid)
