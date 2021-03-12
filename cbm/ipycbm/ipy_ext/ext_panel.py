@@ -8,6 +8,7 @@
 # License   : 3-Clause BSD
 
 
+from os.path import normpath, join
 from ipywidgets import (Label, VBox, HBox, Dropdown, Button, Layout)
 
 from cbm.utils import config
@@ -22,7 +23,7 @@ def extract():
     l_carddb = Label("4. Add CARD metadata to databse tabel 'xx_dias_catalogue'.")
     l_extrac = Label("5. Run parcel extraction routines.")
 
-    path_data = f"{config.get_value(['paths', 'temp'])}extract/"
+    path_data = normpath(join(config.get_value(['paths', 'temp']), 'extract'))
     # Connect
     db_select = Dropdown(
         options=[db for db in config.get_value(['db'])],

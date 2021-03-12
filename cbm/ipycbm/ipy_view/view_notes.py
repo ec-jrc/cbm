@@ -8,13 +8,11 @@
 # License   : 3-Clause BSD
 
 
-import glob
-import json
-import os.path
+from os.path import join, normpath
 import pandas as pd
-from ipywidgets import (Text, Textarea, HTML, BoundedIntText, HBox, VBox, Dropdown, Button, Output, Checkbox, Layout)
+from ipywidgets import (Text, Textarea, HTML, BoundedIntText,
+                        HBox, VBox, Dropdown, Button, Output, Checkbox, Layout)
 
-from cbm.utils import config, data_options
 
 def notes(path, ds=None, parcel=None):
     info = HTML(
@@ -30,7 +28,7 @@ def notes(path, ds=None, parcel=None):
     )
     try:
         y_ = int(ds[-4:])
-    except:
+    except Exception:
         y_ = 2000
     year = BoundedIntText(
         value=y_,
@@ -66,6 +64,7 @@ def notes(path, ds=None, parcel=None):
     new = HBox([aoi, year, pid])
 
     progress = Output()
+
     def outlog(*text):
         with progress:
             print(*text)
@@ -74,9 +73,9 @@ def notes(path, ds=None, parcel=None):
     def save_on_click(b):
         progress.clear_output()
         df = pd.DataFrame([[aoi.value, year.value, pid.value, note.value]])
-        df.to_csv(f'{path}notes.csv', mode='a', header=False)
+        df.to_csv(normpath(join(path, 'notes.csv')), mode='a', header=False)
         outlog(f"The note is saved in {path}notes.csv")
 
     wbox = VBox([info, new, HBox([note, save]), progress])
-    
+
     return wbox

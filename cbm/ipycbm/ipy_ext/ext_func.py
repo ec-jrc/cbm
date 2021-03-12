@@ -10,6 +10,7 @@
 
 import os
 import glob
+from os.path import normpath, join
 from ipywidgets import (Text, Label, HBox, VBox, Layout, Tab, Dropdown,
                         Output, Button, FileUpload, Checkbox, DatePicker)
 
@@ -24,8 +25,9 @@ def upload_shp(path_data):
     # Upload
     l_up = Label("a. Upload .shp to the server.")
     accept_files = ".shp, .cpg, .dbf, .prj, .shx, .sbn, .sbx, .xml"
+    data_path = config.get_value(['paths', 'temp'])
     shp_dist_folder = Text(
-        value=f"{path_data}vector",
+        value=normpath(join(path_data, 'vector')),
         placeholder='tmp/',
         description='Folder:',
         disabled=False
@@ -70,7 +72,7 @@ def upload_shp(path_data):
         os.makedirs(shp_dist_folder.value, exist_ok=True)
         for key in shp_select.value:
             content = shp_select.value[key]['content']
-            with open(f'{shp_dist_folder.value}/{key}', 'wb') as f:
+            with open(normpath(join(shp_dist_folder.value, key)), 'wb') as f:
                 f.write(content)
         outlog("All files are uploaded.")
         shp_select.value.clear()
@@ -82,8 +84,8 @@ def upload_shp(path_data):
     l_imp = Label("""b. Import uploaded .shp to the database. Add a short name,
         max 15 characters for the parcels table e.g.:escat2020.""")
     imp_select = Dropdown(
-        options=[s for s in glob.glob(f'{shp_dist_folder.value}/*'
-                                      ) if '.shp' in s],
+        options=[s for s in glob.glob(normpath(join(shp_dist_folder.value,
+                                                    '*'))) if '.shp' in s],
         description='Select .shp:',
         disabled=False
     )
@@ -106,7 +108,7 @@ def upload_shp(path_data):
     )
 
     try:
-        with open(f"{config.get_value(['paths','temp'])}tb_prefix", 'r') as f:
+        with open(normpath(join(data_path, 'tb_prefix')), 'r') as f:
             name_from_prfix = f.read()
     except Exception:
         name_from_prfix = None
@@ -119,7 +121,7 @@ def upload_shp(path_data):
     )
 
     def on_imp_tb_name(change):
-        with open(f"{config.get_value(['paths','temp'])}tb_prefix", 'w+') as f:
+        with open(normpath(join(data_path, 'tb_prefix')), 'w+') as f:
             f.write(imp_tb_name.value)
     imp_tb_name.observe(on_imp_tb_name, 'value')
 
@@ -133,7 +135,7 @@ def upload_shp(path_data):
 
             outlog("Importing .shp to database...")
             command = ['ogr2ogr', '-f', 'PostgreSQL',
-                       'PG:' + database.conn_str(), '-nln',
+                       'PG:' + db.conn_str(), '-nln',
                        tb_name, '-nlt', 'PROMOTE_TO_MULTI', '-nlt', 'GEOMETRY',
                        imp_select.value]
             if imp_truncate.value is True:
@@ -145,7 +147,8 @@ def upload_shp(path_data):
             else:
                 outlog("Could not import shp file.")
         else:
-            outlog("Please add a name for the parcels table (MAX 15 char e.g.: escat2020).")
+            outlog(
+                "Please add a name for the parcels table (MAX 15 char e.g.: escat2020).")
 
     @imp_refresh.on_click
     def imp_refresh_on_click(b):
@@ -162,10 +165,11 @@ def upload_shp(path_data):
 def create_tables():
     """Create essential cbm tables
     """
+    data_path = config.get_value(['paths', 'temp'])
     l_tb = Label("""Add a short name as prefix for the tables,
         max 15 characters e.g.:escat2020.""")
     try:
-        with open(f"{config.get_value(['paths','temp'])}tb_prefix", 'r') as f:
+        with open(normpath(join(data_path, 'tb_prefix')), 'r') as f:
             prefix = f.read()
     except Exception:
         prefix = ''
@@ -206,7 +210,7 @@ def create_tables():
             print(*text)
 
     def on_tb_prefix(change):
-        with open(f"{config.get_value(['paths','temp'])}tb_prefix", 'w+') as f:
+        with open(normpath(join(data_path, 'tb_prefix')), 'w+') as f:
             f.write(tb_prefix.value.replace(' ', '').lower()[:15])
     tb_prefix.observe(on_tb_prefix, 'value')
 
@@ -309,6 +313,7 @@ def extraction():
     def bt_sig_c6_on_click(b):
         progress.clear_output()
         with progress:
-            outlog("6-day coherence extraction not yet available please check for updates.")
+            outlog(
+                "6-day coherence extraction not yet available please check for updates.")
 
     return VBox([dates, bt_sg_box, progress])

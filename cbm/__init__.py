@@ -14,7 +14,7 @@ __email__ = ""
 __status__ = "Development"
 
 import os
-import os.path
+from os.path import join, normcase, exists, normpath
 from cbm.utils import config, update
 from pkg_resources import get_distribution, DistributionNotFound
 
@@ -26,9 +26,9 @@ if sys.version_info < (3, 6):
 try:
     _dist = get_distribution('cbm')
     # Normalize case for Windows systems
-    dist_loc = os.path.normcase(_dist.location)
-    here = os.path.normcase(__file__)
-    if not here.startswith(os.path.join(dist_loc, 'cbm')):
+    dist_loc = normcase(_dist.location)
+    here = normcase(__file__)
+    if not here.startswith(normpath(join(dist_loc, 'cbm'))):
         # not installed, but there is another version that *is*
         raise DistributionNotFound
 except DistributionNotFound:
@@ -39,8 +39,8 @@ else:
 paths = config.get_value(['paths'])
 for p in paths:
     try:
-        if not os.path.exists(os.path.join(config.path_work, paths[p])):
-            os.makedirs(os.path.join(config.path_work, paths[p]))
+        if not exists(normpath(join(config.path_work, paths[p]))):
+            os.makedirs(normpath(join(config.path_work, paths[p])))
             print(f"Directory {p} created successfully")
     except OSError as err:
         print(f"Directory {p} can not be created: ", err)

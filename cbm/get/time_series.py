@@ -8,7 +8,7 @@
 # License   : 3-Clause BSD
 
 import json
-import os.path
+from os.path import join, normpath, isfile
 from cbm.utils import data_handler, config
 
 
@@ -27,8 +27,9 @@ def by_pid(aoi, year, pid, tstype, band, save=True):
     """
     datapath = config.get_value(['paths', 'temp'])
     get_requests = data_source()
-    file_ts = f"{datapath}/{aoi}{year}/{pid}/time_series_{tstype}{band}"
-    if not os.path.isfile(file_ts):
+    file_ts = normpath(join(datapath, f'{aoi}{year}', pid,
+                            f'time_series_{tstype}{band}'))
+    if not isfile(file_ts):
         ts = json.loads(get_requests.pts(aoi, year, pid, tstype, band))
         if save:
             print(data_handler.export(ts, 11, file_ts))

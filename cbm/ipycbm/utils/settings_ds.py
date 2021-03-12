@@ -8,6 +8,7 @@
 # License   : 3-Clause BSD
 
 
+from os.path import join, normpath
 from ipywidgets import (Text, VBox, HBox, Label, Password, Button, Layout, Tab,
                         Output, Dropdown, FloatText, BoundedIntText, Combobox)
 
@@ -239,7 +240,8 @@ def direct_settings():
         )
 
         try:
-            with open(f"{values['paths']['temp']}tb_prefix", 'r') as f:
+            with open(normpath(join(f"{values['paths']['temp']}", 'tb_prefix')),
+                      'r') as f:
                 code_value = f.read().split('_')[0]
         except Exception:
             code_value = dsc_value.split('_')[0]
