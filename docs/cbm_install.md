@@ -36,3 +36,9 @@ pip uninstall cbm
 
 ## Troubleshooting
 
+On Windowns GDAL may need to be installed with the [osgeo4w](https://trac.osgeo.org/osgeo4w/) installation package
+
+The rasterio package may also need to be installed with:
+```bash
+conda install -c conda-forge rasterio=1.1.5
+```

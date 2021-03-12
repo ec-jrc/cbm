@@ -24,6 +24,7 @@
 
    setup_prerequisites
    setup_prepare
+   setup_software
    setup_extract
    setup_db_backup
 
