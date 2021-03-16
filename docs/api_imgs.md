@@ -297,7 +297,7 @@ thus, only 3 out of the 11 image in June 2018 are cloud free. One has mixed valu
 
 You can now decide to go pick up the relevant bands for the 4 cloud free acquisitions. This can, in principle, be done with *rawChipByLocation* but that is not a very efficient procedure, because that query does not benefit well from parallel processing.
 
-Continue on the [next WIKI page](https://github.com/ec-jrc/cbm/wiki/7.-Taking-the-next-step-Using-POST-with-RESTful-services-to-get-tailor-made-selections) to find a more advanced solution.
+Continue on the [next WIKI page](https://jrc-cbm.readthedocs.io/en/latest/api_post.html) to find a more advanced solution.
 
 
 ## Quiz question

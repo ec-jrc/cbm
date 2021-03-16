@@ -2,7 +2,7 @@
 
 **Taking the next step: Using POST with RESTful services to get tailor made selections**
 
-Please read up on the [generic characteristics of the RESTful service](https://github.com/ec-jrc/cbm/wiki/5.-Using-RESTful-services-to-get-parcel-time-series) AND [RESTful queries for chip selections](https://github.com/ec-jrc/cbm/wiki/6.-Using-RESTful-services-to-get-parcel-time-series-as-image-chips) **BEFORE** using the query described here.
+Please read up on the [generic characteristics of the RESTful service](https://jrc-cbm.readthedocs.io/en/latest/api_ts.html) AND [RESTful queries for chip selections](https://jrc-cbm.readthedocs.io/en/latest/api_imgs.html) **BEFORE** using the query described here.
 
 
 ## rawChipsBatch
