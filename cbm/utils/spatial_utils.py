@@ -28,18 +28,18 @@ def swap_xy(indata):
     it also preserves z coordinates (if present)
 
     Exaple code:
-        from cbm.utils import spatial
+        from cbm.utils import spatial_utils
         geom = [[20, 40]]
-        spatial.swap_xy(geom)
+        spatial_utils.swap_xy(geom)
 
         # POINT Z (1 2 3) -> POINT Z (2 1 3)
-        spatial.swap_xy(Point(1, 2, 3))
+        spatial_utils.swap_xy(Point(1, 2, 3))
 
         # MULTILINESTRING ((1 2, 3 4)) -> MULTILINESTRING ((2 1, 4 3))
-        spatial.swap_xy(MultiLineString([[(1, 2), (3, 4)]]))
+        spatial_utils.swap_xy(MultiLineString([[(1, 2), (3, 4)]]))
 
         # Map the function to a geopandas geometry column
-        table.geometry = table.geometry.map(spatial.swap_xy)
+        table.geometry = table.geometry.map(spatial_utils.swap_xy)
     """
     if type(indata) is str:
         indata = eval(indata)
@@ -209,38 +209,3 @@ def transform_geometry(indata, target_epsg=4326, source_epsg=None):
             return geom_target
     except Exception as err:
         print("could not transform geometry", err)
-
-
-def bounds(geotiff):
-    import rasterio
-    import rasterio.features
-    import rasterio.warp
-    import numpy as np
-    """
-    Args:
-        geotiff: A tiff type image with georeferencing information.
-    Returns:
-        img_bounds: The bounds of the geotiff.
-    Example:
-        (13, -130), (32, -100) # SW and NE corners of the image
-    """
-    with rasterio.open(geotiff) as dataset:
-        # Read the dataset's valid data mask as a ndarray.
-        mask = dataset.dataset_mask().astype(np.uint16)
-
-        # Extract feature shapes and values from the array.
-        for geom, val in rasterio.features.shapes(
-                mask, transform=dataset.transform):
-
-            # Transform shapes from the dataset's own coordinate
-            # reference system to CRS84 (EPSG:4326).
-            geom = rasterio.warp.transform_geom(
-                dataset.crs, 'EPSG:4326', geom, precision=6)
-
-            # Print GeoJSON shapes to stdout.
-            img_bounds = ((geom['coordinates'][0][1][1],
-                           geom['coordinates'][0][1][0]),
-                          (geom['coordinates'][0][3][1],
-                           geom['coordinates'][0][3][0]))
-
-    return img_bounds
