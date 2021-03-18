@@ -93,7 +93,9 @@ def cbl(lon, lat, start_date, end_date, bands=None, lut=None, chipsize=None):
     return response
 
 
-def rcbl(parcel, start_date, end_date, bands, chipsize, filespath):
+def rcbl(parcel, start_date, end_date, bands, chipsize, filespath,
+         quiet=True):
+    """Get parcel raw chip images from RESTful API by location"""
     import os
     import os.path
     import pandas as pd
@@ -105,8 +107,6 @@ def rcbl(parcel, start_date, end_date, bands, chipsize, filespath):
     for band in bands:
         requrl = """{}/query/rawChipByLocation?lon={}&lat={}&start_date={}&end_date={}"""
         if band is not None:
-            #         band = '_'.join(band)
-            #         band = band.replace(' ', '')
             requrl = f"{requrl}&band={band}"
         if chipsize is not None:
             requrl = f"{requrl}&chipsize={chipsize}"
@@ -122,13 +122,13 @@ def rcbl(parcel, start_date, end_date, bands, chipsize, filespath):
         target.ImportFromEPSG(4326)
         transform = osr.CoordinateTransformation(source, target)
 
-        # And get the lon, lat for its centroid, so that we can center the chips on
-        # the parcel
+        # And get the lon, lat for its centroid, so that we can center the chips
+        # on the parcel
         centroid = geom.Centroid()
         centroid.Transform(transform)
 
         # Use pid for next request
-        pid = parcel['ogc_fid'][0]
+        # pid = parcel['ogc_fid'][0]
         # cropname = parcel['cropname'][0]
 
         # Set up the rawChip request
@@ -151,20 +151,20 @@ def rcbl(parcel, start_date, end_date, bands, chipsize, filespath):
             outf = normpath(join(filespath, c.split('/')[-1]))
             if not isfile(outf):
                 res = requests.get(url, stream=True)
-                # print(f"Downloading {c.split('/')[-1]}")
+                if not quiet:
+                    print(f"Downloading {c.split('/')[-1]}")
                 with open(outf, "wb") as handle:
                     for chunk in res.iter_content(chunk_size=512):
                         if chunk:  # filter out keep-alive new chunks
                             handle.write(chunk)
-        print(
-            f"Images for band '{band}', for the selected dates are downloaded.")
+        if not quiet:
+            print(
+                f"Images for band '{band}', for the selected dates are downloaded.")
 
-        # if len(df.index) != 0:
-        #     print(f"All GeoTIFFs for band '{band}' are ",
-        #           f"downloaded in the folder: '{filespath}'")
-    print("\n------Total time------")
-    print(
-        f"Total time required for {len(bands)} bands: {time.time() - start} seconds.")
+    if not quiet:
+        print("\n------Total time------")
+        print(
+            f"Total time required for {len(bands)} bands: {time.time() - start} seconds.")
 
 
 def clouds(geom):
@@ -264,15 +264,16 @@ def background(lon, lat, chipsize=512, extend=512, tms='Google',
             print("Image not found...")
         bkgdimg = ''  # image not found in html response
 
-    workdir = config.get_value(['paths', 'temp'])
-    path = f'{workdir}{aoi}{year}/{pid}/backgrounds/'
-    if not os.path.exists(path):
-        os.makedirs(path)
+    workdir = normpath(join(config.get_value(['paths', 'temp']),
+                            f'{aoi}{str(year)}', str(pid)))
+    bg_path = normpath(join(workdir, 'backgrounds'))
+    if not os.path.exists(bg_path):
+        os.makedirs(bg_path)
 
     img_url = f"{api_url}{bkgdimg}"
     res = requests.get(img_url, stream=True)
     image_name = img_url.split('/')[-1].lower()
-    bg_file = f"{path}{image_name}"
+    bg_file = normpath(join(bg_path, image_name))
 
     if not quiet:
         print(f"Downloading {image_name}")
