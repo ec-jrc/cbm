@@ -1,16 +1,10 @@
 # itignore CbM files
 
-main.json
 config/*
 ipynb/temp/*
 ipynb/config/*
 ipynb/data/*
-ipynb/tests/*
 ipynb/test*
-ipynb/*.json
-data/*
-tmp/*
-
 
 # ---> Python
 # Byte-compiled / optimized / DLL files
