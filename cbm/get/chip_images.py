@@ -7,12 +7,13 @@
 # Copyright : 2021 European Commission, Joint Research Centre
 # License   : 3-Clause BSD
 
+import os
 import json
-from os.path import join, normpath, isfile
-from cbm.utils import data_handler, config
+from os.path import join, normpath, isfile, dirname
+from cbm.utils import config
 
 
-def by_pid(aoi, year, pid, start_date, end_date, band, chipsize):
+def by_pid(aoi, year, pid, start_date, end_date, band, chipsize, quiet=False):
     """Download the chip image by selected parcel id.
 
     Examples:
@@ -33,27 +34,37 @@ def by_pid(aoi, year, pid, start_date, end_date, band, chipsize):
             composite. Defaults to B08_B04_B03.
         chipsize, size of the chip in pixels (int).
     """
-    datapath = config.get_value(['paths', 'temp'])
+    workdir = normpath(join(config.get_value(['paths', 'temp']),
+                            f'{aoi}{str(year)}', str(pid)))
     get_requests = data_source()
-    pfile = normpath(join(datapath, f'{aoi}{year}', pid, 'info.json'))
+    pfile = normpath(join(workdir, 'info.json'))
     if not isfile(pfile):
         parcel = json.loads(get_requests.pid(aoi, year, pid, True))
-        print(data_handler.export(parcel, 10, pfile.replace('.json', '')))
+        try:
+            os.makedirs(dirname(pfile), exist_ok=True)
+            with open(pfile, "w") as f:
+                json.dump(parcel, f)
+            if not quiet:
+                print(f"File saved at: {pfile}")
+        except Exception as err:
+            print(f"Could not create the file: {err}")
     else:
         with open(pfile, "r") as f:
             parcel = json.load(f)
-    files_chips = normpath(join(datapath, f'{aoi}{year}', pid, 'chip_images'))
-    print(f"Getting '{band}' chip images for parcel: {pid}")
+    images_dir = normpath(join(workdir, 'chip_images'))
+    if not quiet:
+        print(f"Getting '{band}' chip images for parcel: {pid}")
 
     # parcel = json.loads(get_requests.pid(aois, year, pid, True))
     get_requests.rcbl(parcel, start_date, end_date, [band],
-                      chipsize, files_chips)
+                      chipsize, images_dir)
 
-    filet = normpath(join(datapath, f'{aoi}{year}', pid, 'chip_images',
-                          f'images_list.{band}.csv'))
-    if file_len(filet) > 1:
-        print(f"Completed, all GeoTIFFs for band '{band}' are downloaded",
-              f" in the folder: '{datapath}{aoi}{year}/{pid}/chip_images'")
+    images_list = normpath(join(workdir, 'chip_images',
+                                f'images_list.{band}.csv'))
+    if file_len(images_list) > 1:
+        if not quiet:
+            print(f"Completed, all GeoTIFFs for band '{band}' are downloaded",
+                  f" in the folder: '{workdir}/chip_images'")
     else:
         print("No files where downloaded, please check your configurations")
 
