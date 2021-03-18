@@ -7,12 +7,14 @@
 # Copyright : 2021 European Commission, Joint Research Centre
 # License   : 3-Clause BSD
 
+import os
 import json
+import pandas as pd
 from os.path import join, normpath, isfile
-from cbm.utils import data_handler, config
+from cbm.utils import config
 
 
-def by_pid(aoi, year, pid, tstype, band, save=True):
+def by_pid(aoi, year, pid, tstype, band, quiet=False):
     """Download the time series for the selected year
 
     Examples:
@@ -23,16 +25,25 @@ def by_pid(aoi, year, pid, tstype, band, save=True):
         aoi, the area of interest e.g.: es, nld (str)
         year, the year of the parcels dataset (int)
         pid, the parcel id (int).
-        save, save or not to file (Boolean).
     """
-    datapath = config.get_value(['paths', 'temp'])
+    workdir = config.get_value(['paths', 'temp'])
     get_requests = data_source()
-    file_ts = normpath(join(datapath, f'{aoi}{year}', pid,
+    file_ts = normpath(join(workdir, f'{aoi}{year}', pid,
                             f'time_series_{tstype}{band}'))
     if not isfile(file_ts):
         ts = json.loads(get_requests.pts(aoi, year, pid, tstype, band))
-        if save:
-            print(data_handler.export(ts, 11, file_ts))
+        try:
+            if isinstance(ts, pd.DataFrame):
+                ts.to_csv(file_ts, index=True, header=True)
+            elif isinstance(ts, dict):
+                os.makedirs(os.path.dirname(file_ts), exist_ok=True)
+                df = pd.DataFrame.from_dict(ts, orient='columns')
+                df.to_csv(file_ts, index=True, header=True)
+            if not quiet:
+                print(f"File saved at: {file_ts}")
+            return ts
+        except Exception as err:
+            return f"Could not create the file: {err}"
 
 
 def data_source():
