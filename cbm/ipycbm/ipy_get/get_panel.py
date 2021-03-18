@@ -9,16 +9,18 @@
 
 
 # Get parcels data
+import os
 import json
 import datetime
-from os.path import join, normpath
+import pandas as pd
+from os.path import join, normpath, dirname
 from IPython.display import display
 from ipywidgets import (Text, Textarea, Label, HBox, VBox, Dropdown,
                         ToggleButtons, ToggleButton, Layout, Output,
                         Button, DatePicker, RadioButtons, IntSlider,
                         Box, HTML, SelectMultiple)
 
-from cbm.utils import data_handler, config, data_options
+from cbm.utils import config, data_options
 from cbm.ipycbm.ipy_get import get_maps
 
 
@@ -105,9 +107,16 @@ def get():
         if values['set']['data_source'] == 'api':
             get_requests = data_source()
             available_options = json.loads(get_requests.get_options())
-            outlog(data_handler.export(available_options, 10,
-                                       normpath(join(config.path_conf,
-                                                     'api_options'))))
+            try:
+                api_options = normpath(join(config.path_conf,
+                                            'api_options.json'))
+                os.makedirs(dirname(api_options), exist_ok=True)
+                with open(api_options, "w") as f:
+                    json.dump(available_options, f)
+                outlog(f"File saved at: {api_options}")
+            except Exception as err:
+                outlog(f"Could not create the file 'api_options.json': {err}")
+
             outlog(f"The API options are updated.")
         aois.options = tuple(aois_options())
         year.options = aois_years()[aois.value]
@@ -211,12 +220,12 @@ def get():
             elif obj['new'] == 2:
                 display(wbox_pids)
             elif obj['new'] == 3:
-                display(get_maps.base_map(aois.value,
-                                          config.get_value(['set', 'data_source'])))
+                display(get_maps.base_map(
+                    aois.value, config.get_value(['set', 'data_source'])))
             elif obj['new'] == 4:
-                display(VBox([get_maps.polygon(aois.value,
-                                               config.get_value(['set', 'data_source'])),
-                              get_ids_box, ppoly_out]))
+                display(VBox([get_maps.polygon(aois.value, config.get_value(
+                        ['set', 'data_source'])),
+                    get_ids_box, ppoly_out]))
 
     method.observe(method_options, 'value')
 
@@ -414,9 +423,14 @@ def get():
         elif source == 'direct':
             dataset = config.get_value(['set', 'dataset'])
             datapath = normpath(join(paths.value, dataset, str(pid)))
-        file_pinf = normpath(join(datapath, 'info'))
-
-        outlog(data_handler.export(parcel, 10, file_pinf))
+        file_pinf = normpath(join(datapath, 'info.json'))
+        try:
+            os.makedirs(dirname(file_pinf), exist_ok=True)
+            with open(file_pinf, "w") as f:
+                json.dump(parcel, f)
+            outlog(f"File saved at: {file_pinf}")
+        except Exception as err:
+            outlog(f"Could not create the file 'api_options.json': {err}")
 
         if pts_bt.value is True:
             outlog(f"Getting time series for parcel: '{pid}',",
@@ -428,8 +442,18 @@ def get():
                 band = ''
                 if pts_band.value != '':
                     band = f"_{pts_band.value}"
-                file_ts = normpath(join(datapath, f'time_series_{pts}{band}'))
-                outlog(data_handler.export(ts, 11, file_ts))
+                file_ts = normpath(join(datapath,
+                                        f'time_series_{pts}{band}.csv'))
+                try:
+                    if isinstance(ts, pd.DataFrame):
+                        ts.to_csv(file_ts, index=True, header=True)
+                    elif isinstance(ts, dict):
+                        os.makedirs(os.path.dirname(file_ts), exist_ok=True)
+                        df = pd.DataFrame.from_dict(ts, orient='columns')
+                        df.to_csv(file_ts, index=True, header=True)
+                    return f"File saved at: {file_ts}"
+                except Exception as err:
+                    return f"Could not create the file: {err}"
         if pci_bt.value is True:
             files_pci = normpath(join(datapath, 'chip_images'))
             outlog(f"Getting '{pci_band.value}' chip images for parcel: {pid}")
