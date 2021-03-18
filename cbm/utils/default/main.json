@@ -1,0 +1,67 @@
+{
+    "set": {
+        "user": "",
+        "email": "",
+        "institution": "",
+        "update_check": "True",
+        "member_state": "",
+        "polygon": "",
+        "data_source": "api",
+        "db_conn": "main",
+        "dataset": "default_2020",
+        "ds_year": "2020",
+        "jupyterlab": "True",
+        "plimit": "25",
+        "url": "https://github.com/ec-jrc/cbm"
+    },
+    "paths": {
+        "data": "data",
+        "temp": "temp"
+    },
+    "api": {
+        "url": "http://0.0.0.0",
+        "user": "",
+        "pass": ""
+    },
+    "db": {
+        "main": {
+            "desc": "Main db",
+            "host": "0.0.0.0",
+            "port": "5432",
+            "name": "postgres",
+            "sche": "public",
+            "user": "postgres",
+            "pass": ""
+        }
+    },
+    "dataset": {
+        "default_2020": {
+            "db": "main",
+            "desc": "Dataset description",
+            "center": "51.0,14.0",
+            "zoom": "5",
+            "start_date": "",
+            "end_date": "",
+            "tables": {
+                "parcels": "par",
+                "dias_catalog": "dias_cat",
+                "s2": "s2_sig",
+                "bs": "bs_sig",
+                "c6": "c6_sig",
+                "bs_tf": "bs_ten"
+            },
+            "pcolumns": {
+                "parcels_id": "id",
+                "crop_names": "name",
+                "crop_codes": "code"
+            }
+        }
+    },
+    "obst": {
+        "osdias": "",
+        "oshost": "http://",
+        "bucket": "DIAS",
+        "access_key": "",
+        "secret_key": ""
+    }
+}
