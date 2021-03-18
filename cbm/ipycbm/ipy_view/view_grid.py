@@ -18,8 +18,7 @@ from descartes import PolygonPatch
 from ipywidgets import (HBox, VBox, Dropdown, Button, Output,
                         Checkbox, Layout, IntRangeSlider)
 
-from cbm.utils import data_options, spatial
-from cbm.ipycbm.ipy_view import view_images
+from cbm.utils import data_options, spatial_utils, raster_utils
 
 from skimage import exposure
 
@@ -30,7 +29,7 @@ def imgs_grid(path):
         print(f"Crop name: {crop_name},  Area: {area:.2f} sqm")
 
         def multi_bands_imgs(bands, fname):
-            df = view_images.create_df(ci_path, pid, ci_band.value)
+            df = raster_utils.create_df(ci_path, pid, ci_band.value)
             rows = round((df.shape[0] / columns) + 0.5)
             fig = plt.figure(figsize=(16, 4 * rows))
             for i, row in df.iterrows():
@@ -43,8 +42,8 @@ def imgs_grid(path):
                 # Merge bands (images path, export image path, bands list)
                 if not isfile(img_png):
                     imgs_path = normpath(join(ci_path, row['imgs']))
-                    view_images.merge_bands(imgs_path, img_png,
-                                            bands)
+                    raster_utils.merge_bands(imgs_path, img_png,
+                                             bands)
 
                 with rasterio.open(img_png, format='PNG') as img:
                     overlay_date(img, row['date'].date())  # Add date overlay.
@@ -67,7 +66,7 @@ def imgs_grid(path):
             return plt.show()
 
         def ndvi_imgs(bands, fname):
-            df = view_images.create_df(ci_path, pid, ci_band.value)
+            df = raster_utils.create_df(ci_path, pid, ci_band.value)
             rows = round((df.shape[0] / columns) + 0.5)
             fig = plt.figure(figsize=(16, 4 * rows))
             for i, row in df.iterrows():
@@ -80,7 +79,7 @@ def imgs_grid(path):
                 b4f = f"{imgs_path}.B04.tif"
                 b4 = rasterio.open(b4f, format='GTiff')
 
-                ndvi = view_images.calc_ndvi(imgs_path, img_png, bands)
+                ndvi = raster_utils.calc_ndvi(imgs_path, img_png, bands)
                 overlay_date(b4, row['date'].date())  # Add date overlay.
                 ax = plt.gca()
                 if show_parcel.value:
@@ -97,7 +96,7 @@ def imgs_grid(path):
             return plt.show()
 
         def single_band(band):
-            df = view_images.create_df(ci_path, pid, ci_band.value)
+            df = raster_utils.create_df(ci_path, pid, ci_band.value)
             rows = round((df.shape[0] / columns) + 0.5)
             fig = plt.figure(figsize=(16, 4 * rows))
             for i, row in df.iterrows():
@@ -141,7 +140,7 @@ def imgs_grid(path):
         with open(file_info, 'r') as f:
             info_data = json.loads(f.read())
         img_epsg = img.crs.to_epsg()
-        geo_json = spatial.transform_geometry(info_data, img_epsg)
+        geo_json = spatial_utils.transform_geometry(info_data, img_epsg)
         patche = [PolygonPatch(feature, edgecolor="yellow",
                                facecolor="none", linewidth=2
                                ) for feature in [geo_json['geom'][0]]]
@@ -158,7 +157,7 @@ def imgs_grid(path):
     ci_path = normpath(join(path, 'chip_images'))
     columns = 4
 
-    available_options = view_images.available_options(path, pid)
+    available_options = raster_utils.available_options(path, pid)
     ci_band = Dropdown(
         options=available_options,
         description='Select band:',

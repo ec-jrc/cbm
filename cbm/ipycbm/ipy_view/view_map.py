@@ -17,8 +17,7 @@ from ipywidgets import (HBox, VBox, Dropdown, Play, Layout, Label,
 from ipyleaflet import (Map, ImageOverlay, Popup, basemap_to_tiles,
                         Polygon, WidgetControl, basemaps)
 
-from cbm.utils import config, spatial
-from cbm.ipycbm.ipy_view import view_images
+from cbm.utils import config, spatial_utils, raster_utils
 
 
 def widget_box(path):
@@ -35,7 +34,7 @@ def widget_box(path):
     ci_path = normpath(join(path, 'chip_images'))
 
     ci_band = Dropdown(
-        options=view_images.available_options(path, pid, False, False),
+        options=raster_utils.available_options(path, pid, False, False),
         disabled=False,
         layout=Layout(width='140px')
     )
@@ -60,14 +59,14 @@ def widget_box(path):
 
         multipoly = []
         multycent = []
-        geom = spatial.transform_geometry(info_data)
+        geom = spatial_utils.transform_geometry(info_data)
         poly = geom['geom'][0]['coordinates'][0]
-    #     poly = spatial.swap_xy(geom['coordinates'][0])[0]
+    #     poly = spatial_utils.swap_xy(geom['coordinates'][0])[0]
         multipoly.append(poly)
-        centroid = spatial.centroid(poly)
+        centroid = spatial_utils.centroid(poly)
         multycent.append(centroid)
 
-        centroid = spatial.centroid(multycent)
+        centroid = spatial_utils.centroid(multycent)
         m = Map(center=centroid, zoom=16,
                 basemap=basemaps.OpenStreetMap.Mapnik)
 
@@ -136,24 +135,24 @@ def widget_box(path):
         show_sat.observe(show_sat_changed)
 
         try:
-            df = view_images.create_df(ci_path, pid, ci_band.value)
+            df = raster_utils.create_df(ci_path, pid, ci_band.value)
 
             geotiff = normpath(join(ci_path,
                                     f"{df['imgs'][0]}.{ci_band.value[0]}.tif"))
-            bounds = spatial.bounds(geotiff)
+            bounds = raster_utils.bounds(geotiff)
 
             images = {}
             for i, row in df.iterrows():
                 str_date = str(row['date'].date()).replace('-', '')
-                img_tc = normpath(join(ci_path,
-                                       f"{('').join(ci_band.value)}_{str_date}.png"))
+                img_tc = normpath(
+                    join(ci_path, f"{('').join(ci_band.value)}_{str_date}.png"))
 
                 # Create false color image if it does not exist
                 # Merge bands (images path, export image path, bands list)
                 if not isfile(img_tc):
                     imgs_path = normpath(join(ci_path, row['imgs']))
-                    view_images.merge_bands(imgs_path, img_tc,
-                                            ci_band.value)
+                    raster_utils.merge_bands(imgs_path, img_tc,
+                                             ci_band.value)
 
                 if bool(config.get_value(['set', 'jupyterlab'])) is True:
                     jlab_path = os.getcwd().replace(os.path.expanduser("~"), '')

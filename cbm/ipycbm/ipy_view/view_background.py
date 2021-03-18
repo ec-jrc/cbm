@@ -11,7 +11,7 @@ from copy import copy
 # import matplotlib.ticker as ticker
 # import numpy as np
 
-from cbm.utils import config, spatial
+from cbm.utils import config, spatial_utils
 from cbm.get import background as bg
 
 
@@ -40,7 +40,7 @@ def grid(aoi, year, pid, chipsize=512, extend=512, tms=['Google']):
 
     with rasterio.open(f'{bg_path}{tms[0].lower()}.tif') as img:
         img_epsg = img.crs.to_epsg()
-        geom = spatial.transform_geometry(json_data, img_epsg)
+        geom = spatial_utils.transform_geometry(json_data, img_epsg)
         patches = overlay_parcel(img, geom)
 
     rows = int(len(tms) // columns + (len(tms) % columns > 0))
@@ -87,7 +87,7 @@ def slider(aoi, year, pid, chipsize=512, extend=512, tms=['Google']):
 
     with rasterio.open(f'{bg_path}{tms[0].lower()}.tif') as img:
         img_epsg = img.crs.to_epsg()
-        geom = spatial.transform_geometry(json_data, img_epsg)
+        geom = spatial_utils.transform_geometry(json_data, img_epsg)
         patches = overlay_parcel(img, geom)
 
     selection = SelectionSlider(
