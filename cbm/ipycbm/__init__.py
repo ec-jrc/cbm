@@ -54,8 +54,8 @@ def config(*args):
 
 
 def bg_grid(*args):
-    from cbm.ipycbm.ipy_view import view_background
-    return view_background.grid(*args)
+    from cbm.show import images
+    return images.background(*args)
 
 
 def bg_slider(*args):
