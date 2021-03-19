@@ -14,11 +14,11 @@ __email__ = ""
 __status__ = "Development"
 
 import os
+import sys
 from os.path import join, normcase, exists, normpath
 from cbm.utils import config, update
 from pkg_resources import get_distribution, DistributionNotFound
 
-import sys
 if sys.version_info < (3, 6):
     print("Not supoted python version, cbm needs python version > 3.6")
     sys.exit()
@@ -47,3 +47,13 @@ for p in paths:
 
 config.create()
 update.check()
+
+
+def chip_images(*args):
+    from cbm.show import images
+    return images.chips(*args)
+
+
+def background(*args):
+    from cbm.show import images
+    return images.background(*args)
