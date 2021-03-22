@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import json
 
 from cbm.get import chip_images
-from cbm.utils import config, spatial_utils
+from cbm.utils import config, spatial_utils, data_options
 from mpl_toolkits.axes_grid1 import ImageGrid
 
 
@@ -29,7 +29,7 @@ def overlay_parcel(img, geom):
     return patche
 
 
-def main(aoi, pid, dates, band, chipsize, quiet=True):
+def main(aoi, pid, dates, band, chipsize, columns=5, quiet=True):
     """Plot chip image with parcel polygon overlay.
 
     Examples:
@@ -50,7 +50,6 @@ def main(aoi, pid, dates, band, chipsize, quiet=True):
             composite. Defaults to B08_B04_B03.
         chipsize, size of the chip in pixels (int).
     """
-    columns = 4
 
     if type(dates) is list:
         start_date, end_date = dates[0], dates[1]
@@ -99,7 +98,7 @@ def main(aoi, pid, dates, band, chipsize, quiet=True):
             with rasterio.open(t) as img:
                 for patch in patches:
                     ax.add_patch(copy(patch))
-                show(img, ax=ax)
+                show(img, ax=ax, cmap=data_options.cmaps(band))
                 ax.set_title(t.split('_')[-1].split('.')[0], fontsize=20)
 
         if len(chips_list) > columns:
