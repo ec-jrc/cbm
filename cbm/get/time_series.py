@@ -44,6 +44,10 @@ def by_pid(aoi, year, pid, tstype, band, quiet=False):
             return ts
         except Exception as err:
             return f"Could not create the file: {err}"
+    else:
+        with open(file_ts, 'r') as f:
+            ts = json.load(f)
+        return ts
 
 
 def data_source():
