@@ -28,7 +28,7 @@ def overlay_parcel(img, geom):
     return patche
 
 
-def background(aoi, year, pid, chipsize=512, extend=512, tms=['Google']):
+def main(aoi, year, pid, chipsize=512, extend=512, tms=['Google']):
     """Show the background image with parcels polygon overlay by selected
     parcel id. This function will get an image from the center of the polygon.
 

@@ -15,57 +15,6 @@ from cbm.utils import config, spatial_utils
 from cbm.get import background as bg
 
 
-def grid(aoi, year, pid, chipsize=512, extend=512, tms=['Google']):
-
-    columns = 4
-    if len(tms) < columns:
-        columns = len(tms)
-
-    workdir = config.get_value(['paths', 'temp'])
-    path = f'{workdir}/{aoi}{year}/{pid}/'
-    bg_path = f'{path}/backgrounds/'
-
-    for t in tms:
-        if not os.path.isfile(f'{bg_path}{t.lower()}.tif'):
-            bg.by_pid(aoi, year, pid, chipsize, extend, t, True)
-
-    with open(f'{path}info.json', "r") as f:
-        json_data = json.load(f)
-
-    def overlay_parcel(img, geom):
-        patche = [PolygonPatch(feature, edgecolor="yellow",
-                               facecolor="none", linewidth=2
-                               ) for feature in geom['geom']]
-        return patche
-
-    with rasterio.open(f'{bg_path}{tms[0].lower()}.tif') as img:
-        img_epsg = img.crs.to_epsg()
-        geom = spatial_utils.transform_geometry(json_data, img_epsg)
-        patches = overlay_parcel(img, geom)
-
-    rows = int(len(tms) // columns + (len(tms) % columns > 0))
-    fig = plt.figure(figsize=(30, 10 * rows))
-    grid = ImageGrid(fig, 111,  # similar to subplot(111)
-                     nrows_ncols=(rows, columns),  # creates grid of axes
-                     axes_pad=0.4,  # pad between axes in inch.
-                     )
-
-    for ax, t in zip(grid, tms):
-        with rasterio.open(f'{bg_path}{t.lower()}.tif') as img:
-            for patch in patches:
-                ax.add_patch(copy(patch))
-#             ax.xaxis.set_major_locator(ticker.MultipleLocator(200))
-#             ax.xaxis.set_minor_locator(ticker.MultipleLocator(200))
-            show(img, ax=ax)
-            ax.set_title(t, fontsize=20)
-
-    if len(tms) > columns:
-        for ax in grid[-((columns * rows - len(tms))):]:
-            ax.remove()
-
-    plt.show()
-
-
 def slider(aoi, year, pid, chipsize=512, extend=512, tms=['Google']):
 
     workdir = config.get_value(['paths', 'temp'])
@@ -122,7 +71,7 @@ def slider(aoi, year, pid, chipsize=512, extend=512, tms=['Google']):
     return VBox([selection, output])
 
 
-def map(aoi, year, pid, chipsize=512, extend=512, tms='Google'):
+def maps(aoi, year, pid, chipsize=512, extend=512, tms='Google'):
 
     workdir = config.get_value(['paths', 'temp'])
     path = f'{workdir}/{aoi}{year}/{pid}/backgrounds/'
