@@ -50,10 +50,20 @@ update.check()
 
 
 def chip_images(*args):
-    from cbm.show import images
-    return images.chips(*args)
+    from cbm.show import chip_images
+    return chip_images.main(*args)
 
 
 def background(*args):
-    from cbm.show import images
-    return images.background(*args)
+    from cbm.show import background
+    return background.main(*args)
+
+
+def time_series(*args):
+    from cbm.show import time_series
+    return time_series.main(*args)
+
+
+def calendar(*args):
+    from cbm.show import calendar
+    return calendar.main(*args)

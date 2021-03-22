@@ -29,7 +29,7 @@ def overlay_parcel(img, geom):
     return patche
 
 
-def chips(aoi, pid, dates, band, chipsize, quiet=True):
+def main(aoi, pid, dates, band, chipsize, quiet=True):
     """Plot chip image with parcel polygon overlay.
 
     Examples:
