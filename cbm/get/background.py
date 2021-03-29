@@ -15,7 +15,7 @@ from cbm.utils import spatial_utils, config
 
 
 def by_location(aoi, year, lon, lat, chipsize=512, extend=512,
-                tms='Google', quiet=True, axis=True):
+                tms='Google', axis=True, quiet=True):
     """Download the background image with parcels polygon overlay by selected
     location. This function will get an image from the center of the polygon.
 
@@ -34,26 +34,32 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512,
         quiet, print or not procedure information (Boolean).
     """
 
-    json_data = json.loads(api.ploc(aoi, year, lon, lat, True))
-    if type(json_data['ogc_fid']) is list:
-        pid = json_data['ogc_fid'][0]
-    else:
-        pid = json_data['ogc_fid']
+    try:
+        json_data = json.loads(api.ploc(aoi, year, lon, lat, True))
+        if type(json_data['ogc_fid']) is list:
+            pid = json_data['ogc_fid'][0]
+        else:
+            pid = json_data['ogc_fid']
 
-    workdir = normpath(join(config.get_value(['paths', 'temp']),
-                            f'{aoi}{str(year)}', str(pid)))
-    json_file = normpath(join(workdir, 'info.json'))
-    if not exists(workdir):
-        os.makedirs(workdir)
-    if not isfile(json_file):
-        with open(json_file, "w") as f:
-            json.dump(json_data, f)
+        workdir = normpath(join(config.get_value(['paths', 'temp']),
+                                f'{aoi}{str(year)}', str(pid)))
+        json_file = normpath(join(workdir, 'info.json'))
+        if not exists(workdir):
+            os.makedirs(workdir)
+        if not isfile(json_file):
+            with open(json_file, "w") as f:
+                json.dump(json_data, f)
+    except Exception:
+        workdir = normpath(join(config.get_value(['paths', 'temp']),
+                                f'{aoi}{str(year)}', f'_{lon}_{lat}'))
 
-    by_pid(aoi, year, pid, chipsize, extend, tms, quiet, axis)
+    bg_path = normpath(join(workdir, 'backgrounds'))
+    api.background(lon, lat, chipsize, extend,
+                   tms, bg_path, quiet)
 
 
 def by_pid(aoi, year, pid, chipsize=512, extend=512,
-           tms='Google', quiet=True, axis=True):
+           tms='Google', axis=True, quiet=True):
     """Download the background image with parcels polygon overlay by selected
     location.
 
@@ -89,5 +95,6 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512,
     lat, lon = spatial_utils.centroid(
         spatial_utils.transform_geometry(json_data))
 
+    bg_path = normpath(join(workdir, 'backgrounds'))
     api.background(lon, lat, chipsize, extend,
-                   tms, aoi, year, pid, quiet)
+                   tms, bg_path, quiet)
