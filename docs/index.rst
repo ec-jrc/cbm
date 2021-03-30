@@ -31,7 +31,7 @@
 
 .. toctree::
    :maxdepth: 3
-   :caption: cbm library:
+   :caption: CbM package:
 
    cbm_install
    cbm_overview
@@ -52,3 +52,13 @@
    api_imgs
    api_analytics
    api_post
+
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Developers:
+
+   dev_contributing
+   dev_pull_request
+   dev_proposals
+   dev_learn
