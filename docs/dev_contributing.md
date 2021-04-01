@@ -13,15 +13,14 @@ patches and features.
 
 The [issue tracker](https://github.com/ec-jrc/cbm/issues) is
 the preferred channel for submitting [pull requests](#pull-requests) and
-[bug reports](#bugs), but please respect the following
-restrictions:
+[bug reports](#bugs), but please **do not** use the issue tracker for personal
+support requests. Consider one of the following alternatives instead:
 
-* Please **do not** use the issue tracker for personal support requests. Please
-  consider one of the following alternatives instead:
   * [JRC GTCAP Wikis platform](https://webgate.ec.europa.eu/fpfis/wikis/display/GTCAP/GTCAP+Home)
   for Q&A as well as support for troubleshooting, installation and debugging. Do
   remember to tag your questions with the tag `cbm`.
   * [Contact directly JRC GTCAP team](https://marswiki.jrc.ec.europa.eu/wikicap/index.php/Main_Page)
+  * [CbM forum](https://gtcap.jrc.ec.europa.eu/gtcap/index.php/Main_Page) (Under development)
 
 <!--
   * Mailing list: The [CbM JRC Group](https://---/forum/#!forum/cbm)
@@ -36,7 +35,7 @@ They should remain focused in scope and avoid containing unrelated commits.
 **Please ask first** before embarking on any significant pull request (e.g.
 implementing features, refactoring code), otherwise you risk spending a lot of
 time working on something that the project's developers might not want to merge
-into the project. Please read the [tutorial on writing new CbM functions](https://jrc-cbm.readthedocs.io/en/latest/dev_developing.html)
+into the project. Read the [tutorial on writing new CbM functions](https://jrc-cbm.readthedocs.io/en/latest/dev_developing.html)
 if you want to contribute a brand new feature.
 
 If you are new to Git, GitHub, or contributing to an open-source project, you
@@ -47,7 +46,7 @@ or check our list of [useful related documentations](https://jrc-cbm.readthedocs
 <!--
 ### Checklist
 
-Please use the following checklist to make sure that your contribution is well
+Use the following checklist to make sure that your contribution is well
 prepared for merging into the main CbM repository:
 
 1. Source code adheres to the coding conventions described in [CbM Style Guide](https://jrc-cbm.readthedocs.io/en/latest/dev_style_guide.html).
@@ -112,5 +111,5 @@ of each `.py` file e.g.:
 # License   : 3-Clause BSD
 ```
 
-Please note that if the academic institution or company you are affiliated with
+Note that if the academic institution or company you are affiliated with
 does not allow to give up the rights, you should contact us for further details.
