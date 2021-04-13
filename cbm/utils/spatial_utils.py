@@ -208,4 +208,5 @@ def transform_geometry(indata, target_epsg=4326, source_epsg=None):
         else:
             return geom_target
     except Exception as err:
-        print("could not transform geometry", err)
+        print("Could not transform geometry: ", err)
+        return indata
