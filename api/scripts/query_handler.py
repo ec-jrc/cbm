@@ -8,14 +8,12 @@
 # License   : 3-Clause BSD
 
 
-# import paramiko
 import psycopg2
 import psycopg2.extras
 import logging
 
-import db
+from scipts import db
 conn_str = db.conn_str()
-# conn_str = "host='0.0.0.0' port=5432 dbname='postgres' user='pg' password=''"
 
 logging.basicConfig(filename='queryHandler.log', filemode='w',
                     format='%(name)s - %(levelname)s - %(message)s',
@@ -23,103 +21,103 @@ logging.basicConfig(filename='queryHandler.log', filemode='w',
 
 
 # Parcel Images
+
+
+def getBackgroundByLocation(lon, lat, chipsize, chipextend, tms,
+                            unique_id, iformat):
+    import backgroundExtract as bgext
+    logging.debug(unique_id)
+
+    logging.debug(
+        f"ssh on remote_dias_py python backgroundExtract.py {lon} {lat} {chipsize} {chipextend} {tms} {unique_id} {iformat}")
+    bgext.getWindowedExtract(lon, lat, chipsize, chipextend, tms,
+                             unique_id, iformat)
+    bgext.buildHTML(unique_id, tms, iformat)
+    return True
+
+
 def getChipsByLocation(lon, lat, start_date, end_date, unique_id, lut='5_95',
                        bands='B08_B04_B03', plevel='LEVEL2A'):
+    import chipS2Extractor2 as ces2
     logging.debug(lut)
     logging.debug(bands)
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect('remote_dias_py', password='dias_py')
-    logging.debug(f"ssh on remote_dias_py python chipGenerate.py {lon} {lat}",
-                  f"{start_date} {end_date} {unique_id} {lut} {bands} {plevel}")
-    stdin, stdout, stderr = ssh.exec_command(
-        f"cd /usr/src/app && python chipGenerate.py {lon} {lat} {start_date}",
-        f"{end_date} {unique_id} {lut} {bands} {plevel}")
-    logging.debug(stdout.readlines())
-    stdout.channel.recv_exit_status()
-    ssh.close()
-    return True
+    logging.debug(
+        f"ssh on remote_dias_py python chipS2Extractor2.py {lon} {lat} {start_date} {end_date} {unique_id} {lut} {bands} {plevel}")
 
+    numchips = ces2.parallelExtract(
+        lon, lat, start_date, end_date, unique_id, lut, bands, plevel)
 
-def getBackgroundByLocation(lon, lat, chipsize, chipextend, tms, unique_id):
-    logging.debug(unique_id)
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect('remote_dias_py', password='dias_py')
-    logging.debug("ssh on remote_dias_py python backgroundGenerate.py",
-                  f"{lon} {lat} {chipsize} {chipextend} {tms} {unique_id}")
-    stdin, stdout, stderr = ssh.exec_command(
-        "cd /usr/src/app && python backgroundGenerate.py",
-        f"{lon} {lat} {chipsize} {chipextend} {tms} {unique_id}")
-    logging.debug(stdout.readlines())
-    stdout.channel.recv_exit_status()
-    ssh.close()
-    return True
+    if numchips == -1:
+        print(f"Request results in too many chips, please revise selection")
+    elif numchips > 0:
+        print(ces2.chipCollect(unique_id))
+    else:
+        print(f"Chips already cached in {unique_id}")
 
+    print(ces2.buildHTML(unique_id, start_date, end_date))
 
-def getChipsByParcelId(aoi, year, parcelid, start_date, end_date, unique_id,
-                       lut='5_95', bands='B08_B04_B03', plevel='LEVEL2A'):
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect('remote_dias_py', password='dias_py')
-    logging.debug("ssh on remote_dias_py python chipGenerate4Parcel.py",
-                  f"{aoi} {year} {parcelid} {start_date} {end_date}",
-                  f"{unique_id} {lut} {bands} {plevel}")
-    stdin, stdout, stderr = ssh.exec_command(
-        f"cd /usr/src/app && python chipGenerate4Parcel.py {aoi} {year}",
-        f"{parcelid} {start_date} {end_date} {unique_id} {lut} {bands} {plevel}")
-    logging.debug(stdout.readlines())
-    stdout.channel.recv_exit_status()
-    ssh.close()
     return True
 
 
 def getRawChipByLocation(lon, lat, start_date, end_date, unique_id, band,
                          chipsize='1280', plevel='LEVEL2A'):
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect('remote_dias_py', password='dias_py')
-    logging.debug(f"ssh on remote_dias_py python rawChipGenerate.py {lon}",
-                  f"{lat} {start_date} {end_date} {unique_id} {band} {plevel}")
-    stdin, stdout, stderr = ssh.exec_command(
-        f"cd /usr/src/app && python rawChipGenerate.py {lon} {lat}",
-        f"{start_date} {end_date} {unique_id} {band} {chipsize} {plevel}")
-    logging.debug(stdout.readlines())
-    stdout.channel.recv_exit_status()
-    ssh.close()
+    import rawChipExtractor as rce
+    logging.debug(
+        f"ssh on remote_dias_py python rawChipExtractor.py {lon} {lat} {start_date} {end_date} {unique_id} {band} {plevel}")
+
+    numchips = rce.parallelExtract(lon, lat, start_date, end_date, unique_id,
+                                   band, chipsize, plevel)
+
+    if numchips == -1:
+        print(f"Request results in too many chips, please revise selection")
+    elif numchips > 0:
+        print(rce.chipCollect(unique_id))
+    else:
+        print(f"Chips already cached in {unique_id}")
+
+    print(rce.buildJSON(unique_id, start_date, end_date))
     return True
 
 
 def getRawChipsBatch(unique_id):
     # params are dumped in params.json on unique_id directory
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect('remote_dias_py', password='dias_py')
-    logging.debug(f"ssh on remote_dias_py python rawChipBatch.py {unique_id}")
-    stdin, stdout, stderr = ssh.exec_command(
-        f"cd /usr/src/app && python rawChipBatch.py {unique_id}")
-    logging.debug(stdout.readlines())
-    stdout.channel.recv_exit_status()
-    ssh.close()
+    import rawChipBatchExtract as rceb
+
+    logging.debug(f"ssh on remote_dias_py python rawChipBatchExtract.py {unique_id}")
+    numchips = rceb.parallelExtract(unique_id)
+
+    if numchips == -1:
+        print(f"Request results in too many chips, please revise selection")
+    elif numchips > 0:
+        print(rceb.chipCollect(unique_id))
+    else:
+        print(f"Chips already cached in {unique_id}")
+
+    print(rceb.buildJSON(unique_id))
     return True
 
 
 def getRawS1ChipsBatch(unique_id):
     # params are dumped in params.json on unique_id directory
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect('remote_dias_py', password='dias_py')
+    import rawS1ChipBatchExtract as rces1
+
     logging.debug(
-        f"ssh on remote_dias_py python rawS1ChipBatch.py {unique_id}")
-    stdin, stdout, stderr = ssh.exec_command(
-        f"cd /usr/src/app && python rawS1ChipBatch.py {unique_id}")
-    logging.debug(stdout.readlines())
-    stdout.channel.recv_exit_status()
-    ssh.close()
+        f"ssh on remote_dias_py python rawS1ChipBatchExtract.py {unique_id}")
+
+    numchips = rces1.parallelExtract(unique_id)
+
+    if numchips == -1:
+        print(f"Request results in too many chips, please revise selection")
+    elif numchips > 0:
+        print(rces1.chipCollect(unique_id))
+    else:
+        print(f"Chips already cached in {unique_id}")
+
+    print(rces1.buildJSON(unique_id))
     return True
 
-# Parcel Time Series
 
+# Parcel Time Series
 
 def getParcelTimeSeries(dias_cat, year, pid, tstype, band=None):
     conn = psycopg2.connect(conn_str)
