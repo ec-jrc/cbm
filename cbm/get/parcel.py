@@ -25,9 +25,27 @@ def by_location(aoi, year, lon, lat, tstype, band, quiet=True):
         year, the year of the parcels dataset (int)
         pid, the parcel id (int).
     """
-    workdir = config.get_value(['paths', 'temp'])
     get_requests = data_source()
-    file_pinf = normpath(join(workdir, f'{aoi}{year}', pid, 'info.json'))
+    try:
+        json_data = json.loads(get_requests.ploc(aoi, year, lon, lat, True))
+        if type(json_data['ogc_fid']) is list:
+            pid = json_data['ogc_fid'][0]
+        else:
+            pid = json_data['ogc_fid']
+
+        workdir = normpath(join(config.get_value(['paths', 'temp']),
+                                f'{aoi}{str(year)}', str(pid)))
+        json_file = normpath(join(workdir, 'info.json'))
+        if not exists(workdir):
+            os.makedirs(workdir)
+        if not isfile(json_file):
+            with open(json_file, "w") as f:
+                json.dump(json_data, f)
+    except Exception:
+        workdir = normpath(join(config.get_value(['paths', 'temp']),
+                                f'{aoi}{str(year)}', f'_{lon}_{lat}'))
+
+    file_pinf = normpath(join(workdir, 'info.json'))
     if not isfile(file_pinf):
         try:
             parcel = json.loads(get_requests.pid(aoi, year, pid, True))
