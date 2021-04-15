@@ -11,20 +11,26 @@
 import os
 import json
 import logging
-from logging.handlers import TimedRotatingFileHandler
+from decimal import Decimal
 from functools import wraps
+from flasgger import Swagger
 from werkzeug.utils import secure_filename
+from logging.handlers import TimedRotatingFileHandler
 from flask import (Flask, request, send_from_directory, make_response,
-                   render_template, flash, redirect)
+                   render_template, flash, redirect, jsonify, abort)
 
 
-import query_handler as qh
-import users
+from scripts import query_handler as qh
+from scripts import users
 
 app = Flask(__name__)
 app.secret_key = os.urandom(12)
+app.config['SWAGGER'] = {
+    'title': 'CbM API',
+    'uiversion': 3
+}
 
-# Enable uplaod page.
+# Enable upload page.
 UPLOAD_ENABLE = False  # True or False
 
 
@@ -37,9 +43,14 @@ def auth_required(f):
         auth = request.authorization
         if auth and users.auth(auth.username, auth.password) is True:
             return f(*args, **kwargs)
-        return make_response('Could not verify.', 401,
-                             {'WWW-Authenticate': 'Basic realm="Login Required"'})
+        return make_response(
+            'Could not verify.', 401,
+            {'WWW-Authenticate': 'Basic realm="Login Required"'})
     return decorated
+
+
+swag = Swagger(app, decorators=[auth_required],
+               template_file='templates/flasgger.json')
 
 
 class CustomJsonEncoder(json.JSONEncoder):
@@ -48,8 +59,6 @@ class CustomJsonEncoder(json.JSONEncoder):
             return float(obj)
         return super(CustomJsonEncoder, self).default(obj)
 
-
-# -------- Queries ----------------------------------------------------------- #
 
 @app.route('/query/', methods=['GET'])
 @auth_required
@@ -60,6 +69,17 @@ def query():
 @app.route('/query/options', methods=['GET'])
 @auth_required
 def options():
+    """
+    Get the available options (for current the user).
+    ---
+    tags:
+      - options
+    responses:
+      200:
+        description: Returns a dictionary of available options
+        schema:
+            type: object
+    """
     try:
         with open('config/options.json', 'r') as f:
             api_options = json.load(f)
@@ -67,6 +87,193 @@ def options():
     except Exception as err:
         return str(err)
 
+
+# -------- Queries - Chip Images --------------------------------------------- #
+
+@app.route('/dump/<unique_id>/<png_id>')
+# @auth_required
+def dump(unique_id, png_id):
+    try:
+        return send_from_directory(f"files/dump/{unique_id}", png_id)
+    except FileNotFoundError:
+        abort(404)
+
+
+@app.route('/query/chipsByLocation', methods=['GET'])
+@auth_required
+def chipsByLocation_query():
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+    # Start by getting the request IP address
+    if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
+        rip = request.environ['REMOTE_ADDR']
+    else:
+        rip = request.environ['HTTP_X_FORWARDED_FOR']
+
+    lon = request.args.get('lon')
+    lat = request.args.get('lat')
+
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+
+    if 'lut' in request.args.keys():
+        lut = request.args.get('lut')
+    else:
+        lut = '5_95'
+
+    if 'bands' in request.args.keys():
+        bands = request.args.get('bands')
+    else:
+        bands = 'B08_B04_B03'
+
+    if 'plevel' in request.args.keys():
+        plevel = request.args.get('plevel')
+    else:
+        plevel = 'LEVEL2A'
+
+    unique_id = f"dump/{rip}E{lon}N{lat}L{lut}_{plevel}_{bands}".replace(
+        '.', '_')
+
+    data = qh.getChipsByLocation(
+        lon, lat, start_date, end_date, unique_id, lut, bands, plevel)
+
+    if data:
+        return send_from_directory(f"files/{unique_id}", 'dump.html')
+    else:
+        return json.dumps({})
+
+
+@app.route('/query/backgroundByLocation', methods=['GET'])
+@auth_required
+def backgroundByLocation_query():
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+    # Start by getting the request IP address
+    if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
+        rip = request.environ['REMOTE_ADDR']
+    else:
+        rip = request.environ['HTTP_X_FORWARDED_FOR']
+
+    lon = request.args.get('lon')
+    lat = request.args.get('lat')
+
+    if 'chipsize' in request.args.keys():
+        chipsize = request.args.get('chipsize')
+    else:
+        chipsize = '256'
+
+    if 'extend' in request.args.keys():
+        chipextend = request.args.get('extend')
+    else:
+        chipextend = '256'
+
+    if 'tms' in request.args.keys():
+        tms = request.args.get('tms')
+    else:
+        tms = 'Google'
+
+    if 'iformat' in request.args.keys():
+        iformat = request.args.get('iformat')
+    else:
+        iformat = 'tif'
+
+    unique_id = f"dump/{rip}E{lon}N{lat}_{chipsize}_{chipextend}_{tms}".replace(
+        '.', '_')
+
+    data = qh.getBackgroundByLocation(
+        lon, lat, chipsize, chipextend, tms, unique_id, iformat)
+
+    if data:
+        if 'raw' in request.args.keys():
+            return 1
+        else:
+            return send_from_directory(f"files/{unique_id}", 'dump.html')
+    else:
+        return json.dumps({})
+
+
+@app.route('/query/chipsByParcelId', methods=['GET'])
+@auth_required
+def chipsByParcelId_query():
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+    # Start by getting the request IP address
+    if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
+        rip = request.environ['REMOTE_ADDR']
+    else:
+        rip = request.environ['HTTP_X_FORWARDED_FOR']
+
+    aoi = request.args.get('aoi')
+    year = request.args.get('year')
+    parcelid = request.args.get('pid')
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+
+    if 'lut' in request.args.keys():
+        lut = request.args.get('lut')
+    else:
+        lut = '5_95'
+
+    if 'bands' in request.args.keys():
+        bands = request.args.get('bands')
+    else:
+        bands = 'B08_B04_B03'
+
+    if 'plevel' in request.args.keys():
+        plevel = request.args.get('plevel')
+    else:
+        plevel = 'LEVEL2A'
+
+    unique_id = f"dump/{rip}_{aoi}{year}_{parcelid}_{lut}_{plevel}_{bands}".replace(
+        '.', '_')
+
+    data = qh.getChipsByParcelId(aoi, year, parcelid, start_date, end_date,
+                                 unique_id, lut, bands, plevel)
+
+    if data:
+        return send_from_directory(f"files/{unique_id}", 'dump.html')
+    else:
+        return json.dumps({})
+
+
+@app.route('/query/rawChipByLocation', methods=['GET'])
+@auth_required
+def rawChipByLocation_query():
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+    # Start by getting the request IP address
+    if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
+        rip = request.environ['REMOTE_ADDR']
+    else:
+        rip = request.environ['HTTP_X_FORWARDED_FOR']
+
+    lon = request.args.get('lon')
+    lat = request.args.get('lat')
+
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+
+    band = request.args.get('band')
+
+    if 'plevel' in request.args.keys():
+        plevel = request.args.get('plevel')
+    else:
+        plevel = 'LEVEL2A'
+
+    if 'chipsize' in request.args.keys():
+        chipsize = request.args.get('chipsize')
+    else:
+        chipsize = '1280'
+
+    unique_id = f"dump/{rip}E{lon}N{lat}_{plevel}_{chipsize}_{band}".replace(
+        '.', '_')
+
+    data = qh.getRawChipByLocation(
+        lon, lat, start_date, end_date, unique_id, band, chipsize, plevel)
+
+    if data:
+        return send_from_directory(f"files/{unique_id}", 'dump.json')
+    else:
+        return json.dumps({})
+
+
+# -------- Queries - Time Series --------------------------------------------- #
 
 @app.route('/query/parcelTimeSeries', methods=['GET'])
 @auth_required
