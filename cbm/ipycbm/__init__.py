@@ -55,7 +55,7 @@ def config(*args):
 
 def bg_grid(*args):
     from cbm.show import background
-    return background.main(*args)
+    return background.by_pid(*args)
 
 
 def bg_slider(*args):
