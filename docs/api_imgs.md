@@ -7,15 +7,15 @@ Please read up on the [generic characteristics of the RESTful service](https://j
 **WARNING**: The query described here is **resource intensive**. It starts a complex task that involves communication between docker containers and parallel execution on several DIAS VMs. The following limitations apply:
 
 * Chip extraction is for Level-1C (L1C) and Level-2A (L2A) Sentinel-2. L2A is not available everywhere, but generally in the CbM onboarding Member States and those in other pilots (e.g. SEN4CAP, EOSC-EAP) where CREODIAS was used. L1C is available globally.
- 
+
 * Selection is by date range. The current limit per request is 24 chips. No cloud filtering is applied. Shorten the time window if it leads to > 24 chips being selected (error output is still rudimentary).
- 
-* The service applies a simple rule to exclude duplicate chips for the same date (e.g. in tile overlaps). However, a location may be in a multiple orbit overlap, which will generate denser time series than the usual 5 day repeat cycle of the A and B sensors. Thus, you may need to shorten the time window in order not to exceed the 24 chip limit. 
- 
+
+* The service applies a simple rule to exclude duplicate chips for the same date (e.g. in tile overlaps). However, a location may be in a multiple orbit overlap, which will generate denser time series than the usual 5 day repeat cycle of the A and B sensors. Thus, you may need to shorten the time window in order not to exceed the 24 chip limit.
+
 * The server has a simple caching mechanism. If you run the query again, with a larger time window, it will only generate the new chips, taking the rest from cache. This should be used to create longer time series.
 
 * The cache is flushed regularly, typically at midnight (CET).
- 
+
 * **Do not refresh the link** if it is still running, as it will start a new selection process and currently screws up the sequence.
 
 **NOTE**: The use of these RESTful queries on JRC RESTful example is meant for occassional use and testing. If you have a use case that requires many chip generations, please contact us for alternative methods.
@@ -25,29 +25,29 @@ All requests are logged, using your internet address (IP). Furthermore, the cach
 
 ## chipByLocation
 
-Generates a series of extracted Sentinel-2 LEVEL2A segments of 128x128 pixels as a composite of 3 bands. 
+Generates a series of extracted Sentinel-2 LEVEL2A segments of 128x128 pixels as a composite of 3 bands.
 
-| Parameters  | Description   | Example call                  |
-| ----------- | --------------------- | ------------------------ |
-| **lon**         | longitude in decimal degrees  | [default](http://185.178.85.226/query/chipsByLocation?lon=6.32&lat=52.34&start_date=2018-04-01&end_date=2018-04-30)                         |
-| **lat**         | latitude in decimal degrees |  [empty]()              |
-| **start_date**         | start date of time window |                |
-| **end_date**         | end date of time window |                |
-| *lut*  | percentiles or absolute values used to scale to byte   |  [+option](http://185.178.85.226/query/chipsByLocation?lon=6.32&lat=52.34&start_date=2018-04-01&end_date=2018-04-30&lut=1_90)                        |
-| *bands*  | band selection for composite generation   |  [+option](http://185.178.85.226/query/chipsByLocation?lon=6.32&lat=52.34&start_date=2018-04-01&end_date=2018-04-30&bands=B08_B11_B04&lut=10_90)                        |
-| *plevel*  | processing level   |                          |
+| Parameters | Description | Example call |
+| ---------- | ----------- | ------------ |
+| **lon** | longitude in decimal degrees  | [default](http://185.178.85.226/query/chipsByLocation?lon=6.32&lat=52.34&start_date=2018-04-01&end_date=2018-04-30) |
+| **lat** | latitude in decimal degrees | [empty]() |
+| **start_date** | start date of time window | |
+| **end_date** | end date of time window | |
+| *lut*  | percentiles or absolute values used to scale to byte | [+option](http://185.178.85.226/query/chipsByLocation?lon=6.32&lat=52.34&start_date=2018-04-01&end_date=2018-04-30&lut=1_90) |
+| *bands* | band selection for composite generation | [+option](http://185.178.85.226/query/chipsByLocation?lon=6.32&lat=52.34&start_date=2018-04-01&end_date=2018-04-30&bands=B08_B11_B04&lut=10_90) |
+| *plevel* | processing level | |
 
 
 Currently, parameter values can be as follows:
 
-| Parameters  | Format   | Description                  |
-| ----------- | --------------------- | ------------------------ |
-| **lon, lat**   | a string representing a float number  | Any geographical coordinate where Level-2A Sentinel-2 is available          |
-| **start_date, end_date**         | YYYY-mm-dd   | Time window for which Level-2A Sentinel-2 is available (after 27 March 2018)        |
-| *lut*         | Low_High      | A pair of float values between 0 and 100 separated by an underscore (\_). Low must be smaller than High. Defaults to 5_95    |
-| *lut*         | LB1_HB1_LB2_HB2_LB3_HB3      | 3 pairs of float values, with each value separated by an underscore (\_). Each pair are the absolute low and high thresholds, applied to the band selection    |
-| *bands*         | Bn1_Bn2_Bn3   | 3 Sentinel-2 band names. One of ['B02', 'B03', 'B04', 'B08'] (10 m bands) or ['B05', 'B06', 'B07', 'B8A', 'B11', 'B12'] (20 m bands). 10m and 20m bands can be combined. The first band determines the resolution in the output composite. Defaults to B08_B04_B03.    |
-| *plevel*         | string      | LEVEL2A, LEVEL1C. Use LEVEL1C where LEVEL2A is not avaiable        |
+| Parameters  | Format | Description |
+| ----------- | ------ | ----------- |
+| **lon, lat** | a string representing a float number  | Any geographical coordinate where Level-2A Sentinel-2 is available |
+| **start_date, end_date** | YYYY-mm-dd | Time window for which Level-2A Sentinel-2 is available (after 27 March 2018) |
+| *lut* | Low_High | A pair of float values between 0 and 100 separated by an underscore (\_). Low must be smaller than High. Defaults to 5_95 |
+| *lut* | LB1_HB1_LB2_HB2_LB3_HB3 | 3 pairs of float values, with each value separated by an underscore (\_). Each pair are the absolute low and high thresholds, applied to the band selection |
+| *bands* | Bn1_Bn2_Bn3 | 3 Sentinel-2 band names. One of ['B02', 'B03', 'B04', 'B08'] (10 m bands) or ['B05', 'B06', 'B07', 'B8A', 'B11', 'B12'] (20 m bands). 10m and 20m bands can be combined. The first band determines the resolution in the output composite. Defaults to B08_B04_B03. |
+| *plevel* | string | LEVEL2A, LEVEL1C. Use LEVEL1C where LEVEL2A is not avaiable |
 
 
 returns
@@ -57,7 +57,7 @@ An HTML page that displays the selected chips in a table with max. 8 columns.
 
 ## backgroundByLocation
 
-It is often handy to have a high resolution overview of the parcel situation. A (globally) useful set are the Google and Bing (or Virtual Earth) background image sets. 
+It is often handy to have a high resolution overview of the parcel situation. A (globally) useful set are the Google and Bing (or Virtual Earth) background image sets.
 
 This query generates an extract from either Google or Bing. It uses the WMTS standard to grab and compose, which makes it fast (does not depend on DIAS S3 store).
 
@@ -88,7 +88,7 @@ An HTML page that displays the selected chip as a PNG tile. Generates a GeoTIFF 
 
 ## rawChipByLocation
 
-Generates a series of extracted Sentinel-2 LEVEL2A segments of 128x128 (10m resolution bands) or 64x64 (20 m) pixels as list of full resolution GeoTIFFs. 
+Generates a series of extracted Sentinel-2 LEVEL2A segments of 128x128 (10m resolution bands) or 64x64 (20 m) pixels as list of full resolution GeoTIFFs.
 
 | Parameters  | Description   | Example call                  |
 | ----------- | --------------------- | ------------------------ |
@@ -289,7 +289,7 @@ S2B_MSIL2A_20190620T105039_N0212_R051_T31UFU_20190620T140845.SCL.tif {4: 187}
 ```
 i.e., for each image set, the histogram (a dictionary) shows how many of the 187 pixels included in the parcel (at 20 m resolution) are in each SCL class. The SCL class keys have the following meaning:
 
-![SCL Legend](https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/legend_scl.png) 
+![SCL Legend](https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/legend_scl.png)
 
 (Courtesy of Csaba Wirnhardt, JRC)
 
@@ -303,5 +303,3 @@ Continue on the [next WIKI page](https://jrc-cbm.readthedocs.io/en/latest/api_po
 ## Quiz question
 
 There is an alternative, more approximate, solution to understand whether the parcel is cloud free. Try to find out which, and write a script to compare to the histogram extractions.
-
-
