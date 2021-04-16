@@ -67,7 +67,7 @@ and set the database connection information. e.g.:
 
 A docker image is available on [docker hub](https://hub.docker.com/r/gtcap/cbm_api). This image includes flask and all the required python libraries needed to build a RESTful API For CbM. It can be easily deployed with:
 
-    docker run -it --name api -v "$PWD":/app -p 5000:5000 gtcap/cbm_api
+    docker run -it --name api -v "$PWD":/app -p 5000:80 gtcap/cbm_api
 
 <!-- $ -->
 
@@ -88,7 +88,7 @@ docker build --tag cbm_api .
 ```
 Go back to api folder **cbm/api** and deployed the container with:
 
-    docker run -it --name api -v "$PWD":/app -p 5000:5000 cbm_api
+    docker run -it --name api -v "$PWD":/app -p 5000:80 cbm_api
 
 <!-- $ -->
 
