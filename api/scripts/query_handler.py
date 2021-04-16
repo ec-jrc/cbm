@@ -12,10 +12,10 @@ import psycopg2
 import psycopg2.extras
 import logging
 
-from scipts import db
+from scripts import db
 conn_str = db.conn_str()
 
-logging.basicConfig(filename='queryHandler.log', filemode='w',
+logging.basicConfig(filename='logs/queryHandler.log', filemode='w',
                     format='%(name)s - %(levelname)s - %(message)s',
                     level=logging.ERROR)
 
