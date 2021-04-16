@@ -50,7 +50,7 @@ def auth_required(f):
 
 
 swag = Swagger(app, decorators=[auth_required],
-               template_file='templates/flasgger.json')
+               template_file='static/flasgger.json')
 
 
 class CustomJsonEncoder(json.JSONEncoder):
@@ -99,52 +99,20 @@ def dump(unique_id, png_id):
         abort(404)
 
 
-@app.route('/query/chipsByLocation', methods=['GET'])
-@auth_required
-def chipsByLocation_query():
-    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
-    # Start by getting the request IP address
-    if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
-        rip = request.environ['REMOTE_ADDR']
-    else:
-        rip = request.environ['HTTP_X_FORWARDED_FOR']
-
-    lon = request.args.get('lon')
-    lat = request.args.get('lat')
-
-    start_date = request.args.get('start_date')
-    end_date = request.args.get('end_date')
-
-    if 'lut' in request.args.keys():
-        lut = request.args.get('lut')
-    else:
-        lut = '5_95'
-
-    if 'bands' in request.args.keys():
-        bands = request.args.get('bands')
-    else:
-        bands = 'B08_B04_B03'
-
-    if 'plevel' in request.args.keys():
-        plevel = request.args.get('plevel')
-    else:
-        plevel = 'LEVEL2A'
-
-    unique_id = f"dump/{rip}E{lon}N{lat}L{lut}_{plevel}_{bands}".replace(
-        '.', '_')
-
-    data = qh.getChipsByLocation(
-        lon, lat, start_date, end_date, unique_id, lut, bands, plevel)
-
-    if data:
-        return send_from_directory(f"files/{unique_id}", 'dump.html')
-    else:
-        return json.dumps({})
-
-
 @app.route('/query/backgroundByLocation', methods=['GET'])
 @auth_required
 def backgroundByLocation_query():
+    """
+    Generate an extract from either Google or Bing.
+    It uses the WMTS standard to grab and compose, which makes it fast
+    (does not depend on DIAS S3 store).
+    ---
+    tags:
+      - backgroundByLocation
+    responses:
+      200:
+        description: An HTML page that displays the selected chip as a PNG tile.
+    """
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
     # Start by getting the request IP address
     if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
@@ -190,9 +158,72 @@ def backgroundByLocation_query():
         return json.dumps({})
 
 
+@app.route('/query/chipsByLocation', methods=['GET'])
+@auth_required
+def chipsByLocation_query():
+    """
+    Get chips images by location.
+    Generates a series of extracted Sentinel-2 LEVEL2A segments of 128x128 pixels as a composite of 3 bands.
+    ---
+    tags:
+      - chipsByLocation
+    responses:
+      200:
+        description: An HTML page that displays the selected chips in a table with max. 8 columns.
+    """
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+    # Start by getting the request IP address
+    if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
+        rip = request.environ['REMOTE_ADDR']
+    else:
+        rip = request.environ['HTTP_X_FORWARDED_FOR']
+
+    lon = request.args.get('lon')
+    lat = request.args.get('lat')
+
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+
+    if 'lut' in request.args.keys():
+        lut = request.args.get('lut')
+    else:
+        lut = '5_95'
+
+    if 'bands' in request.args.keys():
+        bands = request.args.get('bands')
+    else:
+        bands = 'B08_B04_B03'
+
+    if 'plevel' in request.args.keys():
+        plevel = request.args.get('plevel')
+    else:
+        plevel = 'LEVEL2A'
+
+    unique_id = f"dump/{rip}E{lon}N{lat}L{lut}_{plevel}_{bands}".replace(
+        '.', '_')
+
+    data = qh.getChipsByLocation(
+        lon, lat, start_date, end_date, unique_id, lut, bands, plevel)
+
+    if data:
+        return send_from_directory(f"files/{unique_id}", 'dump.html')
+    else:
+        return json.dumps({})
+
+
 @app.route('/query/chipsByParcelId', methods=['GET'])
 @auth_required
 def chipsByParcelId_query():
+    """
+    Get chips images by parcel id.
+    Generates a series of extracted Sentinel-2 LEVEL2A segments of 128x128 pixels as a composite of 3 bands.
+    ---
+    tags:
+      - chipsByParcelId
+    responses:
+      200:
+        description: Returns a html with the images
+    """
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
     # Start by getting the request IP address
     if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
@@ -236,6 +267,16 @@ def chipsByParcelId_query():
 @app.route('/query/rawChipByLocation', methods=['GET'])
 @auth_required
 def rawChipByLocation_query():
+    """
+    Get chips images by parcel id.
+    Generates a series of extracted Sentinel-2 LEVEL2A segments of 128x128 (10m resolution bands) or 64x64 (20 m) pixels as list of full resolution GeoTIFFs.
+    ---
+    tags:
+      - rawChipByLocation
+    responses:
+      200:
+        description: A JSON dictionary with date labels and relative URLs to cached GeoTIFFs.
+    """
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
     # Start by getting the request IP address
     if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
@@ -278,6 +319,15 @@ def rawChipByLocation_query():
 @app.route('/query/parcelTimeSeries', methods=['GET'])
 @auth_required
 def parcelTimeSeries_query():
+    """
+    Get the time series for a parcel ID.
+    ---
+    tags:
+      - parcelTimeSeries
+    responses:
+      200:
+        description: Time series table.
+    """
     aoi = request.args.get('aoi')
     year = request.args.get('year')
     parcelid = request.args.get('pid')
@@ -301,6 +351,15 @@ def parcelTimeSeries_query():
 @app.route('/query/parcelPeers', methods=['GET'])
 @auth_required
 def parcelPeers_query():
+    """
+    Get the parcel “peers” for a known parcel ID,
+    ---
+    tags:
+      - parcelPeers
+    responses:
+      200:
+        description: The parcel “peers”.
+    """
     parcelTable = request.args.get('parcels')
     pid = request.args.get('pid')
     distance = 1000.0
@@ -329,6 +388,15 @@ def parcelPeers_query():
 @app.route('/query/parcelByLocation', methods=['GET'])
 @auth_required
 def parcelByLocation_query():
+    """
+    Find parcel information for a geographical location.
+    ---
+    tags:
+      - parcelByLocation
+    responses:
+      200:
+        description: Parcel information.
+    """
     parcelTable = request.args.get('parcels')
     lon = request.args.get('lon')
     lat = request.args.get('lat')
@@ -351,6 +419,15 @@ def parcelByLocation_query():
 @app.route('/query/parcelById', methods=['GET'])
 @auth_required
 def parcelById_query():
+    """
+    Get a parcel information for a known parcel ID,
+    ---
+    tags:
+      - parcelById
+    responses:
+      200:
+        description: Parcel information.
+    """
     parcelTable = request.args.get('parcels')
     withGeometry = False
 
@@ -374,6 +451,15 @@ def parcelById_query():
 @app.route('/query/parcelsByPolygon', methods=['GET'])
 @auth_required
 def parcelsByPolygon_query():
+    """
+    Find a parcel ID for within a given polygon.
+    ---
+    tags:
+      - parcelsByPolygon
+    responses:
+      200:
+        description: List of parcels.
+    """
     parcelTable = request.args.get('parcels')
     withGeometry = False
     only_ids = True
