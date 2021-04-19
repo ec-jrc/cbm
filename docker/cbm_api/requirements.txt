@@ -6,3 +6,5 @@ werkzeug
 requests
 pandas
 flasgger
+gdal==2.4.0
+rasterio
