@@ -27,15 +27,16 @@ All requests are logged, using your internet address (IP). Furthermore, the cach
 
 Generates a series of extracted Sentinel-2 LEVEL2A segments of 128x128 pixels as a composite of 3 bands.
 
-| Parameters | Description | Example call |
-| ---------- | ----------- | ------------ |
-| **lon** | longitude in decimal degrees  | [default](http://185.178.85.226/query/chipsByLocation?lon=6.32&lat=52.34&start_date=2018-04-01&end_date=2018-04-30) |
-| **lat** | latitude in decimal degrees | [empty]() |
-| **start_date** | start date of time window | |
-| **end_date** | end date of time window | |
-| *lut*  | percentiles or absolute values used to scale to byte | [+option](http://185.178.85.226/query/chipsByLocation?lon=6.32&lat=52.34&start_date=2018-04-01&end_date=2018-04-30&lut=1_90) |
+
+| Parameters  | Description | Example call |
+| ----------- | ----------- | ------------ |
+| **lon** | longitude in decimal degrees | [default](http://185.178.85.226/query/chipsByLocation?lon=6.32&lat=52.34&start_date=2018-04-01&end_date=2018-04-30) |
+| **lat** | latitude in decimal degrees | empty |
+| *start_date* | start date of time window | |
+| *end_date* | end date of time window | |
+| *lut* | percentiles or absolute values used to scale to byte | [+option](http://185.178.85.226/query/chipsByLocation?lon=6.32&lat=52.34&start_date=2018-04-01&end_date=2018-04-30&lut=1_90) |
 | *bands* | band selection for composite generation | [+option](http://185.178.85.226/query/chipsByLocation?lon=6.32&lat=52.34&start_date=2018-04-01&end_date=2018-04-30&bands=B08_B11_B04&lut=10_90) |
-| *plevel* | processing level | |
+| **plevel** | processing level | |
 
 
 Currently, parameter values can be as follows:
