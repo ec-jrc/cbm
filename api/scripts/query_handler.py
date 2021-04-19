@@ -12,6 +12,12 @@ import psycopg2
 import psycopg2.extras
 import logging
 
+from scripts import backgroundExtract as bgext
+# from scripts import chipS2Extractor2 as ces2
+# from scripts import rawChipBatchExtract as rceb
+# from scripts import rawChipExtractor as rce
+# from scripts import rawS1ChipBatchExtract as rces1
+
 from scripts import db
 conn_str = db.conn_str()
 
@@ -22,27 +28,24 @@ logging.basicConfig(filename='logs/queryHandler.log', filemode='w',
 
 # Parcel Images
 
-
 def getBackgroundByLocation(lon, lat, chipsize, chipextend, tms,
                             unique_id, iformat):
-    import backgroundExtract as bgext
-    logging.debug(unique_id)
-
-    logging.debug(
-        f"ssh on remote_dias_py python backgroundExtract.py {lon} {lat} {chipsize} {chipextend} {tms} {unique_id} {iformat}")
-    bgext.getWindowedExtract(lon, lat, chipsize, chipextend, tms,
-                             unique_id, iformat)
-    bgext.buildHTML(unique_id, tms, iformat)
-    return True
+    try:
+        logging.debug(unique_id)
+        logging.debug(f"{unique_id} {iformat}")
+        bgext.getWindowedExtract(lon, lat, chipsize, chipextend,
+                                 unique_id, tms, iformat)
+        bgext.buildHTML(unique_id, tms, iformat)
+        return True
+    except Exception as err:
+        print(err)
 
 
 def getChipsByLocation(lon, lat, start_date, end_date, unique_id, lut='5_95',
                        bands='B08_B04_B03', plevel='LEVEL2A'):
-    import chipS2Extractor2 as ces2
     logging.debug(lut)
     logging.debug(bands)
-    logging.debug(
-        f"ssh on remote_dias_py python chipS2Extractor2.py {lon} {lat} {start_date} {end_date} {unique_id} {lut} {bands} {plevel}")
+    logging.debug(f"{lon} {lat} {start_date} {end_date} {unique_id} {lut} {bands} {plevel}")
 
     numchips = ces2.parallelExtract(
         lon, lat, start_date, end_date, unique_id, lut, bands, plevel)
@@ -61,9 +64,8 @@ def getChipsByLocation(lon, lat, start_date, end_date, unique_id, lut='5_95',
 
 def getRawChipByLocation(lon, lat, start_date, end_date, unique_id, band,
                          chipsize='1280', plevel='LEVEL2A'):
-    import rawChipExtractor as rce
     logging.debug(
-        f"ssh on remote_dias_py python rawChipExtractor.py {lon} {lat} {start_date} {end_date} {unique_id} {band} {plevel}")
+        f"{lon} {lat} {start_date} {end_date} {unique_id} {band} {plevel}")
 
     numchips = rce.parallelExtract(lon, lat, start_date, end_date, unique_id,
                                    band, chipsize, plevel)
@@ -81,9 +83,8 @@ def getRawChipByLocation(lon, lat, start_date, end_date, unique_id, band,
 
 def getRawChipsBatch(unique_id):
     # params are dumped in params.json on unique_id directory
-    import rawChipBatchExtract as rceb
 
-    logging.debug(f"ssh on remote_dias_py python rawChipBatchExtract.py {unique_id}")
+    logging.debug(unique_id)
     numchips = rceb.parallelExtract(unique_id)
 
     if numchips == -1:
@@ -99,10 +100,8 @@ def getRawChipsBatch(unique_id):
 
 def getRawS1ChipsBatch(unique_id):
     # params are dumped in params.json on unique_id directory
-    import rawS1ChipBatchExtract as rces1
 
-    logging.debug(
-        f"ssh on remote_dias_py python rawS1ChipBatchExtract.py {unique_id}")
+    logging.debug(unique_id)
 
     numchips = rces1.parallelExtract(unique_id)
 
@@ -119,7 +118,7 @@ def getRawS1ChipsBatch(unique_id):
 
 # Parcel Time Series
 
-def getParcelTimeSeries(dias_cat, year, pid, tstype, band=None):
+def getParcelTimeSeries(parcelTable, pid, tstype, band=None):
     conn = psycopg2.connect(conn_str)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
@@ -129,8 +128,8 @@ def getParcelTimeSeries(dias_cat, year, pid, tstype, band=None):
             getTableDataSql = f"""
                 SELECT extract('epoch' from obstime), count,
                     mean, std, min, p25, p50, p75, max
-                FROM {aoi}{year}_{tstype}_signatures s,
-                    dias_catalogue_{dias_cat}{year} d
+                FROM {parcelTable}_{tstype}_signatures s,
+                    {parcelTable}_dias_catalogue d
                 WHERE s.obsid = d.id and
                 pid = {pid} and
                 band = '{band}'
@@ -140,8 +139,8 @@ def getParcelTimeSeries(dias_cat, year, pid, tstype, band=None):
             getTableDataSql = f"""
                 SELECT extract('epoch' from obstime), band,
                     count, mean, std, min, p25, p50, p75, max
-                FROM {aoi}{year}_{tstype}_signatures s,
-                    dias_catalogue_{dias_cat}{year} d
+                FROM {parcelTable}_{tstype}_signatures s,
+                    {parcelTable}_dias_catalogue d
                 WHERE s.obsid = d.id and
                 pid = {pid}
                 ORDER By obstime, band asc;
@@ -157,7 +156,7 @@ def getParcelTimeSeries(dias_cat, year, pid, tstype, band=None):
                 data.append(tuple(r))
         else:
             print("No time series found for",
-                  f"{pid} in {aoi}{year}_{tstype}_signatures")
+                  f"{pid} in {parcelTable}_{tstype}_signatures")
         return data
 
     except Exception as err:
@@ -215,6 +214,8 @@ def getParcelPeers(parcelTable, pid, distance, maxPeers):
                       "database and table: ", err)
         return data.append('Ended with no data')
 
+
+# Parcel information
 
 def getParcelByLocation(parcelTable, lon, lat, withGeometry=False):
     conn = psycopg2.connect(conn_str)

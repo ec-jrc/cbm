@@ -30,7 +30,7 @@ app.config['SWAGGER'] = {
     'uiversion': 3
 }
 
-# Enable upload page.
+# Enable upload page (http://HOST/upload).
 UPLOAD_ENABLE = False  # True or False
 
 
@@ -143,7 +143,7 @@ def backgroundByLocation_query():
     else:
         iformat = 'tif'
 
-    unique_id = f"dump/{rip}E{lon}N{lat}_{chipsize}_{chipextend}_{tms}".replace(
+    unique_id = f"static/dump/{rip}E{lon}N{lat}_{chipsize}_{chipextend}_{tms}".replace(
         '.', '_')
 
     data = qh.getBackgroundByLocation(
@@ -153,7 +153,7 @@ def backgroundByLocation_query():
         if 'raw' in request.args.keys():
             return 1
         else:
-            return send_from_directory(f"files/{unique_id}", 'dump.html')
+            return send_from_directory(f"{unique_id}", 'dump.html')
     else:
         return json.dumps({})
 
@@ -328,15 +328,14 @@ def parcelTimeSeries_query():
       200:
         description: Time series table.
     """
-    aoi = request.args.get('aoi')
-    year = request.args.get('year')
+    parcelTable = request.args.get('parcels')
     parcelid = request.args.get('pid')
     tstype = request.args.get('tstype')
     band = None
 
     if 'band' in request.args.keys():
         band = request.args.get('band')
-    data = qh.getParcelTimeSeries(aoi, year, parcelid, tstype, band)
+    data = qh.getParcelTimeSeries(parcelTable, parcelid, tstype, band)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -499,6 +498,12 @@ def allowed_file(filename):
 @app.route('/upload', methods=['GET', 'POST'])
 @auth_required
 def upload_file():
+    """
+    Upload file.
+    ---
+    tags:
+      - upload
+    """
     # Show upload page only if the uploader is enabled.
     if UPLOAD_ENABLE is True:
         if request.method == 'POST':
