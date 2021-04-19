@@ -5,9 +5,12 @@ MAINTAINER JRC UNIT D5
 COPY ./requirements.txt /app/
 WORKDIR /app
 
-RUN apt-get update \
-    && apt-get install -y gcc nano\
-    && apt-get clean
+RUN apt-get update
+RUN apt-get install -y python-numpy gdal-bin libgdal-dev gcc nano
+RUN apt-get clean
 
-RUN pip install --upgrade pip
-RUN pip install --user -r requirements.txt
+RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal
+RUN export C_INCLUDE_PATH=/usr/include/gdal
+
+RUN pip3 install --upgrade pip
+RUN pip3 install --user -r requirements.txt
