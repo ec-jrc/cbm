@@ -137,7 +137,13 @@ def rcbl(parcel, start_date, end_date, bands, chipsize, filespath,
         response = requests.get(requrl.format(api_url, cen_y, cen_x, start_date,
                                               end_date, band, chipsize),
                                 auth=(api_user, api_pass))
-
+        if not quiet:
+            print("Request url:", requrl.format(
+                api_url, cen_y, cen_x, start_date, end_date, band, chipsize))
+            print("Geom:", geom)
+            print("Source:", source, ", Target:", target)
+            print("Centroid", centroid)
+            print("Response:", response)
         # Directly create a pandas DataFrame from the json response
         df = pd.read_json(response.content)
         os.makedirs(filespath, exist_ok=True)
@@ -229,7 +235,8 @@ def get_options():
 
 
 def background(lon, lat, chipsize=512, extend=512, tms='Google',
-               aoi='undefined', year='', pid='0000', quiet=True):
+               bg_path='', quiet=True):
+    # aoi='undefined', year='', pid='0000', quiet=True):
     """Download the background image.
 
     Examples:
@@ -246,31 +253,29 @@ def background(lon, lat, chipsize=512, extend=512, tms='Google',
     """
     import os
     import os.path
-    import re
 
     # Get the api credentials
     api_url, api_user, api_pass = config.credentials('api')
 
     # The url to get the background image
-    requrl = f"lon={lon}&lat={lat}&chipsize={chipsize}&extend={extend}&tms={tms}"
-    response = requests.get(f"{api_url}/query/backgroundByLocation?{requrl}",
-                            auth=(api_user, api_pass))
+    requrl = f"lon={lon}&lat={lat}&chipsize={chipsize}&extend={extend}"
+    response = requests.get(
+        f"{api_url}/query/backgroundByLocation?{requrl}&tms={tms}&raw",
+        auth=(api_user, api_pass))
 
     # Try to get the image link from the html response
     try:
-        bkgdimg = re.search('src="(.+?)"/>', str(response.content)).group(1)
+        bkgdimg = response.content.decode("utf-8")
+        print(bkgdimg)
     except AttributeError:
         if not quiet:
             print("Image not found...")
         bkgdimg = ''  # image not found in html response
 
-    workdir = normpath(join(config.get_value(['paths', 'temp']),
-                            f'{aoi}{str(year)}', str(pid)))
-    bg_path = normpath(join(workdir, 'backgrounds'))
-    if not os.path.exists(bg_path):
+    if not os.path.exists(bg_path) and bg_path != "":
         os.makedirs(bg_path)
 
-    img_url = f"{api_url}{bkgdimg}"
+    img_url = f"{api_url}/{bkgdimg}"
     res = requests.get(img_url, stream=True)
     image_name = img_url.split('/')[-1].lower()
     bg_file = normpath(join(bg_path, image_name))
@@ -278,7 +283,7 @@ def background(lon, lat, chipsize=512, extend=512, tms='Google',
     if not quiet:
         print(f"Downloading {image_name}")
     with open(bg_file, "wb") as handle:
-        for chunk in res.iter_content(chunk_size=512):
+        for chunk in res.iter_content(chunk_size=1024):
             if chunk:  # filter out keep-alive new chunks
                 handle.write(chunk)
     if not quiet:
