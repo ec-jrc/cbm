@@ -10,6 +10,7 @@
 
 import os
 import json
+import glob
 import logging
 from decimal import Decimal
 from functools import wraps
@@ -17,11 +18,12 @@ from flasgger import Swagger
 from werkzeug.utils import secure_filename
 from logging.handlers import TimedRotatingFileHandler
 from flask import (Flask, request, send_from_directory, make_response,
-                   render_template, flash, redirect, jsonify, abort)
+                   render_template, flash, redirect, jsonify, abort, url_for)
 
 
 from scripts import query_handler as qh
 from scripts import users
+
 
 app = Flask(__name__)
 app.secret_key = os.urandom(12)
@@ -151,9 +153,12 @@ def backgroundByLocation_query():
 
     if data:
         if 'raw' in request.args.keys():
-            return 1
+            return f"{unique_id}/{tms.lower()}.{iformat}"
         else:
-            return send_from_directory(f"{unique_id}", 'dump.html')
+            flist = glob.glob(f"{unique_id}/{tms.lower()}.{iformat}")
+            full_filename = url_for(
+                'static', filename=flist[0].replace('static/', ''))
+            return render_template("bg_page.html", bg_image=full_filename)
     else:
         return json.dumps({})
 

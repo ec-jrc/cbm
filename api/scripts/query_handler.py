@@ -35,7 +35,6 @@ def getBackgroundByLocation(lon, lat, chipsize, chipextend, tms,
         logging.debug(f"{unique_id} {iformat}")
         bgext.getWindowedExtract(lon, lat, chipsize, chipextend,
                                  unique_id, tms, iformat)
-        bgext.buildHTML(unique_id, tms, iformat)
         return True
     except Exception as err:
         print(err)

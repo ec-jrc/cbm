@@ -91,3 +91,12 @@ def create_db_config():
             json.dump(json.loads(db_conf), outfile, indent=4)
         print("The db_conf.json file did not exist, a new file was created.")
         return json.loads(db_conf)
+
+
+def check(db='main'):
+    try:
+        conn = psycopg2.connect(conn_str(db))
+        conn.close()
+        return True
+    except Exception:
+        return False
