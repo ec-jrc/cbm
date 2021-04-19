@@ -19,16 +19,11 @@
 import os
 import glob
 import math
-
 import numpy as np
 import logging
-
 import rasterio as rio
 from rasterio.windows import Window
 from rasterio.transform import Affine
-from flask import url_for
-
-
 from osgeo import osr, ogr
 
 
@@ -129,41 +124,3 @@ def getWindowedExtract(lon, lat, chipSize, chipExtend, unique_dir,
             return True
     else:
         return False
-
-
-def buildHTML(unique_dir, tms, format='tif'):
-    """Build an HTML page that displays the selected chip as a PNG tile.
-    Arguments:
-        unique_dir (str): the path for the file to be stored
-        tms (str): tile map server
-        format (str): File format '.tif' or '.png'
-    """
-    flist = glob.glob(f"{unique_dir}/{tms.lower()}.{format}")
-
-    html = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <style>table {'{border-spacing: 10px;}'}</style>
-</head>
-<body>
-    <table style="width:100%">
-        <tr>
-            <td>
-                <label>
-                <img id = '{flist[0]}' src='{url_for(
-                    'static', filename=flist[0].replace('static/', ''))}'/>
-                <br/>
-                {flist[0]}
-                </label>
-            </td>
-        </tr>
-    </table>
-</body>
-</html>
-"""
-
-    with open(f"{unique_dir}/dump.html", "w") as out:
-        out.write(html)
-
-    return True
