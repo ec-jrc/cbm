@@ -1,5 +1,9 @@
 # itignore CbM files
 
+api/static/dump/
+api/core
+api/config/users.json
+
 config/*
 ipynb/temp/*
 ipynb/config/*
