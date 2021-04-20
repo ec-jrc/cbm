@@ -16,9 +16,10 @@ import hashlib
 from codecs import encode
 
 users_file = 'config/users.json'
+data_auth_file = 'config/data_auth.json'
 
 
-def auth(username, password):
+def auth(username, password, aoi=None):
     """Authentication check with hashed passwords
 
     To be used in authentication decorator of flask app.
@@ -62,7 +63,14 @@ def auth(username, password):
             'sha256', password.encode('utf-8'), salt, 100000)
 
         if key == new_key:
-            return True
+            if aoi:
+                aois = get_list(data_auth_file)
+                if username in aois[aoi]:
+                    return True
+                else:
+                    return False
+            else:
+                return True
         else:
             return False
 
@@ -70,7 +78,27 @@ def auth(username, password):
         return False
 
 
-def create(username, password=''):
+def data_auth(aoi, username):
+    aois = get_list(data_auth_file)
+    if username in aois[aoi]:
+        return True
+    else:
+        return False
+
+
+def data_auth_add(aoi, username):
+    aois = get_list(data_auth_file)
+    if aoi in aois:
+        if username not in aois[aoi]:
+            print(type(aois[aoi]), aois[aoi])
+            aois[aoi] = aois[aoi]+[username]
+    else:
+        aois[aoi] = [username]
+    with open(data_auth_file, 'w') as u:
+        json.dump(aois, u, indent=1)
+
+
+def create(username, password='', aoi=None):
     """Create a new user
 
     Example:
@@ -94,10 +122,12 @@ def create(username, password=''):
     }
     with open(users_file, 'w') as u:
         json.dump(users, u, indent=2)
+    if aoi:
+        data_auth_add(aoi, username)
     print(f"The user '{username}' was created.")
 
 
-def get_list():
+def get_list(file=users_file):
     """Get the list of active users
 
     Example:
@@ -108,12 +138,12 @@ def get_list():
 
     """
     try:
-        with open(users_file, 'r') as u:
+        with open(file, 'r') as u:
             users = json.load(u)
         return users
     except Exception:
         try:
-            with open(users_file, 'w') as u:
+            with open(file, 'w') as u:
                 users = json.dumps({}, sort_keys=False, indent=2)
             return {}
         except Exception as err:
@@ -144,7 +174,7 @@ def delete(username):
 
 if __name__ == '__main__':
     if sys.argv[1].lower() == 'add' or sys.argv[1].lower() == 'create':
-        create(sys.argv[2], sys.argv[3])
+        create(sys.argv[2], sys.argv[3], sys.argv[4])
     elif sys.argv[1].lower() == 'delete':
         delete(sys.argv[2])
     elif sys.argv[1].lower() == 'list':
@@ -152,7 +182,7 @@ if __name__ == '__main__':
             print(key)
     else:
         print("""Not recognized arguments. Available options:
-    python users.py create username password  # Create a new user.
-    python users.py delete username           # Delete a user.
-    python users.py list                      # Print a list of the users.
+    python users.py add username password  aoi # Create a new user.
+    python users.py delete username            # Delete a user.
+    python users.py list                       # Print a list of the users.
         """)
