@@ -44,7 +44,15 @@ def auth_required(f):
     def decorated(*args, **kwargs):
         auth = request.authorization
         if auth and users.auth(auth.username, auth.password) is True:
-            return f(*args, **kwargs)
+            if 'aoi' in request.args.keys():
+                aoi = request.args.get('aoi')
+                print(aoi, aoi[:-4])
+                if users.data_auth(aoi, auth.username):
+                    return f(*args, **kwargs)
+                return make_response(
+                    'Could not authorization for this dataset.', 401)
+            else:
+                return f(*args, **kwargs)
         return make_response(
             'Could not verify.', 401,
             {'WWW-Authenticate': 'Basic realm="Login Required"'})
@@ -333,14 +341,14 @@ def parcelTimeSeries_query():
       200:
         description: Time series table.
     """
-    parcelTable = request.args.get('parcels')
+    aoi = request.args.get('aoi')
     parcelid = request.args.get('pid')
     tstype = request.args.get('tstype')
     band = None
 
     if 'band' in request.args.keys():
         band = request.args.get('band')
-    data = qh.getParcelTimeSeries(parcelTable, parcelid, tstype, band)
+    data = qh.getParcelTimeSeries(aoi, parcelid, tstype, band)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -364,7 +372,7 @@ def parcelPeers_query():
       200:
         description: The parcel “peers”.
     """
-    parcelTable = request.args.get('parcels')
+    aoi = request.args.get('aoi')
     pid = request.args.get('pid')
     distance = 1000.0
     maxPeers = 10
@@ -378,7 +386,7 @@ def parcelPeers_query():
     if maxPeers > 100:
         maxPeers = 100
 
-    data = qh.getParcelPeers(parcelTable, pid, distance, maxPeers)
+    data = qh.getParcelPeers(aoi, pid, distance, maxPeers)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -401,7 +409,7 @@ def parcelByLocation_query():
       200:
         description: Parcel information.
     """
-    parcelTable = request.args.get('parcels')
+    aoi = request.args.get('aoi')
     lon = request.args.get('lon')
     lat = request.args.get('lat')
     withGeometry = False
@@ -409,7 +417,7 @@ def parcelByLocation_query():
     if 'withGeometry' in request.args.keys():
         withGeometry = True if request.args.get(
             'withGeometry') == 'True' else False
-    data = qh.getParcelByLocation(parcelTable, lon, lat, withGeometry)
+    data = qh.getParcelByLocation(aoi, lon, lat, withGeometry)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -432,7 +440,7 @@ def parcelById_query():
       200:
         description: Parcel information.
     """
-    parcelTable = request.args.get('parcels')
+    aoi = request.args.get('aoi')
     withGeometry = False
 
     if 'withGeometry' in request.args.keys():
@@ -440,7 +448,7 @@ def parcelById_query():
             'withGeometry') == 'True' else False
 
     parcelid = request.args.get('parcelid')
-    data = qh.getParcelById(parcelTable, parcelid, withGeometry)
+    data = qh.getParcelById(aoi, parcelid, withGeometry)
 
     if not data:
         return json.dumps({})
@@ -464,7 +472,7 @@ def parcelsByPolygon_query():
       200:
         description: List of parcels.
     """
-    parcelTable = request.args.get('parcels')
+    aoi = request.args.get('aoi')
     withGeometry = False
     only_ids = True
 
@@ -477,7 +485,7 @@ def parcelsByPolygon_query():
             'only_ids') == 'True' else False
 
     polygon = request.args.get('polygon')
-    data = qh.getParcelsByPolygon(parcelTable, polygon, withGeometry, only_ids)
+    data = qh.getParcelsByPolygon(aoi, polygon, withGeometry, only_ids)
 
     if not data:
         return json.dumps({})
