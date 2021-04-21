@@ -8,19 +8,21 @@
 # License   : 3-Clause BSD
 
 
-import psycopg2
 import pandas as pd
-from cbm.sources import db
 
+from cbm.sources import db
+from cbm.utils import config
 # Requests
+
+
 def getParcelByLocation(dsc, lon, lat, withGeometry=False, set_db='main'):
     """Find the parcel under the given coordinates"""
-    conn = db.conn(set_db)
+    # conn = db.conn(set_db)
     cur = db.cur(set_db)
     data = []
     values = config.read()
     dsc = values['set']['dataset']
-    dsy = values['set']['ds_year']
+    # dsy = values['set']['ds_year']
     try:
         values = config.read()
         parcels_table = values['dataset'][dsc]['tables']['parcels']
@@ -34,21 +36,21 @@ def getParcelByLocation(dsc, lon, lat, withGeometry=False, set_db='main'):
         cur.execute(getTableSrid)
         srid = cur.fetchone()[0]
 
-
         if withGeometry:
             geometrySql = ", st_asgeojson(wkb_geometry) as geom"
         else:
             geometrySql = ""
 
         getTableDataSql = f"""
-            SELECT {parcels_id}, {crop_names} as cropname, {crop_codes} as cropcode,
+            SELECT {parcels_id}, {crop_names} as cropname,
+                    {crop_codes} as cropcode,
                 st_srid(wkb_geometry) as srid{geometrySql},
                 st_area(wkb_geometry) as area,
                 st_X(st_transform(st_centroid(wkb_geometry), 4326)) as clon,
                 st_Y(st_transform(st_centroid(wkb_geometry), 4326)) as clat
             FROM {parcels_table}
-            WHERE st_intersects(wkb_geometry,
-                  st_transform(st_geomfromtext('POINT({lon} {lat})', 4326), {srid}));
+            WHERE st_intersects(wkb_geometry, st_transform(st_geomfromtext(
+                'POINT({lon} {lat})', 4326), {srid}));
         """
 
         #  Return a list of tuples
@@ -60,7 +62,8 @@ def getParcelByLocation(dsc, lon, lat, withGeometry=False, set_db='main'):
             for r in rows:
                 data.append(tuple(r))
         else:
-            print(f"No parcel found in {parcels_table} that intersects with point ({lon}, {lat})")
+            print(
+                f"No parcel found in {parcels_table} that intersects with point ({lon}, {lat})")
         return data
 
     except Exception as err:
@@ -70,12 +73,10 @@ def getParcelByLocation(dsc, lon, lat, withGeometry=False, set_db='main'):
 
 def getParcelById(dsc, pid, withGeometry=False, set_db='main'):
     """Get parcel information for the given parcel id"""
-    conn = db.conn(set_db)
     cur = db.cur(set_db)
     data = []
     values = config.read()
     dsc = values['set']['dataset']
-    dsy = values['set']['ds_year']
     try:
         values = config.read()
         parcels_table = values['dataset'][dsc]['tables']['parcels']
@@ -87,7 +88,7 @@ def getParcelById(dsc, pid, withGeometry=False, set_db='main'):
             SELECT srid FROM geometry_columns
             WHERE f_table_name = '{parcels_table}'"""
         cur.execute(getTableSrid)
-        srid = cur.fetchone()[0]
+        # srid = cur.fetchone()[0]
 
         if withGeometry:
             geometrySql = ", st_asgeojson(wkb_geometry) as geom"
@@ -95,7 +96,8 @@ def getParcelById(dsc, pid, withGeometry=False, set_db='main'):
             geometrySql = ""
 
         getTableDataSql = f"""
-            SELECT {parcels_id}, {crop_names} as cropname, {crop_codes} as cropcode,
+            SELECT {parcels_id}, {crop_names} as cropname,
+                    {crop_codes} as cropcode,
                 st_srid(wkb_geometry) as srid{geometrySql},
                 st_area(wkb_geometry) as area,
                 st_X(st_transform(st_centroid(wkb_geometry), 4326)) as clon,
@@ -125,12 +127,10 @@ def getParcelsByPolygon(dsc, polygon, withGeometry=False, only_ids=True, set_db=
     """Get list of parcels within the given polygon"""
     poly = polygon.replace('_', ' ').replace('-', ',')
 
-    conn = db.conn(set_db)
     cur = db.cur(set_db)
     data = []
     values = config.read()
     dsc = values['set']['dataset']
-    dsy = values['set']['ds_year']
     try:
         values = config.read()
         parcels_table = values['dataset'][dsc]['tables']['parcels']
@@ -175,7 +175,8 @@ def getParcelsByPolygon(dsc, polygon, withGeometry=False, only_ids=True, set_db=
             for r in rows:
                 data.append(tuple(r))
         else:
-            print(f"No parcel found in {parcels_table} that intersects with the polygon.")
+            print(
+                f"No parcel found in {parcels_table} that intersects with the polygon.")
         return data
 
     except Exception as err:
@@ -185,12 +186,10 @@ def getParcelsByPolygon(dsc, polygon, withGeometry=False, only_ids=True, set_db=
 
 def getParcelTimeSeries(dsc, year, pid, tstype, band=None, set_db='main'):
     """Get the time series for the given parcel"""
-    conn = db.conn(set_db)
     cur = db.cur(set_db)
     data = []
     values = config.read()
     dsc = values['set']['dataset']
-    dsy = values['set']['ds_year']
     try:
         values = config.read()
         dias_catalog = values['dataset'][dsc]['tables']['dias_catalog']
@@ -234,7 +233,6 @@ def getParcelTimeSeries(dsc, year, pid, tstype, band=None, set_db='main'):
 
 
 def getParcelPeers(parcels_table, pid, distance, maxPeers, set_db='main'):
-    conn = db.conn(set_db)
     cur = db.cur(set_db)
     data = []
 
@@ -252,7 +250,7 @@ def getParcelPeers(parcels_table, pid, distance, maxPeers, set_db='main'):
             WITH current_parcel AS (select {crop_names},
                 wkb_geometry from {parcels_table} where {parcels_id} = {pid})
             SELECT {parcels_id} as pid, st_distance(wkb_geometry,
-                (SELECT wkb_geometry FROM current_parcel)) as distance from {parcels_table} 
+                (SELECT wkb_geometry FROM current_parcel)) as distance from {parcels_table}
             where {crop_names} = (select {crop_names} from current_parcel)
             And {parcels_id} != {pid}
             And st_dwithin(wkb_geometry, (SELECT wkb_geometry FROM current_parcel), {distance})
@@ -270,7 +268,8 @@ def getParcelPeers(parcels_table, pid, distance, maxPeers, set_db='main'):
             for r in rows:
                 data.append(tuple(r))
         else:
-            print(f"No parcel peers found in {parcels_table} within {distance} meters from parcel {pid}")
+            print(
+                f"No parcel peers found in {parcels_table} within {distance} meters from parcel {pid}")
         return data
 
     except Exception as err:
@@ -283,7 +282,6 @@ def getS2frames(parcel_id, start, end, set_db='main'):
     conn = db.conn(set_db)
     values = config.read()
     dsc = values['set']['dataset']
-    dsy = values['set']['ds_year']
     dias_catalog = values['dataset'][dsc]['tables']['dias_catalog']
     parcels_table = values['dataset'][dsc]['tables']['parcels']
     parcels_id = values['dataset'][dsc]['columns']['parcels_id']
@@ -314,7 +312,6 @@ def getSRID(dsc, set_db='main'):
     conn = db.conn(set_db)
     values = config.read()
     dsc = values['set']['dataset']
-    dsy = values['set']['ds_year']
     parcels_table = values['dataset'][dsc]['tables']['parcels']
 
     pgq_srid = f"""
@@ -333,21 +330,21 @@ def getPolygonCentroid(parcel_id, set_db='main'):
     conn = db.conn(set_db)
     values = config.read()
     dsc = values['set']['dataset']
-    dsy = values['set']['ds_year']
+    # dsy = values['set']['ds_year']
     parcels_table = values['dataset'][dsc]['tables']['parcels']
     parcels_id = values['dataset'][dsc]['columns']['parcels_id']
 
     getParcelPolygonSql = f"""
-        SELECT ST_Asgeojson(ST_transform(ST_Centroid(wkb_geometry), 4326)) as center,
-          ST_Asgeojson(st_transform(wkb_geometry, 4326)) as polygon
-        FROM {parcels_table} 
+        SELECT ST_Asgeojson(ST_transform(ST_Centroid(wkb_geometry), 4326))
+            As center, ST_Asgeojson(st_transform(wkb_geometry, 4326)) as polygon
+        FROM {parcels_table}
         WHERE {parcels_id} = {parcel_id}
         LIMIT 1;
     """
 
     # Read result set into a pandas dataframe
     df_pcent = pd.read_sql_query(getParcelPolygonSql, conn)
-    
+
     return df_pcent
 
 
