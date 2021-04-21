@@ -31,23 +31,19 @@ from cbm.utils import config
 
 # Database conection configurations
 def crls(db='main'):
-    try:
-        # Database
-        values = config.read()
-        DB_HOST = values['db'][db]['host']
-        DB_NAME = values['db'][db]['name']
-        DB_SCHE = values['db'][db]['sche']
-        DB_USER = values['db'][db]['user']
-        DB_PORT = values['db'][db]['port']
-        DB_PASS = values['db'][db]['pass']
-        return DB_HOST, DB_NAME, DB_USER, DB_PORT, DB_PASS
-    except Exception as err:
-        print(f"Err: Could not read config file: {err}")
+    values = config.read()
+    DB_HOST = values['db'][db]['host']
+    DB_NAME = values['db'][db]['name']
+    # DB_SCHE = values['db'][db]['sche']
+    DB_USER = values['db'][db]['user']
+    DB_PORT = values['db'][db]['port']
+    DB_PASS = values['db'][db]['pass']
+    return DB_HOST, DB_NAME, DB_USER, DB_PORT, DB_PASS
 
 
 def conn_str(db='main'):
-    """Get the database connection string to connect the application to the database.\
-    You will need the database credentials for this to work (database server address,\
+    """Get the database connection string to connect to the database.
+    The database credentials is needed for this (database server address,
     port, databese name, username and password)."""
     postgres = ("host={} dbname={} user={} port={} password={}"
                 .format(*crls(db)))
@@ -90,7 +86,7 @@ def get_value(dict_keys, var_name='', db='main'):
     config_value = config.get_value(dict_keys)
     value = config.autoselect(config_value, tables(db), True)
     if var_name is not None:
-        if value == None:
+        if value in None:
             print(f"!WARNING! The value for table '{var_name}' is: '{value}'.")
         else:
             print(f"The value for table '{var_name}' is: '{value}'.")
@@ -141,7 +137,7 @@ def tables(db='main', matching_text=None, print_list=False):
                 print(t_)
         else:
             return list_
-    except Exception as err:
+    except Exception:
         return []
 
 
@@ -151,7 +147,7 @@ def table_data(table, where, db='main'):
     try:
         getTableDataSql = f"""
           SELECT * FROM {table}
-          WHERE 
+          WHERE
           LIMIT 1000;
         """
         df_data = pd.read_sql_query(getTableDataSql, conn)
@@ -178,7 +174,7 @@ def table_columns(table, db='main', matching_text=None):
                 columns_list.remove(value)
                 columns_list.insert(0, value)
     except Exception:
-        print("Did not found columns, please select the right database and table")
+        print("Did not find any columns...")
         df_columns = pd.DataFrame(columns=['column_name'])
     return columns_list
 
@@ -220,7 +216,7 @@ def insert_function(func, db='main'):
     conn = psycopg2.connect(conn_str(db))
     conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    
+
     # Execute function.
     cur.execute(func)
 
@@ -232,9 +228,10 @@ def exact_count(table, db='main'):
     getExactCount = f"""
         SELECT count(*) AS exact_count
         FROM {table};"""
-    
+
     cur.execute(getExactCount)
     return cur.fetchall()[0][0]
+
 
 def execute_query(query, db='main'):
     """Return query"""
@@ -246,18 +243,19 @@ def execute_query(query, db='main'):
     cur.close()
     return data
 
+
 def execute_sql(sql, db='main'):
     """Execute sql"""
     try:
         conn = psycopg2.connect(conn_str(db))
         cur = conn.cursor()
         cur.execute(sql)
-        conn.commit() # <--- makes sure the change is shown in the database
+        conn.commit()  # <--- makes sure the change is shown in the database
         conn.close()
         cur.close()
         return 0
     except Exception as err:
-        return 1
+        return err
 
 
 def tb_extent(table, db='main'):
@@ -267,13 +265,13 @@ def tb_extent(table, db='main'):
         conn = psycopg2.connect(conn_str(db))
         cur = conn.cursor()
         sql = f"""
-        SELECT ST_AsText(ST_SetSRID(ST_Extent(st_transform(wkb_geometry, 4326)),4326))
-            As bextent
+        SELECT ST_AsText(ST_SetSRID(ST_Extent(st_transform(wkb_geometry, 4326)),
+            4326)) As bextent
         FROM {table};"""
         cur.execute(sql)
         for row in cur:
             data.append(row)
-        conn.commit() # <--- makes sure the change is shown in the database
+        conn.commit()  # <--- makes sure the change is shown in the database
         conn.close()
         cur.close()
         data = data[0][0].replace(' ', '+')
