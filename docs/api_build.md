@@ -23,18 +23,24 @@ Then go to the api folder of the downloaded package:
 To create and manage users that can access the RESTful API for CbM, execute in the terminal:
 
 ```bash
-python users.py create username password # To Create a new user.
-python users.py delete username          # Delete a user.
-python users.py list                     # Print a list of the users.
+python users.py add username password dataset # To Create a new user.
+python users.py delete username               # Delete a user.
+python users.py list                          # Print a list of the users.
 ```
-(Change the 'username' and 'password' with a username and password of the user)
+Change the 'username' and 'password' with a username and password of the user.
+Set the dataset to the data that the user will be restricted to.
 
-Or import the module in a python script or notebook cell:
+Example:
+```bash
+python3 users.py add john_doe Pass4John aoi2020
+```
+
+Alternatively import the module in a python script or notebook cell:
 
 ```python
-import users # Import the users module
+import users # Import the users module (set the import accordingly to your path)
 # Create a new user with:
-users.create('username', 'password')
+users.create('username', 'password', 'dataset')
 
 # To delete a user.
 users.delete('username')
@@ -114,6 +120,39 @@ Add in the file "config/options.json" the available RESTful API options in the b
 This can be retrieved from the users with the request:
 
     http(s):/Host.Name.Or.IP/query/options
+
+
+## Adding orthophotos (Optional)
+
+It is often handy to have a high resolution overview of the parcel situation.
+A (globally) useful set are the Google and Bing (or Virtual Earth) background image sets.
+To add new base maps add in the 'tms/' folder the xml files.
+
+Bing base maps example:
+
+```xml
+<GDAL_WMS>
+    <Service name="VirtualEarth">
+        <ServerUrl>http://a${server_num}.ortho.tiles.virtualearth.net/tiles/a${quadkey}.jpeg?g=90</ServerUrl>
+    </Service>
+    <DataWindow>
+        <UpperLeftX>-20037508.34</UpperLeftX>
+        <UpperLeftY>20037508.34</UpperLeftY>
+        <LowerRightX>20037508.34</LowerRightX>
+        <LowerRightY>-20037508.34</LowerRightY>
+        <TileLevel>19</TileLevel>
+        <TileCountX>1</TileCountX>
+        <TileCountY>1</TileCountY>
+        <YOrigin>top</YOrigin>
+    </DataWindow>
+    <Projection>EPSG:900913</Projection>
+    <BlockSizeX>256</BlockSizeX>
+    <BlockSizeY>256</BlockSizeY>
+    <BandsCount>3</BandsCount>
+    <MaxConnections>4</MaxConnections>
+    <Cache />
+</GDAL_WMS>
+```
 
 
 **Important notes**
