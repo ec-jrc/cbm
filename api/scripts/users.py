@@ -90,12 +90,11 @@ def data_auth_add(aoi, username):
     aois = get_list(data_auth_file)
     if aoi in aois:
         if username not in aois[aoi]:
-            print(type(aois[aoi]), aois[aoi])
             aois[aoi] = aois[aoi]+[username]
     else:
         aois[aoi] = [username]
     with open(data_auth_file, 'w') as u:
-        json.dump(aois, u, indent=1)
+        json.dump(aois, u, indent=2)
 
 
 def create(username, password='', aoi=None):
