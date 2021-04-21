@@ -9,32 +9,31 @@
 
 import os
 import json
-from os.path import join, normpath, isfile, dirname
+from os.path import join, normpath, isfile, dirname, exists
 from cbm.utils import config
 
 
-def by_location(aoi, year, lon, lat, tstype, band, quiet=True):
+def by_location(aoi, lon, lat, tstype, band, quiet=True):
     """Download the time series for the selected year
 
     Examples:
         import cbm
-        cbm.get.time_series.by_pid(aoi, year, pid, tstype, band, save)
+        cbm.get.time_series.by_pid(aoi, pid, tstype, band, save)
 
     Arguments:
-        aoi, the area of interest e.g.: es, nld (str)
-        year, the year of the parcels dataset (int)
-        pid, the parcel id (int).
+        aoi, the area of interest and year e.g.: es2019, nld2020 (str)
+        lat, lon, the the coords of the parcel (float).
     """
     get_requests = data_source()
     try:
-        json_data = json.loads(get_requests.ploc(aoi, year, lon, lat, True))
+        json_data = json.loads(get_requests.ploc(aoi, lon, lat, True))
         if type(json_data['ogc_fid']) is list:
             pid = json_data['ogc_fid'][0]
         else:
             pid = json_data['ogc_fid']
 
         workdir = normpath(join(config.get_value(['paths', 'temp']),
-                                f'{aoi}{str(year)}', str(pid)))
+                                aoi, str(pid)))
         json_file = normpath(join(workdir, 'info.json'))
         if not exists(workdir):
             os.makedirs(workdir)
@@ -43,12 +42,12 @@ def by_location(aoi, year, lon, lat, tstype, band, quiet=True):
                 json.dump(json_data, f)
     except Exception:
         workdir = normpath(join(config.get_value(['paths', 'temp']),
-                                f'{aoi}{str(year)}', f'_{lon}_{lat}'))
+                                aoi, f'_{lon}_{lat}'))
 
     file_pinf = normpath(join(workdir, 'info.json'))
     if not isfile(file_pinf):
         try:
-            parcel = json.loads(get_requests.pid(aoi, year, pid, True))
+            parcel = json.loads(get_requests.pid(aoi, pid, True))
             os.makedirs(dirname(file_pinf), exist_ok=True)
             with open(file_pinf, "w") as f:
                 json.dump(parcel, f)
@@ -60,24 +59,23 @@ def by_location(aoi, year, lon, lat, tstype, band, quiet=True):
         return parcel
 
 
-def by_pid(aoi, year, pid, tstype, band, quiet=True):
+def by_pid(aoi, pid, tstype, band, quiet=True):
     """Download the time series for the selected year
 
     Examples:
         import cbm
-        cbm.get.time_series.by_pid(aoi, year, pid, tstype, band, save)
+        cbm.get.time_series.by_pid(aoi, pid, tstype, band, save)
 
     Arguments:
-        aoi, the area of interest e.g.: es, nld (str)
-        year, the year of the parcels dataset (int)
+        aoi, the area of interest and year e.g.: es2019, nld2020 (str)
         pid, the parcel id (int).
     """
     workdir = config.get_value(['paths', 'temp'])
     get_requests = data_source()
-    file_pinf = normpath(join(workdir, f'{aoi}{year}', pid, 'info.json'))
+    file_pinf = normpath(join(workdir, aoi, pid, 'info.json'))
     if not isfile(file_pinf):
         try:
-            parcel = json.loads(get_requests.pid(aoi, year, pid, True))
+            parcel = json.loads(get_requests.pid(aoi, pid, True))
             os.makedirs(dirname(file_pinf), exist_ok=True)
             with open(file_pinf, "w") as f:
                 json.dump(parcel, f)

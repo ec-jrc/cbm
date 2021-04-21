@@ -13,18 +13,17 @@ from os.path import join, normpath, isfile, dirname
 from cbm.utils import config
 
 
-def by_location(aoi, year, lon, lat, start_date, end_date, band, chipsize,
+def by_location(aoi, lon, lat, start_date, end_date, band, chipsize,
                 quiet=True):
     """Download the chip image by selected location.
 
     Examples:
         import cbm
-        cbm.get.chip_images.by_pid(aoi, year, pid, start_date, end_date,
+        cbm.get.chip_images.by_pid(aoi, pid, start_date, end_date,
                                     band, chipsize)
 
     Arguments:
-        aoi, the area of interest e.g.: es, nld (str)
-        year, the year of the parcels dataset (int)
+        aoi, the area of interest and year e.g.: es2019, nld2020 (str)
         lat, lon, the the coords of the parcel (float).
         start_date, Start date '2019-06-01' (str)
         end_date, End date '2019-06-01' (str)
@@ -36,18 +35,18 @@ def by_location(aoi, year, lon, lat, start_date, end_date, band, chipsize,
         chipsize, size of the chip in pixels (int).
     """
     get_requests = data_source()
-    json_data = json.loads(get_requests.ploc(aoi, year, lon, lat, True))
+    json_data = json.loads(get_requests.ploc(aoi, lon, lat, True))
     if type(json_data['ogc_fid']) is list:
         pid = json_data['ogc_fid'][0]
     else:
         pid = json_data['ogc_fid']
 
     workdir = normpath(join(config.get_value(['paths', 'temp']),
-                            f'{aoi}{str(year)}', str(pid)))
+                            aoi, str(pid)))
     pfile = normpath(join(workdir, 'info.json'))
 
     if not isfile(pfile):
-        parcel = json.loads(get_requests.pid(aoi, year, pid, True))
+        parcel = json.loads(get_requests.pid(aoi, pid, True))
         try:
             os.makedirs(dirname(pfile), exist_ok=True)
             with open(pfile, "w") as f:
@@ -76,17 +75,16 @@ def by_location(aoi, year, lon, lat, start_date, end_date, band, chipsize,
         print("No files where downloaded, please check your configurations")
 
 
-def by_pid(aoi, year, pid, start_date, end_date, band, chipsize, quiet=True):
+def by_pid(aoi, pid, start_date, end_date, band, chipsize, quiet=True):
     """Download the chip image by selected parcel id.
 
     Examples:
         import cbm
-        cbm.get.chip_images.by_pid(aoi, year, pid, start_date, end_date,
+        cbm.get.chip_images.by_pid(aoi, pid, start_date, end_date,
                                     band, chipsize)
 
     Arguments:
-        aoi, the area of interest e.g.: es, nld (str)
-        year, the year of the parcels dataset (int)
+        aoi, the area of interest and year e.g.: es2019, nld2020 (str)
         pid, the parcel id (int).
         start_date, Start date '2019-06-01' (str)
         end_date, End date '2019-06-01' (str)
@@ -98,11 +96,11 @@ def by_pid(aoi, year, pid, start_date, end_date, band, chipsize, quiet=True):
         chipsize, size of the chip in pixels (int).
     """
     workdir = normpath(join(config.get_value(['paths', 'temp']),
-                            f'{aoi}{str(year)}', str(pid)))
+                            aoi, str(pid)))
     get_requests = data_source()
     pfile = normpath(join(workdir, 'info.json'))
     if not isfile(pfile):
-        parcel = json.loads(get_requests.pid(aoi, year, pid, True))
+        parcel = json.loads(get_requests.pid(aoi, pid, True))
         try:
             os.makedirs(dirname(pfile), exist_ok=True)
             with open(pfile, "w") as f:

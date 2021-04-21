@@ -14,63 +14,49 @@ from os.path import join, normpath, isfile
 from cbm.utils import config
 
 
-def ploc(aoi, year, lon, lat, geom=False):
-    if aoi == 'es_ns':
-        parcels = f'es{year}_nour_subset'
-    else:
-        parcels = f'{aoi}{year}'
+def ploc(aoi, lon, lat, geom=False):
 
     api_url, api_user, api_pass = config.credentials('api')
-    requrl = """{}/query/parcelByLocation?parcels={}&lon={}&lat={}"""
+    requrl = """{}/query/parcelByLocation?aoi={}&lon={}&lat={}"""
     if geom is True:
         requrl = f"{requrl}&withGeometry=True"
 
-    response = requests.get(requrl.format(api_url, parcels, lon, lat),
+    response = requests.get(requrl.format(api_url, aoi, lon, lat),
                             auth=(api_user, api_pass))
     return response.content
 
 
-def pid(aoi, year, pid, geom=False):
-    if aoi == 'es_ns':
-        parcels = f'es{year}_nour_subset'
-    else:
-        parcels = f'{aoi}{year}'
+def pid(aoi, pid, geom=False):
 
     api_url, api_user, api_pass = config.credentials('api')
-    requrl = """{}/query/parcelById?parcels={}&parcelid={}"""
+    requrl = """{}/query/parcelById?aoi={}&parcelid={}"""
     if geom is True:
         requrl = f"{requrl}&withGeometry=True"
 
-    response = requests.get(requrl.format(api_url, parcels, pid),
+    response = requests.get(requrl.format(api_url, aoi, pid),
                             auth=(api_user, api_pass))
     return response.content
 
 
-def ppoly(aoi, year, polygon, geom=False, only_ids=True):
-    if aoi == 'es_ns':
-        parcels = f'es{year}_nour_subset'
-    else:
-        parcels = f'{aoi}{year}'
+def ppoly(aoi, polygon, geom=False, only_ids=True):
 
     api_url, api_user, api_pass = config.credentials('api')
-    requrl = """{}/query/parcelsByPolygon?parcels={}&polygon={}"""
+    requrl = """{}/query/parcelsByPolygon?aoi={}&polygon={}"""
     if geom is True:
         requrl = f"{requrl}&withGeometry=True"
     if only_ids is True:
         requrl = f"{requrl}&only_ids=True"
-    response = requests.get(requrl.format(api_url, parcels, polygon),
+    response = requests.get(requrl.format(api_url, aoi, polygon),
                             auth=(api_user, api_pass))
     return response.content
 
 
-def pts(aoi, year, pid, tstype, band=''):
-    if aoi == 'es_ns':
-        aoi = f'es'
+def pts(aoi, pid, tstype, band=''):
 
     api_url, api_user, api_pass = config.credentials('api')
-    requrl = """{}/query/parcelTimeSeries?aoi={}&year={}&pid={}&tstype={}&band={}"""
+    requrl = """{}/query/parcelTimeSeries?aoi={}&pid={}&tstype={}&band={}"""
 
-    response = requests.get(requrl.format(api_url, aoi, year,
+    response = requests.get(requrl.format(api_url, aoi,
                                           pid, tstype, band),
                             auth=(api_user, api_pass))
     return response.content
