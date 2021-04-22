@@ -197,9 +197,8 @@ def get():
                 polygon_str = '-'.join(['_'.join(map(str, c))
                                         for c in polygon])
                 outlog_poly(f"Geting parcel ids within the polygon...")
-                polyids = json.loads(get_requests.ppoly(aois.value, year.value,
-                                                        polygon_str, False,
-                                                        True))
+                polyids = json.loads(get_requests.ppoly(
+                    f"{aois.value}{year.value}", polygon_str, False, True))
                 outlog_poly(
                     f"'{len(polyids['ogc_fid'])}' parcels where found:")
                 outlog_poly(polyids['ogc_fid'])
@@ -424,19 +423,16 @@ def get():
             dataset = config.get_value(['set', 'dataset'])
             datapath = normpath(join(paths.value, dataset, str(pid)))
         file_pinf = normpath(join(datapath, 'info.json'))
-        try:
-            os.makedirs(dirname(file_pinf), exist_ok=True)
-            with open(file_pinf, "w") as f:
-                json.dump(parcel, f)
-            outlog(f"File saved at: {file_pinf}")
-        except Exception as err:
-            outlog(f"Could not create the file 'api_options.json': {err}")
+        os.makedirs(dirname(file_pinf), exist_ok=True)
+        with open(file_pinf, "w") as f:
+            json.dump(parcel, f)
+        outlog(f"File saved at: {file_pinf}")
 
         if pts_bt.value is True:
             outlog(f"Getting time series for parcel: '{pid}',",
                    f"({pts_tstype.value} {pts_band.value}).")
             for pts in pts_tstype.value:
-                ts = json.loads(get_requests.pts(aois.value, year.value,
+                ts = json.loads(get_requests.pts(f"{aois.value}{year.value}",
                                                  pid, pts,
                                                  pts_band.value))
                 band = ''
@@ -444,16 +440,13 @@ def get():
                     band = f"_{pts_band.value}"
                 file_ts = normpath(join(datapath,
                                         f'time_series_{pts}{band}.csv'))
-                try:
-                    if isinstance(ts, pd.DataFrame):
-                        ts.to_csv(file_ts, index=True, header=True)
-                    elif isinstance(ts, dict):
-                        os.makedirs(os.path.dirname(file_ts), exist_ok=True)
-                        df = pd.DataFrame.from_dict(ts, orient='columns')
-                        df.to_csv(file_ts, index=True, header=True)
-                    return f"File saved at: {file_ts}"
-                except Exception as err:
-                    return f"Could not create the file: {err}"
+                if isinstance(ts, pd.DataFrame):
+                    ts.to_csv(file_ts, index=True, header=True)
+                elif isinstance(ts, dict):
+                    os.makedirs(os.path.dirname(file_ts), exist_ok=True)
+                    df = pd.DataFrame.from_dict(ts, orient='columns')
+                    df.to_csv(file_ts, index=True, header=True)
+                return f"File saved at: {file_ts}"
         if pci_bt.value is True:
             files_pci = normpath(join(datapath, 'chip_images'))
             outlog(f"Getting '{pci_band.value}' chip images for parcel: {pid}")
@@ -472,7 +465,7 @@ def get():
     def get_from_location(lon, lat):
         get_requests = data_source()
         outlog(f"Finding parcel information for coordinates: {lon}, {lat}")
-        parcel = json.loads(get_requests.ploc(aois.value, year.value,
+        parcel = json.loads(get_requests.ploc(f"{aois.value}{year.value}",
                                               lon, lat, True))
         pid = parcel['ogc_fid'][0]
         outlog(f"The parcel '{pid}' was found at this location.")
@@ -486,7 +479,7 @@ def get():
         outlog(f"Getting parcels information for: '{pids}'")
         for pid in pids:
             try:
-                parcel = json.loads(get_requests.pid(aois.value, year.value,
+                parcel = json.loads(get_requests.pid(f"{aois.value}{year.value}",
                                                      pid, True))
                 get_data(parcel)
             except Exception as err:

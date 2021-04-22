@@ -15,15 +15,15 @@ from cbm.utils import config, spatial_utils
 from cbm.get import background as bg
 
 
-def slider(aoi, year, pid, chipsize=512, extend=512, tms=['Google']):
+def slider(aoi, pid, chipsize=512, extend=512, tms=['Google']):
 
     workdir = config.get_value(['paths', 'temp'])
-    path = f'{workdir}/{aoi}{year}/{pid}/'
+    path = f'{workdir}/{aoi}/{pid}/'
     bg_path = f'{path}/backgrounds/'
 
     for t in tms:
         if not os.path.isfile(f'{bg_path}{t.lower()}.tif'):
-            bg.by_pid(aoi, year, pid, chipsize, extend, t, True)
+            bg.by_pid(aoi, pid, chipsize, extend, t, True)
 
     with open(f'{path}info.json', "r") as f:
         json_data = json.load(f)
@@ -71,14 +71,14 @@ def slider(aoi, year, pid, chipsize=512, extend=512, tms=['Google']):
     return VBox([selection, output])
 
 
-def maps(aoi, year, pid, chipsize=512, extend=512, tms='Google'):
+def maps(aoi, pid, chipsize=512, extend=512, tms='Google'):
 
     workdir = config.get_value(['paths', 'temp'])
-    path = f'{workdir}/{aoi}{year}/{pid}/backgrounds/'
+    path = f'{workdir}/{aoi}/{pid}/backgrounds/'
 
     for t in tms:
         if not os.path.isfile(f'{path}{t.lower()}.png'):
-            bg.by_pid(aoi, year, pid, chipsize, extend, t, True)
+            bg.by_pid(aoi, pid, chipsize, extend, t, True)
 
     columns = 5
     rows = int(len(tms) // columns + (len(tms) % columns > 0))
