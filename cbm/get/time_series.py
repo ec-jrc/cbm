@@ -14,7 +14,7 @@ from os.path import join, normpath, isfile, exists
 from cbm.utils import config
 
 
-def by_location(aoi, lon, lat, tstype, band, quiet=False):
+def by_location(aoi, lon, lat, tstype, band='', quiet=False):
     """Download the time series for the selected year
 
     Examples:
@@ -66,7 +66,7 @@ def by_location(aoi, lon, lat, tstype, band, quiet=False):
         return ts
 
 
-def by_pid(aoi, pid, tstype, band, quiet=False):
+def by_pid(aoi, pid, tstype, band='', quiet=False):
     """Download the time series for the selected year
 
     Examples:
