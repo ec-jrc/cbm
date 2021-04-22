@@ -13,12 +13,12 @@ from os.path import join, normpath, isfile, dirname, exists
 from cbm.utils import config
 
 
-def by_location(aoi, lon, lat, tstype, band, quiet=True):
+def by_location(aoi, lon, lat, quiet=True):
     """Download the time series for the selected year
 
     Examples:
         import cbm
-        cbm.get.time_series.by_pid(aoi, pid, tstype, band, save)
+        cbm.get.parcel.by_pid(aoi, pid, save)
 
     Arguments:
         aoi, the area of interest and year e.g.: es2019, nld2020 (str)
@@ -59,12 +59,12 @@ def by_location(aoi, lon, lat, tstype, band, quiet=True):
         return parcel
 
 
-def by_pid(aoi, pid, tstype, band, quiet=True):
+def by_pid(aoi, pid, quiet=True):
     """Download the time series for the selected year
 
     Examples:
         import cbm
-        cbm.get.time_series.by_pid(aoi, pid, tstype, band, save)
+        cbm.get.parcel.by_pid(aoi, pid)
 
     Arguments:
         aoi, the area of interest and year e.g.: es2019, nld2020 (str)
@@ -72,7 +72,7 @@ def by_pid(aoi, pid, tstype, band, quiet=True):
     """
     workdir = config.get_value(['paths', 'temp'])
     get_requests = data_source()
-    file_pinf = normpath(join(workdir, aoi, pid, 'info.json'))
+    file_pinf = normpath(join(workdir, aoi, str(pid), 'info.json'))
     if not isfile(file_pinf):
         try:
             parcel = json.loads(get_requests.pid(aoi, pid, True))
