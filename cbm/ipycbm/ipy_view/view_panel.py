@@ -191,7 +191,8 @@ def view():
             if obj['new'] == 1:
                 display(view_code.code(data_path))
             elif obj['new'] == 2:
-                display(view_time_series.time_series(data_path))
+                display(view_time_series.time_series_widget(
+                    select_table.value, selection_single.value))
             elif obj['new'] == 3:
                 display(view_grid.imgs_grid(data_path))
             elif obj['new'] == 4:
