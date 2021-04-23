@@ -21,8 +21,8 @@ def available_options(ci_path, pid, ndvi=True, individual=True):
     """
     Get available band combination options.
     Args:
-    ci_path: Images path
-    pid: Parcel id
+        ci_path: Images path
+        pid: Parcel id
     """
 
     ci_path = normpath(join(ci_path, 'chip_images'))
@@ -48,11 +48,17 @@ def available_options(ci_path, pid, ndvi=True, individual=True):
     return available
 
 
-def create_df(ci_path, pid, bands):
+def create_df(path, pid, bands):
     """
     Create dataframe with the available downloaded images.
+    Args:
+        path: the path to the images (str)
+        pid: the parcel id (int)
+        bands: selected the band or bands (str)
+    Returns:
+        Dataframe (df)
     """
-    csv_list = normpath(join(ci_path, f'images_list.{bands[0]}.csv'))
+    csv_list = normpath(join(path, f'images_list.{bands[0]}.csv'))
     df = pd.read_csv(csv_list, index_col=0)
     df['date'] = df['dates'].str[0:8]
     df['date'] = pd.to_datetime(df['date'], format='%Y%m%d')
@@ -60,7 +66,7 @@ def create_df(ci_path, pid, bands):
     # Filter df to remove dates with missing bands.
     if len(bands) > 1:
         for b in bands:
-            csv_list_b = normpath(join(ci_path, f'images_list.{b}.csv'))
+            csv_list_b = normpath(join(path, f'images_list.{b}.csv'))
             df_b = pd.read_csv(csv_list_b, index_col=0)
             df_b['date'] = df_b['dates'].str[0:8]
             df_b['date'] = pd.to_datetime(df_b['date'], format='%Y%m%d')
