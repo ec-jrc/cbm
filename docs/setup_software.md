@@ -78,6 +78,16 @@ postgres=# \d
 ```
 These tables are required for the handling of spatial constructs (geometries, raster data, projection information).
 
+### Optimizing
+
+The main configuration settings for PostgreSQL are in a text file postgresql.conf 
+(/etc/postgresql/"version"/main/postgresql.conf) PostgreSQL ships with a basic configuration
+tuned for wide compatibility rather than performance.
+
+It is strongly recommended to configure the settings of the PostgreSQL database
+based on your hardware configuration and application, useful information can be found at
+[PGTune](https://pgtune.leopard.in.ua/) or at [PGConfig](https://www.pgconfig.org/).
+
 ### Essential CbM tables
 
 We now need to create the tables that we will use in the CbM context:
