@@ -35,12 +35,11 @@ def by_location(aoi, lon, lat, dates, band, chipsize, columns=5, quiet=True):
 
     Examples:
         import cbm
-        cbm.get.chip_images.by_pid(aoi, year, pid, start_date, end_date,
+        cbm.get.chip_images.by_pid(aoi, pid, start_date, end_date,
                                     band, chipsize)
 
     Arguments:
-        aoi, the area of interest e.g.: es, nld (str)
-        year, the year of the parcels dataset (int)
+        aoi, the area of interest and year e.g.: es2020, cat2020 (str)
         pid, the parcel id (int).
         dates, the date of the image (str) or start_date and end_date (list)
             '2019-06-01' or ['2019-06-01', '2019-06-30']
@@ -57,17 +56,16 @@ def by_location(aoi, lon, lat, dates, band, chipsize, columns=5, quiet=True):
         start_date, end_date = dates[0], dates[1]
     else:
         start_date, end_date = dates, dates
-    year = start_date.split('-')[0]
 
-    json_data = json.loads(api.ploc(aoi, year, lon, lat, True))
+    json_data = json.loads(api.ploc(aoi, lon, lat, True))
     if type(json_data['ogc_fid']) is list:
         pid = json_data['ogc_fid'][0]
     else:
         pid = json_data['ogc_fid']
 
     workdir = normpath(join(config.get_value(['paths', 'temp']),
-                            f'{aoi}{str(year)}', str(pid)))
-    chip_imgs.by_pid(aoi, year, pid, start_date, end_date,
+                            aoi, str(pid)))
+    chip_imgs.by_pid(aoi, pid, start_date, end_date,
                      band, chipsize, quiet)
 
     chips_dir = normpath(join(workdir, 'chip_images'))
@@ -121,12 +119,11 @@ def by_pid(aoi, pid, dates, band, chipsize, columns=5, quiet=True):
 
     Examples:
         import cbm
-        cbm.get.chip_images.by_pid(aoi, year, pid, start_date, end_date,
+        cbm.get.chip_images.by_pid(aoi, pid, start_date, end_date,
                                     band, chipsize)
 
     Arguments:
-        aoi, the area of interest e.g.: es, nld (str)
-        year, the year of the parcels dataset (int)
+        aoi, the area of interest and year e.g.: es2020, cat2020 (str)
         pid, the parcel id (int).
         dates, the date of the image (str) or start_date and end_date (list)
             '2019-06-01' or ['2019-06-01', '2019-06-30']
@@ -143,10 +140,9 @@ def by_pid(aoi, pid, dates, band, chipsize, columns=5, quiet=True):
         start_date, end_date = dates[0], dates[1]
     else:
         start_date, end_date = dates, dates
-    year = start_date.split('-')[0]
     workdir = normpath(join(config.get_value(['paths', 'temp']),
-                            f'{aoi}{str(year)}', str(pid)))
-    chip_imgs.by_pid(aoi, year, pid, start_date, end_date,
+                            aoi, str(pid)))
+    chip_imgs.by_pid(aoi, pid, start_date, end_date,
                      band, chipsize, quiet)
 
     chips_dir = normpath(join(workdir, 'chip_images'))
