@@ -155,7 +155,7 @@ def centroid(indata):
     else:
         print("Not recognized coordinates format.")
 
-    import gdal
+    from osgeo import gdal
     if int(gdal.VersionInfo()) < 3000000:
         return(round(_y, 4), round(_x, 4))
     else:
