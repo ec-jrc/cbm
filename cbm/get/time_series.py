@@ -19,7 +19,7 @@ def by_location(aoi, lon, lat, tstype, band='', quiet=False):
 
     Examples:
         import cbm
-        cbm.get.time_series.by_pid(aoi, pid, tstype, band, save)
+        cbm.get.time_series.by_location(aoi, lon, lat, tstype, band, save)
 
     Arguments:
         aoi, the area of interest and year e.g.: es2019, nld2020 (str)

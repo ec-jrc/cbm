@@ -19,7 +19,7 @@ def by_location(aoi, lon, lat, start_date, end_date, band, chipsize,
 
     Examples:
         import cbm
-        cbm.get.chip_images.by_pid(aoi, pid, start_date, end_date,
+        cbm.get.chip_images.by_location(aoi, lon, lat, start_date, end_date,
                                     band, chipsize)
 
     Arguments:
