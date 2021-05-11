@@ -18,7 +18,7 @@ def by_location(aoi, lon, lat, quiet=True):
 
     Examples:
         import cbm
-        cbm.get.parcel.by_pid(aoi, pid, save)
+        cbm.get.parcel.by_location(aoi, lon, lat, save)
 
     Arguments:
         aoi, the area of interest and year e.g.: es2019, nld2020 (str)

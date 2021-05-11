@@ -64,7 +64,7 @@ def by_pid(aoi, pid, chipsize=512, extend=512,
 
     Examples:
         from cbm.view import background
-        background.by_location(aoi, lon, lat, 512, 512, 'Google',
+        background.by_pid(aoi, pid, 512, 512, 'Google',
                                 True, True)
 
     Arguments:
