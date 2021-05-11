@@ -7,7 +7,9 @@ USER root
 RUN apt-get update -q
 RUN apt-get upgrade -y
 RUN apt-get install -y software-properties-common
-RUN add-apt-repository ppa:ubuntugis/ubuntugis-unstable && apt-get update
+RUN apt-get update -q
+RUN add-apt-repository ppa:ubuntugis/ppa
+RUN apt-get update --fix-missing
 RUN apt-get install -y \
     binutils \
     libproj-dev \
@@ -28,10 +30,12 @@ RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal
 RUN export C_INCLUDE_PATH=/usr/include/gdal
 
 RUN pip install --upgrade pip
+RUN pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
+# RUN pip install -i https://test.pypi.org/simple/ cbm
 
 COPY requirements.txt /tmp
 RUN pip install -r /tmp/requirements.txt
 
-RUN pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
+EXPOSE 8888
 
 USER jovyan

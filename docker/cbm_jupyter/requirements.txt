@@ -1,11 +1,4 @@
-psycopg2-binary
 tflearn
-boto3
-tqdm
 lxml
-rasterstats
 geopandas
-matplotlib
-ipywidgets
-ipyleaflet
 cbm
