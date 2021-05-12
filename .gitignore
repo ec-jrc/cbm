@@ -1,8 +1,12 @@
 # itignore CbM files
 
+api/tms/*
+!api/tms/google_tms.xml
+!api/tms/bing_tms.xml
+
 api/static/dump/
-api/core
 api/config/users.json
+api/config/data_auth.json
 
 config/*
 ipynb/temp/*
