@@ -24,9 +24,7 @@ def main():
     tab_box.set_title(0, 'DataSource')
     tab_box.set_title(1, 'General')
 
-    wbox = VBox([clean_temp(), tab_box])
-
-    return wbox
+    return tab_box
 
 
 def data_source():
@@ -39,7 +37,8 @@ def data_source():
             ("Direct access to database and object storage.", 'direct')
         ],
         value=source,
-        layout={'width': 'max-content'}
+        layout={'width': 'max-content'},
+        disabled=True
     )
 
     sources_box = Box([
@@ -189,7 +188,7 @@ def general():
         config.set_value(['paths', 'temp'], str(path_temp.value))
         outlog("The new settings are saved.")
 
-    wbox = VBox([wbox_user, wbox_sys,
+    wbox = VBox([clean_temp(), wbox_user, wbox_sys,
                  HBox([btn_save]),
                  progress])
 
@@ -227,9 +226,9 @@ def clean_temp(hide=False):
     def bt_clean_on_click(b):
         for i in directory:
             try:
-                shutil.rmtree(f'{temppath}{i}')
+                shutil.rmtree(join(temppath, i))
             except Exception:
-                os.remove(f'{temppath}{i}')
+                os.remove(join(temppath, i))
         outlog(f"The '{temppath}' folder is now empty.")
 
     if hide is False:
