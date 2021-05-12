@@ -8,9 +8,9 @@ To check individual parcel, the parcel information, time series, background high
 ```python
 import cbm
 
-aoi = 'aoi'      # area of interest (str)
+aoi = 'nld'      # area of interest (str)
 year = 2019      # the year of the parcels dataset (int)
-pid = 123456     # Parcel id (int)
+pid = 575532     # Parcel id (int)
 tstype = 's2'    # time series type (str)
 band = ''        # a selected band
 save = True      # Save to file (bool)
@@ -31,7 +31,6 @@ year = 2019               # Year of the parcels dataset (int)
 pid = 575532              # Parcel id (int)
 start_date = '2019-06-01' # Start date '2019-06-01' (str)
 end_date = '2019-06-30'   # End date '2019-06-01' (str)
-sat = 's2'                # Time series type  (str)
 band = 'SCL'              # Selected band
 chipsize = 2560           # size of the chip in pixels (int)
 

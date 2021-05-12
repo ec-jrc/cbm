@@ -31,6 +31,17 @@
 
 .. toctree::
    :maxdepth: 3
+   :caption: RESTful API:
+
+   api_build
+   api_ts
+   api_imgs
+   api_analytics
+   api_post
+
+
+.. toctree::
+   :maxdepth: 3
    :caption: CbM package:
 
    cbm_install
@@ -41,17 +52,6 @@
    cbm_foi
    cbm_get
    cbm_cal
-
-
-.. toctree::
-   :maxdepth: 3
-   :caption: RESTful API:
-
-   api_build
-   api_ts
-   api_imgs
-   api_analytics
-   api_post
 
 
 .. toctree::
