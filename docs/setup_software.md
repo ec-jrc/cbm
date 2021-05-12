@@ -187,11 +187,11 @@ More information can be found at: https://jupyter.org/documentation
 
 **To build GTCAP Jupyter docker image from source**
 
-In the folder "docker/gtcap_jupyter/" there is a "Dockerfile" to create a Jupyter docker image.
-To create the "gtcap_jupyter" docker image from source run:
+In the folder "cbm/docker/jupyter/" there is a "Dockerfile" to create a Jupyter docker image.
+To create the "cbm_jupyter" docker image from source run:
 
 ```sh
 git clone https://github.com/ec-jrc/cbm.git
-cd docker/cbm_jupyter
+cd cbm/docker/cbm_jupyter
 docker build -t gtcap/cbm_jupyter .
 ```
