@@ -86,15 +86,16 @@ To expose the RESTful server to port 80, change -p 5000:5000 to -p 80:5000, or t
 
 To build the cbm_api docker image from source, go to the docker folder of cbm package
 ```bash
+git clone https://github.com/ec-jrc/cbm.git
 cd cbm/docker/cbm_api
 ```
 And run:
 ```bash
-docker build --tag cbm_api .
+docker build --tag gtcap/cbm_api .
 ```
 Go back to api folder **cbm/api** and deployed the container with:
 
-    docker run -it --name api -v "$PWD":/app -p 5000:80 cbm_api
+    docker run -it --name api -v "$PWD":/app -p 5000:80 gtcap/cbm_api
 
 <!-- $ -->
 
