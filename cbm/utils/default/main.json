@@ -12,7 +12,7 @@
         "ds_year": "2020",
         "jupyterlab": "True",
         "plimit": "25",
-        "url": "https://github.com/ec-jrc/cbm"
+        "git_url": "https://github.com/ec-jrc/cbm"
     },
     "paths": {
         "data": "data",

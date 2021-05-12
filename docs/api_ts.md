@@ -118,7 +118,7 @@ locurl = """http://185.178.85.226/query/parcelByLocation?parcels={}&lon={}&lat={
 
 # set the query parameters
 parcels = 'nld2018'
-lon='6.31'
+lon='6.32'
 lat='52.34'
 
 # Parse the response with the standard json module

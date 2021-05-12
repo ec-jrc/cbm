@@ -1,7 +1,7 @@
 boto3==1.14.30
 botocore==1.17.30
-Fiona==1.8.13.post1
-GDAL==3.0.4
+fiona==1.8.13.post1
+gdal==3.2.1
 geopandas==0.8.1
 ipyleaflet==0.13.3
 ipywidgets==7.5.1

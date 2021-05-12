@@ -39,14 +39,14 @@ If the credentials are set properly the extractions can be done with:
 ```python
 import cbm
 
-start_date = '2019-06-01'
-end_date = '2019-06-30'
+start = '2019-06-01'
+end = '2019-06-30'
 dias_catalogue = 'aoi2019_dias_catalogue'
 parcels_table = 'aoi2019'
 results_table = 'aoi2019_s2_signatures'
 dias = 'dias'
 
-cbm.extract.s2(startdate, enddate, dias_catalogue, parcels_table, results_table, dias)
+cbm.extract.s2(start, end, dias_catalogue, parcels_table, results_table, dias)
 ```
 
 
