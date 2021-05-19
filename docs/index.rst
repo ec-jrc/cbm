@@ -27,13 +27,13 @@
    setup_software
    setup_extract
    setup_db_backup
+   setup_build_api
 
 
 .. toctree::
    :maxdepth: 3
    :caption: RESTful API:
 
-   api_build
    api_ts
    api_imgs
    api_analytics
