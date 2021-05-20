@@ -39,6 +39,7 @@ setup(
         'rasterstats',
         'requests',
         'tqdm',
+        'descartes',
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
