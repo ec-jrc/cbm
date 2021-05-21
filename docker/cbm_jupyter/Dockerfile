@@ -24,12 +24,15 @@ RUN apt-get install -y \
     nano \
     g++ \
     gcc \
-    libgdal-dev
+    libgdal-dev \
+    libxml2-dev \
+    libxmlsec1-dev
 
 RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal
 RUN export C_INCLUDE_PATH=/usr/include/gdal
 
 RUN pip install --upgrade pip
+RUN pip install --upgrade pip setuptools wheel
 RUN pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
 # RUN pip install -i https://test.pypi.org/simple/ cbm
 
