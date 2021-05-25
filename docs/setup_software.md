@@ -1,10 +1,15 @@
 # Required software
 
 ## Docker (Ubuntu 18.04)
-Note these instructions are for Ubuntu 18.04 and may not work for other platforms. Installation instructions for other platforms can be found at [docs.docker.com](https://docs.docker.com/engine/install).
+Note these instructions are for Ubuntu 18.04 and may not work for other platforms.
+Installation instructions for other platforms can be found at [docs.docker.com](https://docs.docker.com/engine/install).
 
-The open virtualization software Docker was used to deploy all the applications required for CbM development. The Docker is a set of platform as a service products that use OS-level virtualization to deliver software in packages called containers.
-To run the extraction routines it is recommended to install the latest version of docker with the below steps:
+The open virtualization software Docker was used to deploy all the applications
+required for CbM development. The Docker is a set of platform as a service
+products that use OS-level virtualization to deliver software in packages called
+containers.
+To run the extraction routines it is recommended to install the latest version
+of docker with the below steps:
 ```sh
 sudo snap remove docker
 rm -R /var/lib/docker
@@ -13,7 +18,7 @@ sudo apt-get update
 sudo apt-get install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo apt-key fingerprint 0EBFCD88
-sudo add-apt-repository    "deb [arch=amd64] https://download.docker.com/linux/ubuntu 
+sudo add-apt-repository    "deb [arch=amd64] https://download.docker.com/linux/ubuntu
      $(lsb_release -cs) \
      stable"
 sudo apt-get update
@@ -29,21 +34,28 @@ sudo systemctl enable docker
 
 ## PostGIS
 
-For this project we use PostgreSQL database with the PostGIS extension. Postgis extends the open source PostgreSQL database server with spatial data constructs (e.g. geometries) and spatial querying capacities, allowing storage and query of information about location and mapping. 
+For this project we use PostgreSQL database with the PostGIS extension. Postgis
+extends the open source PostgreSQL database server with spatial data constructs
+(e.g. geometries) and spatial querying capacities, allowing storage and query of
+information about location and mapping.
 
 To run a postgres database with postgis extension run:
 ```sh
-docker run --name postgis -v pgdb_data:/var/lib/postgresql/data -p 5432:5432 -d mdillon/postgis:10
+docker run --name cbm_db -d --restart always -v database:/var/lib/postgresql -v "$PWD"/sql:/root/sql --shm-size=2gb -p 5432:5432 -e POSTGRES_USER=postgres -e POSTGRES_PASS=mydiaspassword kartoza/postgis
 ```
-(To add password for the database add: POSTGRES_PASSWORD=mydiaspassword)    
+<!-- $ -->
+
+Change the POSTGRES_PASS=mydiaspassword to a secure password for the database.    
 
 This will return with a long docker container ID. Check if all is well:
 ```sh
-    docker ps -a
-    CONTAINER ID        IMAGE                COMMAND                  CREATED             STATUS                   PORTS                    NAMES
-    75fc1f296c79        mdillon/postgis:10   "docker-entrypoint.s…"   9 seconds ago       Up 7 seconds             0.0.0.0:5432->5432/tcp   postgis
+docker ps -a
+CONTAINER ID        IMAGE             COMMAND                  CREATED             STATUS                   PORTS                    NAMES
+75fc1f296c79        kartoza/postgis   "docker-entrypoint.s…"   9 seconds ago       Up 7 seconds             0.0.0.0:5432->5432/tcp   cbm_db
 ```
-You need postgresql client tools to access the database. Make sure these match the database version (which is 10 in the example case). For example, for the command line interface on ubuntu:
+You need postgresql client tools to access the database. Make sure these match
+the database version (which is 10 in the example case). For example, for the
+command line interface on ubuntu:
 ```sh
 sudo apt-get install postgresql-client-common postgresql-client-10
 ```
@@ -56,12 +68,21 @@ Type "help" for help.
 
 postgres=#
 ```
+To enable the required postgis extensions for cbm run:
 
-The mdillon/postgis image contains the TIGER data base per default (this is a often used in postgis training). We don't need it, so remove with:
+```sql
+CREATE EXTENSION postgis;
+CREATE EXTENSION postgis_raster;
+CREATE EXTENSION postgis_topology;
+```
+
+The postgis image may contain the TIGER data base per default (this is a often
+    used in postgis training). We don't need it, so remove with:
 ```
 postgres=# drop schema tiger cascade;
 ```
-and exit and reconnect (you are now in schema *public*). List the default tables in that schema:
+and exit and reconnect (you are now in schema *public*). List the default tables
+in that schema:
 ```
 postgres=# \q
 psql -h localhost -d postgres -U postgres
@@ -76,13 +97,14 @@ postgres=# \d
  public | spatial_ref_sys   | table | postgres
 (5 rows)
 ```
-These tables are required for the handling of spatial constructs (geometries, raster data, projection information).
+These tables are required for the handling of spatial constructs (geometries,
+    raster data, projection information).
 
 ### Optimizing
 
-The main configuration settings for PostgreSQL are in a text file postgresql.conf 
-(/etc/postgresql/"version"/main/postgresql.conf) PostgreSQL ships with a basic configuration
-tuned for wide compatibility rather than performance.
+The main configuration settings for PostgreSQL are in a text file postgresql.conf
+(/etc/postgresql/"version"/main/postgresql.conf) PostgreSQL ships with a basic
+configuration tuned for wide compatibility rather than performance.
 
 It is strongly recommended to configure the settings of the PostgreSQL database
 based on your hardware configuration and application, useful information can be found at
@@ -98,7 +120,7 @@ postgres=# create table public.aois (
     wkb_geometry public.geometry(Polygon,4326)
 );
 
-postgres=# create table public.dias_catalogue (
+postgres=# create table public.aoi_2020_dias_catalogue (
     id serial,
     obstime timestamp without time zone not null,
     reference character varying(120) not null,
@@ -108,11 +130,11 @@ postgres=# create table public.dias_catalogue (
     footprint public.geometry(Polygon,4326)
 );
 
-postgres=# create table public.aoi_s2_signatures (
-    pid int, 
-    obsid int, 
-    band char(2), 
-    count real, 
+postgres=# create table public.aoi_2020_s2_signatures (
+    pid int,
+    obsid int,
+    band char(2),
+    count real,
     mean real,
     std real,
     min real,
@@ -123,30 +145,53 @@ postgres=# create table public.aoi_s2_signatures (
 );
 ```
 
-The table *aois* is an ancillary table in which one can define the geometries of the areas of interest. The *dias_catalogue* is an essential table that stores the metadata for the relevant Sentinel-1 and -2 image frames. The table *aoi_s2_signatures* will store the time series extracts which will be linked to the parcel ID (pid) from the to-be-uploaded parcel reference table for each observation id (obsid) in the *dias_catalogue*.
+The table *aois* is an ancillary table in which one can define the geometries of
+the areas of interest. The *dias_catalogue* is an essential table that stores
+the metadata for the relevant Sentinel-1 and -2 image frames. The table
+*aoi_s2_signatures* will store the time series extracts which will be linked to
+the parcel ID (pid) from the to-be-uploaded parcel reference table for each
+observation id (obsid) in the *dias_catalogue*.
 
-Generate a new *aoi_s2_signatures* table for each aoi. This will typically be needed for separate years, as parcel references change. For instance, a table name like *nld2019_s2_signatures* would store all S2 records for the NL reference for 2019.
+Generate a new *aoi_s2_signatures* table for each aoi. This will typically be
+needed for separate years, as parcel references change. For instance, a table
+name like *nld2019_s2_signatures* would store all S2 records for the NL
+reference for 2019.
 
-For Sentinel-1 time series create the equivalent tables with *bs* (backscattering coefficients) and *c6* (6-day coherence) instead of *s2* in the table name.
+For Sentinel-1 time series create the equivalent tables with *bs*
+(backscattering coefficients) and *c6* (6-day coherence) instead of *s2* in the table name.
 
 
 ## Jupyter server
 
-The Jupyter Server is an open source web application that allows to create and share documents that contain live code, equations, visualizations and narrative text. Uses include: data cleaning and transformation, numerical simulation, statistical modeling, data visualization, machine learning, and much more (https://jupyter.org). JupyterLab is the next-generation user interface for Project Jupyter offering all the familiar building blocks of the classic Jupyter Notebook (notebook, terminal, text editor, file browser, rich outputs, etc.) in a flexible and powerful user interface. JupyterLab will eventually replace the classic Jupyter Notebook (https://jupyterlab.readthedocs.io).
+The Jupyter Server is an open source web application that allows to create and
+share documents that contain live code, equations, visualizations and narrative
+text. Uses include: data cleaning and transformation, numerical simulation,
+statistical modeling, data visualization, machine learning, and much more
+(https://jupyter.org). JupyterLab is the next-generation user interface for
+Project Jupyter offering all the familiar building blocks of the classic Jupyter
+Notebook (notebook, terminal, text editor, file browser, rich outputs, etc.) in
+a flexible and powerful user interface. JupyterLab will eventually replace the
+classic Jupyter Notebook (https://jupyterlab.readthedocs.io).
 
 **Instaling DIAS Jupyter (Jupyter Notebook Tensorflow Python Stack for CbM)**
 
-GTCAP cbm_jupyter docker image is based on the tensorflow-notebook of Jupyter Notebook Scientific Python Stack and configured for Copernicus DIAS for CAP “checks by monitoring” with all the requirements. This is the recommended way to run a Jupyter server. Some DIAS providers may provide preinstalled Jupyter environments as well.
+GTCAP cbm_jupyter docker image is based on the tensorflow-notebook of Jupyter
+Notebook Scientific Python Stack and configured for Copernicus DIAS for CAP
+“checks by monitoring” with all the requirements. This is the recommended way to
+run a Jupyter server. Some DIAS providers may provide preinstalled Jupyter
+environments as well.
 
 **Run GTCAP Jupyter docker image**
 
 To run a jupyter server with the default setup:
 ```
-docker run -p 8888:8888 gtcap/cbm_jupyter
+docker run --name cbm_jupyter -p 8888:8888 gtcap/cbm_jupyter
 ```
-This will run the jupyter server on port '8888' and can be accessed from a web browser on 'localhost:8888'.
+This will run the jupyter server on port '8888' and can be accessed from a web
+browser on 'localhost:8888'.
 
-To expose the jupyter server to port 80, change -p 8888:8888 to -p 80:8888, or to any other port.
+To expose the jupyter server to port 80, change -p 8888:8888 to -p 80:8888, or
+to any other port.
 
 
 **More options**
@@ -158,9 +203,8 @@ docker pull gtcap/cbm_jupyter
 
 To configure and access the current local directory within the jupyter server run:
 ```
-docker run -it --privileged=true --user root -e NB_USER="$USER" -e NB_UID="$UID" -e NB_GID="$UID" -p 8888:8888 -v "$PWD":/home/"$USER" --name=jupyter4cbm gtcap_jupyter
+docker run -it --privileged=true --user root -e NB_USER="$USER" -e NB_UID="$UID" -e NB_GID="$UID" -p 8888:8888 -v "$PWD":/home/"$USER" --name=cbm_jupyter gtcap/cbm_jupyter
 ```
-<!-- $ -->
 
 To run the Jupyter server with a predefined token, add at the end of the command:
 ```
@@ -178,20 +222,55 @@ To access jupyter server, open in the web browser the link with the token that i
 
 **Usage Instructions**
 
-All Jupyter Notebooks files have the extension '.ipynb' and are identifiable by the notebook icon next to their name.
+All Jupyter Notebooks files have the extension '.ipynb' and are identifiable by
+the notebook icon next to their name.
 To create a new notebook in JupyterLab, go to File -> New and select 'New Notebook'.
 Notebooks currently running will have a green dot, while non-running ones will not.
 To run a cell with a script, click on the run icon or press Shift+Enter
 
 More information can be found at: https://jupyter.org/documentation
 
-**To build GTCAP Jupyter docker image from source**
+
+### Build Jupyter image from source
+
+To build cbm_jupyter docker image from source follow these steps:
+
+1. Download the cbm repository:
+git clone https://github.com/ec-jrc/cbm.git
 
 In the folder "cbm/docker/jupyter/" there is a "Dockerfile" to create a Jupyter docker image.
-To create the "cbm_jupyter" docker image from source run:
 
-```sh
-git clone https://github.com/ec-jrc/cbm.git
+2. Navigate to the folder with the docker image file:
 cd cbm/docker/cbm_jupyter
+
+3. Build the docker image
 docker build -t gtcap/cbm_jupyter .
+
+
+4.a. Run the Jupyter server  - with no shared folder "bindmount", the files within the container will be deleted if the container is removed:
+
+docker run -p 8888:8888 gtcap/cbm_jupyter
+
+4.b. Or run the Jupyter server  - with a shared folder "bindmount", the files will not be deleted if the container is removed:
+ 
+- Navigate to the folder you want to bindmount to the container, e.g. the home directory:
+cd ~/
+
+Then run the Jupyter server with:
+- docker run -it --privileged=true --user root -e NB_USER="$USER" -e NB_UID="$UID" -e NB_GID="$UID" -p 8888:8888 -v "$PWD":/home/"$USER" --name=jupyter4cbm gtcap/cbm_jupyter
+<!-- $ -->
+
+The token to access the jupyter server will be in the command line output:
+```sh
+[I 08:51:48.705 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[C 08:51:48.708 NotebookApp]
+
+   To access the notebook, open this file in a browser:
+       file:///home/jovyan/.local/share/jupyter/runtime/nbserver-8-open.html
+   Or copy and paste one of these URLs:
+       http://abcd12345678:8888/?token=abcd12345678
+    or http://127.0.0.1:8888/?token=abcd12345678
 ```
+
+You will be able to access the Jupyter server on port 8888 (or any other port) on VM's public ip e.g.: **0.0.0.0:8888**
+Copy the token from the command line and add it to the web interface.
