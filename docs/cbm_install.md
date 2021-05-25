@@ -12,7 +12,7 @@ The cbm python library is available at the [Python Package Index](https://pypi.o
 Can be instaled with:
 
 ```bash
-pip install cbm
+pip3 install cbm
 ```
 
 ## Installing for development
