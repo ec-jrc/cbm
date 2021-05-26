@@ -12,6 +12,7 @@ from os.path import normpath, join
 from ipywidgets import (Label, VBox, HBox, Dropdown, Button, Layout)
 
 from cbm.utils import config
+from cbm.ipycbm.utils import settings_ds
 from cbm.ipycbm.ipy_ext import ext_func, ext_card2db
 
 
@@ -46,7 +47,7 @@ def extract():
     @db_config.on_click
     def db_config_on_click(b):
         if db_conf_box.children == ():
-            db_conf_box.children = [settings.direct_conn()]
+            db_conf_box.children = [settings_ds.direct_conn()]
         else:
             db_conf_box.children = ()
     wbox = VBox([l_connec, VBox([db_box, db_conf_box]),
