@@ -166,15 +166,13 @@ def direct_conn(db='main'):
         config.set_value(['db', db, 'port'], str(db_port.value))
         config.set_value(['db', db, 'name'], str(db_name.value))
         config.set_value(['db', db, 'user'], str(db_user.value))
-        if db_pass.value != '':
-            config.set_value(['db', db, 'conn', 'pass'], str(db_pass.value))
+        config.set_value(['db', db, 'pass'], str(db_pass.value))
         # Save Object storage connection information
         config.set_value(['obst', 'osdias'], str(os_dias.value))
         config.set_value(['obst', 'oshost'], str(os_host.value))
         config.set_value(['obst', 'bucket'], str(os_bucket.value))
         config.set_value(['obst', 'access_key'], str(os_access_key.value))
-        if os_secret_key.value != '':
-            config.set_value(['obst', 'secret_key'], str(os_secret_key.value))
+        config.set_value(['obst', 'secret_key'], str(os_secret_key.value))
 
         outlog("All changes are saved.")
 

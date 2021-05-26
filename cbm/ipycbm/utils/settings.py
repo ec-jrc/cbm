@@ -38,7 +38,7 @@ def data_source():
         ],
         value=source,
         layout={'width': 'max-content'},
-        disabled=True
+        disabled=False
     )
 
     sources_box = Box([
@@ -166,7 +166,6 @@ def general():
 
     btn_save = Button(
         description='Save',
-        disabled=False,
         icon='save'
     )
 

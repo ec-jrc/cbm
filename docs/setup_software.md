@@ -73,7 +73,6 @@ To enable the required postgis extensions for cbm run:
 ```sql
 CREATE EXTENSION postgis;
 CREATE EXTENSION postgis_raster;
-CREATE EXTENSION postgis_topology;
 ```
 
 The postgis image may contain the TIGER data base per default (this is a often
