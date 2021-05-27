@@ -11,6 +11,7 @@ RUN apt-get update -q
 RUN add-apt-repository ppa:ubuntugis/ppa
 RUN apt-get update --fix-missing
 RUN apt-get install -y \
+    build-essential \
     binutils \
     libproj-dev \
     gdal-bin \
@@ -34,7 +35,6 @@ RUN export C_INCLUDE_PATH=/usr/include/gdal
 RUN pip install --upgrade pip
 RUN pip install --upgrade pip setuptools wheel
 RUN pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
-# RUN pip install -i https://test.pypi.org/simple/ cbm
 
 COPY requirements.txt /tmp
 RUN pip install -r /tmp/requirements.txt
