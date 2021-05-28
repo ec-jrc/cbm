@@ -43,7 +43,7 @@ To run a postgres database with postgis extension run:
 ```sh
 docker run --name cbm_db -d --restart always -v database:/var/lib/postgresql -v "$PWD"/sql:/root/sql --shm-size=2gb -p 5432:5432 -e POSTGRES_USER=postgres -e POSTGRES_PASS=mydiaspassword kartoza/postgis
 ```
-<!-- $ -->
+
 
 Change the POSTGRES_PASS=mydiaspassword to a secure password for the database.    
 
@@ -183,9 +183,10 @@ environments as well.
 **Run GTCAP Jupyter docker image**
 
 To run a jupyter server with the default setup:
-```
+```sh
 docker run --name cbm_jupyter -p 8888:8888 gtcap/cbm_jupyter
 ```
+
 This will run the jupyter server on port '8888' and can be accessed from a web
 browser on 'localhost:8888'.
 
@@ -201,12 +202,12 @@ docker pull gtcap/cbm_jupyter
 ```
 
 To configure and access the current local directory within the jupyter server run:
-```
+```sh
 docker run -it --privileged=true --user root -e NB_USER="$USER" -e NB_UID="$UID" -e NB_GID="$UID" -p 8888:8888 -v "$PWD":/home/"$USER" --name=cbm_jupyter gtcap/cbm_jupyter
 ```
 
 To run the Jupyter server with a predefined token, add at the end of the command:
-```
+```sh
 start-notebook.sh --NotebookApp.token='abcdefghijk1234567890'
 ```
 
@@ -257,7 +258,7 @@ cd ~/
 
 Then run the Jupyter server with:
 - docker run -it --privileged=true --user root -e NB_USER="$USER" -e NB_UID="$UID" -e NB_GID="$UID" -p 8888:8888 -v "$PWD":/home/"$USER" --name=jupyter4cbm gtcap/cbm_jupyter
-<!-- $ -->
+
 
 The token to access the jupyter server will be in the command line output:
 ```sh
