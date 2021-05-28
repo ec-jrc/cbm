@@ -193,7 +193,6 @@ browser on 'localhost:8888'.
 To expose the jupyter server to port 80, change -p 8888:8888 to -p 80:8888, or
 to any other port.
 
-
 **More options**
 
 To pull the docker image from [dockerhub](https://hub.docker.com/r/gtcap/cbm_jupyter) use:
@@ -212,10 +211,14 @@ start-notebook.sh --NotebookApp.token='abcdefghijk1234567890'
 ```
 
 **Note**: JupyterLab can be accessed by adding /lab at the url, instead of /tree (e.g. localhost/lab).
-To run with enabled JupyterLab by default add -e JUPYTER_ENABLE_LAB=yes flag e.g.:
+
+To run with enabled JupyterLab by default add -e JUPYTER_ENABLE_LAB=yes flag.
+
+To run with enabled JupyterLab by default and mount the current directory run:
 ```sh
 docker run -it --privileged=true --user root -e NB_USER="$USER" -e NB_UID="$UID" -e NB_GID="$UID" -e JUPYTER_ENABLE_LAB=yes -p 8888:8888 -v "$PWD":/home/"$USER" --name=jupyter4cbm gtcap/cbm_jupyter
 ```
+
 For more options visit [jupyter-docker-stacks.readthedocs.io](https://jupyter-docker-stacks.readthedocs.io/en/latest)
 
 To access jupyter server, open in the web browser the link with the token that is provided in the terminal (e.g. http://localhost/tree?token=abcdefghijk1234567890).
@@ -236,29 +239,33 @@ More information can be found at: https://jupyter.org/documentation
 To build cbm_jupyter docker image from source follow these steps:
 
 1. Download the cbm repository:
+```sh
 git clone https://github.com/ec-jrc/cbm.git
-
+```
 In the folder "cbm/docker/jupyter/" there is a "Dockerfile" to create a Jupyter docker image.
 
 2. Navigate to the folder with the docker image file:
+```sh
 cd cbm/docker/cbm_jupyter
-
+```
 3. Build the docker image
+```sh
 docker build -t gtcap/cbm_jupyter .
-
+```
 
 4.a. Run the Jupyter server  - with no shared folder "bindmount", the files within the container will be deleted if the container is removed:
-
+```sh
 docker run -p 8888:8888 gtcap/cbm_jupyter
-
+```
 4.b. Or run the Jupyter server  - with a shared folder "bindmount", the files will not be deleted if the container is removed:
- 
 - Navigate to the folder you want to bindmount to the container, e.g. the home directory:
+```sh
 cd ~/
-
+```
 Then run the Jupyter server with:
+```sh
 - docker run -it --privileged=true --user root -e NB_USER="$USER" -e NB_UID="$UID" -e NB_GID="$UID" -p 8888:8888 -v "$PWD":/home/"$USER" --name=jupyter4cbm gtcap/cbm_jupyter
-
+```
 
 The token to access the jupyter server will be in the command line output:
 ```sh
