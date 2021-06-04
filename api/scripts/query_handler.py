@@ -128,7 +128,7 @@ def getParcelTimeSeries(parcelTable, pid, tstype, band=None):
                 SELECT extract('epoch' from obstime), count,
                     mean, std, min, p25, p50, p75, max
                 FROM {parcelTable}_{tstype}_signatures s,
-                    {parcelTable}_dias_catalogue d
+                    public.dias_catalogue d
                 WHERE s.obsid = d.id and
                 pid = {pid} and
                 band = '{band}'
@@ -139,7 +139,7 @@ def getParcelTimeSeries(parcelTable, pid, tstype, band=None):
                 SELECT extract('epoch' from obstime), band,
                     count, mean, std, min, p25, p50, p75, max
                 FROM {parcelTable}_{tstype}_signatures s,
-                    {parcelTable}_dias_catalogue d
+                    public.dias_catalogue d
                 WHERE s.obsid = d.id and
                 pid = {pid}
                 ORDER By obstime, band asc;
@@ -172,7 +172,7 @@ def getParcelPeers(parcelTable, pid, distance, maxPeers):
     try:
         logging.debug("start queries")
         getCropCodes = f"""
-            SELECT cropname, cropcode, codetype FROM croplabels
+            SELECT cropname, cropcode, codetype FROM public.aois
             WHERE parceltable = '{parcelTable}'"""
         logging.debug(getCropCodes)
         cur.execute(getCropCodes)
@@ -231,7 +231,7 @@ def getParcelByLocation(parcelTable, lon, lat, withGeometry=False):
         srid = cur.fetchone()[0]
         logging.debug(srid)
         getCropCodes = f"""
-            SELECT cropname, cropcode, codetype FROM croplabels
+            SELECT cropname, cropcode, codetype FROM public.aois
             WHERE parceltable = '{parcelTable}'"""
         cur.execute(getCropCodes)
         row = cur.fetchone()
@@ -292,7 +292,7 @@ def getParcelById(parcelTable, parcelid, withGeometry=False):
         srid = cur.fetchone()[0]
         logging.debug(srid)
         getCropCodes = f"""
-            SELECT cropname, cropcode, codetype FROM croplabels
+            SELECT cropname, cropcode, codetype FROM public.aois
             WHERE parceltable = '{parcelTable}'"""
         cur.execute(getCropCodes)
         row = cur.fetchone()
@@ -352,7 +352,7 @@ def getParcelsByPolygon(parcelTable, polygon, withGeometry=False,
         srid = cur.fetchone()[0]
         print(srid)
         getCropCodes = f"""
-            SELECT cropname, cropcode, codetype FROM croplabels
+            SELECT cropname, cropcode, codetype FROM public.aois
             WHERE parceltable = '{parcelTable}'"""
         cur.execute(getCropCodes)
         row = cur.fetchone()
