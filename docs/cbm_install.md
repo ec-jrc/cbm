@@ -22,14 +22,14 @@ For development install cbm in [editable mode](https://pip.pypa.io/en/stable/ref
 ```bash
 git clone https://github.com/ec-jrc/cbm.git
 cd cbm
-pip install -e .
+pip3 install -e .
 ```
 
 To update cbm with the local changes run in the cbm folder:
 
 .. code-block:: bash
 
-    pip install -U -f -e .
+    pip3 install -U -f -e .
 
 
 ## Installing from source:
@@ -47,7 +47,7 @@ python setup.py install
 To uninstall cbm run:
 
 ```bash
-pip uninstall cbm
+pip3 uninstall cbm
 ```
 
 
