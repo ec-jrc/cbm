@@ -52,7 +52,7 @@ To start CbM it is essential to have:
 There are several steps to set up the core components for Checks by Monitoring.
 These steps require different types of technical expertise. 
 
-- Setup server applications
+- Install server applications
     - Docker (containerization system)
     - Postgres database with PostGIS extension
     - Jupyter (interactive analysis and visualization environment)
