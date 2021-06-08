@@ -245,8 +245,7 @@ def chipsByParcelId_query():
         rip = request.environ['HTTP_X_FORWARDED_FOR']
 
     aoi = request.args.get('aoi')
-    year = request.args.get('year')
-    parcelid = request.args.get('pid')
+    pid = request.args.get('pid')
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
 
@@ -265,10 +264,10 @@ def chipsByParcelId_query():
     else:
         plevel = 'LEVEL2A'
 
-    unique_id = f"dump/{rip}_{aoi}{year}_{parcelid}_{lut}_{plevel}_{bands}".replace(
+    unique_id = f"dump/{rip}_{aoi}_{pid}_{lut}_{plevel}_{bands}".replace(
         '.', '_')
 
-    data = qh.getChipsByParcelId(aoi, year, parcelid, start_date, end_date,
+    data = qh.getChipsByParcelId(aoi, pid, start_date, end_date,
                                  unique_id, lut, bands, plevel)
 
     if data:
@@ -342,13 +341,14 @@ def parcelTimeSeries_query():
         description: Time series table.
     """
     aoi = request.args.get('aoi')
-    parcelid = request.args.get('pid')
+    year = request.args.get('year')
+    pid = request.args.get('pid')
     tstype = request.args.get('tstype')
     band = None
 
     if 'band' in request.args.keys():
         band = request.args.get('band')
-    data = qh.getParcelTimeSeries(aoi, parcelid, tstype, band)
+    data = qh.getParcelTimeSeries(aoi, year, pid, tstype, band)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -373,6 +373,7 @@ def parcelPeers_query():
         description: The parcel “peers”.
     """
     aoi = request.args.get('aoi')
+    year = request.args.get('year')
     pid = request.args.get('pid')
     distance = 1000.0
     maxPeers = 10
@@ -386,7 +387,7 @@ def parcelPeers_query():
     if maxPeers > 100:
         maxPeers = 100
 
-    data = qh.getParcelPeers(aoi, pid, distance, maxPeers)
+    data = qh.getParcelPeers(aoi, year, pid, distance, maxPeers)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -410,6 +411,7 @@ def parcelByLocation_query():
         description: Parcel information.
     """
     aoi = request.args.get('aoi')
+    year = request.args.get('year')
     lon = request.args.get('lon')
     lat = request.args.get('lat')
     withGeometry = False
@@ -417,7 +419,7 @@ def parcelByLocation_query():
     if 'withGeometry' in request.args.keys():
         withGeometry = True if request.args.get(
             'withGeometry') == 'True' else False
-    data = qh.getParcelByLocation(aoi, lon, lat, withGeometry)
+    data = qh.getParcelByLocation(aoi, year, lon, lat, withGeometry)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -441,14 +443,15 @@ def parcelById_query():
         description: Parcel information.
     """
     aoi = request.args.get('aoi')
+    year = request.args.get('year')
     withGeometry = False
 
     if 'withGeometry' in request.args.keys():
         withGeometry = True if request.args.get(
             'withGeometry') == 'True' else False
 
-    parcelid = request.args.get('parcelid')
-    data = qh.getParcelById(aoi, parcelid, withGeometry)
+    pid = request.args.get('pid')
+    data = qh.getParcelById(aoi, year, pid, withGeometry)
 
     if not data:
         return json.dumps({})
@@ -473,6 +476,7 @@ def parcelsByPolygon_query():
         description: List of parcels.
     """
     aoi = request.args.get('aoi')
+    year = request.args.get('year')
     withGeometry = False
     only_ids = True
 
@@ -485,7 +489,7 @@ def parcelsByPolygon_query():
             'only_ids') == 'True' else False
 
     polygon = request.args.get('polygon')
-    data = qh.getParcelsByPolygon(aoi, polygon, withGeometry, only_ids)
+    data = qh.getParcelsByPolygon(aoi, year, polygon, withGeometry, only_ids)
 
     if not data:
         return json.dumps({})
