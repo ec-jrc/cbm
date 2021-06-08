@@ -2,7 +2,7 @@
 
 ## Dependencies
 
-The 'cbm' python library has one C library dependency: GDAL >=2.x. GDAL itself depends on many of other libraries provided by most major operating systems and also depends on the non standard GEOS and PROJ4 libraries, see: [Install GDAL](https://jrc-cbm.readthedocs.io/en/latest/cbm_install.html#install-gdal).
+The 'cbm' python library has one C library dependency: GDAL >=2.x. GDAL itself depends on many of other libraries provided by most major operating systems and also depends on the non standard GEOS and PROJ4 libraries, see: [Install GDAL](https://jrc-cbm.readthedocs.io/en/latest/cbm_install.html#id1).
 
 
 ## Installing from PyPI

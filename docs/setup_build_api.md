@@ -23,24 +23,24 @@ Then go to the api folder of the downloaded package:
 To create and manage users that can access the RESTful API for CbM, execute in the terminal:
 
 ```bash
-python users.py add username password dataset # To Create a new user.
-python users.py delete username               # Delete a user.
-python users.py list                          # Print a list of the users.
+python3 scripts/users.py add username password dataset # To Create a new user.
+python3 scripts/users.py delete username               # Delete a user.
+python3 scripts/users.py list                          # Print a list of the users.
 ```
 Change the 'username' and 'password' with a username and password of the user.
 Set the dataset to the data that the user will be restricted to.
 
 Example:
 ```bash
-python3 users.py add john_doe Pass4John aoi2020
+python3 scripts/users.py add john_doe Pass4John aoi2020
 ```
 
 Alternatively import the module in a python script or notebook cell:
 
 ```python
-import users # Import the users module (set the import accordingly to your path)
+from scripts import users # Import the users module (set the import accordingly to your path)
 # Create a new user with:
-users.create('username', 'password', 'dataset')
+users.add('username', 'password', 'dataset')
 
 # To delete a user.
 users.delete('username')
@@ -73,13 +73,13 @@ and set the database connection information. e.g.:
 
 A docker image is available on [docker hub](https://hub.docker.com/r/gtcap/cbm_api). This image includes flask and all the required python libraries needed to build a RESTful API For CbM. It can be easily deployed with:
 
-    docker run -it --name api -v "$PWD":/app -p 5000:80 gtcap/cbm_api
+    docker run -it --name api -v "$PWD":/app -p 80:80 gtcap/cbm_api
 
 <!-- $ -->
 
 *Must run from within the 'cbm/api/' folder
 
-To expose the RESTful server to port 80, change -p 5000:5000 to -p 80:5000, or to any other port.
+To expose the RESTful server to another port, change the port parameter -p [PORT]:80.
 
 
 ### Build from source
