@@ -117,7 +117,7 @@ def getRawS1ChipsBatch(unique_id):
 
 # Parcel Time Series
 
-def getParcelTimeSeries(parcelTable, pid, tstype, band=None):
+def getParcelTimeSeries(aoi, year, pid, tstype, band=None):
     conn = psycopg2.connect(conn_str)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
@@ -127,7 +127,7 @@ def getParcelTimeSeries(parcelTable, pid, tstype, band=None):
             getTableDataSql = f"""
                 SELECT extract('epoch' from obstime), count,
                     mean, std, min, p25, p50, p75, max
-                FROM {parcelTable}_{tstype}_signatures s,
+                FROM {aoi}.signatures s,
                     public.dias_catalogue d
                 WHERE s.obsid = d.id and
                 pid = {pid} and
@@ -138,7 +138,7 @@ def getParcelTimeSeries(parcelTable, pid, tstype, band=None):
             getTableDataSql = f"""
                 SELECT extract('epoch' from obstime), band,
                     count, mean, std, min, p25, p50, p75, max
-                FROM {parcelTable}_{tstype}_signatures s,
+                FROM {aoi}.signatures s,
                     public.dias_catalogue d
                 WHERE s.obsid = d.id and
                 pid = {pid}
@@ -155,7 +155,7 @@ def getParcelTimeSeries(parcelTable, pid, tstype, band=None):
                 data.append(tuple(r))
         else:
             print("No time series found for",
-                  f"{pid} in {parcelTable}_{tstype}_signatures")
+                  f"{pid} in {aoi}.signatures")
         return data
 
     except Exception as err:
@@ -164,7 +164,7 @@ def getParcelTimeSeries(parcelTable, pid, tstype, band=None):
         return data.append('Ended with no data')
 
 
-def getParcelPeers(parcelTable, pid, distance, maxPeers):
+def getParcelPeers(aoi, year, pid, distance, maxPeers):
     conn = psycopg2.connect(conn_str)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
@@ -172,8 +172,8 @@ def getParcelPeers(parcelTable, pid, distance, maxPeers):
     try:
         logging.debug("start queries")
         getCropCodes = f"""
-            SELECT cropname, cropcode, codetype FROM public.aois
-            WHERE parceltable = '{parcelTable}'"""
+            SELECT cropname, cropcode, codetype FROM aois
+            WHERE parceltable = '{aoi}.parcels_{year}'"""
         logging.debug(getCropCodes)
         cur.execute(getCropCodes)
         row = cur.fetchone()
@@ -181,10 +181,10 @@ def getParcelPeers(parcelTable, pid, distance, maxPeers):
 
         getTableDataSql = f"""
             WITH current_parcel AS (SELECT {cropname}, wkb_geometry
-            FROM {parcelTable} where ogc_fid = {pid})
+            FROM {aoi}.parcels_{year} where ogc_fid = {pid})
             SELECT ogc_fid as pid, st_distance(wkb_geometry,
                 (SELECT wkb_geometry FROM current_parcel))
-                as distance from {parcelTable}
+                as distance from {aoi}.parcels_{year}
             where {cropname} = (SELECT {cropname} from current_parcel)
             And ogc_fid != {pid}
             And st_dwithin(wkb_geometry,
@@ -204,7 +204,7 @@ def getParcelPeers(parcelTable, pid, distance, maxPeers):
             for r in rows:
                 data.append(tuple(r))
         else:
-            logging.debug(f"No parcel peers found in {parcelTable} within",
+            logging.debug(f"No parcel peers found in {aoi}.parcels_{year} within",
                           "{distance} meters from parcel {pid}")
         return data
 
@@ -216,7 +216,7 @@ def getParcelPeers(parcelTable, pid, distance, maxPeers):
 
 # Parcel information
 
-def getParcelByLocation(parcelTable, lon, lat, withGeometry=False):
+def getParcelByLocation(aoi, year, lon, lat, withGeometry=False):
     conn = psycopg2.connect(conn_str)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
@@ -224,20 +224,18 @@ def getParcelByLocation(parcelTable, lon, lat, withGeometry=False):
     try:
         logging.debug("start queries")
         getTableSrid = f"""
-            SELECT srid FROM geometry_columns
-            WHERE f_table_name = '{parcelTable}'"""
+            SELECT Find_SRID('{aoi}', 'parcels_{year}', 'wkb_geometry');"""
         logging.debug(getTableSrid)
         cur.execute(getTableSrid)
         srid = cur.fetchone()[0]
         logging.debug(srid)
         getCropCodes = f"""
-            SELECT cropname, cropcode, codetype FROM public.aois
-            WHERE parceltable = '{parcelTable}'"""
+            SELECT cropname, cropcode, codetype FROM aois
+            WHERE parceltable = '{aoi}.parcels_{year}'"""
         cur.execute(getCropCodes)
         row = cur.fetchone()
         cropname = row[0]
         cropcode = row[1]
-        codetype = row[2]
         logging.debug(row)
 
         if withGeometry:
@@ -251,7 +249,7 @@ def getParcelByLocation(parcelTable, lon, lat, withGeometry=False):
                 st_area(wkb_geometry) as area,
                 st_X(st_transform(st_centroid(wkb_geometry), 4326)) as clon,
                 st_Y(st_transform(st_centroid(wkb_geometry), 4326)) as clat
-            FROM {parcelTable}
+            FROM {aoi}.parcels_{year}
             WHERE st_intersects(wkb_geometry,
             st_transform(st_geomfromtext('POINT({lon} {lat})', 4326), {srid}));
         """
@@ -266,7 +264,7 @@ def getParcelByLocation(parcelTable, lon, lat, withGeometry=False):
             for r in rows:
                 data.append(tuple(r))
         else:
-            logging.debug(f"No parcel found in {parcelTable} that intersects",
+            logging.debug(f"No parcel found in {aoi}.parcels_{year} that intersects",
                           f"with point ({lon}, {lat})")
         logging.debug(data)
         return data
@@ -277,7 +275,7 @@ def getParcelByLocation(parcelTable, lon, lat, withGeometry=False):
         return data.append('Ended with no data')
 
 
-def getParcelById(parcelTable, parcelid, withGeometry=False):
+def getParcelById(aoi, year, parcelid, withGeometry=False):
     conn = psycopg2.connect(conn_str)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
@@ -285,17 +283,17 @@ def getParcelById(parcelTable, parcelid, withGeometry=False):
     try:
         logging.debug("start queries")
         getTableSrid = f"""
-            SELECT srid FROM geometry_columns
-            WHERE f_table_name = '{parcelTable}'"""
+            SELECT Find_SRID('{aoi}', 'parcels_{year}', 'wkb_geometry');"""
         logging.debug(getTableSrid)
         cur.execute(getTableSrid)
         srid = cur.fetchone()[0]
         logging.debug(srid)
         getCropCodes = f"""
-            SELECT cropname, cropcode, codetype FROM public.aois
-            WHERE parceltable = '{parcelTable}'"""
+            SELECT cropname, cropcode, codetype FROM aois
+            WHERE parceltable = '{aoi}.parcels_{year}'"""
         cur.execute(getCropCodes)
         row = cur.fetchone()
+        print('row', row)
         cropname = row[0]
         cropcode = row[1]
         # codetype = row[2]
@@ -311,7 +309,7 @@ def getParcelById(parcelTable, parcelid, withGeometry=False):
                 st_area(wkb_geometry) as area,
                 st_X(st_transform(st_centroid(wkb_geometry), 4326)) as clon,
                 st_Y(st_transform(st_centroid(wkb_geometry), 4326)) as clat
-            FROM {parcelTable}
+            FROM {aoi}.parcels_{year}
             WHERE ogc_fid = {parcelid};
         """
 
@@ -322,19 +320,21 @@ def getParcelById(parcelTable, parcelid, withGeometry=False):
         data.append(tuple(etup.name for etup in cur.description))
         if len(rows) > 0:
             for r in rows:
+                print(r)
                 data.append(tuple(r))
         else:
             logging.debug(
-                f"No parcel found in {parcelTable} with id ({parcelid}).")
+                f"No parcel found in {aoi}.parcels_{year} with id ({parcelid}).")
         return data
 
     except Exception as err:
+        print(err)
         logging.debug("Did not find data, please select the right database",
                       "and table: ", err)
         return data.append('Ended with no data')
 
 
-def getParcelsByPolygon(parcelTable, polygon, withGeometry=False,
+def getParcelsByPolygon(aoi, year, polygon, withGeometry=False,
                         only_ids=True):
     poly = polygon.replace('_', ' ').replace('-', ',')
 
@@ -345,15 +345,14 @@ def getParcelsByPolygon(parcelTable, polygon, withGeometry=False,
     try:
         print("start queries")
         getTableSrid = f"""
-            SELECT srid FROM geometry_columns
-            WHERE f_table_name = '{parcelTable}'"""
+            SELECT Find_SRID('{aoi}', 'parcels_{year}', 'wkb_geometry');"""
         print(getTableSrid)
         cur.execute(getTableSrid)
         srid = cur.fetchone()[0]
         print(srid)
         getCropCodes = f"""
-            SELECT cropname, cropcode, codetype FROM public.aois
-            WHERE parceltable = '{parcelTable}'"""
+            SELECT cropname, cropcode, codetype FROM aois
+            WHERE parceltable = '{aoi}.parcels_{year}'"""
         cur.execute(getCropCodes)
         row = cur.fetchone()
         cropname = row[0]
@@ -376,7 +375,7 @@ def getParcelsByPolygon(parcelTable, polygon, withGeometry=False,
 
         getTableDataSql = f"""
             SELECT {selectSql}
-            FROM {parcelTable}
+            FROM {aoi}.parcels_{year}
             WHERE st_intersects(wkb_geometry,
             st_transform(st_geomfromtext('POLYGON(({poly}))', 4326), {srid}))
             LIMIT 100;
@@ -391,7 +390,7 @@ def getParcelsByPolygon(parcelTable, polygon, withGeometry=False,
             for r in rows:
                 data.append(tuple(r))
         else:
-            print(f"No parcel found in {parcelTable} that intersects",
+            print(f"No parcel found in {aoi}.parcels_{year} that intersects",
                   "with the polygon.")
         return data
 
