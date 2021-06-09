@@ -97,7 +97,7 @@ def data_auth_add(aoi, username):
         json.dump(aois, u, indent=2)
 
 
-def create(username, password='', aoi=None):
+def add(username, password='', aoi=None):
     """Create a new user
 
     Example:
@@ -173,7 +173,7 @@ def delete(username):
 
 if __name__ == '__main__':
     if sys.argv[1].lower() == 'add' or sys.argv[1].lower() == 'create':
-        create(sys.argv[2], sys.argv[3], sys.argv[4])
+        add(sys.argv[2], sys.argv[3], sys.argv[4])
     elif sys.argv[1].lower() == 'delete':
         delete(sys.argv[2])
     elif sys.argv[1].lower() == 'list':
