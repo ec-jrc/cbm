@@ -1,6 +1,7 @@
 # itignore CbM files
 
 api/tms/*
+api/core
 !api/tms/google_tms.xml
 !api/tms/bing_tms.xml
 
