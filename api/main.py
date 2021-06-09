@@ -34,7 +34,7 @@ app.config['SWAGGER'] = {
 
 # Enable upload page (http://HOST/upload).
 UPLOAD_ENABLE = False  # True or False
-
+DEFAULT_SCHEMA = 'public'
 
 # -------- Core functions ---------------------------------------------------- #
 
@@ -340,15 +340,19 @@ def parcelTimeSeries_query():
       200:
         description: Time series table.
     """
-    aoi = request.args.get('aoi')
     year = request.args.get('year')
     pid = request.args.get('pid')
     tstype = request.args.get('tstype')
     band = None
 
+    if 'aoi' in request.args.keys():
+        schema = request.args.get('aoi')
+    else:
+        schema = DEFAULT_SCHEMA
+
     if 'band' in request.args.keys():
         band = request.args.get('band')
-    data = qh.getParcelTimeSeries(aoi, year, pid, tstype, band)
+    data = qh.getParcelTimeSeries(schema, year, pid, tstype, band)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -372,11 +376,16 @@ def parcelPeers_query():
       200:
         description: The parcel “peers”.
     """
-    aoi = request.args.get('aoi')
     year = request.args.get('year')
     pid = request.args.get('pid')
     distance = 1000.0
     maxPeers = 10
+
+    if 'aoi' in request.args.keys():
+        schema = request.args.get('aoi')
+    else:
+        schema = DEFAULT_SCHEMA
+
     if 'distance' in request.args.keys():
         distance = float(request.args.get('distance'))
     if 'max' in request.args.keys():
@@ -387,7 +396,7 @@ def parcelPeers_query():
     if maxPeers > 100:
         maxPeers = 100
 
-    data = qh.getParcelPeers(aoi, year, pid, distance, maxPeers)
+    data = qh.getParcelPeers(schema, year, pid, distance, maxPeers)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -410,16 +419,21 @@ def parcelByLocation_query():
       200:
         description: Parcel information.
     """
-    aoi = request.args.get('aoi')
     year = request.args.get('year')
     lon = request.args.get('lon')
     lat = request.args.get('lat')
     withGeometry = False
 
+    if 'aoi' in request.args.keys():
+        schema = request.args.get('aoi')
+    else:
+        schema = DEFAULT_SCHEMA
+
     if 'withGeometry' in request.args.keys():
         withGeometry = True if request.args.get(
             'withGeometry') == 'True' else False
-    data = qh.getParcelByLocation(aoi, year, lon, lat, withGeometry)
+
+    data = qh.getParcelByLocation(schema, year, lon, lat, withGeometry)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -442,16 +456,20 @@ def parcelById_query():
       200:
         description: Parcel information.
     """
-    aoi = request.args.get('aoi')
     year = request.args.get('year')
     withGeometry = False
+
+    if 'aoi' in request.args.keys():
+        schema = request.args.get('aoi')
+    else:
+        schema = DEFAULT_SCHEMA
 
     if 'withGeometry' in request.args.keys():
         withGeometry = True if request.args.get(
             'withGeometry') == 'True' else False
 
     pid = request.args.get('pid')
-    data = qh.getParcelById(aoi, year, pid, withGeometry)
+    data = qh.getParcelById(schema, year, pid, withGeometry)
 
     if not data:
         return json.dumps({})
@@ -475,10 +493,14 @@ def parcelsByPolygon_query():
       200:
         description: List of parcels.
     """
-    aoi = request.args.get('aoi')
     year = request.args.get('year')
     withGeometry = False
     only_ids = True
+
+    if 'aoi' in request.args.keys():
+        schema = request.args.get('aoi')
+    else:
+        schema = DEFAULT_SCHEMA
 
     if 'withGeometry' in request.args.keys():
         withGeometry = True if request.args.get(
@@ -489,7 +511,7 @@ def parcelsByPolygon_query():
             'only_ids') == 'True' else False
 
     polygon = request.args.get('polygon')
-    data = qh.getParcelsByPolygon(aoi, year, polygon, withGeometry, only_ids)
+    data = qh.getParcelsByPolygon(schema, year, polygon, withGeometry, only_ids)
 
     if not data:
         return json.dumps({})
