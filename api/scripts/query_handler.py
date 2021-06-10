@@ -123,11 +123,12 @@ def getParcelTimeSeries(schema, year, pid, tstype, band=None):
     data = []
 
     try:
+        sigs_table = f"{schema}.sigs_{year}"
         if band:
             getTableDataSql = f"""
                 SELECT extract('epoch' from obstime), count,
                     mean, std, min, p25, p50, p75, max
-                FROM {schema}.signatures s,
+                FROM {sigs_table} s,
                     public.dias_catalogue d
                 WHERE s.obsid = d.id and
                 pid = {pid} and
@@ -138,7 +139,7 @@ def getParcelTimeSeries(schema, year, pid, tstype, band=None):
             getTableDataSql = f"""
                 SELECT extract('epoch' from obstime), band,
                     count, mean, std, min, p25, p50, p75, max
-                FROM {schema}.signatures s,
+                FROM {sigs_table} s,
                     public.dias_catalogue d
                 WHERE s.obsid = d.id and
                 pid = {pid}
@@ -291,13 +292,12 @@ def getParcelById(schema, year, parcelid, withGeometry=False):
         srid = cur.fetchone()[0]
         logging.debug(srid)
         getCropCodes = f"""
-            SELECT cropname, cropcode, codetype FROM aois
+            SELECT cropname, cropcode FROM aois
             WHERE parceltable = '{schema}.parcels_{year}'"""
         cur.execute(getCropCodes)
         row = cur.fetchone()
         cropname = row[0]
         cropcode = row[1]
-        # codetype = row[2]
 
         if withGeometry:
             geometrySql = ", st_asgeojson(wkb_geometry) as geom"
