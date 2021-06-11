@@ -39,6 +39,8 @@ DEFAULT_SCHEMA = 'public'
 # -------- Core functions ---------------------------------------------------- #
 
 # Authentication decorator.
+
+
 def auth_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -345,6 +347,11 @@ def parcelTimeSeries_query():
     tstype = request.args.get('tstype')
     band = None
 
+    if 'scl' in request.args.keys():
+        scl = request.args.get('scl')
+    else:
+        scl = True
+
     if 'aoi' in request.args.keys():
         schema = request.args.get('aoi')
     else:
@@ -352,7 +359,12 @@ def parcelTimeSeries_query():
 
     if 'band' in request.args.keys():
         band = request.args.get('band')
-    data = qh.getParcelTimeSeries(schema, year, pid, tstype, band)
+
+    if tstype.lower() == 'scl':
+        data = qh.getParcelSCL(schema, year, pid)
+    else:
+        data = qh.getParcelTimeSeries(schema, year, pid, tstype, band, scl)
+
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -511,7 +523,8 @@ def parcelsByPolygon_query():
             'only_ids') == 'True' else False
 
     polygon = request.args.get('polygon')
-    data = qh.getParcelsByPolygon(schema, year, polygon, withGeometry, only_ids)
+    data = qh.getParcelsByPolygon(
+        schema, year, polygon, withGeometry, only_ids)
 
     if not data:
         return json.dumps({})
@@ -584,4 +597,4 @@ if __name__ == "__main__":
     logger.setLevel(logging.INFO)
     logger.addHandler(handler)
     app.run(debug=True, use_reloader=True,
-            host='0.0.0.0', port=5000, threaded=True)
+            host='0.0.0.0', port=80, threaded=True)

@@ -12,14 +12,13 @@ import psycopg2
 import psycopg2.extras
 import logging
 
-from scripts import backgroundExtract as bgext
-# from scripts import chipS2Extractor2 as ces2
-# from scripts import rawChipBatchExtract as rceb
-# from scripts import rawChipExtractor as rce
-# from scripts import rawS1ChipBatchExtract as rces1
-
 from scripts import db
-conn_str = db.conn_str()
+from scripts import backgroundExtract as bgext
+from scripts import chipS2Extractor2 as ces2
+from scripts import rawChipBatchExtract as rceb
+from scripts import rawChipExtractor as rce
+from scripts import rawS1ChipBatchExtract as rces1
+
 
 logging.basicConfig(filename='logs/queryHandler.log', filemode='w',
                     format='%(name)s - %(levelname)s - %(message)s',
@@ -44,7 +43,8 @@ def getChipsByLocation(lon, lat, start_date, end_date, unique_id, lut='5_95',
                        bands='B08_B04_B03', plevel='LEVEL2A'):
     logging.debug(lut)
     logging.debug(bands)
-    logging.debug(f"{lon} {lat} {start_date} {end_date} {unique_id} {lut} {bands} {plevel}")
+    logging.debug(
+        f"{lon} {lat} {start_date} {end_date} {unique_id} {lut} {bands} {plevel}")
 
     numchips = ces2.parallelExtract(
         lon, lat, start_date, end_date, unique_id, lut, bands, plevel)
@@ -52,7 +52,7 @@ def getChipsByLocation(lon, lat, start_date, end_date, unique_id, lut='5_95',
     if numchips == -1:
         print(f"Request results in too many chips, please revise selection")
     elif numchips > 0:
-        print(ces2.chipCollect(unique_id))
+        print(f"New chips ara in {unique_id}")
     else:
         print(f"Chips already cached in {unique_id}")
 
@@ -72,7 +72,7 @@ def getRawChipByLocation(lon, lat, start_date, end_date, unique_id, band,
     if numchips == -1:
         print(f"Request results in too many chips, please revise selection")
     elif numchips > 0:
-        print(rce.chipCollect(unique_id))
+        print(f"New chips ara in {unique_id}")
     else:
         print(f"Chips already cached in {unique_id}")
 
@@ -117,40 +117,35 @@ def getRawS1ChipsBatch(unique_id):
 
 # Parcel Time Series
 
-def getParcelTimeSeries(schema, year, pid, tstype, band=None):
-    conn = psycopg2.connect(conn_str)
+def getParcelTimeSeries(schema, year, pid, tstype, band=None, scl=True):
+    conn = psycopg2.connect(db.conn_str())
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
 
+    sigs_table = f"{schema}.sigs_{year}"
+    where_band = f"And s.band = '{band}'" if band else ''
+    select_scl = ', h.hist' if scl else ''
+    from_hists = f", {schema}.hists_2020 h" if scl else ''
+    where_shid = 'And s.pid = h.pid And h.obsid = s.obsid' if scl else ''
+
     try:
-        sigs_table = f"{schema}.sigs_{year}"
-        if band:
-            getTableDataSql = f"""
-                SELECT extract('epoch' from obstime), count,
-                    mean, std, min, p25, p50, p75, max
-                FROM {sigs_table} s,
-                    public.dias_catalogue d
-                WHERE s.obsid = d.id and
-                pid = {pid} and
-                band = '{band}'
-                ORDER By obstime asc;
-            """
-        else:
-            getTableDataSql = f"""
-                SELECT extract('epoch' from obstime), band,
-                    count, mean, std, min, p25, p50, p75, max
-                FROM {sigs_table} s,
-                    public.dias_catalogue d
-                WHERE s.obsid = d.id and
-                pid = {pid}
-                ORDER By obstime, band asc;
-            """
+        getTableDataSql = f"""
+            SELECT extract('epoch' from d.obstime), s.band, s.count,
+                s.mean, s.std, s.min, s.p25, s.p50, s.p75, s.max {select_scl}
+            FROM {sigs_table} s,
+                public.dias_catalogue d {from_hists}
+            WHERE
+                s.obsid = d.id and
+                s.pid = {pid}
+                {where_shid}
+                {where_band}
+            ORDER By obstime, band asc;
+        """
         #  Return a list of tuples
         cur.execute(getTableDataSql)
-
         rows = cur.fetchall()
-
         data.append(tuple(etup.name for etup in cur.description))
+
         if len(rows) > 0:
             for r in rows:
                 data.append(tuple(r))
@@ -165,15 +160,48 @@ def getParcelTimeSeries(schema, year, pid, tstype, band=None):
         return data.append('Ended with no data')
 
 
+def getParcelSCL(schema, year, pid):
+    conn = psycopg2.connect(db.conn_str())
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    data = []
+
+    hists_table = f"{schema}.hists_{year}"
+
+    try:
+        getTableDataSql = f"""
+            SELECT *
+            FROM {hists_table} h
+            WHERE h.pid = {pid}
+            ORDER By h.pid Asc;
+        """
+        #  Return a list of tuples
+        cur.execute(getTableDataSql)
+        rows = cur.fetchall()
+        data.append(tuple(etup.name for etup in cur.description))
+
+        if len(rows) > 0:
+            for r in rows:
+                data.append(tuple(r))
+        else:
+            print("No SCL time series found for",
+                  f"{pid} in {schema}.signatures")
+        return data
+
+    except Exception as err:
+        print("Did not find data, please select the right database and table: ",
+              err)
+        return data.append('Ended with no data')
+
+
 def getParcelPeers(schema, year, pid, distance, maxPeers):
-    conn = psycopg2.connect(conn_str)
+    conn = psycopg2.connect(db.conn_str())
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
 
     try:
         logging.debug("start queries")
         getCropCodes = f"""
-            SELECT cropname, cropcode, codetype FROM aois
+            SELECT cropname, cropcode FROM aois
             WHERE parceltable = '{schema}.parcels_{year}'"""
         logging.debug(getCropCodes)
         cur.execute(getCropCodes)
@@ -205,8 +233,9 @@ def getParcelPeers(schema, year, pid, distance, maxPeers):
             for r in rows:
                 data.append(tuple(r))
         else:
-            logging.debug(f"No parcel peers found in {schema}.parcels_{year} within",
-                          "{distance} meters from parcel {pid}")
+            logging.debug(
+                f"No parcel peers found in {schema}.parcels_{year} within",
+                f"{distance} meters from parcel {pid}")
         return data
 
     except Exception as err:
@@ -219,7 +248,7 @@ def getParcelPeers(schema, year, pid, distance, maxPeers):
 # Parcel information
 
 def getParcelByLocation(schema, year, lon, lat, withGeometry=False):
-    conn = psycopg2.connect(conn_str)
+    conn = psycopg2.connect(db.conn_str())
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
 
@@ -266,8 +295,9 @@ def getParcelByLocation(schema, year, lon, lat, withGeometry=False):
             for r in rows:
                 data.append(tuple(r))
         else:
-            logging.debug(f"No parcel found in {schema}.parcels_{year} that intersects",
-                          f"with point ({lon}, {lat})")
+            logging.debug(
+                f"No parcel found in {schema}.parcels_{year} that intersects",
+                f"with point ({lon}, {lat})")
         logging.debug(data)
         return data
 
@@ -279,7 +309,7 @@ def getParcelByLocation(schema, year, lon, lat, withGeometry=False):
 
 
 def getParcelById(schema, year, parcelid, withGeometry=False):
-    conn = psycopg2.connect(conn_str)
+    conn = psycopg2.connect(db.conn_str())
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
 
@@ -324,7 +354,7 @@ def getParcelById(schema, year, parcelid, withGeometry=False):
                 data.append(tuple(r))
         else:
             logging.debug(
-                f"No parcel found in {schema}.parcels_{year} with id ({parcelid}).")
+                f"No parcel found in the selected table with id ({parcelid}).")
         return data
 
     except Exception as err:
@@ -338,7 +368,7 @@ def getParcelsByPolygon(schema, year, polygon, withGeometry=False,
                         only_ids=True):
     poly = polygon.replace('_', ' ').replace('-', ',')
 
-    conn = psycopg2.connect(conn_str)
+    conn = psycopg2.connect(db.conn_str())
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
 
@@ -367,7 +397,8 @@ def getParcelsByPolygon(schema, year, polygon, withGeometry=False,
         if only_ids:
             selectSql = f"ogc_fid{geometrySql}"
         else:
-            selectSql = f"""ogc_fid, {cropname} as cropname, {cropcode} as cropcode,
+            selectSql = f"""
+                ogc_fid, {cropname} As cropname, {cropcode} As cropcode,
                 st_srid(wkb_geometry) as srid{geometrySql},
                 st_area(wkb_geometry) as area,
                 st_X(st_transform(st_centroid(wkb_geometry), 4326)) as clon,
