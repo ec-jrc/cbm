@@ -1,10 +1,11 @@
 # itignore CbM files
 
 api/tms/*
-api/core
 !api/tms/google_tms.xml
 !api/tms/bing_tms.xml
 
+api/core
+api/gunicorn
 api/static/dump/
 api/config/users.json
 api/config/data_auth.json
