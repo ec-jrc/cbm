@@ -38,7 +38,7 @@ def data_source():
         ],
         value=source,
         layout={'width': 'max-content'},
-        disabled=False
+        disabled=True
     )
 
     sources_box = Box([
@@ -122,7 +122,7 @@ def general():
     sys_info = Label(
         "System settings.")
     paths_info = Label(
-        "Select the personal data folder and the temporary folder.")
+        "Select the personal data folder.")
 
     jupyterlab = Checkbox(
         value=eval(values['set']['jupyterlab']),
@@ -142,7 +142,8 @@ def general():
 
     path_temp = Text(
         value=values['paths']['temp'],
-        description='Temp path:'
+        description='Temp path:',
+        disabled=True
     )
 
     files_info = Label(
