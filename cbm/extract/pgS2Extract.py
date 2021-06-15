@@ -7,13 +7,10 @@
 # Copyright : 2021 European Commission, Joint Research Centre
 # License   : 3-Clause BSD
 
-
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """ postgisS2Extract.py --
         A routine to extract zonal statistics from imagery in S3 object storage.
-        Assumes postgis data base use for scene metadata, features to extract and result storage.
+        Assumes postgis data base use for scene metadata, features to extract
+        and result storage.
         Essential part of DIAS functionality for CAP Checks by Monitoring
     Author: Guido Lemoine, European Commission, Joint Research Centre
     License: see git repository
@@ -50,7 +47,8 @@ from cbm.utils import config
 from cbm.sources import db, object_storage
 
 
-def extractS2(startdate, enddate, dias_catalogue=None, parcels_table=None, results_table=None, dias=None):
+def main(startdate, enddate, dias_catalogue=None, parcels_table=None,
+         results_table=None, dias=None):
     start = time.time()
 
     values = config.read()
@@ -156,10 +154,14 @@ def extractS2(startdate, enddate, dias_catalogue=None, parcels_table=None, resul
     # print(flist[1])
     # print(s3subdir)
 
-    selection = {'B4': '{}/{}_{}_{}_{}.jp2'.format('R10m', mgrs_tile, full_tstamp, 'B04', '10m'),
-                 'B8': '{}/{}_{}_{}_{}.jp2'.format('R10m', mgrs_tile, full_tstamp, 'B08', '10m'),
-                 'SC': '{}/{}_{}_{}_{}.jp2'.format('R20m', mgrs_tile, full_tstamp, 'SCL', '20m')
-                 }
+    selection = {
+        'B4': '{}/{}_{}_{}_{}.jp2'.format(
+            'R10m', mgrs_tile, full_tstamp, 'B04', '10m'),
+        'B8': '{}/{}_{}_{}_{}.jp2'.format(
+            'R10m', mgrs_tile, full_tstamp, 'B08', '10m'),
+        'SC': '{}/{}_{}_{}_{}.jp2'.format(
+            'R20m', mgrs_tile, full_tstamp, 'SCL', '20m')
+    }
 
     file_set = {}
 
@@ -171,12 +173,12 @@ def extractS2(startdate, enddate, dias_catalogue=None, parcels_table=None, resul
 
         if object_storage.get_file('{}{}/IMG_DATA/{}'.format(
                 s3path, s3subdir, s), fpath) == 1:
-#             print("Image {} found in bucket".format(s))
+            #             print("Image {} found in bucket".format(s))
             file_set[k] = fpath
         elif object_storage.get_file('{}{}/IMG_DATA/{}'.format(
                 s3path, s3subdir, alt_s), fpath) == 1:
             # LEVEL2AP has another naming convention.
-#             print("Image {} found in bucket".format(alt_s))
+            #             print("Image {} found in bucket".format(alt_s))
             file_set[k] = fpath
         else:
             print("Neither Image {} nor {} found in bucket".format(s, alt_s))
@@ -190,7 +192,7 @@ def extractS2(startdate, enddate, dias_catalogue=None, parcels_table=None, resul
     # Get the parcel polygon in this image' footprint
     print(f"Downloaded '*{file_set['B4'][4:-12]}*' images ...")
 
-    outsrid = int('326{}'.format(mgrs_tile[1:3]))
+    outsrid = int(f'326{mgrs_tile[1:3]}')
 
     incurs.close()
 
@@ -203,7 +205,8 @@ def extractS2(startdate, enddate, dias_catalogue=None, parcels_table=None, resul
     incurs = inconn.cursor(name='fetch_image_coverage',
                            cursor_factory=psycopg2.extras.DictCursor)
     dataset = config.get_value(['set', 'dataset'])
-    pid_column = config.get_value(['dataset', dataset, 'columns', 'parcels_id'])
+    pid_column = config.get_value(
+        ['dataset', dataset, 'columns', 'parcels_id'])
 
     parcelsql = f"""
     SELECT p.{pid_column}, ST_AsGeoJSON(st_transform(p.wkb_geometry,
@@ -218,7 +221,7 @@ def extractS2(startdate, enddate, dias_catalogue=None, parcels_table=None, resul
     incurs.execute(parcelsql)
 
     sqlload = time.time() - start
-#     print(f"Images loaded and nrecs[0] features selected from database in {sqlload} seconds")
+    print(f"Features selected from database in {sqlload} seconds")
 
     nrows = {}
     for k in file_set.keys():
@@ -231,8 +234,8 @@ def extractS2(startdate, enddate, dias_catalogue=None, parcels_table=None, resul
 
     for b in bands:
         with rasterio.open(file_set.get(b)) as src:
-            affine[b] = cbm.transform
-            array[b] = cbm.read(1)
+            affine[b] = src.transform
+            array[b] = src.read(1)
 
     print(f"Extracting signatures for '*{file_set['B4'][4:-12]}* images ...'")
     while True:
@@ -282,9 +285,9 @@ def extractS2(startdate, enddate, dias_catalogue=None, parcels_table=None, resul
                                           columns=tuple(df_columns), sep=',')
                         outconn.commit()
                     except psycopg2.IntegrityError as e:
-                        print(f"insert statement {insert_stmt} contains duplicate index")
-                    # except Error as e:
-                    #    print(e)
+                        print(f"insert statement {insert_stmt} contains duplicate index", e)
+                    # except Exception as e:
+                    #     print(e)
                     finally:
                         outcurs.close()
                 else:
@@ -312,7 +315,7 @@ def extractS2(startdate, enddate, dias_catalogue=None, parcels_table=None, resul
     print(f"Removing '*{file_set['B4'][4:-12]}*' images.")
     for f in file_set.keys():
         if os.path.exists(file_set.get(f)):
-#             print("Removing {}".format(file_set.get(f)))
+            print(f"Removing {file_set.get(f)}")
             os.remove(file_set.get(f))
 
     print("Total time required for {} features and {} bands: {} seconds".format(
@@ -320,5 +323,4 @@ def extractS2(startdate, enddate, dias_catalogue=None, parcels_table=None, resul
 
 
 if __name__ == "__main__":
-    import sys
     main(sys.argv)
