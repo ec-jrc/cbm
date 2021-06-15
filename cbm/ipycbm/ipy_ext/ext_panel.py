@@ -53,7 +53,7 @@ def extract():
     wbox = VBox([l_connec, VBox([db_box, db_conf_box]),
                  l_create, ext_func.create_tables(),
                  l_upload, ext_func.upload_shp(path_data),
-                 l_carddb, ext_card2db.dias_cat(),
+                 l_carddb, ext_card2db.main(),
                  l_extrac, ext_func.extraction()])
 
     return wbox

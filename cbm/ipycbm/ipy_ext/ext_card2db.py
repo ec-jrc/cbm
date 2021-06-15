@@ -8,150 +8,43 @@
 # License   : 3-Clause BSD
 
 
+import datetime
 from IPython.display import display
 from ipywidgets import (Text, Label, HBox, VBox, Layout, Dropdown,
                         Output, Button, DatePicker, RadioButtons)
 
 from cbm.utils import config, data_options
-from cbm.card2db import creodias as meta2DB
-from cbm.ipycbm.ipy_ext import ext_func
-from cbm.sources import db
 
-def dias_cat():
 
-    aoi_method = RadioButtons(
-#         options=[('Predefined MS polygons', 1), ('Get polygon from dataset extent', 2), ('Draw polygon on a map', 3)],
-        options=[('Predefined MS polygons', 1), ('Get polygon from dataset extent', 2)],
-        value=2,
-        description='AOI:',
-        disabled=False,
-    )
-
-    mss = data_options.ms_polygons()
-    ms = Dropdown(
-        options=[(m, mss[m]) for m in mss],
-        tooltip="AOI",
-        description='AOI:',
-    )
-    tb = Dropdown(
-        options=db.tables(),
-        tooltip="Select table",
-        description='Table:',
-    )
-    tb_refresh = Button(
-        layout=Layout(width='35px'),
-        icon='fa-refresh'
-    )
-
-    aoi_box = VBox([HBox([tb, tb_refresh])])
-
+def main():
+    source = config.get_value(['obst', 'osdias'])
     dias = Dropdown(
         options=data_options.dias_providers(),
         value='EOSC',
         description='DIAS Provider:',
-        disabled=True,
     )
 
-    start = DatePicker(
-        description='Start date',
-        disabled=False
-    )
-    end = DatePicker(
-        description='End date',
-        disabled=False
-    )
-    plevel = RadioButtons(
-        options=['LEVEL2A', 'LEVEL2AP'],
-        value='LEVEL2A',
-        description='pLevel:',
-        disabled=False,
-    )
-    ptype = RadioButtons(
-        options=['CARD-COH6', 'CARD-BS'],
-        description='pType:',
-        disabled=False,
-    )
-    card_options = VBox([plevel])
-    card = RadioButtons(
-        options=[('Sentinel 1', 's1'),('Sentinel 2', 's2')],
-        value='s2',
-        description='card:',
-        disabled=False,
-    )
+    dias_box = VBox()
+    
+    def dias_set(d):
+        if d in ['CREODIAS', 'EOSC']:
+            from cbm.ipycbm.ipy_ext.dias import creodias
+            dias_box.children = [creodias.main()]
+        elif d in ['SOBLOO']:
+            from cbm.ipycbm.ipy_ext.dias import sobloo
+            dias_box.children = [sobloo.main()]
+        elif d in ['MUNDI']:
+            dias_box.children = [Label('This provider is not supported yet')]
+        elif d in ['ONDA']:
+            dias_box.children = [Label('This provider is not supported yet')]
+        elif d in ['WEKEO']:
+            dias_box.children = [Label('This provider is not supported yet')]
+    dias_set(source)
 
-    bt_card2db = Button(
-        description='Add CARD to db',
-        value=False,
-        disabled=False,
-        button_style='info',
-        tooltip='Add CARD catalogue to database',
-        icon='database'
-    )
+    def on_dias_change(change):
+        dias_box.children = []
+        dias_set(dias.value)
 
-    progress = Output()
+    dias.observe(on_dias_change, names='value')
 
-    def outlog(*text):
-        with progress:
-            print(*text)
-
-    def on_aoi_method_change(change):
-        if aoi_method.value == 1:
-            aoi_box.children = [ms]
-        elif aoi_method.value == 2:
-            aoi_box.children = [HBox([tb, tb_refresh])]
-        elif aoi_method.value == 3:
-            aoi_box.children = []
-    aoi_method.observe(on_aoi_method_change, 'value')
-
-    def on_card_change(change):
-        if card.value == 's2':
-            card_options.children = [plevel]
-        else:
-            card_options.children = [ptype]
-    card.observe(on_card_change, 'value')
-
-    @tb_refresh.on_click
-    def tb_refresh_on_click(b):
-        tb.options = db.tables()
-
-    @bt_card2db.on_click
-    def bt_card2db_on_click(b):
-        progress.clear_output()
-        try:
-            with open(f"{config.get_value(['paths','temp'])}tb_prefix", 'r') as f:
-                tb_prefix = f.read()
-        except Exception:
-            tb_prefix = ''
-
-        dc_table = f'{tb_prefix}_dias_catalogue'
-        if db.tb_exist(dc_table) is True:
-            if aoi_method.value == 1:
-                polygon = ms.value.replace(' ','+')
-            elif aoi_method.value == 2:
-                polygon = db.tb_extent(tb.value)
-            elif aoi_method.value == 3:
-                polygon = ms.value.replace(' ','+')
-
-#             print(polygon)
-            if card.value == 's2':
-                option = plevel.value
-            else:
-                option = ptype.value
-
-            outlog("Inserting CARD catalogue to database ...")
-            with progress:
-                meta2DB.dias_cat(tb_prefix,
-                                f"POLYGON(({polygon}))",
-                                start.value, end.value,
-                                card.value, option)
-            outlog("Completed.")
-        else:
-            outlog(f"Table {dc_table} does not exist.")
-
-    wbox = VBox([dias,
-                 HBox([aoi_method, aoi_box]),
-                 HBox([start, end]),
-                 HBox([card, card_options]),
-                 bt_card2db, progress])
-
-    return wbox
+    return VBox([dias, dias_box])

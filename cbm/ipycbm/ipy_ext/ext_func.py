@@ -294,7 +294,7 @@ def extraction():
             try:
                 delta = end.value - start.value
                 for d in range(delta.days):
-                    pgS2Extract.extractS2(start.value, end.value)
+                    pgS2Extract.main(start.value, end.value)
             except Exception as err:
                 outlog(err)
 
