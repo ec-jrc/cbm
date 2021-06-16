@@ -15,14 +15,25 @@ def tables_dict():
             "table": "dias_catalogue",
             "desc": "",
             "sql": """
-                CREATE table public.{}_dias_catalogue (
+                CREATE TABLE public.dias_catalogue (
                 id serial,
                 obstime timestamp without time zone not null,
                 reference character varying(120) not null,
                 sensor character(2) not null,
                 card character(2) not null,
-                status character varying(12) DEFAULT 'ingested'::character varying not null,
+                status character varying(12)
+                    DEFAULT 'ingested'::character varying not null,
                 footprint public.geometry(Polygon,4326)
+                );"""
+        },
+        "aois": {
+            "name": "AOIs (Optional) - Regions or Municipalities",
+            "table": "aois",
+            "desc": "",
+            "sql": """
+                CREATE TABLE public.aois (
+                    name text not null,
+                    wkb_geometry public.geometry(Polygon,4326)
                 );"""
         },
         "s2": {
@@ -30,11 +41,11 @@ def tables_dict():
             "table": "s2_signatures",
             "desc": "",
             "sql": """
-                CREATE table public.{}_s2_signatures (
-                    pid int, 
-                    obsid int, 
-                    band char(2), 
-                    count real, 
+                CREATE TABLE {}.sigs_{}_s2 (
+                    pid int,
+                    obsid int,
+                    band char(2),
+                    count real,
                     mean real,
                     std real,
                     min real,
@@ -50,11 +61,11 @@ def tables_dict():
             "table": "bs_signatures",
             "desc": "",
             "sql": """
-                CREATE table public.{}_bs_signatures (
-                    pid int, 
-                    obsid int, 
-                    band char(2), 
-                    count real, 
+                CREATE TABLE {}.sigs_{}_bs (
+                    pid int,
+                    obsid int,
+                    band char(2),
+                    count real,
                     mean real,
                     std real,
                     min real,
@@ -70,11 +81,11 @@ def tables_dict():
             "table": "c6_signatures",
             "desc": "",
             "sql": """
-                CREATE table public.{}_c6_signatures (
-                    pid int, 
-                    obsid int, 
-                    band char(2), 
-                    count real, 
+                CREATE TABLE {}.sigs_{}_c6 (
+                    pid int,
+                    obsid int,
+                    band char(2),
+                    count real,
                     mean real,
                     std real,
                     min real,
@@ -85,15 +96,25 @@ def tables_dict():
                 );
                 """
         },
-        "aois": {
-            "name": "AOIs (Optional) - Regions or Municipalities",
-            "table": "aois",
+        "sigs": {
+            "name": "All signatures",
+            "table": "signatures",
             "desc": "",
             "sql": """
-                CREATE table public.{}_aois (
-                    name text not null,
-                    wkb_geometry public.geometry(Polygon,4326)
-                );"""
+                CREATE TABLE {} (
+                    pid int,
+                    obsid int,
+                    band char(2),
+                    count real,
+                    mean real,
+                    std real,
+                    min real,
+                    max real,
+                    p25 real,
+                    p50 real,
+                    p75 real
+                );
+                """
         }
     }
     return tb
