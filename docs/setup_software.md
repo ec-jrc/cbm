@@ -102,11 +102,11 @@ These tables are required for the handling of spatial constructs (geometries,
 ### Optimizing
 
 The main configuration settings for PostgreSQL are in a text file postgresql.conf
-(/etc/postgresql/"version"/main/postgresql.conf) PostgreSQL ships with a basic
+(/etc/postgresql/"version"/main/postgresql.conf). PostgreSQL ships with a basic
 configuration tuned for wide compatibility rather than performance.
 
 It is strongly recommended to configure the settings of the PostgreSQL database
-based on your hardware configuration and application, useful information can be found at
+based on your hardware configuration and application, suggested configurations can be found at
 [PGTune](https://pgtune.leopard.in.ua/) or at [PGConfig](https://www.pgconfig.org/).
 
 ### Essential CbM tables
@@ -119,7 +119,7 @@ postgres=# create table public.aois (
     wkb_geometry public.geometry(Polygon,4326)
 );
 
-postgres=# create table public.aoi_2020_dias_catalogue (
+postgres=# create table public.dias_catalogue (
     id serial,
     obstime timestamp without time zone not null,
     reference character varying(120) not null,
@@ -129,7 +129,7 @@ postgres=# create table public.aoi_2020_dias_catalogue (
     footprint public.geometry(Polygon,4326)
 );
 
-postgres=# create table public.aoi_2020_s2_signatures (
+postgres=# create table public.signatures_2020_s2 (
     pid int,
     obsid int,
     band char(2),
@@ -234,39 +234,6 @@ To run a cell with a script, click on the run icon or press Shift+Enter
 More information can be found at: https://jupyter.org/documentation
 
 
-### Build Jupyter image from source
-
-To build cbm_jupyter docker image from source follow these steps:
-
-1. Download the cbm repository:
-```sh
-git clone https://github.com/ec-jrc/cbm.git
-```
-In the folder "cbm/docker/jupyter/" there is a "Dockerfile" to create a Jupyter docker image.
-
-2. Navigate to the folder with the docker image file:
-```sh
-cd cbm/docker/cbm_jupyter
-```
-3. Build the docker image
-```sh
-docker build -t gtcap/cbm_jupyter .
-```
-
-4.a. Run the Jupyter server  - with no shared folder "bindmount", the files within the container will be deleted if the container is removed:
-```sh
-docker run -p 8888:8888 gtcap/cbm_jupyter
-```
-4.b. Or run the Jupyter server  - with a shared folder "bindmount", the files will not be deleted if the container is removed:
-- Navigate to the folder you want to bindmount to the container, e.g. the home directory:
-```sh
-cd ~/
-```
-Then run the Jupyter server with:
-```sh
-- docker run -it --privileged=true --user root -e NB_USER="$USER" -e NB_UID="$UID" -e NB_GID="$UID" -p 8888:8888 -v "$PWD":/home/"$USER" --name=jupyter4cbm gtcap/cbm_jupyter
-```
-
 The token to access the jupyter server will be in the command line output:
 ```sh
 [I 08:51:48.705 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
@@ -281,3 +248,9 @@ The token to access the jupyter server will be in the command line output:
 
 You will be able to access the Jupyter server on port 8888 (or any other port) on VM's public ip e.g.: **0.0.0.0:8888**
 Copy the token from the command line and add it to the web interface.
+
+
+### Build Jupyter image from source
+
+To build cbm_jupyter docker image from source see the [Jupyter for cbm README.md file.](https://github.com/ec-jrc/cbm/tree/main/docker/cbm_jupyter#readme)
+
