@@ -29,35 +29,39 @@ Exaple code:
 import boto3
 from cbm.utils import config
 
-try:
-    values = config.read()
-    ACCESS_KEY = values['obst']['access_key']
-    SECRET_KEY = values['obst']['secret_key']
-    S3HOST = values['obst']['oshost']
-    BUCKET = values['obst']['bucket']
-    SERVICE_PROVIDER = values['obst']['osdias']
-except Exception as err:
-    print(f"Could not read config file: {err}")
+
+class crls:
+    """
+    """
+    try:
+        values = config.read()
+        ACCESS_KEY = values['obst']['access_key']
+        SECRET_KEY = values['obst']['secret_key']
+        S3HOST = values['obst']['oshost']
+        BUCKET = values['obst']['bucket']
+        SERVICE_PROVIDER = values['obst']['osdias']
+    except Exception as err:
+        print(f"Could not read config file: {err}")
 
 
 def connection(arg=None):
-    session = boto3.session.Session(
-        aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
+    session = boto3.session.Session(aws_access_key_id=crls.ACCESS_KEY,
+                                    aws_secret_access_key=crls.SECRET_KEY)
     if arg == 'session':
         return session
     elif arg == 'resource':
-        return session.resource('s3', endpoint_url=S3HOST)
+        return session.resource('s3', endpoint_url=crls.S3HOST)
     else:
-        return session.client('s3', endpoint_url=S3HOST)
+        return session.client('s3', endpoint_url=crls.S3HOST)
 
 
-def get_file(s3file, localfile, progress_bar=False, to_memory=False, status=False):
+def get_file(s3file, localfile, bucket_, progress_bar=False, to_memory=False, status=False):
     import botocore
     """Download a file from the s3 storage"""
-    session = boto3.session.Session(
-        aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
-    s3 = session.resource('s3', endpoint_url=S3HOST)
-    bucket_ = s3.Bucket(BUCKET)
+    session = boto3.session.Session(aws_access_key_id=crls.ACCESS_KEY,
+                                    aws_secret_access_key=crls.SECRET_KEY)
+    s3 = session.resource('s3', endpoint_url=crls.S3HOST)
+    bucket_ = s3.Bucket(crls.BUCKET)
     object_ = bucket_.Object(s3file)
     filesize = object_.content_length
 
@@ -82,7 +86,7 @@ def get_file(s3file, localfile, progress_bar=False, to_memory=False, status=Fals
                 print("File downloaded in memory adress: ", localfile)
                 return 1
         else:
-#             print("-Downloading to local file-")
+            #             print("-Downloading to local file-")
             if progress_bar is True:
                 if isnotebook() is True:
                     from tqdm import tqdm_notebook as tqdm  # For Jupyter Notebook
@@ -112,21 +116,22 @@ def get_file(s3file, localfile, progress_bar=False, to_memory=False, status=Fals
 def list_files(prefix=None, print_list=False):
     """Displays the contents of a single bucket"""
     try:
-        if BUCKET == '':
+        if crls.BUCKET == '':
             print("!Warning! The bucket name is set to 'None', Please enter a default")
             print("'bucket_name' in the configuration file (config/config.json)")
         s3 = connection()
         if prefix is None:
             prefix = ''
         bucket_files = s3.list_objects_v2(
-            Bucket=BUCKET, Prefix=prefix)['Contents']
+            Bucket=crls.BUCKET, Prefix=prefix)['Contents']
         if print_list is True:
             for key in bucket_files:
                 print(key)
         else:
             return bucket_files
     except Exception as err:
-        print(f"Could not retrieve list of the files from the selected buckets: {err}")
+        print(
+            f"Could not retrieve list of the files from the selected buckets: {err}")
 
 
 def list_buckets(print_list=False):
@@ -136,8 +141,8 @@ def list_buckets(print_list=False):
 
         buckets = s3.list_buckets()
         bucket_list = []
-        if BUCKET != '':
-            bucket_list.append(BUCKET)
+        if crls.BUCKET != '':
+            bucket_list.append(crls.BUCKET)
         for bucket_ in buckets['Buckets']:
             bucket_list.append(bucket_['Name'])
         if print_list is True:
@@ -170,7 +175,7 @@ def isnotebook():
         return False  # Probably standard Python interpreter
 
 
-def get_file_location(reference, dias=None, help_text=False):
+def get_file_location(reference, dias=None, quiet=True):
     """Get the files path in the object storage. Each dias provider have
     different configurations. Depending on the provider the relative
     options will be selected.
@@ -196,23 +201,23 @@ def get_file_location(reference, dias=None, help_text=False):
     Sentinel-2/MSI/L2A/2019/08/07/S2A_MSIL2A_20190807T073621_N0213_R092_
     T38SND_20190807T102313.SAFE/GRANULE/L2A_T38SND_A021539_20190807T074416/
     IMG_DATA/R10m/T38SND_20190807T073621_B08_10m.jp2
-    
+
     Sentinel-1/SAR/CARD-BS/2018/08/21/S1A_IW_GRDH_1SDV_20180821T052345_
     20180821T052410_023340_0289E6_6558_CARD_BS/S1A_IW_GRDH_1SDV_20180821T052345_
-    20180821T052410_023340_0289E6_6558_CARD_BS.data/Gamma0_VH.hdr 
+    20180821T052410_023340_0289E6_6558_CARD_BS.data/Gamma0_VH.hdr
 
     --MUNDI--
     25/S/FA/2018/05/24/S2A_MSIL2A_20180524T125041_N0208_R095_T25SFA_
     20180524T190423/    GRANULE/L2A_T25SFA_A015250_20180524T125143/IMG_DATA/
     R10m/T25SFA_20180524T125041_B02_10m.jp2
-    
+
     """
 
     if dias is None:
-        dias = SERVICE_PROVIDER
-        if SERVICE_PROVIDER == '':
-            print("The Copernicus dias provider is not set. Please run the")
-            print("'Configuration' notebook to set the name of the provider.")
+        dias = crls.SERVICE_PROVIDER
+        if crls.SERVICE_PROVIDER == '':
+            print("The Copernicus dias provider is not set. Please run the",
+                  "'Configuration' notebook to set the name of the provider.")
 
     ref_list = reference.split('_')  # Split the reference to properties list.
     sat = ref_list[0]  # Set the satellite s1 or s2
@@ -230,9 +235,10 @@ def get_file_location(reference, dias=None, help_text=False):
     # set local files directory.
     fpath = f"{config.folder_repo}/tmp/{sat}_{full_tstamp}/"
     info_dict = {"fpath": fpath, "sat": sat, "obstime": obstime,
-                 "obspath": obspath, "mgrs_tile": mgrs_tile, "full_tstamp": full_tstamp}
+                 "obspath": obspath, "mgrs_tile": mgrs_tile,
+                 "full_tstamp": full_tstamp}
 
-    if help_text is True:
+    if quiet is False:
         print("Satellite: ", sat)
         print('Observation time: ', obstime)
         print('Observation path: ', obspath)
@@ -249,7 +255,7 @@ def get_file_location(reference, dias=None, help_text=False):
             rootpath = sat + '/GRD'
         else:
             rootpath = ''
-            s3path.replace('MSIL1C', 'MSIL2A',-1)
+            s3path.replace('MSIL1C', 'MSIL2A', -1)
         # Path of the files on the object storage.
         s3path = f"{rootpath}/{reference}/{ref_list[0]}_MSIL2A_\
 {ref_list[2]}_{ref_list[3]}_{ref_list[4]}_{ref_list[5]}_{ref_list[6]}.\
@@ -265,7 +271,7 @@ SAFE/GRANULE/L2A_{ref_list[5]}_"
     elif dias.lower() == 'mundi':
         import pandas as pd
         from datetime import datetime
-        s3path = f"{mgrs_path}/{datetime.strftime(obstime, '%Y/%m/%d')}/{reference}/manifest.safe/"
+        s3path = f"{mgrs_path} / {datetime.strftime(obstime, '%Y/%m/%d')} / {reference} / manifest.safe/"
         q = pd.Timestamp(obstime).quarter
         bucket_path = "s2-l2a-2018-q{}".format(pd.Timestamp(obstime).quarter)
         if get_files(bucket_path, s3path, fpath) == 1:
@@ -307,25 +313,27 @@ SAFE/GRANULE/L2A_{ref_list[5]}_"
         print("The selected service provider is not in the configuration list.")
 
 # Configure S3 access (-> to config loading)
+
+
 def get_subset(fkey, features):
     import numpy as np
 #     import pandas as pd
     import rasterio
     from rasterio.mask import mask
     from rasterio.session import AWSSession
-    s3host_ = S3HOST.replace('http://', '')
+    s3host_ = crls.S3HOST.replace('http://', '')
     s3host_ = s3host_.replace('https://', '')
 
     session = connection('session')
     with rasterio.Env(AWSSession(session), AWS_S3_ENDPOINT=s3host_,
                       AWS_HTTPS='NO', AWS_VIRTUAL_HOSTING=False) as env:
-        with rasterio.open('/vsis3/{}/{}'.format(BUCKET, fkey)) as src:
+        with rasterio.open('/vsis3/{}/{}'.format(crls.BUCKET, fkey)) as src:
             out_image, out_transform = mask(src, features, crop=True,
                                             pad=False, all_touched=False)
 #             print('--out_image.shape: ', out_image.shape)
             w_5 = np.percentile(out_image, 5.0)
             w_95 = np.percentile(out_image, 95.0)
 #             print('--w_5, w_95: ', w_5, w_95)
-            chip_set = np.clip(255 * (out_image - w_5) /(w_95 - w_5),
+            chip_set = np.clip(255 * (out_image - w_5) / (w_95 - w_5),
                                0, 255).astype(np.uint16)
     return chip_set, out_transform
