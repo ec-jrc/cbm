@@ -14,6 +14,9 @@ config/*
 ipynb/temp/*
 ipynb/config/*
 ipynb/data/*
+ipynb/*/temp/*
+ipynb/*/config/*
+ipynb/*/data/*
 ipynb/test*
 
 # ---> Python
