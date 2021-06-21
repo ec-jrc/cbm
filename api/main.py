@@ -405,7 +405,7 @@ def parcelPeers_query():
     maxPeers = 10
 
     if 'ptype' in request.args.keys():
-        ptype = request.args.get('ptype')
+        ptype = f"_{request.args.get('ptype')}"
     else:
         ptype = ''
 
@@ -453,7 +453,7 @@ def parcelByLocation_query():
     withGeometry = False
 
     if 'ptype' in request.args.keys():
-        ptype = request.args.get('ptype')
+        ptype = f"_{request.args.get('ptype')}"
     else:
         ptype = ''
 
@@ -493,7 +493,7 @@ def parcelById_query():
     withGeometry = False
 
     if 'ptype' in request.args.keys():
-        ptype = request.args.get('ptype')
+        ptype = f"_{request.args.get('ptype')}"
     else:
         ptype = ''
 
@@ -536,7 +536,7 @@ def parcelsByPolygon_query():
     only_ids = True
 
     if 'ptype' in request.args.keys():
-        ptype = request.args.get('ptype')
+        ptype = f"_{request.args.get('ptype')}"
     else:
         ptype = ''
 
