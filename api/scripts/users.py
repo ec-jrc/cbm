@@ -80,7 +80,7 @@ def auth(username, password, aoi=None):
 
 def data_auth(aoi, username):
     aois = get_list(data_auth_file)
-    if username in aois[aoi]:
+    if username.lower() in aois[aoi]:
         return True
     else:
         return False
@@ -89,10 +89,10 @@ def data_auth(aoi, username):
 def data_auth_add(aoi, username):
     aois = get_list(data_auth_file)
     if aoi in aois:
-        if username not in aois[aoi]:
-            aois[aoi] = aois[aoi]+[username]
+        if username.lower() not in aois[aoi]:
+            aois[aoi] = aois[aoi]+[username.lower()]
     else:
-        aois[aoi] = [username]
+        aois[aoi] = [username.lower()]
     with open(data_auth_file, 'w') as u:
         json.dump(aois, u, indent=2)
 
@@ -122,7 +122,7 @@ def add(username, password='', aoi=None):
     with open(users_file, 'w') as u:
         json.dump(users, u, indent=2)
     if aoi:
-        data_auth_add(aoi, username)
+        data_auth_add(aoi, username.lower())
     print(f"The user '{username}' was created.")
 
 
@@ -161,8 +161,8 @@ def delete(username):
     """
     users = get_list()
 
-    if username in users:
-        del users[username]
+    if username.lower() in users:
+        del users[username.lower()]
         print(f"The user '{username}' is deleted.")
     else:
         print(f"Err: The user '{username}' was not found.")
