@@ -178,13 +178,15 @@ def backgroundByLocation_query():
 def chipsByLocation_query():
     """
     Get chips images by location.
-    Generates a series of extracted Sentinel-2 LEVEL2A segments of 128x128 pixels as a composite of 3 bands.
+    Generates a series of extracted Sentinel-2 LEVEL2A segments
+    of 128x128 pixels as a composite of 3 bands.
     ---
     tags:
       - chipsByLocation
     responses:
       200:
-        description: An HTML page that displays the selected chips in a table with max. 8 columns.
+        description: An HTML page that displays the selected chips in a table
+        with max. 8 columns.
     """
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
     # Start by getting the request IP address
@@ -231,7 +233,8 @@ def chipsByLocation_query():
 def chipsByParcelId_query():
     """
     Get chips images by parcel id.
-    Generates a series of extracted Sentinel-2 LEVEL2A segments of 128x128 pixels as a composite of 3 bands.
+    Generates a series of extracted Sentinel-2 LEVEL2A segments
+    of 128x128 pixels as a composite of 3 bands.
     ---
     tags:
       - chipsByParcelId
@@ -283,13 +286,15 @@ def chipsByParcelId_query():
 def rawChipByLocation_query():
     """
     Get chips images by parcel id.
-    Generates a series of extracted Sentinel-2 LEVEL2A segments of 128x128 (10m resolution bands) or 64x64 (20 m) pixels as list of full resolution GeoTIFFs.
+    Generates a series of extracted Sentinel-2 LEVEL2A segments of 128x128 (10m
+    resolution bands) or 64x64 (20 m) pixels as list of full resolution GeoTIFFs
     ---
     tags:
       - rawChipByLocation
     responses:
       200:
-        description: A JSON dictionary with date labels and relative URLs to cached GeoTIFFs.
+        description: A JSON dictionary with date labels and
+        relative URLs to cached GeoTIFFs.
     """
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
     # Start by getting the request IP address
@@ -352,6 +357,11 @@ def parcelTimeSeries_query():
     else:
         scl = True
 
+    if 'ptype' in request.args.keys():
+        ptype = f"_{request.args.get('ptype')}"
+    else:
+        ptype = ''
+
     if 'aoi' in request.args.keys():
         schema = request.args.get('aoi')
     else:
@@ -361,9 +371,10 @@ def parcelTimeSeries_query():
         band = request.args.get('band')
 
     if tstype.lower() == 'scl':
-        data = qh.getParcelSCL(schema, year, pid)
+        data = qh.getParcelSCL(schema, year, pid, ptype)
     else:
-        data = qh.getParcelTimeSeries(schema, year, pid, tstype, band, scl)
+        data = qh.getParcelTimeSeries(schema, year, pid, ptype,
+                                      tstype, band, scl)
 
     if not data:
         return json.dumps({})
@@ -393,6 +404,11 @@ def parcelPeers_query():
     distance = 1000.0
     maxPeers = 10
 
+    if 'ptype' in request.args.keys():
+        ptype = request.args.get('ptype')
+    else:
+        ptype = ''
+
     if 'aoi' in request.args.keys():
         schema = request.args.get('aoi')
     else:
@@ -408,7 +424,7 @@ def parcelPeers_query():
     if maxPeers > 100:
         maxPeers = 100
 
-    data = qh.getParcelPeers(schema, year, pid, distance, maxPeers)
+    data = qh.getParcelPeers(schema, year, pid, ptype, distance, maxPeers)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -436,6 +452,11 @@ def parcelByLocation_query():
     lat = request.args.get('lat')
     withGeometry = False
 
+    if 'ptype' in request.args.keys():
+        ptype = request.args.get('ptype')
+    else:
+        ptype = ''
+
     if 'aoi' in request.args.keys():
         schema = request.args.get('aoi')
     else:
@@ -445,7 +466,7 @@ def parcelByLocation_query():
         withGeometry = True if request.args.get(
             'withGeometry') == 'True' else False
 
-    data = qh.getParcelByLocation(schema, year, lon, lat, withGeometry)
+    data = qh.getParcelByLocation(schema, year, lon, lat, ptype, withGeometry)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -471,6 +492,11 @@ def parcelById_query():
     year = request.args.get('year')
     withGeometry = False
 
+    if 'ptype' in request.args.keys():
+        ptype = request.args.get('ptype')
+    else:
+        ptype = ''
+
     if 'aoi' in request.args.keys():
         schema = request.args.get('aoi')
     else:
@@ -481,7 +507,7 @@ def parcelById_query():
             'withGeometry') == 'True' else False
 
     pid = request.args.get('pid')
-    data = qh.getParcelById(schema, year, pid, withGeometry)
+    data = qh.getParcelById(schema, year, pid, ptype, withGeometry)
 
     if not data:
         return json.dumps({})
@@ -509,6 +535,11 @@ def parcelsByPolygon_query():
     withGeometry = False
     only_ids = True
 
+    if 'ptype' in request.args.keys():
+        ptype = request.args.get('ptype')
+    else:
+        ptype = ''
+
     if 'aoi' in request.args.keys():
         schema = request.args.get('aoi')
     else:
@@ -524,7 +555,7 @@ def parcelsByPolygon_query():
 
     polygon = request.args.get('polygon')
     data = qh.getParcelsByPolygon(
-        schema, year, polygon, withGeometry, only_ids)
+        schema, year, polygon, ptype, withGeometry, only_ids)
 
     if not data:
         return json.dumps({})
