@@ -47,8 +47,8 @@ from cbm.utils import config
 from cbm.sources import db, object_storage
 
 
-def main(startdate, enddate, dias_catalogue=None, parcels_table=None,
-         results_table=None, dias=None):
+def main(startdate, enddate, parcels_table=None, results_table=None,
+         dias=None, dias_catalogue=None):
     start = time.time()
 
     values = config.read()
@@ -60,7 +60,7 @@ def main(startdate, enddate, dias_catalogue=None, parcels_table=None,
     if results_table is None:
         results_table = values['dataset'][dsc]['tables']['s2']
     if dias is None:
-        dias = values['obst']['osdias']
+        dias = values['s3']['dias']
 
     inconn = db.connection()
     if not inconn:
@@ -285,7 +285,8 @@ def main(startdate, enddate, dias_catalogue=None, parcels_table=None,
                                           columns=tuple(df_columns), sep=',')
                         outconn.commit()
                     except psycopg2.IntegrityError as e:
-                        print(f"insert statement {insert_stmt} contains duplicate index", e)
+                        print(
+                            f"insert statement {insert_stmt} contains duplicate index", e)
                     # except Exception as e:
                     #     print(e)
                     finally:

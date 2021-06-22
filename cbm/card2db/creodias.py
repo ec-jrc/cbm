@@ -2,13 +2,11 @@
 # -*- coding: utf-8 -*-
 
 # This file is part of CbM (https://github.com/ec-jrc/cbm).
-# Author    : Guido Lemoine
+# Author    : Guido Lemoine, Konstantinos Anastasakis
 # Credits   : GTCAP Team
 # Copyright : 2021 European Commission, Joint Research Centre
 # License   : 3-Clause BSD
 
-
-#!/usr/bin/env python3
 
 # # Query And Transfer CARD Metadata with XMLHttpRequests (CREODIAS)
 #
@@ -55,7 +53,7 @@ def main(tb_prefix, aoi, start, end, card, option):
     endDate = '{}T00:00:00Z'.format(end)
 
     url = url.format(sat, startDate, endDate, option, aoi)
-#     print(url)
+
     r = requests.get(url)
     contentType = r.headers.get('content-type').lower()
 

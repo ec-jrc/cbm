@@ -35,11 +35,11 @@ class crls:
     """
     try:
         values = config.read()
-        ACCESS_KEY = values['obst']['access_key']
-        SECRET_KEY = values['obst']['secret_key']
-        S3HOST = values['obst']['oshost']
-        BUCKET = values['obst']['bucket']
-        SERVICE_PROVIDER = values['obst']['osdias']
+        ACCESS_KEY = values['s3']['access_key']
+        SECRET_KEY = values['s3']['secret_key']
+        S3HOST = values['s3']['host']
+        BUCKET = values['s3']['bucket']
+        SERVICE_PROVIDER = values['s3']['dias']
     except Exception as err:
         print(f"Could not read config file: {err}")
 

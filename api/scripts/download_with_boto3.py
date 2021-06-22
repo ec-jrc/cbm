@@ -4,7 +4,7 @@ import json
 
 
 def getFileFromS3(s3file, localfile, bucket=None):
-    with open('config/s3_config.json', 'r') as f:
+    with open('config/main.json', 'r') as f:
         config = json.load(f)
 
     session = boto3.session.Session(
@@ -29,7 +29,7 @@ def getFileFromS3(s3file, localfile, bucket=None):
 
 
 def listFileFromS3(prefix, bucket=None):
-    with open('s3_config.json', 'r') as f:
+    with open('main.json', 'r') as f:
         config = json.load(f)
 
     session = boto3.session.Session(
