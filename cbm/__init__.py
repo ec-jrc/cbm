@@ -13,12 +13,11 @@ __maintainer__ = ["Guido Lemoine", "Konstantinos Anastasakis"]
 __email__ = ""
 __status__ = "Development"
 
-import os
 import sys
-from os.path import join, normcase, exists, normpath
-from cbm.utils import config, update
+
+from os.path import join, normcase, normpath
+from cbm.utils import update
 from pkg_resources import get_distribution, DistributionNotFound
-from cbm import show, get
 
 
 if sys.version_info < (3, 6):
@@ -38,14 +37,8 @@ except DistributionNotFound:
 else:
     __version__ = _dist.version
 
-paths = config.get_value(['paths'])
-for p in paths:
-    try:
-        if not exists(normpath(join(config.path_work, paths[p]))):
-            os.makedirs(normpath(join(config.path_work, paths[p])))
-            print(f"Directory {p} created successfully")
-    except OSError as err:
-        print(f"Directory {p} can not be created: ", err)
-
-config.create()
 update.check()
+
+
+def init():
+    from cbm.utils import init
