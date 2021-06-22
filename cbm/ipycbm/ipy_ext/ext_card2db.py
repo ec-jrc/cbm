@@ -17,7 +17,7 @@ from cbm.utils import config, data_options
 
 
 def main():
-    source = config.get_value(['obst', 'osdias'])
+    source = config.get_value(['s3', 'dias'])
     dias = Dropdown(
         options=data_options.dias_providers(),
         value='EOSC',

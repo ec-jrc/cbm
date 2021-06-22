@@ -95,7 +95,7 @@ def extractS1bs(startdate, enddate):
     full_tstamp = reference.split('_')[2]
 
     # Copy input data from S3 to local disk
-    dias = values['obst']['osdias']
+    dias = values['s3']['dias']
     if dias in ['EOSC', 'CREODIAS']:
         rootpath = 'Sentinel-1/SAR/CARD-BS'
         print(datetime.strptime(obstime, '%Y/%m/%d'), reference)
@@ -129,7 +129,7 @@ def extractS1bs(startdate, enddate):
     else:
         # Only if the header file is present can we open the image to check its projection
         with rasterio.open(fpath.replace('hdr', 'img')) as src:
-            outsrid = cbm.crs.to_epsg() 
+            outsrid = cbm.crs.to_epsg()
 
     print('Out SRID: ', outsrid)
 
@@ -210,14 +210,14 @@ def extractS1bs(startdate, enddate):
             affine[b] = cbm.transform
             array[b] = cbm.read(1)
 
-    while True: 
+    while True:
         rowset = incurs.fetchmany(size=2000)
 
         if not rowset:
             break
 
-        features = { "type": "FeatureCollection", 
-            "features": [{"type": "feature", "geometry": f[1], "properties": {"pid": int(f[0])}} for f in rowset]} 
+        features = { "type": "FeatureCollection",
+            "features": [{"type": "feature", "geometry": f[1], "properties": {"pid": int(f[0])}} for f in rowset]}
 
         for b in bands:
 

@@ -19,6 +19,8 @@ from scripts import rawChipBatchExtract as rceb
 from scripts import rawChipExtractor as rce
 from scripts import rawS1ChipBatchExtract as rces1
 
+aois_table = 'public.aois'
+dias_cat_table = 'public.dias_catalogue'
 
 logging.basicConfig(filename='logs/queryHandler.log', filemode='w',
                     format='%(name)s - %(levelname)s - %(message)s',
@@ -134,7 +136,7 @@ def getParcelTimeSeries(schema, year, pid, ptype='',
             SELECT extract('epoch' from d.obstime), s.band, s.count,
                 s.mean, s.std, s.min, s.p25, s.p50, s.p75, s.max {select_scl}
             FROM {sigs_table} s,
-                public.dias_catalogue d {from_hists}
+                {dias_cat_table} d {from_hists}
             WHERE
                 s.obsid = d.id and
                 s.pid = {pid}
@@ -202,7 +204,7 @@ def getParcelPeers(schema, year, pid, ptype='', distance='', maxPeers=''):
     try:
         logging.debug("start queries")
         getCropCodes = f"""
-            SELECT cropname, cropcode FROM aois
+            SELECT cropname, cropcode FROM {aois_table}
             WHERE parceltable = '{schema}.parcels_{year}{ptype}'"""
         logging.debug(getCropCodes)
         cur.execute(getCropCodes)
@@ -263,7 +265,7 @@ def getParcelByLocation(schema, year, lon, lat, ptype='', withGeometry=False):
         srid = cur.fetchone()[0]
         logging.debug(srid)
         getCropCodes = f"""
-            SELECT cropname, cropcode, codetype FROM aois
+            SELECT cropname, cropcode, codetype FROM {aois_table}
             WHERE parceltable = '{schema}.parcels_{year}{ptype}'"""
         cur.execute(getCropCodes)
         row = cur.fetchone()
@@ -325,7 +327,7 @@ def getParcelById(schema, year, parcelid, ptype='', withGeometry=False):
         srid = cur.fetchone()[0]
         logging.debug(srid)
         getCropCodes = f"""
-            SELECT cropname, cropcode FROM aois
+            SELECT cropname, cropcode FROM {aois_table}
             WHERE parceltable = '{schema}.parcels_{year}{ptype}'"""
         cur.execute(getCropCodes)
         row = cur.fetchone()
@@ -385,7 +387,7 @@ def getParcelsByPolygon(schema, year, polygon, ptype='', withGeometry=False,
         srid = cur.fetchone()[0]
         print(srid)
         getCropCodes = f"""
-            SELECT cropname, cropcode, codetype FROM aois
+            SELECT cropname, cropcode, codetype FROM {aois_table}
             WHERE parceltable = '{schema}.parcels_{year}{ptype}'"""
         cur.execute(getCropCodes)
         row = cur.fetchone()

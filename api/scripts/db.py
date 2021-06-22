@@ -12,7 +12,7 @@ import os
 import json
 import psycopg2
 
-db_conf_file = 'config/db.json'
+db_conf_file = 'config/main.json'
 
 
 def crls(db='main'):

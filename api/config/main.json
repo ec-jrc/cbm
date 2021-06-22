@@ -9,5 +9,12 @@
             "user": "postgres",
             "pass": ""
         }
+    },
+    "s3": {
+        "dias": "EOSC",
+        "host": "http://data.cloudferro.com",
+        "bucket": "DIAS",
+        "access_key": "anystring",
+        "secret_key": "anystring"
     }
 }
