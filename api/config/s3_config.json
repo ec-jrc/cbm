@@ -1,8 +1,0 @@
-{
-        "s3": {
-                "access_key": "anystring",
-                "secret_key": "anystring",
-                "host": "http://data.cloudferro.com",
-                "bucket": "DIAS"
-        }
-}
