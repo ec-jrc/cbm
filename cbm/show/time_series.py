@@ -16,7 +16,7 @@ from os.path import join, normpath, isfile
 from datetime import timedelta
 
 from cbm.utils import config
-from cbm.get import parcel, time_series
+from cbm.get import parcel_info, time_series
 
 
 def ndvi(aoi, pid):
@@ -24,7 +24,7 @@ def ndvi(aoi, pid):
     path = normpath(join(config.get_value(['paths', 'temp']), aoi, str(pid)))
     file_info = normpath(join(path, 'info.json'))
     if not isfile(file_info):
-        parcel.by_pid(aoi, pid)
+        parcel_info.by_pid(aoi, pid)
     with open(file_info, 'r') as f:
         info_data = json.loads(f.read())
 
@@ -100,7 +100,7 @@ def s2(aoi, pid, bands):
     path = normpath(join(config.get_value(['paths', 'temp']), aoi, str(pid)))
     file_info = normpath(join(path, 'info.json'))
     if not isfile(file_info):
-        parcel.by_pid(aoi, pid)
+        parcel_info.by_pid(aoi, pid)
     with open(file_info, 'r') as f:
         info_data = json.loads(f.read())
 
@@ -207,7 +207,7 @@ def s1_bs(aoi, pid):
     path = normpath(join(config.get_value(['paths', 'temp']), aoi, str(pid)))
     file_info = normpath(join(path, 'info.json'))
     if not isfile(file_info):
-        parcel.by_pid(aoi, pid)
+        parcel_info.by_pid(aoi, pid)
     with open(file_info, 'r') as f:
         info_data = json.loads(f.read())
 
@@ -272,7 +272,7 @@ def s1_c6(aoi, pid):
     path = normpath(join(config.get_value(['paths', 'temp']), aoi, str(pid)))
     file_info = normpath(join(path, 'info.json'))
     if not isfile(file_info):
-        parcel.by_pid(aoi, pid)
+        parcel_info.by_pid(aoi, pid)
     with open(file_info, 'r') as f:
         info_data = json.loads(f.read())
 
