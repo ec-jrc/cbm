@@ -7,56 +7,57 @@
 # Copyright : 2021 European Commission, Joint Research Centre
 # License   : 3-Clause BSD
 
-
+import os
+import os.path
 import requests
 from os.path import join, normpath, isfile
 
 from cbm.utils import config
 
 
-def ploc(aoi, lon, lat, geom=False):
+def ploc(aoi, year, lon, lat, geom=False):
 
     api_url, api_user, api_pass = config.credentials('api')
-    requrl = """{}/query/parcelByLocation?aoi={}&lon={}&lat={}"""
+    requrl = """{}/query/parcelByLocation?aoi={}&year={}&lon={}&lat={}"""
     if geom is True:
         requrl = f"{requrl}&withGeometry=True"
 
-    response = requests.get(requrl.format(api_url, aoi, lon, lat),
+    response = requests.get(requrl.format(api_url, aoi, year, lon, lat),
                             auth=(api_user, api_pass))
     return response.content
 
 
-def pid(aoi, pid, geom=False):
+def pid(aoi, year, pid, geom=False):
 
     api_url, api_user, api_pass = config.credentials('api')
-    requrl = """{}/query/parcelById?aoi={}&parcelid={}"""
+    requrl = """{}/query/parcelById?aoi={}&year={}&pid={}"""
     if geom is True:
         requrl = f"{requrl}&withGeometry=True"
 
-    response = requests.get(requrl.format(api_url, aoi, pid),
+    response = requests.get(requrl.format(api_url, aoi, year, pid),
                             auth=(api_user, api_pass))
     return response.content
 
 
-def ppoly(aoi, polygon, geom=False, only_ids=True):
+def ppoly(aoi, year, polygon, geom=False, only_ids=True):
 
     api_url, api_user, api_pass = config.credentials('api')
-    requrl = """{}/query/parcelsByPolygon?aoi={}&polygon={}"""
+    requrl = """{}/query/parcelsByPolygon?aoi={}&year={}&polygon={}"""
     if geom is True:
         requrl = f"{requrl}&withGeometry=True"
     if only_ids is True:
         requrl = f"{requrl}&only_ids=True"
-    response = requests.get(requrl.format(api_url, aoi, polygon),
+    response = requests.get(requrl.format(api_url, aoi, year, polygon),
                             auth=(api_user, api_pass))
     return response.content
 
 
-def pts(aoi, pid, tstype, band=''):
+def pts(aoi, year, pid, tstype, band=''):
 
     api_url, api_user, api_pass = config.credentials('api')
-    requrl = """{}/query/parcelTimeSeries?aoi={}&pid={}&tstype={}&band={}"""
+    requrl = """{}/query/parcelTimeSeries?aoi={}&year={}&pid={}&tstype={}&band={}"""
 
-    response = requests.get(requrl.format(api_url, aoi,
+    response = requests.get(requrl.format(api_url, aoi, year,
                                           pid, tstype, band),
                             auth=(api_user, api_pass))
     return response.content
@@ -237,14 +238,13 @@ def background(lon, lat, chipsize=512, extend=512, tms='Google',
         quiet, print or not procedure information (Boolean).
 
     """
-    import os
-    import os.path
 
     # Get the api credentials
     api_url, api_user, api_pass = config.credentials('api')
 
     # The url to get the background image
     requrl = f"lon={lon}&lat={lat}&chipsize={chipsize}&extend={extend}"
+    print(f"{api_url}/query/backgroundByLocation?{requrl}&tms={tms}&raw")
     response = requests.get(
         f"{api_url}/query/backgroundByLocation?{requrl}&tms={tms}&raw",
         auth=(api_user, api_pass))

@@ -28,7 +28,7 @@ def overlay_parcel(img, geom):
     return patche
 
 
-def by_location(aoi, lon, lat, chipsize=512, extend=512, tms=['Google'],
+def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['Google'],
                 columns=4, quit=True):
     """Show the background image with parcels polygon overlay by selected
     parcel id. This function will get an image from the center of the polygon.
@@ -39,7 +39,8 @@ def by_location(aoi, lon, lat, chipsize=512, extend=512, tms=['Google'],
                                 True, True)
 
     Arguments:
-        aoi, the area of interest and year e.g.: es2020, cat2020 (str)
+        aoi, the area of interest (str)
+        year, the year of parcels table
         lon, lat, longitude and latitude in decimal degrees (float).
         chipsize, size of the chip in pixels (int).
         extend, size of the chip in meters  (float).
@@ -53,17 +54,17 @@ def by_location(aoi, lon, lat, chipsize=512, extend=512, tms=['Google'],
 
     try:
         from cbm.sources import api
-        json_data = json.loads(api.ploc(aoi, lon, lat, True))
+        json_data = json.loads(api.ploc(aoi, year, lon, lat, True))
         if type(json_data['ogc_fid']) is list:
             pid = json_data['ogc_fid'][0]
         else:
             pid = json_data['ogc_fid']
 
         workdir = normpath(join(config.get_value(['paths', 'temp']),
-                                aoi, str(pid)))
+                                aoi, str(year), str(pid)))
     except Exception:
         workdir = normpath(join(config.get_value(['paths', 'temp']),
-                                aoi, f'_{lon}_{lat}'))
+                                aoi, str(year), f'_{lon}_{lat}'))
         show_parcel = False
         if not quit:
             print("No parcel information found.")
@@ -75,7 +76,7 @@ def by_location(aoi, lon, lat, chipsize=512, extend=512, tms=['Google'],
 
     for t in tms:
         if not isfile(normpath(join(bg_path, f'{t.lower()}.tif'))):
-            bg.by_location(aoi, lon, lat, chipsize, extend, t, True)
+            bg.by_location(aoi, year, lon, lat, chipsize, extend, t, True)
 
     if show_parcel:
         with open(normpath(join(workdir, 'info.json')), 'r') as f:
@@ -108,7 +109,7 @@ def by_location(aoi, lon, lat, chipsize=512, extend=512, tms=['Google'],
     plt.show()
 
 
-def by_pid(aoi, pid, chipsize=512, extend=512, tms=['Google'],
+def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['Google'],
            columns=4, quit=True):
     """Show the background image with parcels polygon overlay by selected
     parcel id. This function will get an image from the center of the polygon.
@@ -119,7 +120,8 @@ def by_pid(aoi, pid, chipsize=512, extend=512, tms=['Google'],
                                 True, True)
 
     Arguments:
-        aoi, the area of interest and year e.g.: es2020, cat2020 (str)
+        aoi, the area of interest (str)
+        year, the year of parcels table
         lon, lat, longitude and latitude in decimal degrees (float).
         chipsize, size of the chip in pixels (int).
         extend, size of the chip in meters  (float).
@@ -133,12 +135,12 @@ def by_pid(aoi, pid, chipsize=512, extend=512, tms=['Google'],
         columns = len(tms)
 
     workdir = normpath(join(config.get_value(['paths', 'temp']),
-                            aoi, str(pid)))
+                            aoi, str(year), str(pid)))
     bg_path = normpath(join(workdir, 'backgrounds'))
 
     for t in tms:
         if not isfile(normpath(join(bg_path, f'{t.lower()}.tif'))):
-            bg.by_pid(aoi, pid, chipsize, extend, t, True)
+            bg.by_pid(aoi, year, pid, chipsize, extend, t, True)
 
     with open(normpath(join(workdir, 'info.json')), 'r') as f:
         json_data = json.load(f)

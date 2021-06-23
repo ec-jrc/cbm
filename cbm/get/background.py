@@ -14,7 +14,7 @@ from cbm.sources import api
 from cbm.utils import spatial_utils, config
 
 
-def by_location(aoi, lon, lat, chipsize=512, extend=512,
+def by_location(aoi, year, lon, lat, chipsize=512, extend=512,
                 tms='Google', axis=True, quiet=True):
     """Download the background image with parcels polygon overlay by selected
     location. This function will get an image from the center of the polygon.
@@ -25,7 +25,8 @@ def by_location(aoi, lon, lat, chipsize=512, extend=512,
                                 True, True)
 
     Arguments:
-        aoi, the area of interest and year e.g.: es2020, cat2020 (str)
+        aoi, the area of interest (str)
+        year, the year of parcels table
         lon, lat, longitude and latitude in decimal degrees (float).
         chipsize, size of the chip in pixels (int).
         extend, size of the chip in meters  (float).
@@ -34,14 +35,14 @@ def by_location(aoi, lon, lat, chipsize=512, extend=512,
     """
 
     try:
-        json_data = json.loads(api.ploc(aoi, lon, lat, True))
+        json_data = json.loads(api.ploc(aoi, year, lon, lat, True))
         if type(json_data['ogc_fid']) is list:
             pid = json_data['ogc_fid'][0]
         else:
             pid = json_data['ogc_fid']
 
         workdir = normpath(join(config.get_value(['paths', 'temp']),
-                                aoi, str(pid)))
+                                aoi, str(year), str(pid)))
         json_file = normpath(join(workdir, 'info.json'))
         if not exists(workdir):
             os.makedirs(workdir)
@@ -50,14 +51,14 @@ def by_location(aoi, lon, lat, chipsize=512, extend=512,
                 json.dump(json_data, f)
     except Exception:
         workdir = normpath(join(config.get_value(['paths', 'temp']),
-                                aoi, f'_{lon}_{lat}'))
+                                aoi, str(year), f'_{lon}_{lat}'))
 
     bg_path = normpath(join(workdir, 'backgrounds'))
     api.background(lon, lat, chipsize, extend,
                    tms, bg_path, quiet)
 
 
-def by_pid(aoi, pid, chipsize=512, extend=512,
+def by_pid(aoi, year, pid, chipsize=512, extend=512,
            tms='Google', axis=True, quiet=True):
     """Download the background image with parcels polygon overlay by selected
     location.
@@ -68,7 +69,8 @@ def by_pid(aoi, pid, chipsize=512, extend=512,
                                 True, True)
 
     Arguments:
-        aoi, the area of interest and year e.g.: es2019, nld2020 (str)
+        aoi, the area of interest (str)
+        year, the year of parcels table
         pid, the parcel id (str).
         chipsize, size of the chip in pixels (int).
         extend, size of the chip in meters  (float).
@@ -77,13 +79,12 @@ def by_pid(aoi, pid, chipsize=512, extend=512,
     """
 
     workdir = normpath(join(config.get_value(['paths', 'temp']),
-                            aoi, str(pid)))
+                            aoi, str(year), str(pid)))
     json_file = normpath(join(workdir, 'info.json'))
     if not isfile(json_file):
-        json_data = json.loads(api.pid(aoi, pid, True))
+        json_data = json.loads(api.pid(aoi, year, pid, True))
         if not exists(workdir):
             os.makedirs(workdir)
-
         with open(json_file, "w") as f:
             json.dump(json_data, f)
     else:
