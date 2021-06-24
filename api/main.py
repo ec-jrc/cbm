@@ -173,6 +173,76 @@ def backgroundByLocation_query():
         return json.dumps({})
 
 
+@app.route('/query/backgroundByParcelId', methods=['GET'])
+@auth_required
+def backgroundByID_query():
+    """
+    Generate an extract from either Google or Bing.
+    It uses the WMTS standard to grab and compose, which makes it fast
+    (does not depend on DIAS S3 store).
+    ---
+    tags:
+      - backgroundByLocation
+    responses:
+      200:
+        description: An HTML page that displays the selected chip as a PNG tile.
+    """
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+    # Start by getting the request IP address
+    if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
+        rip = request.environ['REMOTE_ADDR']
+    else:
+        rip = request.environ['HTTP_X_FORWARDED_FOR']
+
+    aoi = request.args.get('aoi')
+    year = request.args.get('year')
+    pid = request.args.get('pid')
+
+    if 'ptype' in request.args.keys():
+        ptype = f"_{request.args.get('ptype')}"
+    else:
+        ptype = ''
+
+    lon, lat = qh.getParcelCentroid(aoi, year, pid, ptype)
+
+    if 'chipsize' in request.args.keys():
+        chipsize = request.args.get('chipsize')
+    else:
+        chipsize = '256'
+
+    if 'extend' in request.args.keys():
+        chipextend = request.args.get('extend')
+    else:
+        chipextend = '256'
+
+    if 'tms' in request.args.keys():
+        tms = request.args.get('tms')
+    else:
+        tms = 'Google'
+
+    if 'iformat' in request.args.keys():
+        iformat = request.args.get('iformat')
+    else:
+        iformat = 'tif'
+
+    unique_id = f"static/dump/{rip}E{lon}N{lat}_{chipsize}_{chipextend}_{tms}".replace(
+        '.', '_')
+
+    data = qh.getBackgroundByLocation(
+        lon, lat, chipsize, chipextend, tms, unique_id, iformat)
+
+    if data:
+        if 'raw' in request.args.keys():
+            return f"{unique_id}/{tms.lower()}.{iformat}"
+        else:
+            flist = glob.glob(f"{unique_id}/{tms.lower()}.{iformat}")
+            full_filename = url_for(
+                'static', filename=flist[0].replace('static/', ''))
+            return render_template("bg_page.html", bg_image=full_filename)
+    else:
+        return json.dumps({})
+
+
 @app.route('/query/chipsByLocation', methods=['GET'])
 @auth_required
 def chipsByLocation_query():
@@ -363,17 +433,17 @@ def parcelTimeSeries_query():
         ptype = ''
 
     if 'aoi' in request.args.keys():
-        schema = request.args.get('aoi')
+        aoi = request.args.get('aoi')
     else:
-        schema = DEFAULT_SCHEMA
+        aoi = DEFAULT_SCHEMA
 
     if 'band' in request.args.keys():
         band = request.args.get('band')
 
     if tstype.lower() == 'scl':
-        data = qh.getParcelSCL(schema, year, pid, ptype)
+        data = qh.getParcelSCL(aoi, year, pid, ptype)
     else:
-        data = qh.getParcelTimeSeries(schema, year, pid, ptype,
+        data = qh.getParcelTimeSeries(aoi, year, pid, ptype,
                                       tstype, band, scl)
 
     if not data:
@@ -410,9 +480,9 @@ def parcelPeers_query():
         ptype = ''
 
     if 'aoi' in request.args.keys():
-        schema = request.args.get('aoi')
+        aoi = request.args.get('aoi')
     else:
-        schema = DEFAULT_SCHEMA
+        aoi = DEFAULT_SCHEMA
 
     if 'distance' in request.args.keys():
         distance = float(request.args.get('distance'))
@@ -424,7 +494,7 @@ def parcelPeers_query():
     if maxPeers > 100:
         maxPeers = 100
 
-    data = qh.getParcelPeers(schema, year, pid, ptype, distance, maxPeers)
+    data = qh.getParcelPeers(aoi, year, pid, ptype, distance, maxPeers)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -458,15 +528,15 @@ def parcelByLocation_query():
         ptype = ''
 
     if 'aoi' in request.args.keys():
-        schema = request.args.get('aoi')
+        aoi = request.args.get('aoi')
     else:
-        schema = DEFAULT_SCHEMA
+        aoi = DEFAULT_SCHEMA
 
     if 'withGeometry' in request.args.keys():
         withGeometry = True if request.args.get(
             'withGeometry') == 'True' else False
 
-    data = qh.getParcelByLocation(schema, year, lon, lat, ptype, withGeometry)
+    data = qh.getParcelByLocation(aoi, year, lon, lat, ptype, withGeometry)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -498,16 +568,16 @@ def parcelById_query():
         ptype = ''
 
     if 'aoi' in request.args.keys():
-        schema = request.args.get('aoi')
+        aoi = request.args.get('aoi')
     else:
-        schema = DEFAULT_SCHEMA
+        aoi = DEFAULT_SCHEMA
 
     if 'withGeometry' in request.args.keys():
         withGeometry = True if request.args.get(
             'withGeometry') == 'True' else False
 
     pid = request.args.get('pid')
-    data = qh.getParcelById(schema, year, pid, ptype, withGeometry)
+    data = qh.getParcelById(aoi, year, pid, ptype, withGeometry)
 
     if not data:
         return json.dumps({})
@@ -541,9 +611,9 @@ def parcelsByPolygon_query():
         ptype = ''
 
     if 'aoi' in request.args.keys():
-        schema = request.args.get('aoi')
+        aoi = request.args.get('aoi')
     else:
-        schema = DEFAULT_SCHEMA
+        aoi = DEFAULT_SCHEMA
 
     if 'withGeometry' in request.args.keys():
         withGeometry = True if request.args.get(
@@ -555,7 +625,7 @@ def parcelsByPolygon_query():
 
     polygon = request.args.get('polygon')
     data = qh.getParcelsByPolygon(
-        schema, year, polygon, ptype, withGeometry, only_ids)
+        aoi, year, polygon, ptype, withGeometry, only_ids)
 
     if not data:
         return json.dumps({})
