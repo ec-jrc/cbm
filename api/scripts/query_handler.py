@@ -163,6 +163,28 @@ def getParcelTimeSeries(schema, year, pid, ptype='',
         return data.append('Ended with no data')
 
 
+def getParcelCentroid(schema, year, pid, ptype=''):
+    conn = psycopg2.connect(db.conn_str())
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    data = []
+
+    try:
+        getTableDataSql = f"""
+            SELECT ST_X(ST_AsText(ST_Centroid(wkb_geometry))),
+                    ST_Y(ST_AsText(ST_Centroid(wkb_geometry)))
+            FROM {schema}.parcels_{year}{ptype}
+            WHERE ogc_fid = {pid};
+        """
+        #  Return a list of tuples
+        cur.execute(getTableDataSql)
+        return cur.fetchall()[0]
+
+    except Exception as err:
+        print("Did not find data, please select the right database and table: ",
+              err)
+        return data.append('Ended with no data')
+
+
 def getParcelSCL(schema, year, pid, ptype=''):
     conn = psycopg2.connect(db.conn_str())
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
