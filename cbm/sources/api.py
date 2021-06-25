@@ -27,19 +27,20 @@ def ploc(aoi, year, lon, lat, geom=False):
     return response.content
 
 
-def pid(aoi, year, pid, geom=False):
+def pid(aoi, year, pid, ptype='', geom=False):
 
     api_url, api_user, api_pass = config.credentials('api')
     requrl = """{}/query/parcelById?aoi={}&year={}&pid={}"""
     if geom is True:
         requrl = f"{requrl}&withGeometry=True"
-
+    if ptype != '':
+        requrl = f"{requrl}&ptype={ptype}"
     response = requests.get(requrl.format(api_url, aoi, year, pid),
                             auth=(api_user, api_pass))
     return response.content
 
 
-def ppoly(aoi, year, polygon, geom=False, only_ids=True):
+def ppoly(aoi, year, polygon, ptype='', geom=False, only_ids=True):
 
     api_url, api_user, api_pass = config.credentials('api')
     requrl = """{}/query/parcelsByPolygon?aoi={}&year={}&polygon={}"""
@@ -47,6 +48,8 @@ def ppoly(aoi, year, polygon, geom=False, only_ids=True):
         requrl = f"{requrl}&withGeometry=True"
     if only_ids is True:
         requrl = f"{requrl}&only_ids=True"
+    if ptype != '':
+        requrl = f"{requrl}&ptype={ptype}"
     response = requests.get(requrl.format(api_url, aoi, year, polygon),
                             auth=(api_user, api_pass))
     return response.content

@@ -77,13 +77,11 @@ def get():
             options=tuple(aois_options()),
             value=values['set']['dataset'],
             description='AOI:',
-            disabled=False,
         )
     except Exception:
         aois = Dropdown(
             options=tuple(aois_options()),
             description='AOI:',
-            disabled=False,
         )
 
     def years_disabled():
@@ -151,14 +149,12 @@ def get():
         value='5.664',
         placeholder='Add lon',
         description='Lon:',
-        disabled=False
     )
 
     plat = Text(
         value='52.694',
         placeholder='Add lat',
         description='Lat:',
-        disabled=False
     )
 
     wbox_lat_lot = VBox(children=[plat, plon])
@@ -170,7 +166,6 @@ def get():
         value='34296',
         placeholder='12345, 67890',
         description='Parcel(s) ID:',
-        disabled=False
     )
 
     wbox_pids = VBox(children=[info_pid, pid])
@@ -198,7 +193,8 @@ def get():
                                         for c in polygon])
                 outlog_poly(f"Geting parcel ids within the polygon...")
                 polyids = json.loads(get_requests.ppoly(
-                    f"{aois.value}{year.value}", polygon_str, False, True))
+                    f"{aois.value}{year.value}", polygon_str, ptype,
+                    False, True))
                 outlog_poly(
                     f"'{len(polyids['ogc_fid'])}' parcels where found:")
                 outlog_poly(polyids['ogc_fid'])
@@ -230,13 +226,19 @@ def get():
 
     info_type = Label("3. Select datasets to download.")
 
-    table_options = HBox([aois, button_refresh, year])
+    ptype = Text(
+        value='',
+        placeholder='Parcel Type',
+        description='Ptype:',
+        disabled=False
+    )
+
+    table_options = HBox([aois, button_refresh, ptype, year])
 
     # ########### Time series options #########################################
     pts_bt = ToggleButton(
         value=False,
         description='Time series',
-        disabled=False,
         button_style='success',  # success
         tooltip='Get parcel information',
         icon='toggle-off',
@@ -290,13 +292,11 @@ def get():
     pci_start_date = DatePicker(
         value=datetime.date(2019, 6, 1),
         description='Start Date',
-        disabled=False
     )
 
     pci_end_date = DatePicker(
         value=datetime.date(2019, 6, 30),
         description='End Date',
-        disabled=False
     )
 
     pci_plevel = RadioButtons(
@@ -381,7 +381,6 @@ def get():
 
     bt_get = Button(
         description='Download',
-        disabled=False,
         button_style='warning',
         tooltip='Send the request',
         icon='download'
@@ -479,8 +478,8 @@ def get():
         outlog(f"Getting parcels information for: '{pids}'")
         for pid in pids:
             try:
-                parcel = json.loads(get_requests.pid(f"{aois.value}{year.value}",
-                                                     pid, True))
+                parcel = json.loads(get_requests.pid(aois.value, year.value,
+                                                     pid, ptype, True))
                 get_data(parcel)
             except Exception as err:
                 print(err)
