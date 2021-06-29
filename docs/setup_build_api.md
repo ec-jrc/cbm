@@ -51,7 +51,7 @@ print(users.get_list())
 
 ## Database connection
 
-Open the config/db.json file with a text editor (e.g. **nano config/db.json**)
+Open the config/db.json file with a text editor (e.g. **nano config/main.json**)
 and set the database connection information. e.g.:
 ```json
 {
@@ -65,9 +65,17 @@ and set the database connection information. e.g.:
             "user": "postgres",
             "pass": "MyPassword"
         }
+    },
+    "s3": {
+        "dias": "EOSC",
+        "host": "http://data.cloudferro.com",
+        "bucket": "DIAS",
+        "access_key": "anystring",
+        "secret_key": "anystring"
     }
 }
 ```
+
 
 ## Deploy the RESTful API docker container
 
