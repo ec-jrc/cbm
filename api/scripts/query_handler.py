@@ -272,7 +272,7 @@ def getParcelPeers(schema, year, pid, ptype='', distance='', maxPeers=''):
 
 # Parcel information
 
-def getParcelByLocation(schema, year, lon, lat, ptype='', withGeometry=False):
+def getParcelByLocation(schema, year, lon, lat, ptype='', withGeometry=False, wgs84=False):
     conn = psycopg2.connect(db.conn_str())
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
@@ -296,7 +296,10 @@ def getParcelByLocation(schema, year, lon, lat, ptype='', withGeometry=False):
         logging.debug(row)
 
         if withGeometry:
-            geometrySql = ", st_asgeojson(wkb_geometry) as geom"
+            if wgs84:
+                geometrySql = ", st_asgeojson(st_transform(wkb_geometry, 4326)) as geom"
+            else:
+                geometrySql = ", st_asgeojson(wkb_geometry) as geom"
         else:
             geometrySql = ""
 
@@ -334,7 +337,7 @@ def getParcelByLocation(schema, year, lon, lat, ptype='', withGeometry=False):
         return data.append('Ended with no data')
 
 
-def getParcelById(schema, year, parcelid, ptype='', withGeometry=False):
+def getParcelById(schema, year, parcelid, ptype='', withGeometry=False, wgs84=False):
     conn = psycopg2.connect(db.conn_str())
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
@@ -357,7 +360,10 @@ def getParcelById(schema, year, parcelid, ptype='', withGeometry=False):
         cropcode = row[1]
 
         if withGeometry:
-            geometrySql = ", st_asgeojson(wkb_geometry) as geom"
+            if wgs84:
+                geometrySql = ", st_asgeojson(st_transform(wkb_geometry, 4326)) as geom"
+            else:
+                geometrySql = ", st_asgeojson(wkb_geometry) as geom"
         else:
             geometrySql = ""
 
