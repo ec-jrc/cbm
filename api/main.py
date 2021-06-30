@@ -521,6 +521,7 @@ def parcelByLocation_query():
     lon = request.args.get('lon')
     lat = request.args.get('lat')
     withGeometry = False
+    wgs84 = False
 
     if 'ptype' in request.args.keys():
         ptype = f"_{request.args.get('ptype')}"
@@ -532,11 +533,16 @@ def parcelByLocation_query():
     else:
         aoi = DEFAULT_SCHEMA
 
+    if 'wgs84' in request.args.keys():
+        wgs84 = True if request.args.get(
+            'wgs84') == 'True' else False
+
     if 'withGeometry' in request.args.keys():
         withGeometry = True if request.args.get(
             'withGeometry') == 'True' else False
 
-    data = qh.getParcelByLocation(aoi, year, lon, lat, ptype, withGeometry)
+    data = qh.getParcelByLocation(aoi, year, lon, lat, ptype,
+                                  withGeometry, wgs84)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -561,6 +567,7 @@ def parcelById_query():
     """
     year = request.args.get('year')
     withGeometry = False
+    wgs84 = False
 
     if 'ptype' in request.args.keys():
         ptype = f"_{request.args.get('ptype')}"
@@ -572,12 +579,16 @@ def parcelById_query():
     else:
         aoi = DEFAULT_SCHEMA
 
+    if 'wgs84' in request.args.keys():
+        wgs84 = True if request.args.get(
+            'wgs84') == 'True' else False
+
     if 'withGeometry' in request.args.keys():
         withGeometry = True if request.args.get(
             'withGeometry') == 'True' else False
 
     pid = request.args.get('pid')
-    data = qh.getParcelById(aoi, year, pid, ptype, withGeometry)
+    data = qh.getParcelById(aoi, year, pid, ptype, withGeometry, wgs84)
 
     if not data:
         return json.dumps({})
