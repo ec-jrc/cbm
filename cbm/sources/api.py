@@ -15,19 +15,20 @@ from os.path import join, normpath, isfile
 from cbm.utils import config
 
 
-def ploc(aoi, year, lon, lat, geom=False):
+def ploc(aoi, year, lon, lat, geom=False, wgs84=False):
 
     api_url, api_user, api_pass = config.credentials('api')
     requrl = """{}/query/parcelByLocation?aoi={}&year={}&lon={}&lat={}"""
     if geom is True:
         requrl = f"{requrl}&withGeometry=True"
-
+    if wgs84 is True:
+        requrl = f"{requrl}&wgs84={wgs84}"
     response = requests.get(requrl.format(api_url, aoi, year, lon, lat),
                             auth=(api_user, api_pass))
     return response.content
 
 
-def pid(aoi, year, pid, ptype='', geom=False):
+def pid(aoi, year, pid, ptype='', geom=False, wgs84=False):
 
     api_url, api_user, api_pass = config.credentials('api')
     requrl = """{}/query/parcelById?aoi={}&year={}&pid={}"""
@@ -35,12 +36,14 @@ def pid(aoi, year, pid, ptype='', geom=False):
         requrl = f"{requrl}&withGeometry=True"
     if ptype != '':
         requrl = f"{requrl}&ptype={ptype}"
+    if wgs84 is True:
+        requrl = f"{requrl}&wgs84={wgs84}"
     response = requests.get(requrl.format(api_url, aoi, year, pid),
                             auth=(api_user, api_pass))
     return response.content
 
 
-def ppoly(aoi, year, polygon, ptype='', geom=False, only_ids=True):
+def ppoly(aoi, year, polygon, ptype='', geom=False, wgs84=False, only_ids=True):
 
     api_url, api_user, api_pass = config.credentials('api')
     requrl = """{}/query/parcelsByPolygon?aoi={}&year={}&polygon={}"""
@@ -50,6 +53,8 @@ def ppoly(aoi, year, polygon, ptype='', geom=False, only_ids=True):
         requrl = f"{requrl}&only_ids=True"
     if ptype != '':
         requrl = f"{requrl}&ptype={ptype}"
+    if wgs84 is True:
+        requrl = f"{requrl}&wgs84={wgs84}"
     response = requests.get(requrl.format(api_url, aoi, year, polygon),
                             auth=(api_user, api_pass))
     return response.content
