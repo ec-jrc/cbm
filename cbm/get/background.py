@@ -33,9 +33,10 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512,
         tms, tile map server Google or Bing (str).
         quiet, print or not procedure information (Boolean).
     """
+    get_requests = data_source()
 
     try:
-        json_data = json.loads(api.ploc(aoi, year, lon, lat, True))
+        json_data = json.loads(get_requests.ploc(aoi, year, lon, lat, True))
         if type(json_data['ogc_fid']) is list:
             pid = json_data['ogc_fid'][0]
         else:
@@ -77,12 +78,13 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512,
         tms, tile map server Google or Bing (str).
         quiet, print or not procedure information (Boolean).
     """
+    get_requests = data_source()
 
     workdir = normpath(join(config.get_value(['paths', 'temp']),
                             aoi, str(year), str(pid)))
     json_file = normpath(join(workdir, 'info.json'))
     if not isfile(json_file):
-        json_data = json.loads(api.pid(aoi, year, pid, True))
+        json_data = json.loads(get_requests.pid(aoi, year, pid, True))
         if not exists(workdir):
             os.makedirs(workdir)
         with open(json_file, "w") as f:
@@ -95,5 +97,15 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512,
         spatial_utils.transform_geometry(json_data))
 
     bg_path = normpath(join(workdir, 'backgrounds'))
-    api.background(lon, lat, chipsize, extend,
-                   tms, bg_path, quiet)
+    get_requests.background(lon, lat, chipsize, extend,
+                            tms, bg_path, quiet)
+
+
+def data_source():
+    source = config.get_value(['set', 'data_source'])
+    if source == 'api':
+        from cbm.sources import api
+        return api
+    elif source == 'direct':
+        from cbm.sources import direct
+        return direct
