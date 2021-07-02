@@ -15,7 +15,7 @@ from ipywidgets import (Text, Label, HBox, VBox, Layout, Tab, Dropdown,
                         Output, Button, FileUpload, Checkbox, DatePicker)
 
 from cbm.utils import config
-from cbm.sources import db
+from cbm.datas import db
 from cbm.extract import db_tables
 
 from cbm.extract import (pgS2Extract, pgS1bsExtract)

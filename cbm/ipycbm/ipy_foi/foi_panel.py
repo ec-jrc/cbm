@@ -17,7 +17,7 @@ from ipywidgets import (Text, Label, HBox, VBox, Layout, Tab, Dropdown,
 
 from cbm.utils import config
 from cbm.ipycbm.utils import settings
-from cbm.sources import db
+from cbm.datas import db
 from cbm.ipycbm.ipy_ext import ext_func
 from cbm.foi import foi_v1
 from cbm.foi import foi_v2

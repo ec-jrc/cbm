@@ -21,7 +21,7 @@ import fiona
 from yaml import load, FullLoader
 
 from cbm.utils import config
-from cbm.sources import db
+from cbm.datas import db
 
 
 def main(vector_file, raster_file, yaml_file, pre_min_het, pre_max_het, area_threshold):

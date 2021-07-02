@@ -53,7 +53,7 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['Google'],
         tms = [tms]
 
     try:
-        from cbm.sources import api
+        from cbm.datas import api
         json_data = json.loads(api.ploc(aoi, year, lon, lat, True))
         if type(json_data['ogc_fid']) is list:
             pid = json_data['ogc_fid'][0]

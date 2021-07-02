@@ -8,3 +8,6 @@
 # License   : 3-Clause BSD
 
 from cbm.show import background, chip_images, time_series
+
+# def background(*args):
+#     from show import background

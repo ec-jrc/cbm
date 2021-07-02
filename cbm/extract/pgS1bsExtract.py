@@ -21,7 +21,7 @@ from datetime import datetime
 import pandas as pd
 
 from cbm.utils import config
-from cbm.sources import db, object_storage
+from cbm.datas import db, object_storage
 
 def extractS1bs(startdate, enddate):
     start = time.time()

@@ -44,7 +44,7 @@ import rasterio
 from rasterstats import zonal_stats
 
 from cbm.utils import config
-from cbm.sources import db, object_storage
+from cbm.datas import db, object_storage
 
 
 def main(startdate, enddate, parcels_table=None, results_table=None,
