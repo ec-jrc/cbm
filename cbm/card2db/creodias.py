@@ -23,7 +23,7 @@ import requests
 from lxml import etree
 import psycopg2
 from datetime import datetime
-from cbm.sources import db
+from cbm.datas import db
 
 
 def main(tb_prefix, aoi, start, end, card, option):

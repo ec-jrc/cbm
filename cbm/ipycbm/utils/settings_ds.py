@@ -13,7 +13,7 @@ from ipywidgets import (Text, VBox, HBox, Label, Password, Button, Layout, Tab,
                         Output, Dropdown, FloatText, BoundedIntText, Combobox)
 
 from cbm.utils import config, data_options
-from cbm.sources import db, db_requests
+from cbm.datas import db, db_requests
 
 
 def api(mode=None):

@@ -10,7 +10,7 @@ import os
 import json
 from os.path import join, normpath, exists, isfile
 
-from cbm.sources import api
+from cbm.datas import api
 from cbm.utils import spatial_utils, config
 
 
@@ -104,8 +104,8 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512,
 def data_source():
     source = config.get_value(['set', 'data_source'])
     if source == 'api':
-        from cbm.sources import api
+        from cbm.datas import api
         return api
     elif source == 'direct':
-        from cbm.sources import direct
+        from cbm.datas import direct
         return direct

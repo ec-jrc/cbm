@@ -104,10 +104,10 @@ def by_pid(aoi, year, pid, tstype, band='', quiet=False):
 def data_source():
     source = config.get_value(['set', 'data_source'])
     if source == 'api':
-        from cbm.sources import api
+        from cbm.datas import api
         return api
     elif source == 'direct':
-        from cbm.sources import direct
+        from cbm.datas import direct
         return direct
 
 
