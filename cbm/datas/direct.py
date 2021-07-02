@@ -8,7 +8,7 @@
 # License   : 3-Clause BSD
 
 
-from cbm.sources import db
+from cbm.datas import db
 from cbm.utils import config
 import json
 
@@ -89,7 +89,7 @@ def rcbl(parcel, start_date, end_date, bands, chipsize, filespath):
     from pandas import DataFrame
     from osgeo import ogr, osr
     from concurrent.futures import ProcessPoolExecutor, as_completed
-    from cbm.sources import object_storage
+    from cbm.datas import object_storage
 
     start = time.time()
     pid = parcel['ogc_fid'][0]
