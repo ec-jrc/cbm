@@ -10,7 +10,7 @@
 
 import pandas as pd
 
-from cbm.sources import db
+from cbm.datas import db
 from cbm.utils import config
 # Requests
 
