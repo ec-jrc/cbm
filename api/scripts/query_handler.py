@@ -117,52 +117,6 @@ def getRawS1ChipsBatch(unique_id):
     return True
 
 
-# Parcel Time Series
-
-def getParcelTimeSeries(schema, year, pid, ptype='',
-                        tstype='', band=None, scl=True):
-    conn = psycopg2.connect(db.conn_str())
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    data = []
-
-    sigs_table = f"{schema}.sigs_{year}"
-    where_band = f"And s.band = '{band}'" if band else ''
-    select_scl = ', h.hist' if scl else ''
-    from_hists = f", {schema}.hists_2020 h" if scl else ''
-    where_shid = 'And s.pid = h.pid And h.obsid = s.obsid' if scl else ''
-
-    try:
-        getTableDataSql = f"""
-            SELECT extract('epoch' from d.obstime), s.band, s.count,
-                s.mean, s.std, s.min, s.p25, s.p50, s.p75, s.max {select_scl}
-            FROM {sigs_table} s,
-                {dias_cat_table} d {from_hists}
-            WHERE
-                s.obsid = d.id and
-                s.pid = {pid}
-                {where_shid}
-                {where_band}
-            ORDER By obstime, band asc;
-        """
-        #  Return a list of tuples
-        cur.execute(getTableDataSql)
-        rows = cur.fetchall()
-        data.append(tuple(etup.name for etup in cur.description))
-
-        if len(rows) > 0:
-            for r in rows:
-                data.append(tuple(r))
-        else:
-            print("No time series found for",
-                  f"{pid} in {schema}.signatures")
-        return data
-
-    except Exception as err:
-        print("Did not find data, please select the right database and table: ",
-              err)
-        return data.append('Ended with no data')
-
-
 def getParcelCentroid(schema, year, pid, ptype=''):
     conn = psycopg2.connect(db.conn_str())
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -270,9 +224,66 @@ def getParcelPeers(schema, year, pid, ptype='', distance='', maxPeers=''):
         return data.append('Ended with no data')
 
 
+# Parcel Time Series
+
+def getParcelTimeSeries(schema, year, pid, ptype='',
+                        tstype='', band=None, scl=True):
+    conn = psycopg2.connect(db.conn_str())
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    data = []
+
+    sigs_table = f"{schema}.sigs_{year}"
+    select_scl = ', h.hist' if scl else ''
+
+    from_hists = f", {schema}.hists_2020 h" if scl else ''
+    where_shid = 'And s.pid = h.pid And h.obsid = s.obsid' if scl else ''
+    where_band = f"And s.band = '{band}' " if band else ''
+
+    if tstype.lower() == 's2':
+        where_tstype = "And band IN ('B02', 'B03', 'B04', 'B05', 'B08', 'B11') "
+    elif tstype.lower() == 's1':
+        where_tstype = "And band IN ('VVc', 'VHc', 'VVb', 'VHb') "
+    else:
+        where_tstype = ""
+
+    try:
+        getTableDataSql = f"""
+            SELECT extract('epoch' from d.obstime), s.band, s.count,
+                s.mean, s.std, s.min, s.p25, s.p50, s.p75, s.max{select_scl}
+            FROM {sigs_table} s,
+                {dias_cat_table} d{from_hists}
+            WHERE
+                s.pid = {pid}
+                And s.obsid = d.id
+                {where_shid}
+                {where_band}
+                {where_tstype}
+            ORDER By obstime, band asc;
+        """
+        #  Return a list of tuples
+        # print(getTableDataSql)
+        cur.execute(getTableDataSql)
+        rows = cur.fetchall()
+        data.append(tuple(etup.name for etup in cur.description))
+
+        if len(rows) > 0:
+            for r in rows:
+                data.append(tuple(r))
+        else:
+            print("No time series found for",
+                  f"{pid} in {schema}.signatures")
+        return data
+
+    except Exception as err:
+        print("Did not find data, please select the right database and table: ",
+              err)
+        return data.append('Ended with no data')
+
+
 # Parcel information
 
-def getParcelByLocation(schema, year, lon, lat, ptype='', withGeometry=False, wgs84=False):
+def getParcelByLocation(schema, year, lon, lat, ptype='', withGeometry=False,
+                        wgs84=False):
     conn = psycopg2.connect(db.conn_str())
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
@@ -337,7 +348,8 @@ def getParcelByLocation(schema, year, lon, lat, ptype='', withGeometry=False, wg
         return data.append('Ended with no data')
 
 
-def getParcelById(schema, year, parcelid, ptype='', withGeometry=False, wgs84=False):
+def getParcelById(schema, year, parcelid, ptype='', withGeometry=False,
+                  wgs84=False):
     conn = psycopg2.connect(db.conn_str())
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
@@ -378,6 +390,7 @@ def getParcelById(schema, year, parcelid, ptype='', withGeometry=False, wgs84=Fa
         """
 
         #  Return a list of tuples
+        # print(getTableDataSql)
         cur.execute(getTableDataSql)
         rows = cur.fetchall()
 
@@ -398,7 +411,7 @@ def getParcelById(schema, year, parcelid, ptype='', withGeometry=False, wgs84=Fa
 
 
 def getParcelsByPolygon(schema, year, polygon, ptype='', withGeometry=False,
-                        only_ids=True):
+                        only_ids=True, wgs84=False):
     poly = polygon.replace('_', ' ').replace('-', ',')
 
     conn = psycopg2.connect(db.conn_str())
@@ -424,7 +437,10 @@ def getParcelsByPolygon(schema, year, polygon, ptype='', withGeometry=False,
         # codetype = row[2]
 
         if withGeometry:
-            geometrySql = ", st_asgeojson(wkb_geometry) as geom"
+            if wgs84:
+                geometrySql = ", st_asgeojson(st_transform(wkb_geometry, 4326)) as geom"
+            else:
+                geometrySql = ", st_asgeojson(wkb_geometry) as geom"
         else:
             geometrySql = ""
 
