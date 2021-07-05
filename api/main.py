@@ -403,60 +403,6 @@ def rawChipByLocation_query():
         return json.dumps({})
 
 
-# -------- Queries - Time Series --------------------------------------------- #
-
-@app.route('/query/parcelTimeSeries', methods=['GET'])
-@auth_required
-def parcelTimeSeries_query():
-    """
-    Get the time series for a parcel ID.
-    ---
-    tags:
-      - parcelTimeSeries
-    responses:
-      200:
-        description: Time series table.
-    """
-    year = request.args.get('year')
-    pid = request.args.get('pid')
-    tstype = request.args.get('tstype')
-    band = None
-
-    if 'scl' in request.args.keys():
-        scl = request.args.get('scl')
-    else:
-        scl = True
-
-    if 'ptype' in request.args.keys():
-        ptype = f"_{request.args.get('ptype')}"
-    else:
-        ptype = ''
-
-    if 'aoi' in request.args.keys():
-        aoi = request.args.get('aoi')
-    else:
-        aoi = DEFAULT_SCHEMA
-
-    if 'band' in request.args.keys():
-        band = request.args.get('band')
-
-    if tstype.lower() == 'scl':
-        data = qh.getParcelSCL(aoi, year, pid, ptype)
-    else:
-        data = qh.getParcelTimeSeries(aoi, year, pid, ptype,
-                                      tstype, band, scl)
-
-    if not data:
-        return json.dumps({})
-    elif len(data) == 1:
-        return json.dumps(dict(zip(list(data[0]),
-                                   [[] for i in range(len(data[0]))])))
-    else:
-        return json.dumps(dict(zip(list(data[0]),
-                                   [list(i) for i in zip(*data[1:])])),
-                          cls=CustomJsonEncoder)
-
-
 @app.route('/query/parcelPeers', methods=['GET'])
 @auth_required
 def parcelPeers_query():
@@ -469,20 +415,18 @@ def parcelPeers_query():
       200:
         description: The parcel “peers”.
     """
+    aoi = DEFAULT_SCHEMA
     year = request.args.get('year')
     pid = request.args.get('pid')
+    ptype = ''
     distance = 1000.0
     maxPeers = 10
 
     if 'ptype' in request.args.keys():
         ptype = f"_{request.args.get('ptype')}"
-    else:
-        ptype = ''
 
     if 'aoi' in request.args.keys():
         aoi = request.args.get('aoi')
-    else:
-        aoi = DEFAULT_SCHEMA
 
     if 'distance' in request.args.keys():
         distance = float(request.args.get('distance'))
@@ -505,6 +449,62 @@ def parcelPeers_query():
                                    [list(i) for i in zip(*data[1:])])))
 
 
+# -------- Queries - Time Series --------------------------------------------- #
+
+@app.route('/query/parcelTimeSeries', methods=['GET'])
+@auth_required
+def parcelTimeSeries_query():
+    """
+    Get the time series for a parcel ID.
+    ---
+    tags:
+      - parcelTimeSeries
+    responses:
+      200:
+        description: Time series table.
+    """
+    aoi = DEFAULT_SCHEMA
+    year = request.args.get('year')
+    pid = request.args.get('pid')
+    ptype = ''
+    tstype = ''
+    band = ''
+    scl = True
+
+    if 'tstype' in request.args.keys():
+        tstype = request.args.get('tstype')
+
+    if 'scl' in request.args.keys():
+        scl = True if request.args.get('scl') == 'True' else False
+
+    if 'ptype' in request.args.keys():
+        ptype = f"_{request.args.get('ptype')}"
+
+    if 'aoi' in request.args.keys():
+        aoi = request.args.get('aoi')
+
+    if 'band' in request.args.keys():
+        band = request.args.get('band')
+
+    if tstype.lower() == 'scl':
+        data = qh.getParcelSCL(aoi, year, pid, ptype)
+    else:
+        data = qh.getParcelTimeSeries(aoi, year, pid, ptype,
+                                      tstype, band, scl)
+
+    if not data:
+        return json.dumps({})
+    elif len(data) == 1:
+        return json.dumps(dict(zip(list(data[0]),
+                                   [[] for i in range(len(data[0]))])))
+    else:
+        return json.dumps(dict(zip(list(data[0]),
+                                   [list(i) for i in zip(*data[1:])])),
+                          cls=CustomJsonEncoder)
+
+
+# -------- Queries - Parcel information -------------------------------------- #
+
 @app.route('/query/parcelByLocation', methods=['GET'])
 @auth_required
 def parcelByLocation_query():
@@ -517,25 +517,22 @@ def parcelByLocation_query():
       200:
         description: Parcel information.
     """
+    aoi = DEFAULT_SCHEMA
     year = request.args.get('year')
     lon = request.args.get('lon')
     lat = request.args.get('lat')
+    ptype = ''
     withGeometry = False
     wgs84 = False
 
     if 'ptype' in request.args.keys():
         ptype = f"_{request.args.get('ptype')}"
-    else:
-        ptype = ''
 
     if 'aoi' in request.args.keys():
         aoi = request.args.get('aoi')
-    else:
-        aoi = DEFAULT_SCHEMA
 
     if 'wgs84' in request.args.keys():
-        wgs84 = True if request.args.get(
-            'wgs84') == 'True' else False
+        wgs84 = True if request.args.get('wgs84') == 'True' else False
 
     if 'withGeometry' in request.args.keys():
         withGeometry = True if request.args.get(
@@ -565,30 +562,28 @@ def parcelById_query():
       200:
         description: Parcel information.
     """
+    aoi = DEFAULT_SCHEMA
     year = request.args.get('year')
+    pid = request.args.get('pid')
+    ptype = ''
     withGeometry = False
     wgs84 = False
 
     if 'ptype' in request.args.keys():
         ptype = f"_{request.args.get('ptype')}"
-    else:
-        ptype = ''
 
     if 'aoi' in request.args.keys():
         aoi = request.args.get('aoi')
-    else:
-        aoi = DEFAULT_SCHEMA
 
     if 'wgs84' in request.args.keys():
-        wgs84 = True if request.args.get(
-            'wgs84') == 'True' else False
+        wgs84 = True if request.args.get('wgs84') == 'True' else False
 
     if 'withGeometry' in request.args.keys():
         withGeometry = True if request.args.get(
             'withGeometry') == 'True' else False
 
-    pid = request.args.get('pid')
     data = qh.getParcelById(aoi, year, pid, ptype, withGeometry, wgs84)
+    # print(data)
 
     if not data:
         return json.dumps({})
@@ -612,19 +607,18 @@ def parcelsByPolygon_query():
       200:
         description: List of parcels.
     """
+    aoi = DEFAULT_SCHEMA
     year = request.args.get('year')
+    ptype = ''
     withGeometry = False
     only_ids = True
+    wgs84 = False
 
     if 'ptype' in request.args.keys():
         ptype = f"_{request.args.get('ptype')}"
-    else:
-        ptype = ''
 
     if 'aoi' in request.args.keys():
         aoi = request.args.get('aoi')
-    else:
-        aoi = DEFAULT_SCHEMA
 
     if 'withGeometry' in request.args.keys():
         withGeometry = True if request.args.get(
@@ -634,9 +628,12 @@ def parcelsByPolygon_query():
         only_ids = True if request.args.get(
             'only_ids') == 'True' else False
 
+    if 'wgs84' in request.args.keys():
+        wgs84 = True if request.args.get('wgs84') == 'True' else False
+
     polygon = request.args.get('polygon')
     data = qh.getParcelsByPolygon(
-        aoi, year, polygon, ptype, withGeometry, only_ids)
+        aoi, year, polygon, ptype, withGeometry, only_ids, wgs84)
 
     if not data:
         return json.dumps({})
