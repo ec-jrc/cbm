@@ -380,7 +380,7 @@ def getParcelById(schema, year, parcelid, ptype='', withGeometry=False,
             geometrySql = ""
 
         getTableDataSql = f"""
-            SELECT ogc_fid, {cropname} as cropname, {cropcode} as cropcode,
+            SELECT ogc_fid, {cropname} as cropname, {cropcode}::text as cropcode,
                 st_srid(wkb_geometry) as srid{geometrySql},
                 st_area(wkb_geometry) as area,
                 st_X(st_transform(st_centroid(wkb_geometry), 4326)) as clon,
