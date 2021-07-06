@@ -52,8 +52,9 @@ def getParcelByLocation(dsc, lon, lat, withGeometry=False, set_db='main'):
             WHERE st_intersects(wkb_geometry, st_transform(st_geomfromtext(
                 'POINT({lon} {lat})', 4326), {srid}));
         """
+        print(getTableDataSql)
 
-        #  Return a list of tuples
+        # Return a list of tuples
         cur.execute(getTableDataSql)
         rows = cur.fetchall()
 
