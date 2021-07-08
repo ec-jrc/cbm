@@ -163,7 +163,7 @@ def backgroundByLocation_query():
 
     if data:
         if 'raw' in request.args.keys():
-            return f"{unique_id}/{tms.lower()}.{iformat}"
+            return f"{request.host_url}{unique_id}/{tms.lower()}.{iformat}"
         else:
             flist = glob.glob(f"{unique_id}/{tms.lower()}.{iformat}")
             full_filename = url_for(
@@ -471,9 +471,6 @@ def parcelTimeSeries_query():
     band = ''
     scl = True
 
-    if 'tstype' in request.args.keys():
-        tstype = request.args.get('tstype')
-
     if 'scl' in request.args.keys():
         scl = True if request.args.get('scl') == 'True' else False
 
@@ -486,12 +483,18 @@ def parcelTimeSeries_query():
     if 'band' in request.args.keys():
         band = request.args.get('band')
 
+    if 'tstype' in request.args.keys():
+        tstype = request.args.get('tstype')
+        if tstype.lower() == 's1':
+            scl = False
+
     if tstype.lower() == 'scl':
         data = qh.getParcelSCL(aoi, year, pid, ptype)
     else:
         data = qh.getParcelTimeSeries(aoi, year, pid, ptype,
                                       tstype, band, scl)
 
+    # print(data)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
