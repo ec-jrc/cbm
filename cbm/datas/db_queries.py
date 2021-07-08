@@ -68,7 +68,8 @@ def getParcelByLocation(dsc, lon, lat, withGeometry=False, set_db='main'):
         return data
 
     except Exception as err:
-        print("1 Did not find data, please select the right database and table: ", err)
+        print("Did not find data, please select the right database and table: ",
+              err)
         return data.append('Ended with no data')
 
 
@@ -120,11 +121,13 @@ def getParcelById(dsc, pid, withGeometry=False, set_db='main'):
         return data
 
     except Exception as err:
-        print("2 Did not find data, please select the right database and table: ", err)
+        print("Did not find data, please select the right database and table: ",
+              err)
         return data.append('Ended with no data')
 
 
-def getParcelsByPolygon(dsc, polygon, withGeometry=False, only_ids=True, set_db='main'):
+def getParcelsByPolygon(dsc, polygon, withGeometry=False, only_ids=True,
+                        set_db='main'):
     """Get list of parcels within the given polygon"""
     poly = polygon.replace('_', ' ').replace('-', ',')
 
@@ -153,17 +156,19 @@ def getParcelsByPolygon(dsc, polygon, withGeometry=False, only_ids=True, set_db=
         if only_ids:
             selectSql = f"{parcels_id}{geometrySql}"
         else:
-            selectSql = f"""{parcels_id}, {crop_names} as cropname, {crop_codes} as cropcode,
+            selectSql = f"""{parcels_id}, {crop_names} as cropname,
+                {crop_codes} as cropcode,
                 st_srid(wkb_geometry) as srid{geometrySql},
                 st_area(wkb_geometry) as area,
-                st_X(st_transform(st_centroid(wkb_geometry), 4326)) as clon,
-                st_Y(st_transform(st_centroid(wkb_geometry), 4326)) as clat"""
+                st_X(st_transform(st_centroid(wkb_geometry), 4326)) As clon,
+                st_Y(st_transform(st_centroid(wkb_geometry), 4326)) As clat"""
 
         getTableDataSql = f"""
             SELECT {selectSql}
             FROM {parcels_table}
             WHERE st_intersects(wkb_geometry,
-                  st_transform(st_geomfromtext('POLYGON(({poly}))', 4326), {srid}))
+                  st_transform(st_geomfromtext('POLYGON(({poly}))', 4326),
+                  {srid}))
             LIMIT 100;
         """
 
@@ -181,7 +186,8 @@ def getParcelsByPolygon(dsc, polygon, withGeometry=False, only_ids=True, set_db=
         return data
 
     except Exception as err:
-        print("3 Did not find data, please select the right database and table: ", err)
+        print("Did not find data, please select the right database and table: ",
+              err)
         return data.append('Ended with no data')
 
 
@@ -229,7 +235,8 @@ def getParcelTimeSeries(dsc, year, pid, tstype, band=None, set_db='main'):
         return data
 
     except Exception as err:
-        print("4 Did not find data, please select the right database and table: ", err)
+        print("Did not find data, please select the right database and table: ",
+              err)
         return data.append('Ended with no data')
 
 
@@ -251,16 +258,19 @@ def getParcelPeers(parcels_table, pid, distance, maxPeers, set_db='main'):
             WITH current_parcel AS (select {crop_names},
                 wkb_geometry from {parcels_table} where {parcels_id} = {pid})
             SELECT {parcels_id} as pid, st_distance(wkb_geometry,
-                (SELECT wkb_geometry FROM current_parcel)) as distance from {parcels_table}
-            where {crop_names} = (select {crop_names} from current_parcel)
+                (SELECT wkb_geometry FROM current_parcel)) As distance
+            FROM {parcels_table}
+            WHERE {crop_names} = (select {crop_names} FROM current_parcel)
             And {parcels_id} != {pid}
-            And st_dwithin(wkb_geometry, (SELECT wkb_geometry FROM current_parcel), {distance})
+            And st_dwithin(wkb_geometry,
+                (SELECT wkb_geometry FROM current_parcel), {distance})
             And st_area(wkb_geometry) > 3000.0
-            order by st_distance(wkb_geometry, (SELECT wkb_geometry FROM current_parcel)) asc
+            ORDER by st_distance(wkb_geometry,
+                (SELECT wkb_geometry FROM current_parcel)) asc
             LIMIT {maxPeers};
             """
         #  Return a list of tuples
-        print(getTableDataSql)
+        # print(getTableDataSql)
         cur.execute(getTableDataSql)
         rows = cur.fetchall()
 
@@ -274,7 +284,8 @@ def getParcelPeers(parcels_table, pid, distance, maxPeers, set_db='main'):
         return data
 
     except Exception as err:
-        print("5 Did not find data, please select the right database and table: ", err)
+        print("Did not find data, please select the right database and table: ",
+              err)
         return data.append('Ended with no data')
 
 
@@ -337,7 +348,7 @@ def getPolygonCentroid(parcel_id, set_db='main'):
 
     getParcelPolygonSql = f"""
         SELECT ST_Asgeojson(ST_transform(ST_Centroid(wkb_geometry), 4326))
-            As center, ST_Asgeojson(st_transform(wkb_geometry, 4326)) as polygon
+            As center, ST_Asgeojson(st_transform(wkb_geometry, 4326)) As polygon
         FROM {parcels_table}
         WHERE {parcels_id} = {parcel_id}
         LIMIT 1;
@@ -353,7 +364,8 @@ def getTableCentroid(parcels_table, set_db='main'):
     conn = db.conn(set_db)
 
     getTablePolygonSql = f"""
-        SELECT ST_Asgeojson(ST_Transform(ST_PointOnSurface(ST_Union(geom)),4326)) as center
+        SELECT ST_Asgeojson(ST_Transform(ST_PointOnSurface(ST_Union(geom)),
+            4326)) As center
         FROM (SELECT wkb_geometry FROM {parcels_table} LIMIT 100) AS t(geom);
     """
 
