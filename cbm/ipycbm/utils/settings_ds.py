@@ -13,7 +13,7 @@ from ipywidgets import (Text, VBox, HBox, Label, Password, Button, Layout, Tab,
                         Output, Dropdown, FloatText, BoundedIntText, Combobox)
 
 from cbm.utils import config, data_options
-from cbm.datas import db, db_requests
+from cbm.datas import db, db_queries
 
 
 def api(mode=None):
@@ -415,7 +415,7 @@ def direct_settings():
         def bt_get_center_on_click(b):
             import json
             center_json = json.loads(
-                db_requests.getTableCentroid(tb_pr.value)['center'][0])
+                db_queries.getTableCentroid(tb_pr.value)['center'][0])
             map_cent_lat.value = round(center_json['coordinates'][1], 2)
             map_cent_lon.value = round(center_json['coordinates'][0], 2)
             map_zoom.value = 10
