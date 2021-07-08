@@ -17,7 +17,7 @@ from rasterio.plot import show
 from mpl_toolkits.axes_grid1 import ImageGrid
 
 from cbm.utils import config, spatial_utils
-from cbm.get import background as bg
+from cbm.get import background as get_bg
 
 
 def overlay_parcel(img, geom):
@@ -54,7 +54,7 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['Google'],
 
     try:
         from cbm.datas import api
-        json_data = json.loads(api.ploc(aoi, year, lon, lat, True))
+        json_data = json.loads(api.ploc(aoi, year, lon, lat, True, True))
         if type(json_data['ogc_fid']) is list:
             pid = json_data['ogc_fid'][0]
         else:
@@ -76,13 +76,14 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['Google'],
 
     for t in tms:
         if not isfile(normpath(join(bg_path, f'{t.lower()}.tif'))):
-            bg.by_location(aoi, year, lon, lat, chipsize, extend, t, True)
+            get_bg.by_location(aoi, year, lon, lat, chipsize, extend, t, True)
 
     if show_parcel:
         with open(normpath(join(workdir, 'info.json')), 'r') as f:
             json_data = json.load(f)
 
-        with rasterio.open(normpath(join(bg_path, f'{tms[0].lower()}.tif'))) as img:
+        with rasterio.open(normpath(join(bg_path,
+                                         f'{tms[0].lower()}.tif'))) as img:
             img_epsg = img.crs.to_epsg()
             geom = spatial_utils.transform_geometry(json_data, img_epsg)
             patches = overlay_parcel(img, geom)
@@ -140,7 +141,7 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['Google'],
 
     for t in tms:
         if not isfile(normpath(join(bg_path, f'{t.lower()}.tif'))):
-            bg.by_pid(aoi, year, pid, chipsize, extend, t, True)
+            get_bg.by_pid(aoi, year, pid, None, chipsize, extend, t, True)
 
     with open(normpath(join(workdir, 'info.json')), 'r') as f:
         json_data = json.load(f)
@@ -162,7 +163,6 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['Google'],
             for patch in patches:
                 ax.add_patch(copy(patch))
 #             ax.xaxis.set_major_locator(ticker.MultipleLocator(200))
-#             ax.xaxis.set_minor_locator(ticker.MultipleLocator(200))
             show(img, ax=ax)
             ax.set_title(t, fontsize=20)
 
