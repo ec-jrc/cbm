@@ -9,7 +9,7 @@
 
 import os
 import json
-from os.path import join, normpath, isfile, dirname, exists
+from os.path import join, normpath, isfile, dirname
 from cbm.utils import config
 
 
@@ -23,11 +23,12 @@ def by_location(aoi, year, lon, lat, geom=False, wgs84=False, quiet=True):
     Arguments:
         aoi, the area of interest (str)
         year, the year of parcels table
-        lat, lon, the the coords of the parcel (float).
+        lon, lat, the the coords of the parcel (float).
     """
     get_requests = data_source()
     try:
-        json_data = json.loads(get_requests.ploc(aoi, year, lon, lat, geom, wgs84))
+        json_data = json.loads(get_requests.ploc(
+            aoi, year, lon, lat, geom, wgs84))
         if type(json_data['ogc_fid']) is list:
             pid = json_data['ogc_fid'][0]
         else:
@@ -36,14 +37,13 @@ def by_location(aoi, year, lon, lat, geom=False, wgs84=False, quiet=True):
         workdir = normpath(join(config.get_value(['paths', 'temp']),
                                 aoi, str(year), str(pid)))
         json_file = normpath(join(workdir, 'info.json'))
-        if not exists(workdir):
-            os.makedirs(workdir)
+        os.makedirs(workdir, exist_ok=True)
         if not isfile(json_file):
             with open(json_file, "w") as f:
                 json.dump(json_data, f)
     except Exception:
-        workdir = normpath(join(config.get_value(['paths', 'temp']),
-                                aoi, str(year), f'_{lon}_{lat}'))
+        workdir = normpath(join(config.get_value(['paths', 'temp']), aoi,
+                                str(year), f'_{lon}_{lat}'.replace('.', '_')))
 
     file_pinf = normpath(join(workdir, 'info.json'))
     if not isfile(file_pinf):
