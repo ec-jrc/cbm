@@ -15,7 +15,7 @@ from os.path import join, normpath, isfile
 from cbm.utils import config
 
 
-def ploc(aoi, year, lon, lat, geom=False, wgs84=False):
+def ploc(aoi, year, lon, lat, geom=False, wgs84=False, debug=False):
 
     api_url, api_user, api_pass = config.credentials('api')
     requrl = """{}/query/parcelByLocation?aoi={}&year={}&lon={}&lat={}"""
@@ -26,10 +26,12 @@ def ploc(aoi, year, lon, lat, geom=False, wgs84=False):
     # print(requrl.format(api_url, aoi, year, pid))
     response = requests.get(requrl.format(api_url, aoi, year, lon, lat),
                             auth=(api_user, api_pass))
+    if debug:
+        print(requrl.format(api_url, aoi, year, lon, lat), response)
     return response.content
 
 
-def pid(aoi, year, pid, ptype=None, geom=False, wgs84=False):
+def pid(aoi, year, pid, ptype=None, geom=False, wgs84=False, debug=False):
     api_url, api_user, api_pass = config.credentials('api')
     requrl = """{}/query/parcelById?aoi={}&year={}&pid={}"""
     if geom is True:
@@ -41,6 +43,8 @@ def pid(aoi, year, pid, ptype=None, geom=False, wgs84=False):
     # print(requrl.format(api_url, aoi, year, pid))
     response = requests.get(requrl.format(api_url, aoi, year, pid),
                             auth=(api_user, api_pass))
+    if debug:
+        print(requrl.format(api_url, aoi, year, pid), response)
     return response.content
 
 
@@ -231,7 +235,7 @@ def get_options():
 
 
 def background(lon, lat, chipsize=512, extend=512, tms='Google',
-               bg_path='', quiet=True):
+               bg_path='', debug=False):
     # aoi='undefined', year='', pid='0000', quiet=True):
     """Download the background image.
 
@@ -244,8 +248,6 @@ def background(lon, lat, chipsize=512, extend=512, tms='Google',
         extend, size of the chip in meters  (float).
         tms, tile map server Google or Bing (str).
         bk_file, the name of the output file (str).
-        quiet, print or not procedure information (Boolean).
-
     """
 
     # Get the api credentials
@@ -264,26 +266,21 @@ def background(lon, lat, chipsize=512, extend=512, tms='Google',
         img_url = response.content.decode("utf-8")
         # print(type(img_url), img_url)
         if img_url == '{}':
-            print("Image not found...")
-            print(f"{api_url}/query/backgroundByLocation?{requrl}&tms={tms}&raw")
-            print(response)
-            return 1
+            if debug:
+                print("Image not found...")
+                print(f"{api_url}/query/backgroundByLocation?{requrl}&tms={tms}&raw", response)
+            return response
         else:
-            if not os.path.exists(bg_path) and bg_path != "":
-                os.makedirs(bg_path)
-
+            if debug:
+                print(f"{api_url}/query/backgroundByLocation?{requrl}&tms={tms}&raw", response)
             res = requests.get(img_url, stream=True)
             image_name = img_url.split('/')[-1].lower()
             bg_file = normpath(join(bg_path, image_name))
 
-            if not quiet:
-                print(f"Downloading {image_name}")
             with open(bg_file, "wb") as handle:
                 for chunk in res.iter_content(chunk_size=1024):
                     if chunk:  # filter out keep-alive new chunks
                         handle.write(chunk)
-            if not quiet:
-                print("Background image downloaded:", image_name)
 
             return bg_file
     except AttributeError as err:
