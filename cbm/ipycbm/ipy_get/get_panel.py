@@ -50,12 +50,12 @@ def get():
         if values['set']['data_source'] == 'api':
             api_values = config.read('api_options.json')
             for aoi in api_values['aois']:
-                desc = f"{api_values['aois'][aoi]['desc']}"
+                desc = f"{api_values['aois'][aoi]['description']}"
                 options[(desc, aoi)] = api_values['aois'][aoi]['year']
         elif values['set']['data_source'] == 'direct':
             values = config.read()
             for aoi in values['dataset']:
-                desc = f"{values['dataset'][aoi]['desc']}"
+                desc = f"{values['dataset'][aoi]['description']}"
                 options[(f"{desc} ({aoi})", aoi)] = [aoi.split('_')[-1]]
         return options
 
