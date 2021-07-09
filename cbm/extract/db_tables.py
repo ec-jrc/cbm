@@ -13,7 +13,7 @@ def tables_dict():
         "dc": {
             "name": "DIAS Catalogue",
             "table": "dias_catalogue",
-            "desc": "",
+            "description": "",
             "sql": """
                 CREATE TABLE public.dias_catalogue (
                 id serial,
@@ -29,7 +29,7 @@ def tables_dict():
         "aois": {
             "name": "AOIs (Optional) - Regions or Municipalities",
             "table": "aois",
-            "desc": "",
+            "description": "",
             "sql": """
                 CREATE TABLE public.aois (
                     name text not null,
@@ -39,7 +39,7 @@ def tables_dict():
         "s2": {
             "name": "S2 signatures",
             "table": "s2_signatures",
-            "desc": "",
+            "description": "",
             "sql": """
                 CREATE TABLE {}.sigs_{}_s2 (
                     pid int,
@@ -59,7 +59,7 @@ def tables_dict():
         "bs": {
             "name": "S1 Backscattering",
             "table": "bs_signatures",
-            "desc": "",
+            "description": "",
             "sql": """
                 CREATE TABLE {}.sigs_{}_bs (
                     pid int,
@@ -79,7 +79,7 @@ def tables_dict():
         "c6": {
             "name": "S1 6-day coherence",
             "table": "c6_signatures",
-            "desc": "",
+            "description": "",
             "sql": """
                 CREATE TABLE {}.sigs_{}_c6 (
                     pid int,
@@ -99,7 +99,7 @@ def tables_dict():
         "sigs": {
             "name": "All signatures",
             "table": "signatures",
-            "desc": "",
+            "description": "",
             "sql": """
                 CREATE TABLE {} (
                     pid int,

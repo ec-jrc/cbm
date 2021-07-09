@@ -265,7 +265,7 @@ def direct_settings():
 
         )
         ds_desc = Text(
-            value=values['dataset'][dsc_value]['desc'],
+            value=values['dataset'][dsc_value]['description'],
             description='Description:',
             disabled=False
         )
@@ -443,7 +443,7 @@ def direct_settings():
             config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
                               'db'], str(ds_db.value))
             config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
-                              'desc'], str(ds_desc.value))
+                              'description'], str(ds_desc.value))
             config.set_value(
                 ['dataset', f'{dscode}_{str(ds_year.value)}', 'center'],
                 f"{map_cent_lat.value},{map_cent_lon.value}")
