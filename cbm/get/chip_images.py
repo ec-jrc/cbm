@@ -24,7 +24,7 @@ def by_location(aoi, lon, lat, start_date, end_date, band, chipsize,
 
     Arguments:
         aoi, the area of interest and year e.g.: es2019, nld2020 (str)
-        lat, lon, the the coords of the parcel (float).
+        lon, lat, the the coords of the parcel (float).
         start_date, Start date '2019-06-01' (str)
         end_date, End date '2019-06-01' (str)
         band, 3 Sentinel-2 band names. One of [‘B02’, ‘B03’, ‘B04’, ‘B08’]

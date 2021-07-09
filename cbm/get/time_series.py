@@ -10,7 +10,7 @@
 import os
 import json
 import pandas as pd
-from os.path import join, normpath, isfile, exists
+from os.path import join, normpath, isfile
 from cbm.utils import config
 
 
@@ -23,7 +23,7 @@ def by_location(aoi, year, lon, lat, tstype, band='', quiet=False):
 
     Arguments:
         aoi, the area of interest and year e.g.: es2019, nld2020 (str)
-        lat, lon, the the coords of the parcel (float).
+        lon, lat, the the coords of the parcel (float).
     """
     get_requests = data_source()
     try:
@@ -36,14 +36,13 @@ def by_location(aoi, year, lon, lat, tstype, band='', quiet=False):
         workdir = normpath(join(config.get_value(['paths', 'temp']),
                                 aoi, str(pid)))
         json_file = normpath(join(workdir, 'info.json'))
-        if not exists(workdir):
-            os.makedirs(workdir)
+        os.makedirs(workdir, exist_ok=True)
         if not isfile(json_file):
             with open(json_file, "w") as f:
                 json.dump(json_data, f)
     except Exception:
         workdir = normpath(join(config.get_value(['paths', 'temp']),
-                                aoi, f'_{lon}_{lat}'))
+                                aoi, f'_{lon}_{lat}'.replace('.', '_')))
     file_ts = normpath(join(workdir, aoi, pid,
                             f'time_series_{tstype}{band}'))
     if not isfile(file_ts):

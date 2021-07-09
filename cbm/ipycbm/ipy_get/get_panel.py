@@ -141,7 +141,7 @@ def get():
         description='',
         disabled=False,
         button_style='info',
-        tooltips=['Enter lat lon', 'Enter parcel ID',
+        tooltips=['Enter lon lat', 'Enter parcel ID',
                   'Select a point on a map', 'Get parcels id in a polygon'],
     )
 
