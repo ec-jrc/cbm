@@ -21,7 +21,8 @@ from flask import (Flask, request, send_from_directory, make_response,
                    render_template, flash, redirect, jsonify, abort, url_for)
 
 
-from scripts import query_handler as qh
+from scripts import db_queries
+from scripts import image_requests
 from scripts import users
 
 
@@ -158,7 +159,7 @@ def backgroundByLocation_query():
     unique_id = f"static/dump/{rip}E{lon}N{lat}_{chipsize}_{chipextend}_{tms}".replace(
         '.', '_')
 
-    data = qh.getBackgroundByLocation(
+    data = image_requests.getBackgroundByLocation(
         lon, lat, chipsize, chipextend, tms, unique_id, iformat)
 
     if data:
@@ -203,7 +204,7 @@ def backgroundByID_query():
     else:
         ptype = ''
 
-    lon, lat = qh.getParcelCentroid(aoi, year, pid, ptype)
+    lon, lat = db_queries.getParcelCentroid(aoi, year, pid, ptype)
 
     if 'chipsize' in request.args.keys():
         chipsize = request.args.get('chipsize')
@@ -228,7 +229,7 @@ def backgroundByID_query():
     unique_id = f"static/dump/{rip}E{lon}N{lat}_{chipsize}_{chipextend}_{tms}".replace(
         '.', '_')
 
-    data = qh.getBackgroundByLocation(
+    data = image_requests.getBackgroundByLocation(
         lon, lat, chipsize, chipextend, tms, unique_id, iformat)
 
     if data:
@@ -289,7 +290,7 @@ def chipsByLocation_query():
     unique_id = f"dump/{rip}E{lon}N{lat}L{lut}_{plevel}_{bands}".replace(
         '.', '_')
 
-    data = qh.getChipsByLocation(
+    data = image_requests.getChipsByLocation(
         lon, lat, start_date, end_date, unique_id, lut, bands, plevel)
 
     if data:
@@ -342,8 +343,8 @@ def chipsByParcelId_query():
     unique_id = f"dump/{rip}_{aoi}_{pid}_{lut}_{plevel}_{bands}".replace(
         '.', '_')
 
-    data = qh.getChipsByParcelId(aoi, pid, start_date, end_date,
-                                 unique_id, lut, bands, plevel)
+    data = image_requests.getChipsByParcelId(aoi, pid, start_date, end_date,
+                                         unique_id, lut, bands, plevel)
 
     if data:
         return send_from_directory(f"files/{unique_id}", 'dump.html')
@@ -394,7 +395,7 @@ def rawChipByLocation_query():
     unique_id = f"dump/{rip}E{lon}N{lat}_{plevel}_{chipsize}_{band}".replace(
         '.', '_')
 
-    data = qh.getRawChipByLocation(
+    data = image_requests.getRawChipByLocation(
         lon, lat, start_date, end_date, unique_id, band, chipsize, plevel)
 
     if data:
@@ -438,7 +439,7 @@ def parcelPeers_query():
     if maxPeers > 100:
         maxPeers = 100
 
-    data = qh.getParcelPeers(aoi, year, pid, ptype, distance, maxPeers)
+    data = db_queries.getParcelPeers(aoi, year, pid, ptype, distance, maxPeers)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -489,10 +490,10 @@ def parcelTimeSeries_query():
             scl = False
 
     if tstype.lower() == 'scl':
-        data = qh.getParcelSCL(aoi, year, pid, ptype)
+        data = db_queries.getParcelSCL(aoi, year, pid, ptype)
     else:
-        data = qh.getParcelTimeSeries(aoi, year, pid, ptype,
-                                      tstype, band, scl)
+        data = db_queries.getParcelTimeSeries(aoi, year, pid, ptype,
+                                              tstype, band, scl)
 
     # print(data)
     if not data:
@@ -541,8 +542,8 @@ def parcelByLocation_query():
         withGeometry = True if request.args.get(
             'withGeometry') == 'True' else False
 
-    data = qh.getParcelByLocation(aoi, year, lon, lat, ptype,
-                                  withGeometry, wgs84)
+    data = db_queries.getParcelByLocation(aoi, year, lon, lat, ptype,
+                                          withGeometry, wgs84)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -585,8 +586,10 @@ def parcelById_query():
         withGeometry = True if request.args.get(
             'withGeometry') == 'True' else False
 
-    data = qh.getParcelById(aoi, year, pid, ptype, withGeometry, wgs84)
-    # print(data)
+    print('aoi, year, pid, ptype, withGeometry, wgs84')
+    print(aoi, year, pid, ptype, withGeometry, wgs84)
+    data = db_queries.getParcelById(aoi, year, pid, ptype, withGeometry, wgs84)
+    print(data)
 
     if not data:
         return json.dumps({})
@@ -635,7 +638,7 @@ def parcelsByPolygon_query():
         wgs84 = True if request.args.get('wgs84') == 'True' else False
 
     polygon = request.args.get('polygon')
-    data = qh.getParcelsByPolygon(
+    data = db_queries.getParcelsByPolygon(
         aoi, year, polygon, ptype, withGeometry, only_ids, wgs84)
 
     if not data:
