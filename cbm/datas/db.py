@@ -16,8 +16,8 @@ Functions:
       - Create a cursor to execute PostgreSQL command in a database session.
   information(db='main')
       - Get database connection information.
-  get_value(dict_keys, var_name=None)
-      - Get value a table's name as value based on the given dictionary keys.
+  get_version(dict_keys, var_name=None)
+      - Get the database version .
 
 Options:
   -h, --help    Show this screen.
@@ -28,25 +28,21 @@ import psycopg2
 import pandas as pd
 from cbm.utils import config
 
-
-# Database conection configurations
-def crls(db='main'):
-    values = config.read()
-    DB_HOST = values['db'][db]['host']
-    DB_NAME = values['db'][db]['name']
-    # DB_SCHE = values['db'][db]['sche']
-    DB_USER = values['db'][db]['user']
-    DB_PORT = values['db'][db]['port']
-    DB_PASS = values['db'][db]['pass']
-    return DB_HOST, DB_NAME, DB_USER, DB_PORT, DB_PASS
+db_conf_file = 'config/main.json'
 
 
 def conn_str(db='main'):
     """Get the database connection string to connect to the database.
     The database credentials is needed for this (database server address,
     port, databese name, username and password)."""
+    values = config.read()
+    DB_HOST = values['db'][db]['host']
+    DB_NAME = values['db'][db]['name']
+    DB_USER = values['db'][db]['user']
+    DB_PORT = values['db'][db]['port']
+    DB_PASS = values['db'][db]['pass']
     postgres = ("host={} dbname={} user={} port={} password={}"
-                .format(*crls(db)))
+                .format(DB_HOST, DB_NAME, DB_USER, DB_PORT, DB_PASS))
     return postgres
 
 
@@ -56,7 +52,7 @@ def conn(db='main'):
         conn = psycopg2.connect(conn_str(db))
         return conn
     except (Exception, psycopg2.Error) as err:
-        print(f"Could not connect to the database {db}: {err}")
+        print(f"! Unable to connect to the '{db}' database. !: {err}")
         return ''
 
 
@@ -70,7 +66,53 @@ def conn_cur(db='main'):
         return ''
 
 
-# Geting informationand and data
+def db_version(db='main'):
+    try:
+        conn = psycopg2.connect(conn_str(db))
+        cur = conn.cursor()
+        # db_par = conn.get_dsn_parameters()
+        ver = cur.execute("SELECT version();")
+        # record = cur.fetchone()
+        status = f"""! Connected to the database. !<br> Version {ver}"""
+    except Exception:
+        status = "! Unable to connect to the database. !"
+    return status
+
+
+def create_db_config():
+    import json
+    from os.path import isfile
+    if not isfile(db_conf_file):
+        db_conf = """{
+    "db": {
+        "main": {
+            "desc": "Main db",
+            "host": "0.0.0.0",
+            "port": "5432",
+            "sche": "public",
+            "name": "postgres",
+            "user": "postgres",
+            "pass": ""
+        }
+    }
+}"""
+        with open(db_conf_file, 'w') as outfile:
+            json.dump(json.loads(db_conf), outfile, indent=4)
+        print("The db_conf.json file did not exist, a new file was created.")
+        return json.loads(db_conf)
+
+
+def check(db='main'):
+    try:
+        conn = psycopg2.connect(conn_str(db))
+        conn.close()
+        return True
+    except Exception:
+        return False
+
+
+# ###### Geting informationand and data
+
 def get_value(dict_keys, var_name='', db='main'):
     """Get value for tables.
 
@@ -186,21 +228,7 @@ def close_conn(close_1='', close_2=''):
         print("The connection to the database is now closed.")
     except Exception:
         pass
-    try:
-        conn.conn_2.close()
-        print("The connection to the second database is now closed.")
-    except Exception:
-        pass
-    try:
-        close_1.close()
-        print("First argument is closed.")
-    except Exception:
-        pass
-    try:
-        close_2.close()
-        print("Second argument is closed.")
-    except Exception:
-        pass
+
 
 
 def insert_function(func, db='main'):
