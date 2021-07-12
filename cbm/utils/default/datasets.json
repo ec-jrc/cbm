@@ -8,10 +8,11 @@
         "start_date": "",
         "end_date": "",
         "extent": "",
-        "flipcoordinates": "False"
+        "flip_coordinates": "False",
         "tables": {
             "parcels": "par",
             "dias_catalog": "dias_cat",
+            "scl": "hists",
             "s2": "s2_sig",
             "bs": "bs_sig",
             "c6": "c6_sig",
