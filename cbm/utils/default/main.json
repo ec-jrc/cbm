@@ -35,8 +35,8 @@
         }
     },
     "s3": {
-        "osdias": "",
-        "oshost": "http://",
+        "dias": "",
+        "host": "http://",
         "bucket": "DIAS",
         "access_key": "",
         "secret_key": ""
