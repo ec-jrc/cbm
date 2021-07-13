@@ -10,17 +10,18 @@
 
 import os
 import glob
-from os.path import normpath, join
-from ipywidgets import (Text, Label, HBox, VBox, Layout, Tab, Dropdown,
-                        ToggleButtons, Output, SelectMultiple, HTML, Button,
-                        FileUpload, Checkbox, Accordion, IntText, RadioButtons)
+from ipywidgets import (Text, Label, HBox, VBox, Layout, Dropdown,
+                        ToggleButtons, Output, HTML, Button,
+                        FileUpload, IntText, RadioButtons)
 
 from cbm.utils import config
-from cbm.ipycbm.utils import settings
-from cbm.datas import db
+from cbm.ipycbm.utils import settings_ds
 from cbm.ipycbm.ipy_ext import ext_func
 from cbm.foi import foi_v1
-from cbm.foi import foi_v2
+try:
+    from cbm.foi import foi_v2
+except Exception as err:
+    print(err)
 
 
 def foi_tab_v1():
@@ -28,6 +29,7 @@ def foi_tab_v1():
     path_data = f"{config.get_value(['paths', 'temp'])}foi/"
 
     progress = Output()
+
     def outlog(*text):
         with progress:
             print(*text)
@@ -37,7 +39,8 @@ def foi_tab_v1():
         """,
         placeholder='FOI Information',
     )
-#         In case there no image is provided, access to object storage will be needed to generate the base image from sentinel images.
+# In case there no image is provided, access to object storage will be needed
+# to generate the base image from sentinel images.
 
     # Connect to database
     db_info = Label(
@@ -60,12 +63,13 @@ def foi_tab_v1():
 
     parcels_table = RadioButtons(
         options=[('Upload .shp', 0), ('From database', 1)],
-    #    value='pineapple', # Defaults to 'pineapple'
-    #    layout={'width': 'max-content'}, # If the items' names are long
-#         description='Pizza topping:',
+        #    value='pineapple', # Defaults to 'pineapple'
+        #    layout={'width': 'max-content'}, # If the items' names are long
+        #         description='Pizza topping:',
         disabled=False
     )
     par_box = HBox([])
+
     def on_parcels_table(method):
         if method.new == 0:
             par_box.children = []
@@ -80,7 +84,7 @@ def foi_tab_v1():
         options=['Upload', 'Generate'],
         value=None,
         disabled=True,
-        button_style='info', # 'success', 'info', 'warning', 'danger' or ''
+        button_style='info',  # 'success', 'info', 'warning', 'danger' or ''
         tooltips=['Upnload your base image', 'Get from object storage']
     )
 
@@ -151,7 +155,8 @@ def foi_tab_v1():
         icon='fa-share-square',
         layout=Layout(width='40px')
     )
-    pre_ins_func_box = HBox([Label("Add functions to database:"), pre_ins_func])
+    pre_ins_func_box = HBox(
+        [Label("Add functions to database:"), pre_ins_func])
     vector_file = Dropdown(
         options=[s for s in glob.glob(f'{path_data}vector/*'
                                       ) if '.shp' in s],
@@ -247,11 +252,11 @@ def foi_tab_v1():
     @refresh_selections.on_click
     def refresh_selections_on_click(b):
         vector_file.options = [s for s in glob.glob(f'{path_data}vector/*'
-                                      ) if '.shp' in s]
+                                                    ) if '.shp' in s]
         raster_file.options = [s for s in glob.glob(f'{path_data}raster/*'
-                                      ) if '.tif' in s]
+                                                    ) if '.tif' in s]
         yaml_file.options = [s for s in glob.glob(f'{path_data}/*'
-                                      ) if '.yml' in s]
+                                                  ) if '.yml' in s]
 
     @img_clear.on_click
     def img_clear_on_click(b):
@@ -285,6 +290,7 @@ def foi_tab_v1():
         outlog("The yaml file is uploaded.")
 
     db_conf_box = HBox([])
+
     @db_config.on_click
     def db_config_on_click(b):
         if db_conf_box.children == ():
@@ -304,8 +310,10 @@ def foi_tab_v1():
             for f in functions:
                 db.insert_function(open(f).read().format(
                     schema=sche, owner=user))
-            finc_list = [f"ipycbm_{f.split('/')[-1].split('.')[0]}, " for f in functions]
-            outlog(f"The functions: {('').join(finc_list)}where added to the database")
+            finc_list = [
+                f"ipycbm_{f.split('/')[-1].split('.')[0]}, " for f in functions]
+            outlog(
+                f"The functions: {('').join(finc_list)}where added to the database")
         except Exception as err:
             outlog("Could not add functions to dattabase.", err)
 
@@ -313,8 +321,7 @@ def foi_tab_v1():
     def run_analysis_on_click(b):
         with progress:
             foi_v1.main(vector_file.value, raster_file.value, yaml_file.value,
-                pre_min_het.value, pre_max_het.value, pre_min_area.value)
-
+                        pre_min_het.value, pre_max_het.value, pre_min_area.value)
 
     wbox = VBox([foi_info,
                  db_info, db_box, db_conf_box,
@@ -327,14 +334,15 @@ def foi_tab_v1():
 
     return wbox
 
+
 def foi_tab_v2():
     path_data = f"{config.get_value(['paths', 'temp'])}foi/"
 
     progress = Output()
+
     def outlog(*text):
         with progress:
             print(*text)
-
 
     imp_refresh = Button(
         layout=Layout(width='35px'),
@@ -354,7 +362,7 @@ def foi_tab_v2():
         options=['Upload', 'Generate'],
         value=None,
         disabled=True,
-        button_style='info', # 'success', 'info', 'warning', 'danger' or ''
+        button_style='info',  # 'success', 'info', 'warning', 'danger' or ''
         tooltips=['Upnload your base image', 'Get from object storage']
     )
 
@@ -521,11 +529,11 @@ def foi_tab_v2():
     @refresh_selections.on_click
     def refresh_selections_on_click(b):
         vector_file.options = [s for s in glob.glob(f'{path_data}vector/*'
-                                      ) if '.shp' in s]
+                                                    ) if '.shp' in s]
         raster_file.options = [s for s in glob.glob(f'{path_data}raster/*'
-                                      ) if '.tif' in s]
+                                                    ) if '.tif' in s]
         yaml_file.options = [s for s in glob.glob(f'{path_data}/*'
-                                      ) if '.yml' in s]
+                                                  ) if '.yml' in s]
 
     @img_clear.on_click
     def img_clear_on_click(b):
@@ -561,14 +569,14 @@ def foi_tab_v2():
     @run_analysis.on_click
     def run_analysis_on_click(b):
         with progress:
-            foi_v2.main(vector_file.value, raster_file.value, yaml_file.value, pre_negative_buffer.value, pre_min_het.value, pre_max_het.value, pre_pixel_connectivity.value, pre_min_cluster_size.value)
-
+            foi_v2.main(vector_file.value, raster_file.value, yaml_file.value, pre_negative_buffer.value,
+                        pre_min_het.value, pre_max_het.value, pre_pixel_connectivity.value, pre_min_cluster_size.value)
 
     wbox_v2 = VBox([ext_func.upload_shp(path_data),
-                 img_info, img_option, img_box,
-                 pre_box,
-                 run_info,
-                 run_box,
-                 progress])
+                    img_info, img_option, img_box,
+                    pre_box,
+                    run_info,
+                    run_box,
+                    progress])
 
     return wbox_v2
