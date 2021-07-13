@@ -7,6 +7,7 @@
 # Copyright : 2021 European Commission, Joint Research Centre
 # License   : 3-Clause BSD
 
+import os
 import json
 import psycopg2
 import psycopg2.extras
@@ -16,6 +17,7 @@ import pandas as pd
 from cbm.datas import db
 
 
+os.makedirs("logs", exist_ok=True)
 logging.basicConfig(filename='logs/queryHandler.log', filemode='w',
                     format='%(name)s - %(levelname)s - %(message)s',
                     level=logging.ERROR)
