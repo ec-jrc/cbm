@@ -34,7 +34,7 @@
             "pass": ""
         }
     },
-    "obst": {
+    "s3": {
         "osdias": "",
         "oshost": "http://",
         "bucket": "DIAS",

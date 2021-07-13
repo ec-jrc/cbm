@@ -13,7 +13,7 @@ import psycopg2.extras
 import logging
 import pandas as pd
 
-from scripts import db
+from cbm.datas import db
 
 
 logging.basicConfig(filename='logs/queryHandler.log', filemode='w',
@@ -21,16 +21,11 @@ logging.basicConfig(filename='logs/queryHandler.log', filemode='w',
                     level=logging.ERROR)
 
 
-with open('config/datasets.json') as json_file:
-    datasets = json.load(json_file)
-
-
 # Requests
 # Parcel information
 
-def getParcelByLocation(aoi, year, lon, lat, ptype='',
+def getParcelByLocation(dataset, lon, lat, ptype='',
                         withGeometry=False, wgs84=False):
-    dataset = datasets[f'{aoi}_{year}']
     conn = db.conn(dataset['db'])
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
@@ -90,9 +85,9 @@ def getParcelByLocation(aoi, year, lon, lat, ptype='',
         return data.append('Ended with no data')
 
 
-def getParcelById(aoi, year, pid, ptype='', withGeometry=False,
+def getParcelById(dataset, pid, ptype='', withGeometry=False,
                   wgs84=False):
-    dataset = datasets[f'{aoi}_{year}']
+
     conn = db.conn(dataset['db'])
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
@@ -150,9 +145,9 @@ def getParcelById(aoi, year, pid, ptype='', withGeometry=False,
         return data.append('Ended with no data')
 
 
-def getParcelsByPolygon(aoi, year, polygon, ptype='', withGeometry=False,
+def getParcelsByPolygon(dataset, polygon, ptype='', withGeometry=False,
                         only_ids=True, wgs84=False):
-    dataset = datasets[f'{aoi}_{year}']
+
     polygon = polygon.replace('_', ' ').replace('-', ',')
 
     conn = db.conn(dataset['db'])
@@ -220,10 +215,10 @@ def getParcelsByPolygon(aoi, year, polygon, ptype='', withGeometry=False,
 
 # Parcel Time Series
 
-def getParcelTimeSeries(aoi, year, pid, ptype='',
+def getParcelTimeSeries(dataset, pid, ptype='',
                         tstype='s2', band=None, scl=True):
     """Get the time series for the given parcel"""
-    dataset = datasets[f'{aoi}_{year}']
+
     conn = db.conn(dataset['db'])
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
@@ -278,8 +273,8 @@ def getParcelTimeSeries(aoi, year, pid, ptype='',
         return data.append('Ended with no data')
 
 
-def getParcelPeers(aoi, year, pid, distance, maxPeers, ptype=''):
-    dataset = datasets[f'{aoi}_{year}']
+def getParcelPeers(dataset, pid, distance, maxPeers, ptype=''):
+
     conn = db.conn(dataset['db'])
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
@@ -332,9 +327,9 @@ def getParcelPeers(aoi, year, pid, distance, maxPeers, ptype=''):
         return data.append('Ended with no data')
 
 
-def getS2frames(aoi, year, pid, start, end, ptype=''):
+def getS2frames(dataset, pid, start, end, ptype=''):
     """Get the sentinel images frames from dias cataloge for the given parcel"""
-    dataset = datasets[f'{aoi}_{year}']
+
     conn = db.conn(dataset['db'])
 
     dias_catalog = dataset['tables']['dias_catalog']
@@ -360,10 +355,10 @@ def getS2frames(aoi, year, pid, start, end, ptype=''):
     return df_s2frames['reference'].tolist()
 
 
-def getSRID(aoi, year, ptype=''):
+def getSRID(dataset, ptype=''):
     """Get the SRID"""
     # Get parcels SRID.
-    dataset = datasets[f'{aoi}_{year}']
+
     conn = db.conn(dataset['db'])
 
     pgq_srid = f"""
@@ -379,8 +374,8 @@ def getSRID(aoi, year, ptype=''):
     return target_EPSG
 
 
-def getParcelSCL(aoi, year, pid, ptype=''):
-    dataset = datasets[f'{aoi}_{year}']
+def getParcelSCL(dataset, pid, ptype=''):
+
     conn = db.conn(dataset['db'])
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
@@ -411,8 +406,8 @@ def getParcelSCL(aoi, year, pid, ptype=''):
         return data.append('Ended with no data')
 
 
-def getParcelCentroid(aoi, year, pid, ptype=''):
-    dataset = datasets[f'{aoi}_{year}']
+def getParcelCentroid(dataset, pid, ptype=''):
+
     conn = db.conn(dataset['db'])
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
@@ -434,9 +429,9 @@ def getParcelCentroid(aoi, year, pid, ptype=''):
         return data.append('Ended with no data')
 
 
-def getPolygonCentroid(aoi, year, pid, ptype=''):
+def getPolygonCentroid(dataset, pid, ptype=''):
     """Get the centroid of the given polygon"""
-    dataset = datasets[f'{aoi}_{year}']
+
     conn = db.conn(dataset['db'])
 
     getParcelPolygonSql = f"""
@@ -453,8 +448,8 @@ def getPolygonCentroid(aoi, year, pid, ptype=''):
     return df_pcent
 
 
-def getTableCentroid(aoi, year, ptype=''):
-    dataset = datasets[f'{aoi}_{year}']
+def getTableCentroid(dataset, ptype=''):
+
     conn = db.conn(dataset['db'])
 
     getTablePolygonSql = f"""
@@ -469,3 +464,43 @@ def getTableCentroid(aoi, year, ptype=''):
     df_tcent = pd.read_sql_query(getTablePolygonSql, conn)
 
     return df_tcent
+
+
+def get_datasets():
+    datasets_file = 'config/datasets.json'
+    try:
+        with open(datasets_file) as json_file:
+            datasets = json.load(json_file)
+        return datasets
+    except Exception:
+        datasets = """{
+    "default_2020": {
+        "db": "main",
+        "description": "Dataset description",
+        "center": "51.0,14.0",
+        "zoom": "5",
+        "year": "",
+        "start_date": "",
+        "end_date": "",
+        "extent": "",
+        "flip_coordinates": "False",
+        "tables": {
+            "parcels": "par",
+            "dias_catalog": "dias_cat",
+            "scl": "hists",
+            "s2": "s2_sig",
+            "bs": "bs_sig",
+            "c6": "c6_sig",
+            "bs_tf": "bs_ten"
+        },
+        "pcolumns": {
+            "parcel_id": "id",
+            "crop_name": "name",
+            "crop_code": "code"
+        }
+    }
+}"""
+        with open(datasets_file, 'w') as outfile:
+            json.dump(json.loads(datasets), outfile, indent=4)
+        print("The datasets.json file did not exist, a new file was created.")
+        return json.loads(datasets)
