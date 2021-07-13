@@ -35,7 +35,8 @@ app.config['SWAGGER'] = {
 
 # Enable upload page (http://HOST/upload).
 UPLOAD_ENABLE = False  # True or False
-DEFAULT_SCHEMA = 'public'
+DEFAULT_AOI = ''
+datasets = db_queries.get_datasets()
 
 # -------- Core functions ---------------------------------------------------- #
 
@@ -198,13 +199,14 @@ def backgroundByID_query():
     aoi = request.args.get('aoi')
     year = request.args.get('year')
     pid = request.args.get('pid')
+    dataset = datasets[f'{aoi}_{year}']
 
     if 'ptype' in request.args.keys():
         ptype = f"_{request.args.get('ptype')}"
     else:
         ptype = ''
 
-    lon, lat = db_queries.getParcelCentroid(aoi, year, pid, ptype)
+    lon, lat = db_queries.getParcelCentroid(dataset, pid, ptype)
 
     if 'chipsize' in request.args.keys():
         chipsize = request.args.get('chipsize')
@@ -344,7 +346,7 @@ def chipsByParcelId_query():
         '.', '_')
 
     data = image_requests.getChipsByParcelId(aoi, pid, start_date, end_date,
-                                         unique_id, lut, bands, plevel)
+                                             unique_id, lut, bands, plevel)
 
     if data:
         return send_from_directory(f"files/{unique_id}", 'dump.html')
@@ -416,7 +418,7 @@ def parcelPeers_query():
       200:
         description: The parcel “peers”.
     """
-    aoi = DEFAULT_SCHEMA
+    aoi = DEFAULT_AOI
     year = request.args.get('year')
     pid = request.args.get('pid')
     ptype = ''
@@ -439,7 +441,8 @@ def parcelPeers_query():
     if maxPeers > 100:
         maxPeers = 100
 
-    data = db_queries.getParcelPeers(aoi, year, pid, ptype, distance, maxPeers)
+    dataset = datasets[f'{aoi}_{year}']
+    data = db_queries.getParcelPeers(dataset, pid, ptype, distance, maxPeers)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -464,7 +467,7 @@ def parcelTimeSeries_query():
       200:
         description: Time series table.
     """
-    aoi = DEFAULT_SCHEMA
+    aoi = DEFAULT_AOI
     year = request.args.get('year')
     pid = request.args.get('pid')
     ptype = ''
@@ -489,10 +492,11 @@ def parcelTimeSeries_query():
         if tstype.lower() == 's1':
             scl = False
 
+    dataset = datasets[f'{aoi}_{year}']
     if tstype.lower() == 'scl':
-        data = db_queries.getParcelSCL(aoi, year, pid, ptype)
+        data = db_queries.getParcelSCL(dataset, pid, ptype)
     else:
-        data = db_queries.getParcelTimeSeries(aoi, year, pid, ptype,
+        data = db_queries.getParcelTimeSeries(dataset, pid, ptype,
                                               tstype, band, scl)
 
     # print(data)
@@ -521,7 +525,7 @@ def parcelByLocation_query():
       200:
         description: Parcel information.
     """
-    aoi = DEFAULT_SCHEMA
+    aoi = DEFAULT_AOI
     year = request.args.get('year')
     lon = request.args.get('lon')
     lat = request.args.get('lat')
@@ -542,7 +546,8 @@ def parcelByLocation_query():
         withGeometry = True if request.args.get(
             'withGeometry') == 'True' else False
 
-    data = db_queries.getParcelByLocation(aoi, year, lon, lat, ptype,
+    dataset = datasets[f'{aoi}_{year}']
+    data = db_queries.getParcelByLocation(dataset, lon, lat, ptype,
                                           withGeometry, wgs84)
     if not data:
         return json.dumps({})
@@ -566,7 +571,7 @@ def parcelById_query():
       200:
         description: Parcel information.
     """
-    aoi = DEFAULT_SCHEMA
+    aoi = DEFAULT_AOI
     year = request.args.get('year')
     pid = request.args.get('pid')
     ptype = ''
@@ -586,10 +591,8 @@ def parcelById_query():
         withGeometry = True if request.args.get(
             'withGeometry') == 'True' else False
 
-    print('aoi, year, pid, ptype, withGeometry, wgs84')
-    print(aoi, year, pid, ptype, withGeometry, wgs84)
-    data = db_queries.getParcelById(aoi, year, pid, ptype, withGeometry, wgs84)
-    print(data)
+    dataset = datasets[f'{aoi}_{year}']
+    data = db_queries.getParcelById(dataset, pid, ptype, withGeometry, wgs84)
 
     if not data:
         return json.dumps({})
@@ -613,8 +616,9 @@ def parcelsByPolygon_query():
       200:
         description: List of parcels.
     """
-    aoi = DEFAULT_SCHEMA
+    aoi = DEFAULT_AOI
     year = request.args.get('year')
+    polygon = request.args.get('polygon')
     ptype = ''
     withGeometry = False
     only_ids = True
@@ -637,9 +641,9 @@ def parcelsByPolygon_query():
     if 'wgs84' in request.args.keys():
         wgs84 = True if request.args.get('wgs84') == 'True' else False
 
-    polygon = request.args.get('polygon')
+    dataset = datasets[f'{aoi}_{year}']
     data = db_queries.getParcelsByPolygon(
-        aoi, year, polygon, ptype, withGeometry, only_ids, wgs84)
+        dataset, polygon, ptype, withGeometry, only_ids, wgs84)
 
     if not data:
         return json.dumps({})
