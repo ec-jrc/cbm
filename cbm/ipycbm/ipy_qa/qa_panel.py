@@ -62,7 +62,7 @@ def qa():
     @db_config.on_click
     def db_config_on_click(b):
         if db_conf_box.children == ():
-            db_conf_box.children = [settings.direct_conn()]
+            db_conf_box.children = [settings_ds.direct_conn()]
         else:
             db_conf_box.children = ()
 
