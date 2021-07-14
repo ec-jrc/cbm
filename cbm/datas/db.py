@@ -230,7 +230,6 @@ def close_conn(close_1='', close_2=''):
         pass
 
 
-
 def insert_function(func, db='main'):
     """
     Insert functions to database.

@@ -26,7 +26,7 @@ except Exception as err:
 
 def foi_tab_v1():
     path_foi = "cbm/foi/foi_db_func/"
-    path_data = f"{config.get_value(['paths', 'temp'])}foi/"
+    path_data = f"{config.get_value(['paths', 'temp'])}/foi/"
 
     progress = Output()
 
