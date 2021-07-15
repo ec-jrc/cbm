@@ -66,12 +66,11 @@ def foi_tab_v1():
     spatial_info = HTML(
         """2. Select the spatial data to be tested - parcels that will be
         checked for heterogeneity and cardinality.<br>
-        - Upload a shp file or select a table from the database""")
+        - Select a table from the database""")
     spatial_table = RadioButtons(
         options=[('Upload .shp', 'shp'), ('From database', 'db_table')],
     )
 
-    db_tables_info = Label("- Select the table from the database")
     db_tables = Dropdown(
         options=[],
         description='db Tables:'
@@ -88,20 +87,25 @@ def foi_tab_v1():
     def refresh_db_tables_on_click(b):
         db_tables.options = db.tables(config.get_value(['set', 'db_conn']))
 
-    db_tables_box = VBox(
-        [db_tables_info, HBox([db_tables, refresh_db_tables])])
-    spatial_options = VBox(
-        [ext_func.upload_shp(path_data, True), db_tables_box])
+    db_tables_box = HBox([db_tables, refresh_db_tables])
 
-    def on_spatial_table(method):
-        if method.new == 'shp':
-            spatial_options.children = [ext_func.upload_shp(path_data, True),
-                                        db_tables_box]
-        elif method.new == 'db_table':
-            spatial_options.children = [db_tables_box]
-    spatial_table.observe(on_spatial_table, 'value')
+    upload_shp = Button(
+        description='Upload new table',
+        value=False,
+        button_style='info',
+        tooltip='upload_shp.',
+        icon='up'
+    )
 
-    spatial_box = VBox([spatial_info, spatial_table, spatial_options])
+    upload_box = HBox([])
+    @upload_shp.on_click
+    def upload_shp_on_click(b):
+        if upload_box.children == ():
+            upload_box.children = [ext_func.upload_shp(path_data, True)]
+        else:
+            upload_box.children = ()
+
+    spatial_box = VBox([spatial_info, upload_shp, upload_box, db_tables_box])
 
     # Thematic raster.
     img_info = HTML(
