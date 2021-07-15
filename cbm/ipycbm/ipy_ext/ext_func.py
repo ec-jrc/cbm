@@ -21,7 +21,7 @@ from cbm.extract import db_tables
 from cbm.extract import (pgS2Extract, pgS1bsExtract)
 
 
-def upload_shp(path_data):
+def upload_shp(path_data, config_path=False):
     # Upload
     l_up = Label("a. Upload .shp to the server.")
     accept_files = ".shp, .cpg, .dbf, .prj, .shx, .sbn, .sbx, .xml"
@@ -30,7 +30,7 @@ def upload_shp(path_data):
         value=normpath(join(path_data, 'vector')),
         placeholder='tmp/',
         description='Folder:',
-        disabled=False
+        disabled=config_path
     )
     shp_select = FileUpload(
         description='Select files:',
