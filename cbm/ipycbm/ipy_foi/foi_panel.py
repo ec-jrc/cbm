@@ -66,10 +66,42 @@ def foi_tab_v1():
     spatial_info = HTML(
         """2. Select the spatial data to be tested - parcels that will be
         checked for heterogeneity and cardinality.<br>
-        - Upload a shp file""")
+        - Upload a shp file or select a table from the database""")
+    spatial_table = RadioButtons(
+        options=[('Upload .shp', 'shp'), ('From database', 'db_table')],
+    )
 
-    spatial_box = VBox([spatial_info,
-                        ext_func.upload_shp(path_data)])
+    db_tables_info = Label("- Select the table from the database")
+    db_tables = Dropdown(
+        options=[],
+        description='db Tables:'
+    )
+    refresh_db_tables = Button(
+        value=False,
+        button_style='info',
+        tooltip='Get db tables.',
+        icon='refresh',
+        layout=Layout(width='40px')
+    )
+
+    @refresh_db_tables.on_click
+    def refresh_db_tables_on_click(b):
+        db_tables.options = db.tables(config.get_value(['set', 'db_conn']))
+
+    db_tables_box = VBox(
+        [db_tables_info, HBox([db_tables, refresh_db_tables])])
+    spatial_options = VBox(
+        [ext_func.upload_shp(path_data, True), db_tables_box])
+
+    def on_spatial_table(method):
+        if method.new == 'shp':
+            spatial_options.children = [ext_func.upload_shp(path_data, True),
+                                        db_tables_box]
+        elif method.new == 'db_table':
+            spatial_options.children = [db_tables_box]
+    spatial_table.observe(on_spatial_table, 'value')
+
+    spatial_box = VBox([spatial_info, spatial_table, spatial_options])
 
     # Thematic raster.
     img_info = HTML(
@@ -89,12 +121,13 @@ def foi_tab_v1():
         value=f"{path_data}raster/",
         placeholder='tmp/',
         description='Folder:',
+        disabled=True
     )
     img_select = FileUpload(
         description='Select file:',
         icon='plus',
         accept='.tif, .tiff',
-        multiple=True  # True to accept multiple files upload else False
+        multiple=False  # True to accept multiple files upload else False
     )
     img_clear = Button(
         value=False,
@@ -267,8 +300,10 @@ def foi_tab_v1():
     def run_analysis_on_click(b):
         with progress:
             foi_v1.main(
-                vector_file.value, raster_file.value, yaml_file.value,
-                pre_min_het.value, pre_max_het.value, pre_min_area.value)
+                db_tables.value,
+                f"{img_dist_folder.value}{list(img_select.value.keys())[0]}",
+                f"{path_data}{list(yml_select.value.keys())[0]}",
+                param_min_het.value, param_max_het.value, param_area.value)
 
     wbox = VBox([config_box,
                  spatial_box,
