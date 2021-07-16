@@ -15,7 +15,7 @@ from ipywidgets import (Text, Label, HBox, VBox, Layout, Dropdown,
                         FileUpload, IntText, RadioButtons)
 
 from cbm.utils import config
-from cbm.ipycbm.utils import settings_ds
+from cbm.ipycbm.utils import settings_ds, cbm_widgets
 from cbm.ipycbm.ipy_ext import ext_func
 from cbm.foi import foi_v1
 from cbm.datas import db
@@ -67,9 +67,6 @@ def foi_tab_v1():
         """2. Select the spatial data to be tested - parcels that will be
         checked for heterogeneity and cardinality.<br>
         - Select a table from the database""")
-    spatial_table = RadioButtons(
-        options=[('Upload .shp', 'shp'), ('From database', 'db_table')],
-    )
 
     db_tables = Dropdown(
         options=[],
@@ -97,7 +94,7 @@ def foi_tab_v1():
         icon='up'
     )
 
-    upload_box = HBox([])
+    upload_box = VBox([])
 
     @upload_shp.on_click
     def upload_shp_on_click(b):
@@ -105,7 +102,6 @@ def foi_tab_v1():
             upload_box.children = [ext_func.upload_shp(path_foi, True)]
         else:
             upload_box.children = ()
-
     spatial_box = VBox([spatial_info, upload_shp, upload_box, db_tables_box])
 
     # Thematic raster.
@@ -122,120 +118,25 @@ def foi_tab_v1():
         tooltips=['Upnload your base image', 'Get from object storage']
     )
 
-    img_dist_folder = Text(
-        value=f"{path_foi}raster/",
-        placeholder='tmp/',
-        description='Folder:',
-        disabled=True
-    )
-    img_select = FileUpload(
-        description='Select file:',
-        icon='plus',
-        accept='.tif, .tiff',
-        multiple=False  # True to accept multiple files upload else False
-    )
-    img_clear = Button(
-        value=False,
-        button_style='info',
-        tooltip='Clear selections.',
-        icon='broom',
-        layout=Layout(width='40px')
-    )
-    img_upload = Button(
-        value=False,
-        button_style='info',
-        tooltip='Upload foi base image (.tif)',
-        icon='fa-upload',
-        layout=Layout(width='40px')
-    )
-
     def on_img_option_change(change):
         if img_option.value == 'Upload':
-            img_box.children = [HBox([img_dist_folder, img_select,
-                                      img_clear, img_upload])]
+            img_box.children = [HBox([img_info, img_option, img_file])]
         else:
             img_box.children = ()
     img_option.observe(on_img_option_change, 'value')
 
-    @img_clear.on_click
-    def img_clear_on_click(b):
-        img_select.value.clear()
-        img_select._counter = 0
-
-    @img_upload.on_click
-    def img_upload_on_click(b):
-        progress.clear_output()
-        os.makedirs(img_dist_folder.value, exist_ok=True)
-        for key in img_select.value:
-            content = img_select.value[key]['content']
-            with open(f'{img_dist_folder.value}{key}', 'wb') as f:
-                f.write(content)
-        outlog("All files are uploaded.")
-
-    img_box = VBox([img_info, img_option, HBox([img_dist_folder, img_select,
-                                                img_clear, img_upload])])
+    img_file = cbm_widgets.get_files_dropdown(
+        f'{path_foi}raster', '.tif', 'Select Raster')
+    img_box = VBox([img_info, img_option, img_file])
 
     # YAML File upload
     yml_info = HTML(
         """4. YAML file that holds the classes form the thematic raster.<br>
             - This can be also a simple list of values in the notebook
             corespondence between pixel values and names for the classes""")
-    yml_select = FileUpload(
-        description='Select file:',
-        icon='plus',
-        accept='.yml, .yaml, .txt',
-        multiple=False
-    )
-    yml_clear = Button(
-        value=False,
-        button_style='info',
-        tooltip='Clear selection.',
-        icon='broom',
-        layout=Layout(width='40px')
-    )
-    yml_upload = Button(
-        value=False,
-        button_style='info',
-        tooltip='Upload yaml file.',
-        icon='fa-upload',
-        layout=Layout(width='40px')
-    )
-    vector_file = Dropdown(
-        options=[s for s in glob.glob(f'{path_data}vector/*'
-                                      ) if '.shp' in s],
-        description='Vector file:',
-        disabled=False,
-    )
-    raster_file = Dropdown(
-        options=[s for s in glob.glob(f'{path_data}raster/*'
-                                      ) if '.tif' in s],
-        description='Raster file:',
-        disabled=False,
-    )
 
-    yaml_file = Dropdown(
-        options=[s for s in glob.glob(f'{path_data}/*'
-                                      ) if '.yml' in s],
-        description='yaml file:',
-        disabled=False,
-    )
-    @yml_clear.on_click
-    def yml_clear_on_click(b):
-        yml_select.value.clear()
-        yml_select._counter = 0
-
-    @yml_upload.on_click
-    def yml_upload_on_click(b):
-        progress.clear_output()
-        yml_dist_folder = f'{path_foi}'
-        os.makedirs(yml_dist_folder, exist_ok=True)
-        for key in yml_select.value:
-            content = yml_select.value[key]['content']
-            with open(f'{yml_dist_folder}{key}', 'wb') as f:
-                f.write(content)
-        outlog("The yaml file is uploaded.")
-
-    yml_box = VBox([yml_info, HBox([yml_select, yml_clear, yml_upload])])
+    yml_file = cbm_widgets.get_files_dropdown(path_foi, '.yml', 'Select YML')
+    yml_box = VBox([yml_info, yml_file])
 
     # Database functions
     dbf_info = HTML("""5. Create database functions.<br>
@@ -264,8 +165,7 @@ def foi_tab_v1():
                 outlog(f"The '{f}' Was imported to the database.")
             finc_list = [
                 f"ipycbm_{f.split('/')[-1].split('.')[0]}, " for f in functions]
-            outlog(
-                f"The functions: {('').join(finc_list)} where added to the database")
+            outlog(f"The functions: {('').join(finc_list)} where added to the database")
         except Exception as err:
             outlog("Could not add functions to dattabase.", err)
 
@@ -326,8 +226,8 @@ def foi_tab_v1():
         with progress:
             foi_v1.main(
                 db_tables.value,
-                f"{img_dist_folder.value}{list(img_select.value.keys())[0]}",
-                f"{path_foi}{list(yml_select.value.keys())[0]}",
+                f"{path_foi}raster/{img_file.children[1].children[0].value}",
+                f"{path_foi}{yml_file.children[1].children[0].value}",
                 param_min_het.value, param_max_het.value, param_area.value)
 
     wbox = VBox([config_box,
