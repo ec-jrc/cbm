@@ -26,8 +26,8 @@ except Exception as err:
 
 
 def foi_tab_v1():
-    path_data = f"{config.get_value(['paths', 'temp'])}/foi/"
-    path_foi_func = "cbm/foi/foi_db_func/"
+    path_foi = f"{config.get_value(['paths', 'temp'])}/foi/"
+    path_foi_func = foi_v1.path_foi_func
 
     progress = Output()
 
@@ -90,7 +90,7 @@ def foi_tab_v1():
     db_tables_box = HBox([db_tables, refresh_db_tables])
 
     upload_shp = Button(
-        description='Upload new table',
+        description='Create new table',
         value=False,
         button_style='info',
         tooltip='upload_shp.',
@@ -98,10 +98,11 @@ def foi_tab_v1():
     )
 
     upload_box = HBox([])
+
     @upload_shp.on_click
     def upload_shp_on_click(b):
         if upload_box.children == ():
-            upload_box.children = [ext_func.upload_shp(path_data, True)]
+            upload_box.children = [ext_func.upload_shp(path_foi, True)]
         else:
             upload_box.children = ()
 
@@ -122,7 +123,7 @@ def foi_tab_v1():
     )
 
     img_dist_folder = Text(
-        value=f"{path_data}raster/",
+        value=f"{path_foi}raster/",
         placeholder='tmp/',
         description='Folder:',
         disabled=True
@@ -177,7 +178,7 @@ def foi_tab_v1():
     # YAML File upload
     yml_info = HTML(
         """4. YAML file that holds the classes form the thematic raster.<br>
-            This can be also a simple list of values in the notebook
+            - This can be also a simple list of values in the notebook
             corespondence between pixel values and names for the classes""")
     yml_select = FileUpload(
         description='Select file:',
@@ -199,7 +200,25 @@ def foi_tab_v1():
         icon='fa-upload',
         layout=Layout(width='40px')
     )
+    vector_file = Dropdown(
+        options=[s for s in glob.glob(f'{path_data}vector/*'
+                                      ) if '.shp' in s],
+        description='Vector file:',
+        disabled=False,
+    )
+    raster_file = Dropdown(
+        options=[s for s in glob.glob(f'{path_data}raster/*'
+                                      ) if '.tif' in s],
+        description='Raster file:',
+        disabled=False,
+    )
 
+    yaml_file = Dropdown(
+        options=[s for s in glob.glob(f'{path_data}/*'
+                                      ) if '.yml' in s],
+        description='yaml file:',
+        disabled=False,
+    )
     @yml_clear.on_click
     def yml_clear_on_click(b):
         yml_select.value.clear()
@@ -208,7 +227,7 @@ def foi_tab_v1():
     @yml_upload.on_click
     def yml_upload_on_click(b):
         progress.clear_output()
-        yml_dist_folder = f'{path_data}'
+        yml_dist_folder = f'{path_foi}'
         os.makedirs(yml_dist_folder, exist_ok=True)
         for key in yml_select.value:
             content = yml_select.value[key]['content']
@@ -219,18 +238,19 @@ def foi_tab_v1():
     yml_box = VBox([yml_info, HBox([yml_select, yml_clear, yml_upload])])
 
     # Database functions
-    dbf_info = Label("5. Set FOI v1 Parameters.")
+    dbf_info = HTML("""5. Create database functions.<br>
+    - Import required database functions for FOI analysis to the database""")
 
     dbf_insert = Button(
         value=False,
         button_style='info',
-        tooltip='Insert functions to database.',
-        icon='fa-share-square',
-        layout=Layout(width='40px')
+        tooltip='Create functions.',
+        icon='fa-share-square'
     )
 
     @dbf_insert.on_click
     def dbf_insert_on_click(b):
+        outlog('path_foi_func :', path_foi_func)
         progress.clear_output()
         try:
             functions = glob.glob(f"{path_foi_func}*.func")
@@ -241,19 +261,20 @@ def foi_tab_v1():
             for f in functions:
                 db.insert_function(open(f).read().format(
                     schema=sche, owner=user))
+                outlog(f"The '{f}' Was imported to the database.")
             finc_list = [
                 f"ipycbm_{f.split('/')[-1].split('.')[0]}, " for f in functions]
             outlog(
-                f"The functions: {('').join(finc_list)}where added to the database")
+                f"The functions: {('').join(finc_list)} where added to the database")
         except Exception as err:
             outlog("Could not add functions to dattabase.", err)
 
-    dbf_box = HBox(
-        [dbf_info, Label("Add functions to database:"), dbf_insert])
+    dbf_box = VBox(
+        [dbf_info, dbf_insert])
 
     # FOI Parameters
     param_info = HTML(
-        """5. Set FOI Parameters""")
+        """6. Set FOI Parameters""")
 
     # heterogeneity_threshold
     param_heto_info = HTML("""
@@ -290,7 +311,7 @@ def foi_tab_v1():
                       ])
 
     # Run FOI analysis
-    run_info = Label("6. Run the FOI analysis.")
+    run_info = Label("7. Run the FOI analysis.")
     run_analysis = Button(
         description='Run FOI v1',
         value=False,
@@ -306,7 +327,7 @@ def foi_tab_v1():
             foi_v1.main(
                 db_tables.value,
                 f"{img_dist_folder.value}{list(img_select.value.keys())[0]}",
-                f"{path_data}{list(yml_select.value.keys())[0]}",
+                f"{path_foi}{list(yml_select.value.keys())[0]}",
                 param_min_het.value, param_max_het.value, param_area.value)
 
     wbox = VBox([config_box,
@@ -335,8 +356,7 @@ def foi_tab_v2():
         icon='fa-refresh'
     )
 
-    foi_info = HTML(
-        value="""FOI procedures version 2 does not need direct access to the database.
+    foi_info = HTML("""FOI procedures version 2 does not need access to the database.
         """,
         placeholder='FOI Information',
     )

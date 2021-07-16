@@ -19,9 +19,12 @@ from rasterstats import zonal_stats
 from fiona import open as fopen
 import fiona
 from yaml import load, FullLoader
+from os.path import dirname, abspath, join, normpath
 
 from cbm.utils import config
 from cbm.datas import db
+
+path_foi_func = normpath(join(dirname(abspath(__file__)), 'foi_db_func'))
 
 
 def main(vector_file, raster_file, yaml_file, pre_min_het,
@@ -43,7 +46,8 @@ def main(vector_file, raster_file, yaml_file, pre_min_het,
     distribution of different types of pixels inside the FOI.
 
     Args:
-        vector_file (str): The parcels poligons in .shp file format.
+        vector_file (str): The parcels poligons in .shp file format or
+            database table name without .shp ending.
         raster_file (str): The raster file <...>.
         yaml_file: YAML file that holds the classes of thematic raster file.
         pre_min_het: Minimum thresholds for heterogeneity checks.
