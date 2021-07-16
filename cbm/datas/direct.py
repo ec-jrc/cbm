@@ -28,7 +28,7 @@ def ploc(aoi, year, lon, lat, geom=False):
 def pid(aoi, year, pid, geom=False):
     values = config.read()
     db = int(values['dataset'][aoi]['db'])
-    data = db.getParcelById(aoi, pid, geom, db)
+    data = db.getParcelById(aoi, year, pid, geom, db)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
