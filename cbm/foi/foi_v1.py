@@ -71,7 +71,7 @@ def main(vector_file, raster_file, yaml_file, pre_min_het,
 
     # Path for storing the processed data - final spatial data that will be
     #    exported after database processing
-    processed_data = f'{path_temp}processed_data/'
+    processed_data = f'{path_temp}/processed_data/'
     os.makedirs(processed_data, exist_ok=True)
     # Spatial data to be tested - parcels that will be checked for
     #   heterogeneity and cardinality
