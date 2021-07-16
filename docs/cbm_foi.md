@@ -8,6 +8,7 @@ The FOI Assessment performs a spatial analysis on such “thematic raster” pro
 
 As an example, if the thematic raster is the result of a crop classification, a homogeneous FOI should enclose only pixels with class value (or label) that represent the respective crop; a spatially congruent (1-1 cardinality) FOI should not include any cluster of pixels from other class label larger than a specified threshold (for example, expressed as maximum number of pixels in the cluster). If the thematic raster is the result of a unsupervised behavior analysis, all the pixels inside an FOI should be labeled with the value corresponding to a particular behavior during a pre-defined period of time.For both heterogeneity and cardinality, the python package provides two methods for the analysis: one based area calculation (version 1) and one based on cluster size calculation (version 2). Both methods yield similar results.
 
+**To run the FOI functions the configuration file need to be set, see [CbM Package Configuration](https://jrc-cbm.readthedocs.io/en/latest/cbm_config.html) for more details.**
 
 ## Version 1
 
@@ -79,7 +80,7 @@ pre_min_het = 30
 pre_max_het = 70
 area_threshold = 2000
 
-cbm.foi(vector_file, raster_file, yaml_file,
+cbm.foi.v1(vector_file, raster_file, yaml_file,
     pre_min_het, pre_max_het, area_threshold)
 ```
 
@@ -129,7 +130,7 @@ max_heterogeneity_threshold = 70
 connectivity_option = 8
 cluster_threshold = 20
 
-cbm.foi_v2(vector_file, raster_file, yaml_file, negative_buffer, min_heterogeneity_threshold,
+cbm.foi.v2(vector_file, raster_file, yaml_file, negative_buffer, min_heterogeneity_threshold,
     max_heterogeneity_threshold, connectivity_option, cluster_threshold)
 ```
 
