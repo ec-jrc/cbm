@@ -11,31 +11,6 @@ In 2018, "Checks by Monitoring" (CbM) were introduced for area-based support
 schemes. The EU  Paying Agencies (PA) who adapt CbM will migrate to the use of
 Copernicus Sentinel data to check aid applications.
 
-CbM applies to the complete territory of the Member States and makes use of
-continuously updated data streams from the Sentinel-1 and -2 sensors. This
-implies the use of Big Data Analytics solutions, that require parallel
-processing compute infrastructure, such as cloud services. In support to CbM
-implementation the European Commission's science and knowledge service, the
-Joint Research Center (JRC), demonstrates compute solutions that are modular
-and built exclusively on open source components. Although the modules are
-tailored to use on a cloud infrastructure, such as Copernicus DIAS (Data and
-Information Access Services), most can run on single platform solutions as well.
-Central to the modules is the use of a spatial database component for storage of
-PA parcel data sets, metadata storage and process control. Most processes read
-from the database, execute relevant tasks, and (may) store results back in the
-database.
-
-A core concept in CbM is reduction. This is currently implemented primarily as
-statistics extraction, which can then be used in subsequent analytics. Examples
-modules that apply machine learning for outlier analysis have been developed.
-Other components are aimed at providing access to users that need analytical
-outputs for reporting, or data extraction, including image extracts, for further
-client-side detailed analysis.
-
-This code repository provides access to the CbM project code, which can be set
-up, configured and run on an in-house or cloud computing infrastructure for
-development and testing purposes. The modular approach is documented in the Wiki
-pages. 
 
 
 ## Prerequisites
