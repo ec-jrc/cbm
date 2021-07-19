@@ -20,9 +20,12 @@ from fiona import open as fopen
 import fiona
 from yaml import load, FullLoader
 from os.path import dirname, abspath, join, normpath
+from pathlib import Path
 
 from cbm.utils import config
 from cbm.datas import db
+
+import geopandas as gpd
 
 path_foi_func = normpath(join(dirname(abspath(__file__)), 'foi_db_func'))
 
@@ -68,6 +71,7 @@ def main(vector_file, raster_file, yaml_file, pre_min_het,
     overwrite_option = "-OVERWRITE"
     geom_type = "MULTIPOLYGON"
     output_format = "PostgreSQL"
+    
 
     # Path for storing the processed data - final spatial data that will be
     #    exported after database processing
@@ -116,8 +120,34 @@ def main(vector_file, raster_file, yaml_file, pre_min_het,
         reference_data_name + '_foic_v1.shp'
     cardinality_output_clusters = f'{output_data}' + \
         reference_data_name + '_foic_clusters_v1.shp'
+    
+    sql = "SELECT * FROM " + reference_data_table + ";"
+    try:
+        ps_connection = db.conn(db_)
 
-    shape = fiona.open(reference_data)
+        ps_connection.autocommit = True
+
+        cursor = ps_connection.cursor()
+
+        gpd_data = gpd.read_postgis(sql=sql, con=ps_connection)
+
+    except (Exception, psycopg2.DatabaseError) as error:
+        print("Error while connecting to PostgreSQL", error)
+
+    finally:
+        # closing database connection.
+        if(ps_connection):
+            cursor.close()
+            ps_connection.close()
+            #print("PostgreSQL connection is closed") 
+    
+    temp_reference_data = f'{path_temp}' + \
+        reference_data_name + '_temp.shp'
+    
+    gpd_data.to_file(temp_reference_data)
+    
+    
+    shape = fiona.open(temp_reference_data)
     spatialRef = shape.crs["init"]
 #     print("Vector EPSG: ", spatialRef)
 
@@ -137,7 +167,7 @@ def main(vector_file, raster_file, yaml_file, pre_min_het,
     # Counting the number of pixels for each parcel. The fields with names of
     #   the classes from yaml file will be added,
     # and updated with the number of pixels from each category
-    with fopen(reference_data, 'r') as input:
+    with fopen(temp_reference_data, 'r') as input:
         spatialRef = input.crs["init"]
         schema = input.schema
 
@@ -297,6 +327,10 @@ def main(vector_file, raster_file, yaml_file, pre_min_het,
     subprocess.call(["ogr2ogr", "-f", "ESRI Shapefile",
                      cardinality_output, db_connection, processed_cardinality])
     print("Cardinality analysis output downloaded")
+    
+    filelist_temp = [ f for f in os.listdir( f'{path_temp}') if f.startswith(Path(temp_reference_data).stem) ]
+    for f in filelist_temp:
+        os.remove(os.path.join(f'{path_temp}', f))
 
 
 if __name__ == "__main__":
