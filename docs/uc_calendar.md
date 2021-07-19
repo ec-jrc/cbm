@@ -17,7 +17,12 @@ and should be added to the utils folder.
 
 ### 2.1 Calendar view Modules
 
-The script can be launced from the "calendar_view_gui.ipynb" Jupyeter notebook.
+The script can be launched from the "calendar_view_gui.ipynb" Jupyter notebook.
+
+On the first tab of the GUI you can select the products that you want to produce:
+https://raw.githubusercontent.com/CsabaWirnhardt/cbm_media/main/11_cv_gui_tab1.png
+
+
 The following custom modules for the calendar_view package are called by the *run_calendar_view.py* script:
 
 - **batch_utils**: provides general functions for the processing of parcels and Sentinel data. The set of functions provided in this module allows the selection of parcels, the determination of the list of imagettes to be downloaded on the basis of cloud mask criteria, the download of imagettes, processing of Sentinel data including image color stretching (lookup table stretch or LUT stretch)and computation of derived indexes such as NDVI and NDWI. For download operations, the module uses the functions developed under *download_utils*.
