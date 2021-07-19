@@ -73,7 +73,7 @@ The different parts of the script are better detailed in the following sections.
     - create a list tiles to be downloaded (based on cloud cover)
     - get and download band imagettes
     - merge bands and apply stretching
-    - crete calendar views
+    - create calendar views
     - generetes derived products: NDVI profiles, histograms, Red-NIR scatter plots, ...
 
 - **Sentinel-1 processing**
