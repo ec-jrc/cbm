@@ -14,7 +14,7 @@ from ipywidgets import (Text, Label, HBox, VBox, Layout, Dropdown,
                         FileUpload, IntText, RadioButtons)
 
 
-def get_files_dropdown(path, ftype='', description=''):
+def get_files_dropdown(path, ftype='', description='', select_multi=False):
 
     progress = Output()
 
@@ -26,11 +26,11 @@ def get_files_dropdown(path, ftype='', description=''):
         description='Select file:',
         icon='plus',
         accept=ftype,
-        multiple=False
+        multiple=select_multi
     )
     clear = Button(
         value=False,
-        button_style='info',
+        button_style='warning',
         tooltip='Clear selection.',
         icon='broom',
         layout=Layout(width='40px')

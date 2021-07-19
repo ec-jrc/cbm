@@ -263,7 +263,7 @@ def foi_tab_v2():
         """1. Spatial data to be tested -
         parcels that will be checked for heterogeneity and cardinality.""")
     shp_file = cbm_widgets.get_files_dropdown(
-        f'{path_foi}vector', '', 'Select .shp')
+        f'{path_foi}vector', '', 'Select .shp', True)
     shp_box = VBox([shp_info, shp_file])
 
     # Thematic raster.
@@ -276,7 +276,7 @@ def foi_tab_v2():
         options=['Upload', 'Generate'],
         value=None,
         disabled=True,
-        button_style='info',  # 'success', 'info', 'warning', 'danger' or ''
+        button_style='',  # 'success', 'info', 'warning', 'danger' or ''
         tooltips=['Upnload your base image', 'Get from object storage']
     )
 
