@@ -3,7 +3,7 @@
 ## 1. Introduction
 The “**calendar_view**” python package provides a set of functions that allows one to download, process and display Sentinel-1 and Sentinel-2 data products. The package is designed to operate on “**parcels**” provided as input in a ESRI shape file. Sentinel-1 and -2 data are extracted for the specific parcels and are displayed in a “**calendar view**”, which has been designed and optimized to provide an immediate and intuitive access to both temporal and spatial dimensions of Sentinel-derived data.
 
-While the scripts exploit the RESTful APIs developed by the JRC D5 unit to download raw Sentinel imagettes tailored to the extent of the parcels provided as input, the code is general and can be easily adapted to work, for example, on geotiff downloaded from other sources.
+While the scripts exploit the [RESTful APIs] (https://jrc-cbm.readthedocs.io/en/latest/api_imgs.html) developed by the JRC D5 unit to download raw Sentinel imagettes tailored to the extent of the parcels provided as input, the code is general and can be easily adapted to work, for example, on geotiff downloaded from other sources.
 
 
 ## 2. Dependencies
