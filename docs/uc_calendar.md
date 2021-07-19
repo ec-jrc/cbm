@@ -22,6 +22,8 @@ The script can be launched from the "calendar_view_gui.ipynb" Jupyter notebook.
 On the first tab of the GUI you can select the products that you want to produce:
 ![First tab of the calendar view GUI](https://raw.githubusercontent.com/CsabaWirnhardt/cbm_media/main/11_cv_gui_tab1.png)
 
+On the second tab of the GUI you can set the date range for data download and visualisation:
+![Second tab of the calendar view GUI](https://raw.githubusercontent.com/CsabaWirnhardt/cbm_media/main/12_cv_gui_tab2.png)
 
 The following custom modules for the calendar_view package are called by the *run_calendar_view.py* script:
 
