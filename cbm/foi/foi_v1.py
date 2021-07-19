@@ -62,12 +62,12 @@ def main(vector_file, raster_file, yaml_file, pre_min_het,
 
     """
 
-    path_temp = f"{config.get_value(['paths', 'temp'])}foi/"
-    path_data = f"{config.get_value(['paths', 'data'])}foi/"
+    path_temp = f"{config.get_value(['paths', 'temp'])}/"
+    path_data = f"{config.get_value(['paths', 'data'])}/"
     # database connection string
     db_connection = f"PG:{db.conn_str(db_)}"
     # ogr2ogr options
-    geom_field_name = "GEOMETRY_NAME=geom"
+    geom_field_name = "GEOMETRY_NAME=wkb_geometry"
     overwrite_option = "-OVERWRITE"
     geom_type = "MULTIPOLYGON"
     output_format = "PostgreSQL"
@@ -88,7 +88,7 @@ def main(vector_file, raster_file, yaml_file, pre_min_het,
     # corespondence between pixel values and names for the classes
     # yaml_file = f'{path_data}pixelvalues_classes.yml'
 
-    output_data = f'{path_data}output_data/'
+    output_data = f'{path_temp}output_data/'
     os.makedirs(output_data, exist_ok=True)
     reference_data_name = os.path.splitext(os.path.basename(reference_data))[0]
     try:
@@ -129,7 +129,7 @@ def main(vector_file, raster_file, yaml_file, pre_min_het,
 
         cursor = ps_connection.cursor()
 
-        gpd_data = gpd.read_postgis(sql=sql, con=ps_connection)
+        gpd_data = gpd.read_postgis(sql=sql, con=ps_connection, geom_col='wkb_geometry')
 
     except (Exception, psycopg2.DatabaseError) as error:
         print("Error while connecting to PostgreSQL", error)
