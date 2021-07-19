@@ -34,7 +34,10 @@ def get_scl_imagettes(raw_chips_by_location_url, lon, lat, start_date, end_date,
     try:
         response = requests.get(locurl, auth = (username, password), timeout=180)
         print(response)
-        list_of_scl_imagettes = json.loads(response.content)
+        if response.status_code == 404:
+            was_error = True
+        else:
+            list_of_scl_imagettes = json.loads(response.content)
         # print(list_of_scl_imagettes)
     except requests.exceptions.HTTPError as errh:
         was_error = True
@@ -48,10 +51,51 @@ def get_scl_imagettes(raw_chips_by_location_url, lon, lat, start_date, end_date,
     except requests.exceptions.RequestException as err:
         was_error = True
         print ("OOps: Something Else",err)
+    # else:
+        # was_error = True
+        # print("Something else happened, maybe 404 http error")
         
     
     
     return locurl, list_of_scl_imagettes, was_error
+    
+def get_scl_imagettes_l1c(raw_chips_by_location_url, lon, lat, start_date, end_date, username, password, chipsize):
+    list_of_scl_imagettes = []
+    was_error = False
+    band = 'B08'
+    locurl = raw_chips_by_location_url + """?lon=\
+""" + lon + """&lat=""" + lat + """&start_date=""" + start_date + """&end_date=""" + end_date + """&band=""" + band + """&chipsize=""" + chipsize + """&plevel=LEVEL1C"""
+    # print(locurl)
+    # Parse the response with the standard json module
+    print(locurl)
+    
+    try:
+        response = requests.get(locurl, auth = (username, password), timeout=180)
+        print(response)
+        if response.status_code == 404:
+            was_error = True
+        else:
+            list_of_scl_imagettes = json.loads(response.content)
+        # print(list_of_scl_imagettes)
+    except requests.exceptions.HTTPError as errh:
+        was_error = True
+        print ("Http Error:",errh)
+    except requests.exceptions.ConnectionError as errc:
+        was_error = True
+        print ("Error Connecting:",errc)
+    except requests.exceptions.Timeout as errt:
+        was_error = True
+        print ("Timeout Error:",errt)
+    except requests.exceptions.RequestException as err:
+        was_error = True
+        print ("OOps: Something Else",err)
+    # else:
+        # was_error = True
+        # print("Something else happened, maybe 404 http error")
+        
+    
+    
+    return locurl, list_of_scl_imagettes, was_error    
     
 def get_centroid_of_parcel(parcel_id, parcel, centroid_shift_degrees, logfile):
     warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -151,9 +195,14 @@ def get_band_imagettes(raw_chips_batch_url, lon, lat, tiles_to_download, bands, 
     # we keep the same chipsize as in the SCL download, but change it to integer because in the 
     # SCL download request it was string
     post_dict["chipsize"] = int(chipsize)
+    print(post_dict)
     try:
         response = requests.post(raw_chips_batch_url, json=post_dict, auth = (username, password), timeout=180)
-        list_of_band_imagettes = json.loads(response.content)
+        print(response)
+        if response.status_code == 404:
+            was_error = True
+        else:
+            list_of_band_imagettes = json.loads(response.content)
     except requests.exceptions.HTTPError as errh:
         was_error = True
         print ("Http Error:",errh)
@@ -170,6 +219,47 @@ def get_band_imagettes(raw_chips_batch_url, lon, lat, tiles_to_download, bands, 
     
     
     return list_of_band_imagettes, was_error
+    
+def get_band_imagettes_l1c(raw_chips_batch_url, lon, lat, tiles_to_download, bands, username, password, chipsize ):
+    was_error = False
+    response = None
+    list_of_band_imagettes = {}
+    post_dict = {}
+    lon_float = round(float(lon),5)
+    lat_float = round(float(lat),5)
+    post_dict["lon"] = lon_float
+    post_dict["lat"] = lat_float
+    post_dict["tiles"] = tiles_to_download
+
+    post_dict["bands"] = bands
+    # we keep the same chipsize as in the SCL download, but change it to integer because in the 
+    # SCL download request it was string
+    post_dict["chipsize"] = int(chipsize)
+    post_dict["plevel"] = 'LEVEL1C'
+    print(post_dict)
+    try:
+        response = requests.post(raw_chips_batch_url, json=post_dict, auth = (username, password), timeout=180)
+        print(response)
+        if response.status_code == 404:
+            was_error = True
+        else:
+            list_of_band_imagettes = json.loads(response.content)
+    except requests.exceptions.HTTPError as errh:
+        was_error = True
+        print ("Http Error:",errh)
+    except requests.exceptions.ConnectionError as errc:
+        was_error = True
+        print ("Error Connecting:",errc)
+    except requests.exceptions.Timeout as errt:
+        was_error = True
+        print ("Timeout Error:",errt)
+    except requests.exceptions.RequestException as err:
+        was_error = True
+        print ("OOps: Something Else",err)    
+    
+    
+    
+    return list_of_band_imagettes, was_error    
     
 def download_band_imagettes(url_base, list_of_band_imagettes, out_tif_folder, username, password):
     # download the band tifs that were generated with the batch chip extract request
@@ -377,9 +467,11 @@ def get_s1_bs_imagettes(raw_chips_s1_batch_url, lon, lat, start_date, end_date, 
     post_dict["chipsize"] = int(chipsize)
     try:
         print("trying to get s1 bs images with timeout 180 sec")
+        print(post_dict)
         response = requests.post(raw_chips_s1_batch_url, json=post_dict, auth = (username, password), timeout=180)
         print("this is after the request")
         list_of_s1_bs_imagettes = json.loads(response.content)
+        print(list_of_s1_bs_imagettes)
     except requests.exceptions.HTTPError as errh:
         was_error = True
         print ("Http Error:",errh)
@@ -395,7 +487,53 @@ def get_s1_bs_imagettes(raw_chips_s1_batch_url, lon, lat, start_date, end_date, 
     
     
     
-    return list_of_s1_bs_imagettes, was_error    
+    return list_of_s1_bs_imagettes, was_error  
+
+def get_s1_coh6_imagettes(raw_chips_s1_batch_url, lon, lat, start_date, end_date, username, password, chipsize):
+    
+    print("getting S1 COH6 images from: " + start_date + " to: " + end_date)
+    start_and_end_dates = []
+    start_and_end_dates.append(start_date)
+    start_and_end_dates.append(end_date)
+    was_error = False
+    response = None
+    list_of_s1_coh6_imagettes = {}
+    post_dict = {}
+    lon_float = round(float(lon),5)
+    lat_float = round(float(lat),5)
+    
+    
+    post_dict["lon"] = lon_float
+    post_dict["lat"] = lat_float
+    post_dict["dates"] = start_and_end_dates
+
+    post_dict["plevel"] = 'CARD-COH6' 
+    # we keep the same chipsize as in the SCL download, but change it to integer because in the 
+    # SCL download request it was string
+    post_dict["chipsize"] = int(chipsize)
+    try:
+        print("trying to get s1 coh6 images with timeout 180 sec")
+        print(post_dict)
+        response = requests.post(raw_chips_s1_batch_url, json=post_dict, auth = (username, password), timeout=180)
+        print("this is after the request")
+        list_of_s1_coh6_imagettes = json.loads(response.content)
+        print(list_of_s1_coh6_imagettes)
+    except requests.exceptions.HTTPError as errh:
+        was_error = True
+        print ("Http Error:",errh)
+    except requests.exceptions.ConnectionError as errc:
+        was_error = True
+        print ("Error Connecting:",errc)
+    except requests.exceptions.Timeout as errt:
+        was_error = True
+        print ("Timeout Error:",errt)
+    except requests.exceptions.RequestException as err:
+        was_error = True
+        print ("OOps: Something Else",err)    
+    
+    
+    
+    return list_of_s1_coh6_imagettes, was_error     
     
 def download_s1_bs_imagettes(url_base, list_of_s1_bs_imagettes, out_s1_bs_folder, username, password):
     # download the band tifs that were generated with the batch chip extract request
@@ -449,6 +587,59 @@ def download_s1_bs_imagettes(url_base, list_of_s1_bs_imagettes, out_s1_bs_folder
         print("...done")
         i += 1
     return was_error
+    
+def download_s1_coh6_imagettes(url_base, list_of_s1_coh6_imagettes, out_s1_coh6_folder, username, password):
+    # download the band tifs that were generated with the batch chip extract request
+    was_error = False
+    chips_list = list_of_s1_coh6_imagettes['chips']
+    date_list = list_of_s1_coh6_imagettes['dates']
+    # 20200402T055753_VH
+    i = 0
+    for act_date in date_list:
+        acq_date = act_date[0:4] + "-" + act_date[4:6] + "-" + act_date[6:8]
+        acq_hour = act_date[9:11]
+        acq_hour_int = int(acq_hour)
+        
+        if acq_hour_int >=0 and acq_hour_int < 12:
+            orbit_orientation = "D"
+        elif acq_hour_int >=12 and acq_hour_int <=23:
+            orbit_orientation = "A"
+        else:
+            orbit_orientation = "F"
+        print(act_date, acq_date, acq_hour, orbit_orientation, chips_list[i])   
+        tif_url = url_base + chips_list[i]
+        print(tif_url)
+        print("Downloading S1 COH6 image: " + act_date, end="")
+       
+        if not os.path.exists(out_s1_coh6_folder):
+            os.makedirs(out_s1_coh6_folder)
+
+        output_tif_file = out_s1_coh6_folder + "/" + act_date + "_" + orbit_orientation + ".tif"
+
+        if os.path.isfile(output_tif_file):
+    #       if we already downloaded the band imagette for this parcel we skip it
+            print(" already downloaded ", end="")
+        else:
+            try:
+                r = requests.get(tif_url, auth = (username, password), timeout=180)
+                with open(output_tif_file, 'wb') as f:
+                    f.write(r.content)
+                    
+            except requests.exceptions.HTTPError as errh:
+                was_error = True
+                print ("Http Error:",errh)
+            except requests.exceptions.ConnectionError as errc:
+                was_error = True
+                print ("Error Connecting:",errc)
+            except requests.exceptions.Timeout as errt:
+                was_error = True
+                print ("Timeout Error:",errt)
+            except requests.exceptions.RequestException as err:
+                was_error = True
+                print ("OOps: Something Else",err)
+        print("...done")
+        i += 1
+    return was_error    
     
 def rescale_s1_bs_image(tifFileName, output):
     # rescale raw Sentinel-1 backscatter image from float to uint16 by multiplying it with 10000
