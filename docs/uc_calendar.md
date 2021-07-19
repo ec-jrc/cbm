@@ -26,7 +26,7 @@ On the second tab of the GUI you can set the date range for data download and vi
 ![Second tab of the calendar view GUI](https://raw.githubusercontent.com/CsabaWirnhardt/cbm_media/main/12_cv_gui_tab2.png)
 
 
-The following custom modules for the calendar_view package are called by the *run_calendar_view.py* script:
+The following custom modules for the calendar_view package are called by the *run_calendar_view_from_jupyter.py* script:
 
 - **batch_utils**: provides general functions for the processing of parcels and Sentinel data. The set of functions provided in this module allows the selection of parcels, the determination of the list of imagettes to be downloaded on the basis of cloud mask criteria, the download of imagettes, processing of Sentinel data including image color stretching (lookup table stretch or LUT stretch)and computation of derived indexes such as NDVI and NDWI. For download operations, the module uses the functions developed under *download_utils*.
     
