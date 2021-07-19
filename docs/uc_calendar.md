@@ -7,7 +7,7 @@ While the scripts exploit the [RESTful APIs](https://jrc-cbm.readthedocs.io/en/l
 
 
 ## 2. Dependencies
-The *run_calendar_view.py* script depends on several standard python libraries that can be found in the *requirements.txt* file. The dependencies can be installed with:
+The calendar view script depends on several standard python libraries that can be found in the *requirements.txt* file. The dependencies can be installed with:
 
   pip install -r requirements.txt
 
