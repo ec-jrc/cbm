@@ -165,8 +165,8 @@ def clip_raster(rast, feature, gt=None, nodata=-1):
 #parameters: raster_name, reference_data_name, yaml_file_name, connectivity_option, cluster_threshold, 
 #min_heterogeneity_threshold, max_heterogeneity_threshold, negative_buffer
 def main(vector_file, raster_file, yaml_file, negative_buffer, min_heterogeneity_threshold, max_heterogeneity_threshold, connectivity_option, cluster_threshold):
-    path_temp = f"{config.get_value(['paths', 'temp'])}foi/"
-    path_data = f"{config.get_value(['paths', 'data'])}foi/"
+    path_temp = f"{config.get_value(['paths', 'temp'])}/"
+    path_data = f"{config.get_value(['paths', 'data'])}/"
     
     # Spatial data to be tested - parcels that will be checked for heterogeneity and cardinality
     reference_data = vector_file
@@ -179,7 +179,7 @@ def main(vector_file, raster_file, yaml_file, negative_buffer, min_heterogeneity
     processed_data = f'{path_temp}processed_data/'
     os.makedirs(processed_data, exist_ok=True)
     
-    output_data = f'{path_data}output_data/'
+    output_data = f'{path_temp}output_data/'
     os.makedirs(output_data, exist_ok=True)
     
 
@@ -274,7 +274,7 @@ def main(vector_file, raster_file, yaml_file, negative_buffer, min_heterogeneity
                                 clustersRecord.append(( cls, stats[1:][i][4]))
                                 clusterNumber += 1
                         if clusterNumber > 1:
-                            nonCardinalParcels.append(feat['properties']['fid'])
+                            nonCardinalParcels.append(feat['properties']['OBJECTID'])
                             cardinalityFlag = 1
                         feat['geometry'] = mapping(geom_initial)
                         feat['properties']['foi_c'] = cardinalityFlag
