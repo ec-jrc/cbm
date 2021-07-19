@@ -28,6 +28,8 @@ On the second tab of the GUI you can set the date range for data download and vi
 On the third tab of the GUI you can define the ESRI shapefile with the parcel polygons ("Vector filename"), you can select the folder for the outputs produced by the script ("Base folder outputs"), the attribute table column holding the parcel ids ("Parcel id column") and the attbibute table column holding the crop names ("Crop name column"):
 ![Third tab of the calendar view GUI](https://raw.githubusercontent.com/CsabaWirnhardt/cbm_media/main/13_cv_gui_tab3.png)
 
+On the forth tab of the GUI you can define all additional parameters, such as the title for the time series graphs, whether to include or exclude the cirrus cloud mask from cloud cover calculations, the buffer size around the parcel for chip extract (in meters) and the potential shift of the parcel centroid in degrees. (This latter can be useful when you want to make sure the image chips are re-generated and not read from the cash):
+![Forth tab of the calendar view GUI](https://raw.githubusercontent.com/CsabaWirnhardt/cbm_media/main/14_cv_gui_tab4.png)
 
 The following custom modules for the calendar_view package are called by the *run_calendar_view_from_jupyter.py* script:
 
