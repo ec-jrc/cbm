@@ -157,3 +157,26 @@ def extract_stats_for_one_parcel_geopandas_presel_bs(tif_file, parcel):
     # file=open(outputCsvFile, "a"))
 
 
+def calculate_baresoil_index_image(image_folder, index_file):
+    # https://giscrack.com/list-of-spectral-indices-for-sentinel-and-landsat/
+    with rasterio.open(image_file) as src:
+        band_red = src.read(3)
+
+    with rasterio.open(image_file) as src:
+        band_nir = src.read(1)
+        
+    # Allow division by zero
+    numpy.seterr(divide='ignore', invalid='ignore')
+
+    # Calculate BSI
+    bsi = (band_nir.astype(float) - band_red.astype(float)) / (band_nir + band_red)
+    
+    # Set spatial characteristics of the output object to mirror the input
+    kwargs = src.meta
+    kwargs.update(
+        dtype=rasterio.float32,
+        count = 1)
+
+    # Create the file
+    with rasterio.open(ndvi_file, 'w', **kwargs) as dst:
+            dst.write_band(1, bsi.astype(rasterio.float32))
