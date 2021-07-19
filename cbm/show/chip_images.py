@@ -30,7 +30,7 @@ def overlay_parcel(img, geom):
 
 
 def by_location(aoi, lon, lat, dates, band, chipsize, columns=5, quiet=True):
-    from cbm.sources import api
+    from cbm.datas import api
     """Plot chip image with parcel polygon overlay.
 
     Examples:

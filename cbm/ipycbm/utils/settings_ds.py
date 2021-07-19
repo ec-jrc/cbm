@@ -13,7 +13,7 @@ from ipywidgets import (Text, VBox, HBox, Label, Password, Button, Layout, Tab,
                         Output, Dropdown, FloatText, BoundedIntText, Combobox)
 
 from cbm.utils import config, data_options
-from cbm.sources import db, db_requests
+from cbm.datas import db, db_queries
 
 
 def api(mode=None):
@@ -117,30 +117,30 @@ def direct_conn(db='main'):
     info_os = Label("Object storage connection settings.")
     os_dias = Dropdown(
         options=['EOSC', 'CREODIAS', 'SOBLOO', 'MUNDI', 'ONDA', 'WEKEO', ''],
-        value=values['obst']['osdias'],
+        value=values['s3']['dias'],
         description='DIAS:',
         disabled=False,
     )
     os_host = Text(
-        value=values['obst']['oshost'],
+        value=values['s3']['host'],
         placeholder='Storage host',
         description='s3 Host:',
         disabled=False
     )
     os_bucket = Text(
-        value=values['obst']['bucket'],
+        value=values['s3']['bucket'],
         placeholder='Bucket name',
         description='Bucket name:',
         disabled=False
     )
     os_access_key = Text(
-        value=values['obst']['access_key'],
+        value=values['s3']['access_key'],
         placeholder='Access key',
         description='Access Key:',
         disabled=False
     )
     os_secret_key = Password(
-        value=values['obst']['secret_key'],
+        value=values['s3']['secret_key'],
         placeholder='Secret key',
         description='Secret Key:',
         disabled=False
@@ -168,11 +168,11 @@ def direct_conn(db='main'):
         config.set_value(['db', db, 'user'], str(db_user.value))
         config.set_value(['db', db, 'pass'], str(db_pass.value))
         # Save Object storage connection information
-        config.set_value(['obst', 'osdias'], str(os_dias.value))
-        config.set_value(['obst', 'oshost'], str(os_host.value))
-        config.set_value(['obst', 'bucket'], str(os_bucket.value))
-        config.set_value(['obst', 'access_key'], str(os_access_key.value))
-        config.set_value(['obst', 'secret_key'], str(os_secret_key.value))
+        config.set_value(['s3', 'dias'], str(os_dias.value))
+        config.set_value(['s3', 'host'], str(os_host.value))
+        config.set_value(['s3', 'bucket'], str(os_bucket.value))
+        config.set_value(['s3', 'access_key'], str(os_access_key.value))
+        config.set_value(['s3', 'secret_key'], str(os_secret_key.value))
 
         outlog("All changes are saved.")
 
@@ -265,7 +265,7 @@ def direct_settings():
 
         )
         ds_desc = Text(
-            value=values['dataset'][dsc_value]['desc'],
+            value=values['dataset'][dsc_value]['description'],
             description='Description:',
             disabled=False
         )
@@ -415,7 +415,7 @@ def direct_settings():
         def bt_get_center_on_click(b):
             import json
             center_json = json.loads(
-                db_requests.getTableCentroid(tb_pr.value)['center'][0])
+                db_queries.getTableCentroid(tb_pr.value)['center'][0])
             map_cent_lat.value = round(center_json['coordinates'][1], 2)
             map_cent_lon.value = round(center_json['coordinates'][0], 2)
             map_zoom.value = 10
@@ -443,7 +443,7 @@ def direct_settings():
             config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
                               'db'], str(ds_db.value))
             config.set_value(['dataset', f'{dscode}_{str(ds_year.value)}',
-                              'desc'], str(ds_desc.value))
+                              'description'], str(ds_desc.value))
             config.set_value(
                 ['dataset', f'{dscode}_{str(ds_year.value)}', 'center'],
                 f"{map_cent_lat.value},{map_cent_lon.value}")

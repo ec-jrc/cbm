@@ -1,0 +1,20 @@
+{
+    "db": {
+        "main": {
+            "desc": "Main db",
+            "host": "172.17.0.2",
+            "port": "5432",
+            "sche": "public",
+            "name": "postgres",
+            "user": "postgres",
+            "pass": ""
+        }
+    },
+    "s3": {
+        "dias": "EOSC",
+        "host": "http://data.cloudferro.com",
+        "bucket": "DIAS",
+        "access_key": "anystring",
+        "secret_key": "anystring"
+    }
+}

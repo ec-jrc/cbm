@@ -10,293 +10,154 @@
 
 import os
 import glob
-from os.path import normpath, join
-from ipywidgets import (Text, Label, HBox, VBox, Layout, Tab, Dropdown,
-                        ToggleButtons, Output, SelectMultiple, HTML, Button,
-                        FileUpload, Checkbox, Accordion, IntText, RadioButtons)
+from ipywidgets import (Text, Label, HBox, VBox, Layout, Dropdown,
+                        ToggleButtons, Output, HTML, Button,
+                        FileUpload, IntText, RadioButtons)
 
 from cbm.utils import config
-from cbm.ipycbm.utils import settings
-from cbm.sources import db
+from cbm.ipycbm.utils import settings_ds, cbm_widgets
 from cbm.ipycbm.ipy_ext import ext_func
 from cbm.foi import foi_v1
-from cbm.foi import foi_v2
+from cbm.datas import db
+try:
+    from cbm.foi import foi_v2
+except Exception as err:
+    print(err)
 
 
 def foi_tab_v1():
-    path_foi = "cbm/foi/foi_db_func/"
-    path_data = f"{config.get_value(['paths', 'temp'])}foi/"
+    path_foi = f"{config.get_value(['paths', 'temp'])}/foi/"
+    path_foi_func = foi_v1.path_foi_func
 
     progress = Output()
+
     def outlog(*text):
         with progress:
             print(*text)
 
-    foi_info = HTML(
-        value="""FOI procedures need direct access to the database. <br>
-        """,
-        placeholder='FOI Information',
-    )
-#         In case there no image is provided, access to object storage will be needed to generate the base image from sentinel images.
+    foi_info = HTML("""FOI procedures version 1 (requires access to a database).
+        """, placeholder='FOI Information')
 
     # Connect to database
-    db_info = Label(
-        f"1. Connect to database and object storage.")
-    db_select = Dropdown(
-        options=[db for db in config.get_value(['db'])],
-        description='Configure:',
-        disabled=True,
-        layout=Layout(width='140px')
-    )
-    db_config = Button(
+
+    config_info = HTML(value="""1. Connect to database and object storage.<br>
+        FOI procedures need direct access to the database. In case there no
+        image is provided, access to object storage will be needed as well
+        to generate the base image from sentinel images.
+        """, placeholder='FOI Information')
+    config_conn = Button(
         value=False,
-        disabled=False,
         button_style='info',
         tooltip='Configure db connection.',
         icon='cogs',
         layout=Layout(width='40px')
     )
-    db_box = HBox([db_select, db_config])
 
-    parcels_table = RadioButtons(
-        options=[('Upload .shp', 0), ('From database', 1)],
-    #    value='pineapple', # Defaults to 'pineapple'
-    #    layout={'width': 'max-content'}, # If the items' names are long
-#         description='Pizza topping:',
-        disabled=False
+    config_conn_box = HBox([])
+
+    @config_conn.on_click
+    def config_conn_on_click(b):
+        if config_conn_box.children == ():
+            config_conn_box.children = [settings_ds.direct_conn()]
+        else:
+            config_conn_box.children = ()
+
+    config_box = VBox([config_info, config_conn,
+                       config_conn_box])
+
+    # Spatial data to be tested
+    spatial_info = HTML(
+        """2. Select the spatial data to be tested - parcels that will be
+        checked for heterogeneity and cardinality.<br>
+        - Select a table from the database""")
+
+    db_tables = Dropdown(
+        options=[],
+        description='db Tables:'
     )
-    par_box = HBox([])
-    def on_parcels_table(method):
-        if method.new == 0:
-            par_box.children = []
-        elif method.new == 1:
-            par_box.children = []
-    parcels_table.observe(on_parcels_table, 'value')
+    refresh_db_tables = Button(
+        value=False,
+        button_style='info',
+        tooltip='Get db tables.',
+        icon='refresh',
+        layout=Layout(width='40px')
+    )
 
-    # Generate or upload image.
-    img_info = Label(
-        f"3. Upload or generate raster base image. (Only upload is currently available)")
+    @refresh_db_tables.on_click
+    def refresh_db_tables_on_click(b):
+        db_tables.options = db.tables(config.get_value(['set', 'db_conn']))
+
+    db_tables_box = HBox([db_tables, refresh_db_tables])
+
+    upload_shp = Button(
+        description='Create new table',
+        value=False,
+        button_style='info',
+        tooltip='upload_shp.',
+        icon='up'
+    )
+
+    upload_box = VBox([])
+
+    @upload_shp.on_click
+    def upload_shp_on_click(b):
+        if upload_box.children == ():
+            upload_box.children = [ext_func.upload_shp(path_foi, True)]
+        else:
+            upload_box.children = ()
+    spatial_box = VBox([spatial_info, upload_shp, upload_box, db_tables_box])
+
+    # Thematic raster.
+    img_info = HTML(
+        """3. Thematic raster - classification raster, or raster from other
+        source that will be used for testing heterogeneity and cardinality.<br>
+        - Upload or generate raster base image.
+        (Only upload is currently available)""")
     img_option = ToggleButtons(
         options=['Upload', 'Generate'],
         value=None,
         disabled=True,
-        button_style='info', # 'success', 'info', 'warning', 'danger' or ''
+        button_style='info',  # 'success', 'info', 'warning', 'danger' or ''
         tooltips=['Upnload your base image', 'Get from object storage']
     )
 
-    img_dist_folder = Text(
-        value=f"{path_data}raster/",
-        placeholder='tmp/',
-        description='Folder:',
-        disabled=False
-    )
-    img_select = FileUpload(
-        description='Select file:',
-        icon='plus',
-        accept='.tif, .tiff',
-        multiple=True  # True to accept multiple files upload else False
-    )
-    img_clear = Button(
-        value=False,
-        disabled=False,
-        button_style='info',
-        tooltip='Clear selections.',
-        icon='broom',
-        layout=Layout(width='40px')
-    )
-    img_upload = Button(
-        value=False,
-        disabled=False,
-        button_style='info',
-        tooltip='Upload foi base image (.tif)',
-        icon='fa-upload',
-        layout=Layout(width='40px')
-    )
-
-    img_box = HBox([HBox([img_dist_folder, img_select,
-                          img_clear, img_upload])])
-
-    # YAML File upload
-    yml_select = FileUpload(
-        description='Select file:',
-        icon='plus',
-        accept='.yml, .yaml, .txt',
-        multiple=False
-    )
-    yml_clear = Button(
-        value=False,
-        disabled=False,
-        button_style='info',
-        tooltip='Clear selection.',
-        icon='broom',
-        layout=Layout(width='40px')
-    )
-    yml_upload = Button(
-        value=False,
-        disabled=False,
-        button_style='info',
-        tooltip='Upload yaml file.',
-        icon='fa-upload',
-        layout=Layout(width='40px')
-    )
-    yml_box = HBox([yml_select, yml_clear, yml_upload])
-
-    # FOI Prerequisites
-    pre_info = Label("4. FOI v1 Prerequisites.")
-    pre_ins_func = Button(
-        value=False,
-        disabled=False,
-        button_style='info',
-        tooltip='Insert functions to database.',
-        icon='fa-share-square',
-        layout=Layout(width='40px')
-    )
-    pre_ins_func_box = HBox([Label("Add functions to database:"), pre_ins_func])
-    vector_file = Dropdown(
-        options=[s for s in glob.glob(f'{path_data}vector/*'
-                                      ) if '.shp' in s],
-        description='Vector file:',
-        disabled=False,
-    )
-    raster_file = Dropdown(
-        options=[s for s in glob.glob(f'{path_data}raster/*'
-                                      ) if '.tif' in s],
-        description='Raster file:',
-        disabled=False,
-    )
-
-    yaml_file = Dropdown(
-        options=[s for s in glob.glob(f'{path_data}/*'
-                                      ) if '.yml' in s],
-        description='yaml file:',
-        disabled=False,
-    )
-
-    # heterogeneity_threshold
-    pre_heto_chec = HTML("""
-    Minimum and maximum thresholds for heterogeneity checks. In the example,
-    any parcel with percentage of pixels for one class between 30 and 70 from
-    the total, will be considered heterogenous.
-    """)
-    pre_min_het = IntText(
-        value=30,
-        description='MIN:',
-        tooltip="Minimum threshold for heterogeneity checks",
-        disabled=False,
-        layout=Layout(width='150px')
-    )
-    pre_max_het = IntText(
-        value=70,
-        description='MAX:',
-        tooltip="Maximum threshold for heterogeneity checks",
-        disabled=False,
-        layout=Layout(width='150px')
-    )
-    pre_heto_chec_box = HBox([pre_min_het, pre_max_het])
-    pre_min_area = IntText(
-        value=2000,
-        description='area:',
-        tooltip="Minimum area for clusters selection.",
-        disabled=False,
-        layout=Layout(width='200px')
-    )
-
-    refresh_selections = Button(
-        layout=Layout(width='35px'),
-        icon='fa-refresh'
-    )
-
-    pre_box = VBox([
-        pre_info, pre_ins_func_box,
-        HBox([Label("Select the requared files:"), refresh_selections]),
-        HTML("""a. Spatial data to be tested - parcels that will
-            be checked for heterogeneity and cardinality."""),
-        HBox([vector_file]),
-        HTML("""b. Thematic raster - classification raster, or raster
-            from other source that will be used for testing heterogeneity and cardinality."""),
-        HBox([raster_file]),
-        HTML("""c. YAML file that holds the classes form the thematic raster file -
-            can be also a simple list of values in the notebook
-            corespondence between pixel values and names for the classes"""),
-        HBox([yaml_file, yml_box]),
-        pre_heto_chec, pre_heto_chec_box,
-        HBox([pre_min_area, HTML(
-            "Minimum area for clusters selection - only clusters bigger from this threshold will be counted.")])
-    ])
-
-    # Run FOI analysis
-    run_info = Label("5. Run the FOI analysis.")
-    run_analysis = Button(
-        description='Run FOI v1',
-        value=False,
-        disabled=False,
-        button_style='info',
-        tooltip='Run FOI analysis version 1',
-        icon='play',
-    )
-    run_box = HBox([run_analysis])
-
     def on_img_option_change(change):
         if img_option.value == 'Upload':
-            img_box.children = [HBox([img_dist_folder, img_select,
-                                      img_clear, img_upload])]
+            img_box.children = [HBox([img_info, img_option, img_file])]
         else:
             img_box.children = ()
     img_option.observe(on_img_option_change, 'value')
 
-    @refresh_selections.on_click
-    def refresh_selections_on_click(b):
-        vector_file.options = [s for s in glob.glob(f'{path_data}vector/*'
-                                      ) if '.shp' in s]
-        raster_file.options = [s for s in glob.glob(f'{path_data}raster/*'
-                                      ) if '.tif' in s]
-        yaml_file.options = [s for s in glob.glob(f'{path_data}/*'
-                                      ) if '.yml' in s]
+    img_file = cbm_widgets.get_files_dropdown(
+        f'{path_foi}raster', '.tif', 'Select Raster')
+    img_box = VBox([img_info, img_option, img_file])
 
-    @img_clear.on_click
-    def img_clear_on_click(b):
-        img_select.value.clear()
-        img_select._counter = 0
+    # YAML File upload
+    yml_info = HTML(
+        """4. YAML file that holds the classes form the thematic raster.<br>
+            - This can be also a simple list of values in the notebook
+            corespondence between pixel values and names for the classes""")
 
-    @img_upload.on_click
-    def img_upload_on_click(b):
-        progress.clear_output()
-        os.makedirs(img_dist_folder.value, exist_ok=True)
-        for key in img_select.value:
-            content = img_select.value[key]['content']
-            with open(f'{img_dist_folder.value}{key}', 'wb') as f:
-                f.write(content)
-        outlog("All files are uploaded.")
+    yml_file = cbm_widgets.get_files_dropdown(path_foi, '.yml', 'Select YML')
+    yml_box = VBox([yml_info, yml_file])
 
-    @yml_clear.on_click
-    def yml_clear_on_click(b):
-        yml_select.value.clear()
-        yml_select._counter = 0
+    # Database functions
+    dbf_info = HTML("""5. Create database functions.<br>
+    - Import required database functions for FOI analysis to the database""")
 
-    @yml_upload.on_click
-    def yml_upload_on_click(b):
-        progress.clear_output()
-        yml_dist_folder = f'{path_data}'
-        os.makedirs(yml_dist_folder, exist_ok=True)
-        for key in yml_select.value:
-            content = yml_select.value[key]['content']
-            with open(f'{yml_dist_folder}{key}', 'wb') as f:
-                f.write(content)
-        outlog("The yaml file is uploaded.")
+    dbf_insert = Button(
+        value=False,
+        button_style='info',
+        tooltip='Create functions.',
+        icon='fa-share-square'
+    )
 
-    db_conf_box = HBox([])
-    @db_config.on_click
-    def db_config_on_click(b):
-        if db_conf_box.children == ():
-            db_conf_box.children = [settings.direct_conn()]
-        else:
-            db_conf_box.children = ()
-
-    @pre_ins_func.on_click
-    def pre_ins_func_on_click(b):
+    @dbf_insert.on_click
+    def dbf_insert_on_click(b):
+        outlog('path_foi_func :', path_foi_func)
         progress.clear_output()
         try:
-            functions = glob.glob(f"{path_foi}*.func")
+            functions = glob.glob(f"{path_foi_func}*.func")
             db = config.get_value(['set', 'db_conn'])
             sche = config.get_value(['db', db, 'sche'])
             user = config.get_value(['db', db, 'user'])
@@ -304,137 +165,141 @@ def foi_tab_v1():
             for f in functions:
                 db.insert_function(open(f).read().format(
                     schema=sche, owner=user))
-            finc_list = [f"ipycbm_{f.split('/')[-1].split('.')[0]}, " for f in functions]
-            outlog(f"The functions: {('').join(finc_list)}where added to the database")
+                outlog(f"The '{f}' Was imported to the database.")
+            finc_list = [
+                f"ipycbm_{f.split('/')[-1].split('.')[0]}, " for f in functions]
+            outlog(
+                f"The functions: {('').join(finc_list)} where added to the database")
         except Exception as err:
             outlog("Could not add functions to dattabase.", err)
+
+    dbf_box = VBox(
+        [dbf_info, dbf_insert])
+
+    # FOI Parameters
+    param_info = HTML(
+        """6. Set FOI v1 Parameters""")
+
+    # heterogeneity_threshold
+    param_heto_info = HTML("""
+    Minimum and maximum thresholds for heterogeneity checks. In the example,
+    any parcel with percentage of pixels for one class between 30 and 70 from
+    the total, will be considered heterogenous.
+    """)
+    param_min_het = IntText(
+        value=30,
+        description='MIN:',
+        tooltip="Minimum threshold for heterogeneity checks",
+        layout=Layout(width='150px')
+    )
+    param_max_het = IntText(
+        value=70,
+        description='MAX:',
+        tooltip="Maximum threshold for heterogeneity checks",
+        layout=Layout(width='150px')
+    )
+
+    param_area_info = HTML("""Minimum area for clusters selection -
+    only clusters bigger from this threshold will be counted.
+    """)
+    param_area = IntText(
+        value=2000,
+        description='area:',
+        tooltip="Minimum area for clusters selection.",
+        layout=Layout(width='200px')
+    )
+
+    param_box = VBox([param_info,
+                      param_heto_info, HBox([param_min_het, param_max_het]),
+                      param_area_info, param_area
+                      ])
+
+    # Run FOI analysis
+    run_info = Label("7. Run the FOI analysis.")
+    run_analysis = Button(
+        description='Run FOI v1',
+        value=False,
+        button_style='info',
+        tooltip='Run FOI analysis version 1',
+        icon='play',
+    )
+    run_box = VBox([run_info, run_analysis])
 
     @run_analysis.on_click
     def run_analysis_on_click(b):
         with progress:
-            foi_v1.main(vector_file.value, raster_file.value, yaml_file.value,
-                pre_min_het.value, pre_max_het.value, pre_min_area.value)
-
+            foi_v1.main(
+                db_tables.value,
+                f"{path_foi}raster/{img_file.children[1].children[0].value}",
+                f"{path_foi}{yml_file.children[1].children[0].value}",
+                param_min_het.value, param_max_het.value, param_area.value)
 
     wbox = VBox([foi_info,
-                 db_info, db_box, db_conf_box,
-                 ext_func.upload_shp(path_data),
-                 img_info, img_option, img_box,
-                 pre_box,
-                 run_info,
+                 config_box,
+                 spatial_box,
+                 img_box,
+                 yml_box,
+                 dbf_box,
+                 param_box,
                  run_box,
                  progress])
 
     return wbox
 
-def foi_tab_v2():
-    path_data = f"{config.get_value(['paths', 'temp'])}foi/"
 
+def foi_tab_v2():
+    path_foi = f"{config.get_value(['paths', 'temp'])}/foi/"
     progress = Output()
+
     def outlog(*text):
         with progress:
             print(*text)
 
+    foi_info = HTML("""FOI procedures version 2 (does not require access to a database).
+        """, placeholder='FOI Information')
 
-    imp_refresh = Button(
-        layout=Layout(width='35px'),
-        icon='fa-refresh'
-    )
+    # Vector file
+    shp_info = HTML(
+        """1. Spatial data to be tested -
+        parcels that will be checked for heterogeneity and cardinality.""")
+    shp_file = cbm_widgets.get_files_dropdown(
+        f'{path_foi}vector', '', 'Select .shp', True)
+    shp_box = VBox([shp_info, shp_file])
 
-    foi_info = HTML(
-        value="""FOI procedures version 2 does not need direct access to the database.
-        """,
-        placeholder='FOI Information',
-    )
-
-    # Generate or upload image.
-    img_info = Label(
-        f"3. Upload or generate raster base image. (Only upload is currently available)")
+    # Thematic raster.
+    img_info = HTML(
+        """2. Thematic raster - classification raster, or raster from other
+        source that will be used for testing heterogeneity and cardinality.<br>
+        - Upload or generate raster base image.
+        (Only upload is currently available)""")
     img_option = ToggleButtons(
         options=['Upload', 'Generate'],
         value=None,
         disabled=True,
-        button_style='info', # 'success', 'info', 'warning', 'danger' or ''
+        button_style='',  # 'success', 'info', 'warning', 'danger' or ''
         tooltips=['Upnload your base image', 'Get from object storage']
     )
 
-    img_dist_folder = Text(
-        value=f"{path_data}raster/",
-        placeholder='tmp/',
-        description='Folder:',
-        disabled=False
-    )
-    img_select = FileUpload(
-        description='Select file:',
-        icon='plus',
-        accept='.tif, .tiff',
-        multiple=True  # True to accept multiple files upload else False
-    )
-    img_clear = Button(
-        value=False,
-        disabled=False,
-        button_style='info',
-        tooltip='Upload foi reference data (.shp)',
-        icon='broom',
-        layout=Layout(width='40px')
-    )
-    img_upload = Button(
-        value=False,
-        disabled=False,
-        button_style='info',
-        tooltip='Upload foi base image (.tif)',
-        icon='fa-upload',
-        layout=Layout(width='40px')
-    )
-
-    img_box = HBox([HBox([img_dist_folder, img_select,
-                          img_clear, img_upload])])
+    def on_img_option_change(change):
+        if img_option.value == 'Upload':
+            img_box.children = [HBox([img_info, img_option, img_file])]
+        else:
+            img_box.children = ()
+    img_option.observe(on_img_option_change, 'value')
+    img_file = cbm_widgets.get_files_dropdown(
+        f'{path_foi}raster', '.tif', 'Select Raster')
+    img_box = VBox([img_info, img_option, img_file])
 
     # YAML File upload
-    yml_select = FileUpload(
-        description='Select file:',
-        icon='plus',
-        accept='.yml, .yaml, .txt',
-        multiple=False
-    )
-    yml_clear = Button(
-        value=False,
-        disabled=False,
-        button_style='info',
-        tooltip='Clear selection.',
-        icon='broom',
-        layout=Layout(width='40px')
-    )
-    yml_upload = Button(
-        value=False,
-        disabled=False,
-        button_style='info',
-        tooltip='Upload yaml file.',
-        icon='fa-upload',
-        layout=Layout(width='40px')
-    )
-    yml_box = HBox([yml_select, yml_clear, yml_upload])
+    yml_info = HTML(
+        """3. YAML file that holds the classes form the thematic raster.<br>
+            - This can be also a simple list of values in the notebook
+            corespondence between pixel values and names for the classes""")
+    yml_file = cbm_widgets.get_files_dropdown(path_foi, '.yml', 'Select YML')
+    yml_box = VBox([yml_info, yml_file])
 
     # FOI Prerequisites
-    pre_info = Label("4. FOI v2 Prerequisites.")
-    vector_file = Dropdown(
-        options=[s for s in glob.glob(f'{path_data}vector/*'
-                                      ) if '.shp' in s],
-        description='Vector file:',
-        disabled=False,
-    )
-    raster_file = Dropdown(
-        options=[s for s in glob.glob(f'{path_data}raster/*'
-                                      ) if '.tif' in s],
-        description='Raster file:',
-        disabled=False,
-    )
-    yaml_file = Dropdown(
-        options=[s for s in glob.glob(f'{path_data}/*'
-                                      ) if '.yml' in s],
-        description='yaml file:',
-        disabled=False,
-    )
+    pre_info = Label("4. Set FOI v2 Parameters.")
 
     # heterogeneity_threshold
     pre_heto_chec = HTML("""
@@ -479,23 +344,11 @@ def foi_tab_v2():
         layout=Layout(width='200px')
     )
 
-    refresh_selections = Button(
-        layout=Layout(width='35px'),
-        icon='fa-refresh'
-    )
     pre_box = VBox([
-        pre_info, Label("Select the requared files:"),
-        HBox([vector_file, HTML(
-            "Spatial data to be tested - parcels that will be checked for heterogeneity and cardinality.")]),
-        HBox([raster_file, HTML("""Thematic raster - classification raster, or raster
-            from other source that will be used for testing heterogeneity and cardinality.""")]),
-        HTML("""YAML file that holds the classes form the thematic raster file -
-            can be also a simple list of values in the notebook
-            corespondence between pixel values and names for the classes"""),
-        HBox([yaml_file, yml_box]),
-        pre_heto_chec, pre_heto_chec_box, pre_pixel_connectivity, pre_negative_buffer,
-        HBox([pre_min_cluster_size, HTML(
-            "Minimum area for clusters selection - only clusters bigger from this threshold will be counted.")])
+        pre_info, pre_heto_chec, pre_heto_chec_box,
+        pre_pixel_connectivity, pre_negative_buffer,
+        HBox([pre_min_cluster_size,
+              HTML("Minimum area for clusters selection - only clusters bigger from this threshold will be counted.")])
     ])
 
     # Run FOI analysis
@@ -510,65 +363,26 @@ def foi_tab_v2():
     )
     run_box = HBox([run_analysis])
 
-    def on_img_option_change(change):
-        if img_option.value == 'Upload':
-            img_box.children = [HBox([img_dist_folder, img_select,
-                                      img_clear, img_upload])]
-        else:
-            img_box.children = ()
-    img_option.observe(on_img_option_change, 'value')
-
-    @refresh_selections.on_click
-    def refresh_selections_on_click(b):
-        vector_file.options = [s for s in glob.glob(f'{path_data}vector/*'
-                                      ) if '.shp' in s]
-        raster_file.options = [s for s in glob.glob(f'{path_data}raster/*'
-                                      ) if '.tif' in s]
-        yaml_file.options = [s for s in glob.glob(f'{path_data}/*'
-                                      ) if '.yml' in s]
-
-    @img_clear.on_click
-    def img_clear_on_click(b):
-        img_select.value.clear()
-        img_select._counter = 0
-
-    @img_upload.on_click
-    def img_upload_on_click(b):
-        progress.clear_output()
-        os.makedirs(img_dist_folder.value, exist_ok=True)
-        for key in img_select.value:
-            content = img_select.value[key]['content']
-            with open(f'{img_dist_folder.value}{key}', 'wb') as f:
-                f.write(content)
-        outlog("All files are uploaded.")
-
-    @yml_clear.on_click
-    def yml_clear_on_click(b):
-        yml_select.value.clear()
-        yml_select._counter = 0
-
-    @yml_upload.on_click
-    def yml_upload_on_click(b):
-        progress.clear_output()
-        yml_dist_folder = f'{path_data}'
-        os.makedirs(yml_dist_folder, exist_ok=True)
-        for key in yml_select.value:
-            content = yml_select.value[key]['content']
-            with open(f'{yml_dist_folder}{key}', 'wb') as f:
-                f.write(content)
-        outlog("The yaml file is uploaded.")
-
     @run_analysis.on_click
     def run_analysis_on_click(b):
         with progress:
-            foi_v2.main(vector_file.value, raster_file.value, yaml_file.value, pre_negative_buffer.value, pre_min_het.value, pre_max_het.value, pre_pixel_connectivity.value, pre_min_cluster_size.value)
+            foi_v2.main(
+                f"{path_foi}vector/{shp_file.children[1].children[0].value}",
+                f"{path_foi}raster/{img_file.children[1].children[0].value}",
+                f"{path_foi}{yml_file.children[1].children[0].value}",
+                pre_negative_buffer.value,
+                pre_min_het.value,
+                pre_max_het.value,
+                pre_pixel_connectivity.value,
+                pre_min_cluster_size.value)
 
-
-    wbox_v2 = VBox([ext_func.upload_shp(path_data),
-                 img_info, img_option, img_box,
-                 pre_box,
-                 run_info,
-                 run_box,
-                 progress])
+    wbox_v2 = VBox([foi_info,
+                    shp_box,
+                    img_box,
+                    yml_box,
+                    pre_box,
+                    run_info,
+                    run_box,
+                    progress])
 
     return wbox_v2

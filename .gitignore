@@ -4,6 +4,8 @@ api/tms/*
 !api/tms/google_tms.xml
 !api/tms/bing_tms.xml
 
+api/core
+api/gunicorn
 api/static/dump/
 api/config/users.json
 api/config/data_auth.json
@@ -12,6 +14,9 @@ config/*
 ipynb/temp/*
 ipynb/config/*
 ipynb/data/*
+ipynb/*/temp/*
+ipynb/*/config/*
+ipynb/*/data/*
 ipynb/test*
 
 # ---> Python

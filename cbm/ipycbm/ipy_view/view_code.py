@@ -26,7 +26,7 @@ def code(path):
         <code>print(json_data)</code><br>
         <br>
         <b>Example code on how to run database queries</b><br>
-        from cbm.sources import database<br>
+        from cbm.datas import database<br>
         # Return the exact count of rown of the given table<br>
         query = "SELECT count(*) AS exact_count FROM abigtable_names;"<br>
         database.execute_query(query)<br>

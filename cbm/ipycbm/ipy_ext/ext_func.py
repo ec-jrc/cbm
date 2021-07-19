@@ -15,13 +15,13 @@ from ipywidgets import (Text, Label, HBox, VBox, Layout, Tab, Dropdown,
                         Output, Button, FileUpload, Checkbox, DatePicker)
 
 from cbm.utils import config
-from cbm.sources import db
+from cbm.datas import db
 from cbm.extract import db_tables
 
 from cbm.extract import (pgS2Extract, pgS1bsExtract)
 
 
-def upload_shp(path_data):
+def upload_shp(path_data, config_path=False):
     # Upload
     l_up = Label("a. Upload .shp to the server.")
     accept_files = ".shp, .cpg, .dbf, .prj, .shx, .sbn, .sbx, .xml"
@@ -30,7 +30,7 @@ def upload_shp(path_data):
         value=normpath(join(path_data, 'vector')),
         placeholder='tmp/',
         description='Folder:',
-        disabled=False
+        disabled=config_path
     )
     shp_select = FileUpload(
         description='Select files:',
@@ -294,7 +294,7 @@ def extraction():
             try:
                 delta = end.value - start.value
                 for d in range(delta.days):
-                    pgS2Extract.extractS2(start.value, end.value)
+                    pgS2Extract.main(start.value, end.value)
             except Exception as err:
                 outlog(err)
 

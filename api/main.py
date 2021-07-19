@@ -21,7 +21,8 @@ from flask import (Flask, request, send_from_directory, make_response,
                    render_template, flash, redirect, jsonify, abort, url_for)
 
 
-from scripts import query_handler as qh
+from scripts import db_queries
+from scripts import image_requests
 from scripts import users
 
 
@@ -34,11 +35,14 @@ app.config['SWAGGER'] = {
 
 # Enable upload page (http://HOST/upload).
 UPLOAD_ENABLE = False  # True or False
-
+DEFAULT_AOI = ''
+datasets = db_queries.get_datasets()
 
 # -------- Core functions ---------------------------------------------------- #
 
 # Authentication decorator.
+
+
 def auth_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -156,7 +160,78 @@ def backgroundByLocation_query():
     unique_id = f"static/dump/{rip}E{lon}N{lat}_{chipsize}_{chipextend}_{tms}".replace(
         '.', '_')
 
-    data = qh.getBackgroundByLocation(
+    data = image_requests.getBackgroundByLocation(
+        lon, lat, chipsize, chipextend, tms, unique_id, iformat)
+
+    if data:
+        if 'raw' in request.args.keys():
+            return f"{request.host_url}{unique_id}/{tms.lower()}.{iformat}"
+        else:
+            flist = glob.glob(f"{unique_id}/{tms.lower()}.{iformat}")
+            full_filename = url_for(
+                'static', filename=flist[0].replace('static/', ''))
+            return render_template("bg_page.html", bg_image=full_filename)
+    else:
+        return json.dumps({})
+
+
+@app.route('/query/backgroundByParcelId', methods=['GET'])
+@auth_required
+def backgroundByID_query():
+    """
+    Generate an extract from either Google or Bing.
+    It uses the WMTS standard to grab and compose, which makes it fast
+    (does not depend on DIAS S3 store).
+    ---
+    tags:
+      - backgroundByLocation
+    responses:
+      200:
+        description: An HTML page that displays the selected chip as a PNG tile.
+    """
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+    # Start by getting the request IP address
+    if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
+        rip = request.environ['REMOTE_ADDR']
+    else:
+        rip = request.environ['HTTP_X_FORWARDED_FOR']
+
+    aoi = request.args.get('aoi')
+    year = request.args.get('year')
+    pid = request.args.get('pid')
+    dataset = datasets[f'{aoi}_{year}']
+
+    if 'ptype' in request.args.keys():
+        ptype = f"_{request.args.get('ptype')}"
+    else:
+        ptype = ''
+
+    lon, lat = db_queries.getParcelCentroid(dataset, pid, ptype)
+
+    if 'chipsize' in request.args.keys():
+        chipsize = request.args.get('chipsize')
+    else:
+        chipsize = '256'
+
+    if 'extend' in request.args.keys():
+        chipextend = request.args.get('extend')
+    else:
+        chipextend = '256'
+
+    if 'tms' in request.args.keys():
+        tms = request.args.get('tms')
+    else:
+        tms = 'Google'
+
+    if 'iformat' in request.args.keys():
+        iformat = request.args.get('iformat')
+    else:
+        iformat = 'tif'
+
+    unique_id = f"static/dump/{rip}E{lon}N{lat}_{chipsize}_{chipextend}_{tms}".replace(
+        '.', '_')
+
+    data = image_requests.getBackgroundByLocation(
         lon, lat, chipsize, chipextend, tms, unique_id, iformat)
 
     if data:
@@ -176,13 +251,15 @@ def backgroundByLocation_query():
 def chipsByLocation_query():
     """
     Get chips images by location.
-    Generates a series of extracted Sentinel-2 LEVEL2A segments of 128x128 pixels as a composite of 3 bands.
+    Generates a series of extracted Sentinel-2 LEVEL2A segments
+    of 128x128 pixels as a composite of 3 bands.
     ---
     tags:
       - chipsByLocation
     responses:
       200:
-        description: An HTML page that displays the selected chips in a table with max. 8 columns.
+        description: An HTML page that displays the selected chips in a table
+        with max. 8 columns.
     """
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
     # Start by getting the request IP address
@@ -215,7 +292,7 @@ def chipsByLocation_query():
     unique_id = f"dump/{rip}E{lon}N{lat}L{lut}_{plevel}_{bands}".replace(
         '.', '_')
 
-    data = qh.getChipsByLocation(
+    data = image_requests.getChipsByLocation(
         lon, lat, start_date, end_date, unique_id, lut, bands, plevel)
 
     if data:
@@ -229,7 +306,8 @@ def chipsByLocation_query():
 def chipsByParcelId_query():
     """
     Get chips images by parcel id.
-    Generates a series of extracted Sentinel-2 LEVEL2A segments of 128x128 pixels as a composite of 3 bands.
+    Generates a series of extracted Sentinel-2 LEVEL2A segments
+    of 128x128 pixels as a composite of 3 bands.
     ---
     tags:
       - chipsByParcelId
@@ -245,8 +323,7 @@ def chipsByParcelId_query():
         rip = request.environ['HTTP_X_FORWARDED_FOR']
 
     aoi = request.args.get('aoi')
-    year = request.args.get('year')
-    parcelid = request.args.get('pid')
+    pid = request.args.get('pid')
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
 
@@ -265,11 +342,11 @@ def chipsByParcelId_query():
     else:
         plevel = 'LEVEL2A'
 
-    unique_id = f"dump/{rip}_{aoi}{year}_{parcelid}_{lut}_{plevel}_{bands}".replace(
+    unique_id = f"dump/{rip}_{aoi}_{pid}_{lut}_{plevel}_{bands}".replace(
         '.', '_')
 
-    data = qh.getChipsByParcelId(aoi, year, parcelid, start_date, end_date,
-                                 unique_id, lut, bands, plevel)
+    data = image_requests.getChipsByParcelId(aoi, pid, start_date, end_date,
+                                             unique_id, lut, bands, plevel)
 
     if data:
         return send_from_directory(f"files/{unique_id}", 'dump.html')
@@ -282,13 +359,15 @@ def chipsByParcelId_query():
 def rawChipByLocation_query():
     """
     Get chips images by parcel id.
-    Generates a series of extracted Sentinel-2 LEVEL2A segments of 128x128 (10m resolution bands) or 64x64 (20 m) pixels as list of full resolution GeoTIFFs.
+    Generates a series of extracted Sentinel-2 LEVEL2A segments of 128x128 (10m
+    resolution bands) or 64x64 (20 m) pixels as list of full resolution GeoTIFFs
     ---
     tags:
       - rawChipByLocation
     responses:
       200:
-        description: A JSON dictionary with date labels and relative URLs to cached GeoTIFFs.
+        description: A JSON dictionary with date labels and
+        relative URLs to cached GeoTIFFs.
     """
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
     # Start by getting the request IP address
@@ -318,13 +397,60 @@ def rawChipByLocation_query():
     unique_id = f"dump/{rip}E{lon}N{lat}_{plevel}_{chipsize}_{band}".replace(
         '.', '_')
 
-    data = qh.getRawChipByLocation(
+    data = image_requests.getRawChipByLocation(
         lon, lat, start_date, end_date, unique_id, band, chipsize, plevel)
 
     if data:
         return send_from_directory(f"files/{unique_id}", 'dump.json')
     else:
         return json.dumps({})
+
+
+@app.route('/query/parcelPeers', methods=['GET'])
+@auth_required
+def parcelPeers_query():
+    """
+    Get the parcel “peers” for a known parcel ID,
+    ---
+    tags:
+      - parcelPeers
+    responses:
+      200:
+        description: The parcel “peers”.
+    """
+    aoi = DEFAULT_AOI
+    year = request.args.get('year')
+    pid = request.args.get('pid')
+    ptype = ''
+    distance = 1000.0
+    maxPeers = 10
+
+    if 'ptype' in request.args.keys():
+        ptype = f"_{request.args.get('ptype')}"
+
+    if 'aoi' in request.args.keys():
+        aoi = request.args.get('aoi')
+
+    if 'distance' in request.args.keys():
+        distance = float(request.args.get('distance'))
+    if 'max' in request.args.keys():
+        maxPeers = int(request.args.get('max'))
+
+    if distance > 5000.0:
+        distance = 5000.0
+    if maxPeers > 100:
+        maxPeers = 100
+
+    dataset = datasets[f'{aoi}_{year}']
+    data = db_queries.getParcelPeers(dataset, pid, ptype, distance, maxPeers)
+    if not data:
+        return json.dumps({})
+    elif len(data) == 1:
+        return json.dumps(dict(zip(list(data[0]),
+                                   [[] for i in range(len(data[0]))])))
+    else:
+        return json.dumps(dict(zip(list(data[0]),
+                                   [list(i) for i in zip(*data[1:])])))
 
 
 # -------- Queries - Time Series --------------------------------------------- #
@@ -341,14 +467,39 @@ def parcelTimeSeries_query():
       200:
         description: Time series table.
     """
-    aoi = request.args.get('aoi')
-    parcelid = request.args.get('pid')
-    tstype = request.args.get('tstype')
-    band = None
+    aoi = DEFAULT_AOI
+    year = request.args.get('year')
+    pid = request.args.get('pid')
+    ptype = ''
+    tstype = ''
+    band = ''
+    scl = True
+
+    if 'scl' in request.args.keys():
+        scl = True if request.args.get('scl') == 'True' else False
+
+    if 'ptype' in request.args.keys():
+        ptype = f"_{request.args.get('ptype')}"
+
+    if 'aoi' in request.args.keys():
+        aoi = request.args.get('aoi')
 
     if 'band' in request.args.keys():
         band = request.args.get('band')
-    data = qh.getParcelTimeSeries(aoi, parcelid, tstype, band)
+
+    if 'tstype' in request.args.keys():
+        tstype = request.args.get('tstype')
+        if tstype.lower() == 's1':
+            scl = False
+
+    dataset = datasets[f'{aoi}_{year}']
+    if tstype.lower() == 'scl':
+        data = db_queries.getParcelSCL(dataset, pid, ptype)
+    else:
+        data = db_queries.getParcelTimeSeries(dataset, pid, ptype,
+                                              tstype, band, scl)
+
+    # print(data)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -360,42 +511,7 @@ def parcelTimeSeries_query():
                           cls=CustomJsonEncoder)
 
 
-@app.route('/query/parcelPeers', methods=['GET'])
-@auth_required
-def parcelPeers_query():
-    """
-    Get the parcel “peers” for a known parcel ID,
-    ---
-    tags:
-      - parcelPeers
-    responses:
-      200:
-        description: The parcel “peers”.
-    """
-    aoi = request.args.get('aoi')
-    pid = request.args.get('pid')
-    distance = 1000.0
-    maxPeers = 10
-    if 'distance' in request.args.keys():
-        distance = float(request.args.get('distance'))
-    if 'max' in request.args.keys():
-        maxPeers = int(request.args.get('max'))
-
-    if distance > 5000.0:
-        distance = 5000.0
-    if maxPeers > 100:
-        maxPeers = 100
-
-    data = qh.getParcelPeers(aoi, pid, distance, maxPeers)
-    if not data:
-        return json.dumps({})
-    elif len(data) == 1:
-        return json.dumps(dict(zip(list(data[0]),
-                                   [[] for i in range(len(data[0]))])))
-    else:
-        return json.dumps(dict(zip(list(data[0]),
-                                   [list(i) for i in zip(*data[1:])])))
-
+# -------- Queries - Parcel information -------------------------------------- #
 
 @app.route('/query/parcelByLocation', methods=['GET'])
 @auth_required
@@ -409,15 +525,30 @@ def parcelByLocation_query():
       200:
         description: Parcel information.
     """
-    aoi = request.args.get('aoi')
+    aoi = DEFAULT_AOI
+    year = request.args.get('year')
     lon = request.args.get('lon')
     lat = request.args.get('lat')
+    ptype = ''
     withGeometry = False
+    wgs84 = False
+
+    if 'ptype' in request.args.keys():
+        ptype = f"_{request.args.get('ptype')}"
+
+    if 'aoi' in request.args.keys():
+        aoi = request.args.get('aoi')
+
+    if 'wgs84' in request.args.keys():
+        wgs84 = True if request.args.get('wgs84') == 'True' else False
 
     if 'withGeometry' in request.args.keys():
         withGeometry = True if request.args.get(
             'withGeometry') == 'True' else False
-    data = qh.getParcelByLocation(aoi, lon, lat, withGeometry)
+
+    dataset = datasets[f'{aoi}_{year}']
+    data = db_queries.getParcelByLocation(dataset, lon, lat, ptype,
+                                          withGeometry, wgs84)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -440,15 +571,28 @@ def parcelById_query():
       200:
         description: Parcel information.
     """
-    aoi = request.args.get('aoi')
+    aoi = DEFAULT_AOI
+    year = request.args.get('year')
+    pid = request.args.get('pid')
+    ptype = ''
     withGeometry = False
+    wgs84 = False
+
+    if 'ptype' in request.args.keys():
+        ptype = f"_{request.args.get('ptype')}"
+
+    if 'aoi' in request.args.keys():
+        aoi = request.args.get('aoi')
+
+    if 'wgs84' in request.args.keys():
+        wgs84 = True if request.args.get('wgs84') == 'True' else False
 
     if 'withGeometry' in request.args.keys():
         withGeometry = True if request.args.get(
             'withGeometry') == 'True' else False
 
-    parcelid = request.args.get('parcelid')
-    data = qh.getParcelById(aoi, parcelid, withGeometry)
+    dataset = datasets[f'{aoi}_{year}']
+    data = db_queries.getParcelById(dataset, pid, ptype, withGeometry, wgs84)
 
     if not data:
         return json.dumps({})
@@ -472,9 +616,19 @@ def parcelsByPolygon_query():
       200:
         description: List of parcels.
     """
-    aoi = request.args.get('aoi')
+    aoi = DEFAULT_AOI
+    year = request.args.get('year')
+    polygon = request.args.get('polygon')
+    ptype = ''
     withGeometry = False
     only_ids = True
+    wgs84 = False
+
+    if 'ptype' in request.args.keys():
+        ptype = f"_{request.args.get('ptype')}"
+
+    if 'aoi' in request.args.keys():
+        aoi = request.args.get('aoi')
 
     if 'withGeometry' in request.args.keys():
         withGeometry = True if request.args.get(
@@ -484,8 +638,12 @@ def parcelsByPolygon_query():
         only_ids = True if request.args.get(
             'only_ids') == 'True' else False
 
-    polygon = request.args.get('polygon')
-    data = qh.getParcelsByPolygon(aoi, polygon, withGeometry, only_ids)
+    if 'wgs84' in request.args.keys():
+        wgs84 = True if request.args.get('wgs84') == 'True' else False
+
+    dataset = datasets[f'{aoi}_{year}']
+    data = db_queries.getParcelsByPolygon(
+        dataset, polygon, ptype, withGeometry, only_ids, wgs84)
 
     if not data:
         return json.dumps({})
@@ -558,4 +716,4 @@ if __name__ == "__main__":
     logger.setLevel(logging.INFO)
     logger.addHandler(handler)
     app.run(debug=True, use_reloader=True,
-            host='0.0.0.0', port=5000, threaded=True)
+            host='0.0.0.0', port=80, threaded=True)

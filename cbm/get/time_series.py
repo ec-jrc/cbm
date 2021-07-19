@@ -10,11 +10,11 @@
 import os
 import json
 import pandas as pd
-from os.path import join, normpath, isfile, exists
+from os.path import join, normpath, isfile
 from cbm.utils import config
 
 
-def by_location(aoi, lon, lat, tstype, band='', quiet=False):
+def by_location(aoi, year, lon, lat, tstype, band='', quiet=False):
     """Download the time series for the selected year
 
     Examples:
@@ -23,11 +23,11 @@ def by_location(aoi, lon, lat, tstype, band='', quiet=False):
 
     Arguments:
         aoi, the area of interest and year e.g.: es2019, nld2020 (str)
-        lat, lon, the the coords of the parcel (float).
+        lon, lat, the the coords of the parcel (float).
     """
     get_requests = data_source()
     try:
-        json_data = json.loads(get_requests.ploc(aoi, lon, lat, True))
+        json_data = json.loads(get_requests.ploc(aoi, year, lon, lat, True))
         if type(json_data['ogc_fid']) is list:
             pid = json_data['ogc_fid'][0]
         else:
@@ -36,18 +36,17 @@ def by_location(aoi, lon, lat, tstype, band='', quiet=False):
         workdir = normpath(join(config.get_value(['paths', 'temp']),
                                 aoi, str(pid)))
         json_file = normpath(join(workdir, 'info.json'))
-        if not exists(workdir):
-            os.makedirs(workdir)
+        os.makedirs(workdir, exist_ok=True)
         if not isfile(json_file):
             with open(json_file, "w") as f:
                 json.dump(json_data, f)
     except Exception:
         workdir = normpath(join(config.get_value(['paths', 'temp']),
-                                aoi, f'_{lon}_{lat}'))
+                                aoi, f'_{lon}_{lat}'.replace('.', '_')))
     file_ts = normpath(join(workdir, aoi, pid,
                             f'time_series_{tstype}{band}'))
     if not isfile(file_ts):
-        ts = json.loads(get_requests.pts(aoi, pid, tstype, band))
+        ts = json.loads(get_requests.pts(aoi, year, pid, tstype, band))
         try:
             if isinstance(ts, pd.DataFrame):
                 ts.to_csv(file_ts, index=True, header=True)
@@ -66,7 +65,7 @@ def by_location(aoi, lon, lat, tstype, band='', quiet=False):
         return ts
 
 
-def by_pid(aoi, pid, tstype, band='', quiet=False):
+def by_pid(aoi, year, pid, tstype, band='', quiet=False):
     """Download the time series for the selected year
 
     Examples:
@@ -82,7 +81,7 @@ def by_pid(aoi, pid, tstype, band='', quiet=False):
     file_ts = normpath(join(workdir, aoi, pid,
                             f'time_series_{tstype}{band}'))
     if not isfile(file_ts):
-        ts = json.loads(get_requests.pts(aoi, pid, tstype, band))
+        ts = json.loads(get_requests.pts(aoi, year, pid, tstype, band))
         try:
             if isinstance(ts, pd.DataFrame):
                 ts.to_csv(file_ts, index=True, header=True)
@@ -104,10 +103,10 @@ def by_pid(aoi, pid, tstype, band='', quiet=False):
 def data_source():
     source = config.get_value(['set', 'data_source'])
     if source == 'api':
-        from cbm.sources import api
+        from cbm.datas import api
         return api
     elif source == 'direct':
-        from cbm.sources import direct
+        from cbm.datas import direct
         return direct
 
 

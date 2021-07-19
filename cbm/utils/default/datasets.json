@@ -1,0 +1,27 @@
+{
+    "default_2020": {
+        "db": "main",
+        "description": "Dataset description",
+        "center": "51.0,14.0",
+        "zoom": "5",
+        "year": "",
+        "start_date": "",
+        "end_date": "",
+        "extent": "",
+        "flip_coordinates": "False",
+        "tables": {
+            "parcels": "par",
+            "dias_catalog": "dias_cat",
+            "scl": "hists",
+            "s2": "s2_sig",
+            "bs": "bs_sig",
+            "c6": "c6_sig",
+            "bs_tf": "bs_ten"
+        },
+        "pcolumns": {
+            "parcel_id": "id",
+            "crop_name": "name",
+            "crop_code": "code"
+        }
+    }
+}
