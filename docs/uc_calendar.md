@@ -25,6 +25,9 @@ On the first tab of the GUI you can select the products that you want to produce
 On the second tab of the GUI you can set the date range for data download and visualisation:
 ![Second tab of the calendar view GUI](https://raw.githubusercontent.com/CsabaWirnhardt/cbm_media/main/12_cv_gui_tab2.png)
 
+On the third tab of the GUI you can define the ESRI shapefile with the parcel polygons ("Vector filename"), you can select the folder for the outputs produced by the script ("Base folder outputs"), the attribute table column holding the parcel ids ("Parcel id column") and the attbibute table column holding the crop names ("Crop name column"):
+![Third tab of the calendar view GUI](https://raw.githubusercontent.com/CsabaWirnhardt/cbm_media/main/13_cv_gui_tab3.png)
+
 
 The following custom modules for the calendar_view package are called by the *run_calendar_view_from_jupyter.py* script:
 
