@@ -20,7 +20,7 @@ and should be added to the utils folder.
 The script can be launched from the "calendar_view_gui.ipynb" Jupyter notebook.
 
 On the first tab of the GUI you can select the products that you want to produce:
-(https://raw.githubusercontent.com/CsabaWirnhardt/cbm_media/main/11_cv_gui_tab1.png)
+![First tab of the calendar view GUI](https://raw.githubusercontent.com/CsabaWirnhardt/cbm_media/main/11_cv_gui_tab1.png)
 
 
 The following custom modules for the calendar_view package are called by the *run_calendar_view.py* script:
@@ -35,9 +35,9 @@ The following custom modules for the calendar_view package are called by the *ru
 
 - **extract_utils**: module for the calculation of the NDVI and NDWI indexes. The functions in this module are called by *batch_utils*.
 
-The call graph of the run_calendar_view script is provided in Figure 1.
+The call graph of the run_calendar_view script is provided in the figure below.
 
-![Figure 1: Call graph of the run_calendar_view script.](https://raw.githubusercontent.com/borioda/cbm/main/media/img/calendar_view_fun.png)
+![Call graph of the run_calendar_view script.](https://raw.githubusercontent.com/borioda/cbm/main/media/img/calendar_view_fun.png)
 
 
 ## 3 Structure of the code
