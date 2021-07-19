@@ -1,52 +1,27 @@
 ![Image of European Commission](https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/eu_science_hub.png)
 # Code examples for "CAP Checks by Monitoring” (CbM)
-### European Commission, Joint Research Center
-
-**This work is in progress and may be subject to frequent changes**
-
-The European Commission promotes the use of new technologies in the context of
-the Common Agricultural Policy (CAP) and the Integrated Administration and
-Control Systems (IACS) which are managed by the European Union Member States.
-In 2018, "Checks by Monitoring" (CbM) were introduced for area-based support
-schemes. The EU  Paying Agencies (PA) who adapt CbM will migrate to the use of
-Copernicus Sentinel data to check aid applications.
+### Europdfshgdfshdfshg
 
 
 
-## Prerequisites
-
-To start CbM it is essential to have:
-
-1. Computing resources
-2. Copernicus Analysis Ready Data (CARD)
-3. Valid agricultural parcel data (FOI compliant)
 
 
-## Deployment
-
-There are several steps to set up the core components for Checks by Monitoring.
-These steps require different types of technical expertise. 
-
-- Install server applications
-    - Docker (containerization system)
-    - Postgres database with PostGIS extension
-    - Jupyter (interactive analysis and visualization environment)
 
 
-- Adding data to the database
-    - Parcels data to database
-    - CARD Metadata and other required data
 
 
-- Running code examples
-    - Parcel extraction routines
-    - Machine learning algorithms
-    - Database backups
-    - Analytical routines (e.g. market detection)
 
 
-- Accessing and viewing results
-    - Building RESTFul API
+
+
+
+adfgdsfgdsfg
+
+
+
+adfg
+
+adfg
     - Using Jupyter Notebooks
 
 
