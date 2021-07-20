@@ -1,13 +1,13 @@
 # Calendar view
 
 ## 1. Introduction
-The “**calendar_view**” python package provides a set of functions that allows one to download, process and display Sentinel-1 and Sentinel-2 data products. The package is designed to operate on “**parcels**” provided as input in a ESRI shape file. Sentinel-1 and -2 data are extracted for the specific parcels and are displayed in a “**calendar view**”, which as been designed and optimized to provide an immediate and intuitive access to both temporal and spatial dimensions of Sentinel-derived data.
+The “**calendar_view**” python package provides a set of functions that allows one to download, process and display Sentinel-1 and Sentinel-2 data products. The package is designed to operate on “**parcels**” provided as input in a ESRI shape file. Sentinel-1 and -2 data are extracted for the specific parcels and are displayed in a “**calendar view**”, which has been designed and optimized to provide an immediate and intuitive access to both temporal and spatial dimensions of Sentinel-derived data.
 
-While the scripts exploit the RESTful APIs developed by the JRC D5 unit to download raw Sentinel imagettes tailored to the extent of the parcels provided as input, the code is general and can be easily adapted to work, for example, on geotiff downloaded from other sources.
+While the scripts exploit the [RESTful APIs](https://jrc-cbm.readthedocs.io/en/latest/api_imgs.html) developed by the JRC D5 unit to download raw Sentinel imagettes tailored to the extent of the parcels provided as input, the code is general and can be easily adapted to work, for example, on geotiff downloaded from other sources.
 
 
 ## 2. Dependencies
-The *run_calendar_view.py* script depends on several standard python libraries that can be found in the *requirements.txt* file. The dependencies can be installed with:
+The calendar view script depends on several standard python libraries that can be found in the *requirements.txt* file. The dependencies can be installed with:
 
   pip install -r requirements.txt
 
@@ -15,8 +15,23 @@ As well the gdal_merge.py module that can be download from [https://github.com/g
 and should be added to the utils folder.
 
 
-### 2.1 Calendar view Modules 
-The following custom modules for the calendar_view package are called by the *run_calendar_view.py* script:
+### 2.1 Calendar view Modules
+
+The script can be launched from the "calendar_view_gui.ipynb" Jupyter notebook.
+
+On the first tab of the GUI you can select the products that you want to produce:
+![First tab of the calendar view GUI](https://raw.githubusercontent.com/CsabaWirnhardt/cbm_media/main/11_cv_gui_tab1.png)
+
+On the second tab of the GUI you can set the date range for data download and visualisation:
+![Second tab of the calendar view GUI](https://raw.githubusercontent.com/CsabaWirnhardt/cbm_media/main/12_cv_gui_tab2.png)
+
+On the third tab of the GUI you can define the ESRI shapefile with the parcel polygons ("Vector filename"), you can select the folder for the outputs produced by the script ("Base folder outputs"), the attribute table column holding the parcel ids ("Parcel id column") and the attbibute table column holding the crop names ("Crop name column"):
+![Third tab of the calendar view GUI](https://raw.githubusercontent.com/CsabaWirnhardt/cbm_media/main/13_cv_gui_tab3.png)
+
+On the forth tab of the GUI you can define all additional parameters, such as the title for the time series graphs, whether to include or exclude the cirrus cloud mask from cloud cover calculations, the buffer size around the parcel for chip extract (in meters) and the potential shift of the parcel centroid in degrees. (This latter can be useful when you want to make sure the image chips are re-generated and not read from the cash):
+![Forth tab of the calendar view GUI](https://raw.githubusercontent.com/CsabaWirnhardt/cbm_media/main/14_cv_gui_tab4.png)
+
+The following custom modules for the calendar_view package are called by the *run_calendar_view_from_jupyter.py* script:
 
 - **batch_utils**: provides general functions for the processing of parcels and Sentinel data. The set of functions provided in this module allows the selection of parcels, the determination of the list of imagettes to be downloaded on the basis of cloud mask criteria, the download of imagettes, processing of Sentinel data including image color stretching (lookup table stretch or LUT stretch)and computation of derived indexes such as NDVI and NDWI. For download operations, the module uses the functions developed under *download_utils*.
     
@@ -28,9 +43,9 @@ The following custom modules for the calendar_view package are called by the *ru
 
 - **extract_utils**: module for the calculation of the NDVI and NDWI indexes. The functions in this module are called by *batch_utils*.
 
-The call graph of the run_calendar_view script is provided in Figure 1.
+The call graph of the run_calendar_view script is provided in the figure below.
 
-![Figure 1: Call graph of the run_calendar_view script.](https://raw.githubusercontent.com/borioda/cbm/main/media/img/calendar_view_fun.png)
+![Call graph of the run_calendar_view script.](https://raw.githubusercontent.com/borioda/cbm/main/media/img/calendar_view_fun.png)
 
 
 ## 3 Structure of the code
@@ -58,7 +73,7 @@ The different parts of the script are better detailed in the following sections.
     - create a list tiles to be downloaded (based on cloud cover)
     - get and download band imagettes
     - merge bands and apply stretching
-    - crete calendar views
+    - create calendar views
     - generetes derived products: NDVI profiles, histograms, Red-NIR scatter plots, ...
 
 - **Sentinel-1 processing**
