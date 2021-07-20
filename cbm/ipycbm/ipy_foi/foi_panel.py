@@ -129,7 +129,7 @@ def foi_tab_v1():
     img_option.observe(on_img_option_change, 'value')
 
     img_file = cbm_widgets.get_files_dropdown(
-        f'{path_foi}raster', '.tif', 'Select Raster')
+        f'{path_foi}raster', '.tif, .tiff', 'Select Raster')
     img_box = VBox([img_info, img_option, img_file])
 
     # YAML File upload
@@ -138,7 +138,8 @@ def foi_tab_v1():
             - This can be also a simple list of values in the notebook
             corespondence between pixel values and names for the classes""")
 
-    yml_file = cbm_widgets.get_files_dropdown(path_foi, '.yml', 'Select YML')
+    yml_file = cbm_widgets.get_files_dropdown(path_foi, '.yml, .yaml',
+                                              'Select YML')
     yml_box = VBox([yml_info, yml_file])
 
     # Database functions
@@ -263,7 +264,7 @@ def foi_tab_v2():
         """1. Spatial data to be tested -
         parcels that will be checked for heterogeneity and cardinality.""")
     shp_file = cbm_widgets.get_files_dropdown(
-        f'{path_foi}vector', '', 'Select .shp', True)
+        f'{path_foi}vector', '', 'Select .shp', True, True)
     shp_box = VBox([shp_info, shp_file])
 
     # Thematic raster.
@@ -287,7 +288,7 @@ def foi_tab_v2():
             img_box.children = ()
     img_option.observe(on_img_option_change, 'value')
     img_file = cbm_widgets.get_files_dropdown(
-        f'{path_foi}raster', '.tif', 'Select Raster')
+        f'{path_foi}raster', '.tif, .tiff', 'Select Raster')
     img_box = VBox([img_info, img_option, img_file])
 
     # YAML File upload
@@ -295,7 +296,8 @@ def foi_tab_v2():
         """3. YAML file that holds the classes form the thematic raster.<br>
             - This can be also a simple list of values in the notebook
             corespondence between pixel values and names for the classes""")
-    yml_file = cbm_widgets.get_files_dropdown(path_foi, '.yml', 'Select YML')
+    yml_file = cbm_widgets.get_files_dropdown(path_foi, '.yml, .yaml',
+                                              'Select YML')
     yml_box = VBox([yml_info, yml_file])
 
     # FOI Prerequisites
