@@ -9,12 +9,12 @@
 
 import os
 import glob
-from ipywidgets import (Text, Label, HBox, VBox, Layout, Dropdown,
-                        ToggleButtons, Output, HTML, Button,
-                        FileUpload, IntText, RadioButtons)
+from ipywidgets import (Label, HBox, VBox, Layout, Dropdown,
+                        Output, Button, FileUpload)
 
 
-def get_files_dropdown(path, ftype='', description='', select_multi=False):
+def get_files_dropdown(path, ftypes='', description='',
+                       select_multi=False, only_shp=False):
 
     progress = Output()
 
@@ -25,7 +25,7 @@ def get_files_dropdown(path, ftype='', description='', select_multi=False):
     select = FileUpload(
         description='Select file:',
         icon='plus',
-        accept=ftype,
+        accept=ftypes,
         multiple=select_multi
     )
     clear = Button(
@@ -45,8 +45,7 @@ def get_files_dropdown(path, ftype='', description='', select_multi=False):
     dist_folder = Label(f"Destination path: '{path}'")
 
     flist = Dropdown(
-        options=[os.path.basename(s) for s in glob.glob(
-            f'{path}/*') if s.endswith(ftype)],
+        options=filter_files(path, ftypes, only_shp),
         description=description,
         disabled=False,
     )
@@ -57,8 +56,7 @@ def get_files_dropdown(path, ftype='', description='', select_multi=False):
 
     @refresh.on_click
     def refresh_on_click(b):
-        flist.options = [os.path.basename(s) for s in glob.glob(
-            f'{path}/*') if s.endswith(ftype)]
+        flist.options = filter_files(path, ftypes, only_shp)
 
     @clear.on_click
     def clear_on_click(b):
@@ -73,9 +71,21 @@ def get_files_dropdown(path, ftype='', description='', select_multi=False):
             content = select.value[key]['content']
             with open(f'{path}/{key}', 'wb') as f:
                 f.write(content)
-        flist.options = [os.path.basename(s) for s in glob.glob(
-            f'{path}/*') if s.endswith(ftype)]
+        flist.options = filter_files(path, ftypes, only_shp)
         outlog("The file is uploaded.")
 
     return VBox([HBox([select, clear, upload, dist_folder]),
                  HBox([flist, refresh]), progress])
+
+
+def filter_files(path, ftypes, only_shp=False):
+    if type(ftypes) is str:
+        ftypes = ftypes.split(', ')
+    if only_shp:
+        ftypes = ['shp']
+    flist = []
+    for s in glob.glob(f'{path}/*'):
+        for f in ftypes:
+            if s.endswith(f):
+                flist.append(s)
+    return flist
