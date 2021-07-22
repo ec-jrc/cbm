@@ -1,2 +1,4 @@
 include cbm/utils/default/main.json
 include cbm/utils/default/api_options.json
+include cbm/foi/foi_db_func/checkCardinality.func
+include cbm/foi/foi_db_func/checkHeterogeneity.func
