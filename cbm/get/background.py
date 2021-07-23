@@ -8,10 +8,9 @@
 # License   : 3-Clause BSD
 import os
 import json
-import glob
-from os.path import join, normpath, exists, isfile
+from os.path import join, normpath, isfile
 
-from cbm.utils import spatial_utils, config
+from cbm.utils import config
 
 
 def by_location(aoi, year, lon, lat, chipsize=512, extend=512,
