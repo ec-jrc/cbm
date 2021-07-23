@@ -320,3 +320,17 @@ def tb_exist(table, db='main'):
     conn.close()
     cur.close()
     return exist
+
+
+def db_func_exist(func, db='main'):
+    """Check if table exist"""
+    dbfExistSql = f"""
+        SELECT exists(SELECT * FROM pg_proc WHERE proname = '{func}');
+    """
+    conn = psycopg2.connect(conn_str(db))
+    cur = conn.cursor()
+    cur.execute(dbfExistSql)
+    exist = cur.fetchall()[0][0]
+    conn.close()
+    cur.close()
+    return exist
