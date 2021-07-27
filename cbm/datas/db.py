@@ -86,7 +86,7 @@ def create_db_config():
         db_conf = """{
     "db": {
         "main": {
-            "desc": "Main db",
+            "description": "Main db",
             "host": "0.0.0.0",
             "port": "5432",
             "sche": "public",
