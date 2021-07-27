@@ -160,12 +160,12 @@ def foi_tab_v1():
         try:
             functions = glob.glob(f"{path_foi_func}*.func")
             db = config.get_value(['set', 'db_conn'])
-            sche = config.get_value(['db', db, 'sche'])
+            schema = config.get_value(['db', db, 'schema'])
             user = config.get_value(['db', db, 'user'])
 
             for f in functions:
                 db.insert_function(open(f).read().format(
-                    schema=sche, owner=user))
+                    schema=schema, owner=user))
                 outlog(f"The '{f}' Was imported to the database.")
             finc_list = [
                 f"ipycbm_{f.split('/')[-1].split('.')[0]}, " for f in functions]
