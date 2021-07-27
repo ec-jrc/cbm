@@ -174,8 +174,7 @@ def foi_tab_v1():
         except Exception as err:
             outlog("Could not add functions to dattabase.", err)
 
-    dbf_box = VBox(
-        [dbf_info, dbf_insert])
+    dbf_box = VBox([dbf_info, dbf_insert])
 
     # FOI Parameters
     param_info = HTML(

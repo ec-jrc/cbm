@@ -62,8 +62,8 @@ def main(vector_file, raster_file, yaml_file, pre_min_het,
 
     """
 
-    path_temp = f"{config.get_value(['paths', 'temp'])}/"
-    path_data = f"{config.get_value(['paths', 'data'])}/"
+    path_temp = normpath(join(config.get_value(['paths', 'temp']), 'foi'))
+    path_data = normpath(join(config.get_value(['paths', 'data']), 'foi'))
     # database connection string
     db_connection = f"PG:{db.conn_str(db_)}"
     # ogr2ogr options
@@ -71,11 +71,11 @@ def main(vector_file, raster_file, yaml_file, pre_min_het,
     overwrite_option = "-OVERWRITE"
     geom_type = "MULTIPOLYGON"
     output_format = "PostgreSQL"
-    
+
 
     # Path for storing the processed data - final spatial data that will be
     #    exported after database processing
-    processed_data = f'{path_temp}/processed_data/'
+    processed_data = normpath(join(path_temp, 'processed_data'))
     os.makedirs(processed_data, exist_ok=True)
     # Spatial data to be tested - parcels that will be checked for
     #   heterogeneity and cardinality
@@ -88,7 +88,7 @@ def main(vector_file, raster_file, yaml_file, pre_min_het,
     # corespondence between pixel values and names for the classes
     # yaml_file = f'{path_data}pixelvalues_classes.yml'
 
-    output_data = f'{path_temp}output_data/'
+    output_data = normpath(join(path_data, 'output_data'))
     os.makedirs(output_data, exist_ok=True)
     reference_data_name = os.path.splitext(os.path.basename(reference_data))[0]
     try:
@@ -120,7 +120,7 @@ def main(vector_file, raster_file, yaml_file, pre_min_het,
         reference_data_name + '_foic_v1.shp'
     cardinality_output_clusters = f'{output_data}' + \
         reference_data_name + '_foic_clusters_v1.shp'
-    
+
     sql = "SELECT * FROM " + reference_data_table + ";"
     try:
         ps_connection = db.conn(db_)
@@ -139,14 +139,14 @@ def main(vector_file, raster_file, yaml_file, pre_min_het,
         if(ps_connection):
             cursor.close()
             ps_connection.close()
-            #print("PostgreSQL connection is closed") 
-    
+            #print("PostgreSQL connection is closed")
+
     temp_reference_data = f'{path_temp}' + \
         reference_data_name + '_temp.shp'
-    
+
     gpd_data.to_file(temp_reference_data)
-    
-    
+
+
     shape = fiona.open(temp_reference_data)
     spatialRef = shape.crs["init"]
 #     print("Vector EPSG: ", spatialRef)
@@ -327,7 +327,7 @@ def main(vector_file, raster_file, yaml_file, pre_min_het,
     subprocess.call(["ogr2ogr", "-f", "ESRI Shapefile",
                      cardinality_output, db_connection, processed_cardinality])
     print("Cardinality analysis output downloaded")
-    
+
     filelist_temp = [ f for f in os.listdir( f'{path_temp}') if f.startswith(Path(temp_reference_data).stem) ]
     for f in filelist_temp:
         os.remove(os.path.join(f'{path_temp}', f))
