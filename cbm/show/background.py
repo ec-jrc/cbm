@@ -37,7 +37,7 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['Google'],
 
     Examples:
         from cbm.view import background
-        background.by_location(aoi, lon, lat, 512, 512, 'Google',
+        background.by_location(aoi, year, lon, lat, 512, 512, 'Google',
                                 True, True)
 
     Arguments:
@@ -55,7 +55,7 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['Google'],
 
     try:
         get_requests = data_source()
-        json_data = json.loads(get_requests.ploc(aoi, year, lon, lat,
+        json_data = json.loads(get_requests.parcel_by_loc(aoi, year, lon, lat,
                                                  True, False, debug))
         if type(json_data['ogc_fid']) is list:
             pid = json_data['ogc_fid'][0]
@@ -131,7 +131,7 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['Google'],
 
     Examples:
         from cbm.view import background
-        background.by_location(aoi, lon, lat, 512, 512, 'Google',
+        background.by_location(aoi, year, lon, lat, 512, 512, 'Google',
                                 True, True)
 
     Arguments:
@@ -217,6 +217,8 @@ def check_args(bg_path, chipsize, extend):
                 os.rename(rf'{last_par[0]}',
                           rf'{bg_path}/chipsize_extend_{chipsize}_{extend}')
                 return False
+            else:
+                return True
         else:
             with open(f"{bg_path}/chipsize_extend_{chipsize}_{extend}", "w") as f:
                 f.write('')
