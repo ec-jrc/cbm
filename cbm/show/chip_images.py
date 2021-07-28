@@ -29,7 +29,8 @@ def overlay_parcel(img, geom):
     return patche
 
 
-def by_location(aoi, lon, lat, dates, band, chipsize, columns=5, quiet=True):
+def by_location(aoi, year, lon, lat, dates, band,
+                chipsize, columns=5, quiet=True):
     from cbm.datas import api
     """Plot chip image with parcel polygon overlay.
 
@@ -57,7 +58,7 @@ def by_location(aoi, lon, lat, dates, band, chipsize, columns=5, quiet=True):
     else:
         start_date, end_date = dates, dates
 
-    json_data = json.loads(api.ploc(aoi, lon, lat, True))
+    json_data = json.loads(api.parcel_by_loc(aoi, lon, lat, True))
     if type(json_data['ogc_fid']) is list:
         pid = json_data['ogc_fid'][0]
     else:
