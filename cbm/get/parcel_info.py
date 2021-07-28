@@ -9,16 +9,17 @@
 
 import os
 import json
-from os.path import join, normpath, isfile, dirname
+from os.path import join, normpath, dirname
 from cbm.utils import config
 
 
-def by_location(aoi, year, lon, lat, geom=False, wgs84=False, quiet=True):
+def by_location(aoi, year, lon, lat, ptype=None, geom=False,
+                wgs84=False, debug=False):
     """Download the time series for the selected year
 
     Examples:
         import cbm
-        cbm.get.parcel.by_location(aoi, lon, lat, save)
+        cbm.get.parcel.by_location(aoi, year, lon, lat)
 
     Arguments:
         aoi, the area of interest (str)
@@ -26,41 +27,24 @@ def by_location(aoi, year, lon, lat, geom=False, wgs84=False, quiet=True):
         lon, lat, the the coords of the parcel (float).
     """
     get_requests = data_source()
-    try:
-        json_data = json.loads(get_requests.ploc(
-            aoi, year, lon, lat, geom, wgs84))
-        if type(json_data['ogc_fid']) is list:
-            pid = json_data['ogc_fid'][0]
-        else:
-            pid = json_data['ogc_fid']
-
-        workdir = normpath(join(config.get_value(['paths', 'temp']),
-                                aoi, str(year), str(pid)))
-        json_file = normpath(join(workdir, 'info.json'))
-        os.makedirs(workdir, exist_ok=True)
-        if not isfile(json_file):
-            with open(json_file, "w") as f:
-                json.dump(json_data, f)
-    except Exception:
-        workdir = normpath(join(config.get_value(['paths', 'temp']), aoi,
-                                str(year), f'_{lon}_{lat}'.replace('.', '_')))
-
-    file_pinf = normpath(join(workdir, 'info.json'))
-    if not isfile(file_pinf):
-        try:
-            parcel = json.loads(get_requests.pid(aoi, year, pid, geom, wgs84))
-            os.makedirs(dirname(file_pinf), exist_ok=True)
-            with open(file_pinf, "w") as f:
-                json.dump(parcel, f)
-        except Exception as err:
-            return f"Could not create the file: {err}"
+    parcel = json.loads(get_requests.parcel_by_loc(aoi, year, lon, lat,
+                                                   geom, wgs84, debug))
+    if type(parcel['ogc_fid']) is list:
+        pid = parcel['ogc_fid'][0]
     else:
-        with open(file_pinf, 'r') as f:
-            parcel = json.load(f)
-        return parcel
+        pid = parcel['ogc_fid']
+
+    workdir = normpath(join(config.get_value(['paths', 'temp']),
+                            aoi, str(year), str(pid)))
+    json_file = normpath(join(workdir, 'info.json'))
+    os.makedirs(workdir, exist_ok=True)
+    with open(json_file, "w") as f:
+        json.dump(parcel, f)
+    return parcel
 
 
-def by_pid(aoi, year, pid, geom=False, wgs84=False, quiet=True):
+def by_pid(aoi, year, pid, ptype=None, geom=False,
+           wgs84=False, debug=False):
     """Download the time series for the selected year
 
     Examples:
@@ -75,18 +59,12 @@ def by_pid(aoi, year, pid, geom=False, wgs84=False, quiet=True):
     workdir = config.get_value(['paths', 'temp'])
     get_requests = data_source()
     file_pinf = normpath(join(workdir, aoi, str(year), str(pid), 'info.json'))
-    if not isfile(file_pinf):
-        try:
-            parcel = json.loads(get_requests.pid(aoi, year, pid, geom, wgs84))
-            os.makedirs(dirname(file_pinf), exist_ok=True)
-            with open(file_pinf, "w") as f:
-                json.dump(parcel, f)
-        except Exception as err:
-            return f"Could not create the file: {err}"
-    else:
-        with open(file_pinf, 'r') as f:
-            parcel = json.load(f)
-        return parcel
+    parcel = json.loads(get_requests.parcel_by_id(aoi, year, pid, ptype,
+                                                  geom, wgs84, debug))
+    os.makedirs(dirname(file_pinf), exist_ok=True)
+    with open(file_pinf, "w") as f:
+        json.dump(parcel, f)
+    return parcel
 
 
 def data_source():

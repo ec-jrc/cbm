@@ -14,7 +14,7 @@ from cbm.utils import config
 
 
 def by_location(aoi, lon, lat, start_date, end_date, band, chipsize,
-                quiet=True):
+                debug=False):
     """Download the chip image by selected location.
 
     Examples:
@@ -35,47 +35,42 @@ def by_location(aoi, lon, lat, start_date, end_date, band, chipsize,
         chipsize, size of the chip in pixels (int).
     """
     get_requests = data_source()
-    json_data = json.loads(get_requests.ploc(aoi, lon, lat, True))
-    if type(json_data['ogc_fid']) is list:
-        pid = json_data['ogc_fid'][0]
+    year = start_date.split('-')[0]
+    parcel = json.loads(get_requests.parcel_by_loc(aoi, year,
+                                                   lon, lat, True))
+    if type(parcel['ogc_fid']) is list:
+        pid = parcel['ogc_fid'][0]
     else:
-        pid = json_data['ogc_fid']
+        pid = parcel['ogc_fid']
 
     workdir = normpath(join(config.get_value(['paths', 'temp']),
                             aoi, str(pid)))
-    pfile = normpath(join(workdir, 'info.json'))
+    os.makedirs(dirname(workdir), exist_ok=True)
 
-    if not isfile(pfile):
-        parcel = json.loads(get_requests.pid(aoi, pid, True))
-        try:
-            os.makedirs(dirname(pfile), exist_ok=True)
-            with open(pfile, "w") as f:
-                json.dump(parcel, f)
-            if not quiet:
-                print(f"File saved at: {pfile}")
-        except Exception as err:
-            print(f"Could not create the file: {err}")
-    else:
-        with open(pfile, "r") as f:
-            parcel = json.load(f)
-    images_dir = normpath(join(workdir, 'chip_images'))
-    if not quiet:
+    pfile = normpath(join(workdir, 'info.json'))
+    with open(pfile, "w") as f:
+        json.dump(parcel, f)
+
+    if debug:
+        print(f"File saved at: {pfile}")
         print(f"Getting '{band}' chip images for parcel: {pid}")
 
+    images_dir = normpath(join(workdir, 'chip_images'))
     get_requests.rcbl(parcel, start_date, end_date, [band],
                       chipsize, images_dir)
 
     images_list = normpath(join(workdir, 'chip_images',
                                 f'images_list.{band}.csv'))
     if file_len(images_list) > 1:
-        if not quiet:
+        if debug:
             print(f"Completed, all GeoTIFFs for band '{band}' are downloaded",
                   f" in the folder: '{workdir}/chip_images'")
     else:
         print("No files where downloaded, please check your configurations")
 
 
-def by_pid(aoi, pid, start_date, end_date, band, chipsize, quiet=True):
+def by_pid(aoi, year, pid, ptype, start_date, end_date,
+           band, chipsize, debug=False):
     """Download the chip image by selected parcel id.
 
     Examples:
@@ -100,20 +95,19 @@ def by_pid(aoi, pid, start_date, end_date, band, chipsize, quiet=True):
     get_requests = data_source()
     pfile = normpath(join(workdir, 'info.json'))
     if not isfile(pfile):
-        parcel = json.loads(get_requests.pid(aoi, pid, True))
-        try:
-            os.makedirs(dirname(pfile), exist_ok=True)
-            with open(pfile, "w") as f:
-                json.dump(parcel, f)
-            if not quiet:
-                print(f"File saved at: {pfile}")
-        except Exception as err:
-            print(f"Could not create the file: {err}")
+        os.makedirs(dirname(pfile), exist_ok=True)
+        parcel = json.loads(get_requests.parcel_by_id(aoi, year, ptype,
+                                                      pid, True))
+        with open(pfile, "w") as f:
+            json.dump(parcel, f)
+        if debug:
+            print(f"File saved at: {pfile}")
     else:
         with open(pfile, "r") as f:
             parcel = json.load(f)
+
     images_dir = normpath(join(workdir, 'chip_images'))
-    if not quiet:
+    if debug:
         print(f"Getting '{band}' chip images for parcel: {pid}")
 
     get_requests.rcbl(parcel, start_date, end_date, [band],
@@ -122,7 +116,7 @@ def by_pid(aoi, pid, start_date, end_date, band, chipsize, quiet=True):
     images_list = normpath(join(workdir, 'chip_images',
                                 f'images_list.{band}.csv'))
     if file_len(images_list) > 1:
-        if not quiet:
+        if debug:
             print(f"Completed, all GeoTIFFs for band '{band}' are downloaded",
                   f" in the folder: '{workdir}/chip_images'")
     else:
