@@ -13,7 +13,7 @@ from cbm.utils import config
 import json
 
 
-def ploc(aoi, year, lon, lat, geom=False):
+def parcel_by_loc(aoi, year, lon, lat, geom=False):
     values = config.read()
     db = int(values['dataset'][aoi]['db'])
     data = db.getParcelByLocation(aoi, lon, lat, geom, db)
@@ -25,7 +25,7 @@ def ploc(aoi, year, lon, lat, geom=False):
         return json.dumps(dict(zip(list(data[0]), [list(i) for i in zip(*data[1:])])))
 
 
-def pid(aoi, year, pid, geom=False):
+def parcel_by_id(aoi, year, pid, geom=False):
     values = config.read()
     db = int(values['dataset'][aoi]['db'])
     data = db.getParcelById(aoi, year, pid, geom, db)
@@ -37,7 +37,7 @@ def pid(aoi, year, pid, geom=False):
         return json.dumps(dict(zip(list(data[0]), [list(i) for i in zip(*data[1:])])))
 
 
-def ppoly(aoi, year, polygon, geom=False, only_ids=True):
+def parcel_by_polygon(aoi, year, polygon, geom=False, only_ids=True):
     values = config.read()
     db = int(values['dataset'][aoi]['db'])
     data = db.getParcelsByPolygon(aoi, polygon, geom, only_ids, db)
@@ -49,7 +49,7 @@ def ppoly(aoi, year, polygon, geom=False, only_ids=True):
         return json.dumps(dict(zip(list(data[0]), [list(i) for i in zip(*data[1:])])))
 
 
-def pts(aoi, year, pid, tstype, band=None):
+def parcel_ts(aoi, year, pid, tstype, band=None):
     values = config.read()
     db = int(values['dataset'][aoi]['db'])
     data = db.getParcelTimeSeries(aoi, year, pid, tstype, band, db)
