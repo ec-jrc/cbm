@@ -15,7 +15,7 @@ from os.path import join, normpath, isfile
 from cbm.utils import config
 
 
-def ploc(aoi, year, lon, lat, geom=False, wgs84=False, debug=False):
+def parcel_by_loc(aoi, year, lon, lat, geom=False, wgs84=False, debug=False):
 
     api_url, api_user, api_pass = config.credentials('api')
     requrl = """{}/query/parcelByLocation?aoi={}&year={}&lon={}&lat={}"""
@@ -31,7 +31,8 @@ def ploc(aoi, year, lon, lat, geom=False, wgs84=False, debug=False):
     return response.content
 
 
-def pid(aoi, year, pid, ptype=None, geom=False, wgs84=False, debug=False):
+def parcel_by_id(aoi, year, pid, ptype=None, geom=False,
+                 wgs84=False, debug=False):
     api_url, api_user, api_pass = config.credentials('api')
     requrl = """{}/query/parcelById?aoi={}&year={}&pid={}"""
     if geom is True:
@@ -48,7 +49,8 @@ def pid(aoi, year, pid, ptype=None, geom=False, wgs84=False, debug=False):
     return response.content
 
 
-def ppoly(aoi, year, polygon, ptype='', geom=False, wgs84=False, only_ids=True):
+def parcel_by_polygon(aoi, year, polygon, ptype='', geom=False,
+                      wgs84=False, only_ids=True, debug=False):
 
     api_url, api_user, api_pass = config.credentials('api')
     requrl = """{}/query/parcelsByPolygon?aoi={}&year={}&polygon={}"""
@@ -62,10 +64,12 @@ def ppoly(aoi, year, polygon, ptype='', geom=False, wgs84=False, only_ids=True):
         requrl = f"{requrl}&wgs84={wgs84}"
     response = requests.get(requrl.format(api_url, aoi, year, polygon),
                             auth=(api_user, api_pass))
+    if debug:
+        print(requrl.format(api_url, aoi, year, polygon), response)
     return response.content
 
 
-def pts(aoi, year, pid, tstype, band=''):
+def parcel_ts(aoi, year, pid, tstype, band='', debug=False):
 
     api_url, api_user, api_pass = config.credentials('api')
     requrl = """{}/query/parcelTimeSeries?aoi={}&year={}&pid={}&tstype={}&band={}"""
@@ -73,6 +77,8 @@ def pts(aoi, year, pid, tstype, band=''):
     response = requests.get(requrl.format(api_url, aoi, year,
                                           pid, tstype, band),
                             auth=(api_user, api_pass))
+    if debug:
+        print(requrl.format(api_url, aoi, year, pid, tstype, band), response)
     return response.content
 
 
@@ -268,11 +274,13 @@ def background(lon, lat, chipsize=512, extend=512, tms='Google',
         if img_url == '{}':
             if debug:
                 print("Image not found...")
-                print(f"{api_url}/query/backgroundByLocation?{requrl}&tms={tms}&raw", response)
+                print(
+                    f"{api_url}/query/backgroundByLocation?{requrl}&tms={tms}&raw", response)
             return response
         else:
             if debug:
-                print(f"{api_url}/query/backgroundByLocation?{requrl}&tms={tms}&raw", response)
+                print(
+                    f"{api_url}/query/backgroundByLocation?{requrl}&tms={tms}&raw", response)
             res = requests.get(img_url, stream=True)
             image_name = img_url.split('/')[-1].lower()
             bg_file = normpath(join(bg_path, image_name))
