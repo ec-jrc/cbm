@@ -10,62 +10,52 @@
 import os
 import json
 import pandas as pd
-from os.path import join, normpath, isfile
+from os.path import join, normpath
 from cbm.utils import config
+from cbm.get import parcel_info
 
 
-def by_location(aoi, year, lon, lat, tstype, band='', quiet=False):
+def by_location(aoi, year, lon, lat, tstype, ptype=None, band='', debug=False):
     """Download the time series for the selected year
 
     Examples:
         import cbm
-        cbm.get.time_series.by_location(aoi, lon, lat, tstype, band, save)
+        cbm.get.time_series.by_location(aoi, year, lon, lat, tstype)
 
     Arguments:
         aoi, the area of interest and year e.g.: es2019, nld2020 (str)
         lon, lat, the the coords of the parcel (float).
     """
     get_requests = data_source()
-    try:
-        json_data = json.loads(get_requests.ploc(aoi, year, lon, lat, True))
-        if type(json_data['ogc_fid']) is list:
-            pid = json_data['ogc_fid'][0]
-        else:
-            pid = json_data['ogc_fid']
-
-        workdir = normpath(join(config.get_value(['paths', 'temp']),
-                                aoi, str(pid)))
-        json_file = normpath(join(workdir, 'info.json'))
-        os.makedirs(workdir, exist_ok=True)
-        if not isfile(json_file):
-            with open(json_file, "w") as f:
-                json.dump(json_data, f)
-    except Exception:
-        workdir = normpath(join(config.get_value(['paths', 'temp']),
-                                aoi, f'_{lon}_{lat}'.replace('.', '_')))
-    file_ts = normpath(join(workdir, aoi, pid,
-                            f'time_series_{tstype}{band}'))
-    if not isfile(file_ts):
-        ts = json.loads(get_requests.pts(aoi, year, pid, tstype, band))
-        try:
-            if isinstance(ts, pd.DataFrame):
-                ts.to_csv(file_ts, index=True, header=True)
-            elif isinstance(ts, dict):
-                os.makedirs(os.path.dirname(file_ts), exist_ok=True)
-                df = pd.DataFrame.from_dict(ts, orient='columns')
-                df.to_csv(file_ts, index=True, header=True)
-            if not quiet:
-                print(f"File saved at: {file_ts}")
-            return ts
-        except Exception as err:
-            return f"Could not create the file: {err}"
+    parcel = parcel_info.by_location(aoi, year, lon, lat,
+                                     ptype, True, False, debug)
+    if type(parcel['ogc_fid']) is list:
+        pid = parcel['ogc_fid'][0]
     else:
-        with open(file_ts, 'r') as f:
-            ts = json.load(f)
+        pid = parcel['ogc_fid']
+
+    workdir = config.get_value(['paths', 'temp'])
+    file_ts = normpath(join(workdir, aoi, year, str(pid),
+                            f'time_series_{tstype}{band}.csv'))
+    ts = json.loads(get_requests.parcel_ts(
+        aoi, year, pid, tstype, band, debug))
+    try:
+        if isinstance(ts, pd.DataFrame):
+            ts.to_csv(file_ts, index=True, header=True)
+        elif isinstance(ts, dict):
+            os.makedirs(os.path.dirname(file_ts), exist_ok=True)
+            df = pd.DataFrame.from_dict(ts, orient='columns')
+            df.to_csv(file_ts, index=True, header=True)
+        if debug:
+            print(f"File saved at: {file_ts}")
         return ts
+    except Exception as err:
+        return f"Could not create the file: {err}"
+
+    return ts
 
 
-def by_pid(aoi, year, pid, tstype, band='', quiet=False):
+def by_pid(aoi, year, pid, tstype, band='', debug=False):
     """Download the time series for the selected year
 
     Examples:
@@ -78,26 +68,19 @@ def by_pid(aoi, year, pid, tstype, band='', quiet=False):
     """
     workdir = config.get_value(['paths', 'temp'])
     get_requests = data_source()
-    file_ts = normpath(join(workdir, aoi, pid,
-                            f'time_series_{tstype}{band}'))
-    if not isfile(file_ts):
-        ts = json.loads(get_requests.pts(aoi, year, pid, tstype, band))
-        try:
-            if isinstance(ts, pd.DataFrame):
-                ts.to_csv(file_ts, index=True, header=True)
-            elif isinstance(ts, dict):
-                os.makedirs(os.path.dirname(file_ts), exist_ok=True)
-                df = pd.DataFrame.from_dict(ts, orient='columns')
-                df.to_csv(file_ts, index=True, header=True)
-            if not quiet:
-                print(f"File saved at: {file_ts}")
-            return ts
-        except Exception as err:
-            return f"Could not create the file: {err}"
-    else:
-        with open(file_ts, 'r') as f:
-            ts = json.load(f)
-        return ts
+    file_ts = normpath(join(workdir, aoi, year, str(pid),
+                            f'time_series_{tstype}{band}.csv'))
+    ts = json.loads(get_requests.parcel_ts(
+        aoi, year, pid, tstype, band, debug))
+    if isinstance(ts, pd.DataFrame):
+        ts.to_csv(file_ts, index=True, header=True)
+    elif isinstance(ts, dict):
+        os.makedirs(os.path.dirname(file_ts), exist_ok=True)
+        df = pd.DataFrame.from_dict(ts, orient='columns')
+        df.to_csv(file_ts, index=True, header=True)
+    if debug:
+        print(f"File saved at: {file_ts}")
+    return ts
 
 
 def data_source():

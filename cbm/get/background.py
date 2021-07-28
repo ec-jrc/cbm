@@ -11,10 +11,11 @@ import json
 from os.path import join, normpath, isfile
 
 from cbm.utils import config
+from cbm.get import parcel_info
 
 
 def by_location(aoi, year, lon, lat, chipsize=512, extend=512,
-                tms=['Google'], axis=True, debug=False):
+                tms=['Google'], ptype=None, axis=True, debug=False):
     """Download the background image with parcels polygon overlay by selected
     location. This function will get an image from the center of the polygon.
 
@@ -36,25 +37,19 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512,
     if type(tms) is str:
         tms = [tms]
     try:
-        json_data = json.loads(get_requests.ploc(aoi, year, lon, lat,
-                                                 True, False, debug))
-        if type(json_data['ogc_fid']) is list:
-            pid = json_data['ogc_fid'][0]
+        parcel = parcel_info.by_location(aoi, year, lon, lat, ptype,
+                                         True, False, debug)
+        if type(parcel['ogc_fid']) is list:
+            pid = parcel['ogc_fid'][0]
         else:
-            pid = json_data['ogc_fid']
+            pid = parcel['ogc_fid']
 
         workdir = normpath(join(config.get_value(['paths', 'temp']),
                                 aoi, str(year), str(pid)))
         if debug:
             print('pid: ', pid)
             print('workdir: ', workdir)
-            print('json_data: ', json_data)
 
-        json_file = normpath(join(workdir, 'info.json'))
-        os.makedirs(workdir, exist_ok=True)
-        if not isfile(json_file):
-            with open(json_file, "w") as f:
-                json.dump(json_data, f)
     except Exception as err:
         workdir = normpath(join(config.get_value(['paths', 'temp']), aoi,
                                 str(year), f'_{lon}_{lat}'.replace('.', '_')))
@@ -104,8 +99,8 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512,
         print('workdir: ', workdir)
     json_file = normpath(join(workdir, 'info.json'))
     if not isfile(json_file):
-        json_data = json.loads(get_requests.pid(aoi, year, pid,
-                                                None, True, False, debug))
+        json_data = json.loads(get_requests.parcel_by_id(aoi, year, pid, None,
+                                                         True, False, debug))
         os.makedirs(workdir, exist_ok=True)
         with open(json_file, "w") as f:
             json.dump(json_data, f)
