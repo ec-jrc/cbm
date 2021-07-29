@@ -22,18 +22,16 @@ from ipywidgets import (Text, Textarea, Label, HBox, VBox, Dropdown,
 
 from cbm.utils import config, data_options
 from cbm.ipycbm.ipy_get import get_maps
+from cbm.get import time_series, parcel_info, chip_images, background
 
 
 def get():
     """Get the parcel's dataset for the given location or ids"""
-    info = Label(
-        "1. Select the region and the year to get parcel information.")
+    debug = False
+    info = Label("1. Select the aoi to get parcel data.")
 
     values = config.read()
-    # Set the max number of parcels that can be downloaded at once.
-
     ppoly_out = Output()
-
     progress = Output()
 
     def outlog(*text):
@@ -53,7 +51,7 @@ def get():
                 desc = f"{api_values['aois'][aoi]['description']}"
                 options[(desc, aoi)] = api_values['aois'][aoi]['year']
         elif values['set']['data_source'] == 'direct':
-            values = config.read()
+            values = config.read('api_options.json')
             for aoi in values['dataset']:
                 desc = f"{values['dataset'][aoi]['description']}"
                 options[(f"{desc} ({aoi})", aoi)] = [aoi.split('_')[-1]]
@@ -103,14 +101,14 @@ def get():
     def button_refresh_on_click(b):
         values = config.read()
         if values['set']['data_source'] == 'api':
-            get_requests = data_source()
-            available_options = json.loads(get_requests.get_options())
+            from cbm.datas import api
+            available_options = json.loads(api.get_options())
             try:
                 api_options = normpath(join(config.path_conf,
                                             'api_options.json'))
                 os.makedirs(dirname(api_options), exist_ok=True)
                 with open(api_options, "w") as f:
-                    json.dump(available_options, f)
+                    json.dump(available_options, f, indent=4)
                 outlog(f"File saved at: {api_options}")
             except Exception as err:
                 outlog(f"Could not create the file 'api_options.json': {err}")
@@ -145,22 +143,12 @@ def get():
                   'Select a point on a map', 'Get parcels id in a polygon'],
     )
 
-    plon = Text(
-        value='5.664',
-        placeholder='Add lon',
-        description='Lon:',
-    )
-
-    plat = Text(
-        value='52.694',
-        placeholder='Add lat',
-        description='Lat:',
-    )
-
+    plon = Text(value='5.664', placeholder='Add lon', description='Lon:')
+    plat = Text(value='52.694', placeholder='Add lat', description='Lat:')
     wbox_lat_lot = VBox(children=[plat, plon])
 
-    info_pid = Label(
-        "Multiple parcel id codes can be added (comma ',' separated, e.g.: 11111, 22222).")
+    info_pid = HTML("""Multiple parcel id codes can be added
+    (comma ',' separated, e.g.: 11111, 22222).""")
 
     pid = Textarea(
         value='34296',
@@ -192,9 +180,9 @@ def get():
                 polygon_str = '-'.join(['_'.join(map(str, c))
                                         for c in polygon])
                 outlog_poly(f"Geting parcel ids within the polygon...")
-                polyids = json.loads(get_requests.ppoly(
-                    f"{aois.value}{year.value}", polygon_str, ptype,
-                    False, True))
+                polyids = parcel_info.by_polygon(
+                    aois.value, year.value, polygon_str, ptype.value,
+                    False, True)
                 outlog_poly(
                     f"'{len(polyids['ogc_fid'])}' parcels where found:")
                 outlog_poly(polyids['ogc_fid'])
@@ -227,9 +215,9 @@ def get():
     info_type = Label("3. Select datasets to download.")
 
     ptype = Text(
-        value='',
-        placeholder='Parcel Type',
-        description='Ptype:',
+        value=None,
+        placeholder='(Optional) Parcel Type',
+        description='pType:',
         disabled=False
     )
 
@@ -417,7 +405,7 @@ def get():
         source = config.get_value(['set', 'data_source'])
         if source == 'api':
             datapath = normpath(
-                join(paths.value, f'{aois.value}{year.value}', str(pid)))
+                join(paths.value, aois.value, year.value, str(pid)))
         elif source == 'direct':
             dataset = config.get_value(['set', 'dataset'])
             datapath = normpath(join(paths.value, dataset, str(pid)))
@@ -431,9 +419,8 @@ def get():
             outlog(f"Getting time series for parcel: '{pid}',",
                    f"({pts_tstype.value} {pts_band.value}).")
             for pts in pts_tstype.value:
-                ts = json.loads(get_requests.pts(f"{aois.value}{year.value}",
-                                                 pid, pts,
-                                                 pts_band.value))
+                ts = time_series.by_pid(
+                    aois.value, year.value, pid, pts, pts_band.value)
                 band = ''
                 if pts_band.value != '':
                     band = f"_{pts_band.value}"
@@ -445,7 +432,7 @@ def get():
                     os.makedirs(os.path.dirname(file_ts), exist_ok=True)
                     df = pd.DataFrame.from_dict(ts, orient='columns')
                     df.to_csv(file_ts, index=True, header=True)
-                return f"File saved at: {file_ts}"
+            outlog("TS Files are saved.")
         if pci_bt.value is True:
             files_pci = normpath(join(datapath, 'chip_images'))
             outlog(f"Getting '{pci_band.value}' chip images for parcel: {pid}")
@@ -462,10 +449,9 @@ def get():
                 outlog("No files where downloaded, please check your configurations")
 
     def get_from_location(lon, lat):
-        get_requests = data_source()
         outlog(f"Finding parcel information for coordinates: {lon}, {lat}")
-        parcel = json.loads(get_requests.ploc(f"{aois.value}{year.value}",
-                                              lon, lat, True))
+        parcel = parcel_info.by_location(aois.value, year.value, lon, lat,
+                                         ptype.value, True, False, debug)
         pid = parcel['ogc_fid'][0]
         outlog(f"The parcel '{pid}' was found at this location.")
         try:
@@ -474,12 +460,11 @@ def get():
             print(err)
 
     def get_from_id(pids):
-        get_requests = data_source()
         outlog(f"Getting parcels information for: '{pids}'")
         for pid in pids:
             try:
-                parcel = json.loads(get_requests.pid(aois.value, year.value,
-                                                     pid, ptype, True))
+                parcel = parcel_info.by_pid(aois.value, year.value, pid,
+                                            ptype.value, True, False, debug)
                 get_data(parcel)
             except Exception as err:
                 print(err)
