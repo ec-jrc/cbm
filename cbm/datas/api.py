@@ -37,7 +37,7 @@ def parcel_by_id(aoi, year, pid, ptype=None, geom=False,
     requrl = """{}/query/parcelById?aoi={}&year={}&pid={}"""
     if geom is True:
         requrl = f"{requrl}&withGeometry=True"
-    if ptype is not None:
+    if ptype not in [None, '']:
         requrl = f"{requrl}&ptype={ptype}"
     if wgs84 is True:
         requrl = f"{requrl}&wgs84={wgs84}"
