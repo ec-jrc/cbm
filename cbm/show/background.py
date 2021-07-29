@@ -13,13 +13,14 @@ import glob
 import rasterio
 import matplotlib.pyplot as plt
 from copy import copy
-from os.path import join, normpath, exists, isfile
+from os.path import join, normpath, isfile
 from descartes import PolygonPatch
 from rasterio.plot import show
 from mpl_toolkits.axes_grid1 import ImageGrid
 
 from cbm.utils import config, spatial_utils
 from cbm.get import background as get_bg
+from cbm.get import parcel_info
 
 
 def overlay_parcel(img, geom):
@@ -54,13 +55,12 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['Google'],
         tms = [tms]
 
     try:
-        get_requests = data_source()
-        json_data = json.loads(get_requests.parcel_by_loc(aoi, year, lon, lat,
-                                                 True, False, debug))
-        if type(json_data['ogc_fid']) is list:
-            pid = json_data['ogc_fid'][0]
+        parcel = parcel_info.by_location(aoi, year, lon, lat,
+                                            True, False, debug)
+        if type(parcel['ogc_fid']) is list:
+            pid = parcel['ogc_fid'][0]
         else:
-            pid = json_data['ogc_fid']
+            pid = parcel['ogc_fid']
 
         workdir = normpath(join(config.get_value(['paths', 'temp']),
                                 aoi, str(year), str(pid)))
@@ -90,16 +90,17 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['Google'],
             if parcel_id:
                 get_bg.by_pid(aoi, year, pid, chipsize, extend, t, True, debug)
             else:
-                get_bg.by_location(aoi, year, lon, lat, chipsize, extend, t, True, debug)
+                get_bg.by_location(aoi, year, lon, lat,
+                                   chipsize, extend, t, True, debug)
 
     if parcel_id:
         with open(normpath(join(workdir, 'info.json')), 'r') as f:
-            json_data = json.load(f)
+            parcel = json.load(f)
 
         with rasterio.open(normpath(join(bg_path,
                                          f'{tms[0].lower()}.tif'))) as img:
             img_epsg = img.crs.to_epsg()
-            geom = spatial_utils.transform_geometry(json_data, img_epsg)
+            geom = spatial_utils.transform_geometry(parcel, img_epsg)
             patches = overlay_parcel(img, geom)
 
     rows = int(len(tms) // columns + (len(tms) % columns > 0))
@@ -117,7 +118,7 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['Google'],
             show(img, ax=ax)
             ax.set_title(t, fontsize=20)
 
-    if len(tms) > columns:
+    if len(tms) > columns and columns * rows > len(tms):
         for ax in grid[-((columns * rows - len(tms))):]:
             ax.remove()
 
@@ -167,11 +168,11 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['Google'],
             get_bg.by_pid(aoi, year, pid, chipsize, extend, t, True, debug)
 
     with open(normpath(join(workdir, 'info.json')), 'r') as f:
-        json_data = json.load(f)
+        parcel = json.load(f)
 
     with rasterio.open(normpath(join(bg_path, f'{tms[0].lower()}.tif'))) as img:
         img_epsg = img.crs.to_epsg()
-        geom = spatial_utils.transform_geometry(json_data, img_epsg)
+        geom = spatial_utils.transform_geometry(parcel, img_epsg)
         patches = overlay_parcel(img, geom)
 
     rows = int(len(tms) // columns + (len(tms) % columns > 0))
@@ -188,7 +189,7 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['Google'],
             show(img, ax=ax)
             ax.set_title(t, fontsize=20)
 
-    if len(tms) > columns:
+    if len(tms) > columns and columns * rows > len(tms):
         for ax in grid[-((columns * rows - len(tms))):]:
             ax.remove()
 
@@ -225,13 +226,3 @@ def check_args(bg_path, chipsize, extend):
             return True
     else:
         return True
-
-
-def data_source():
-    source = config.get_value(['set', 'data_source'])
-    if source == 'api':
-        from cbm.datas import api
-        return api
-    elif source == 'direct':
-        from cbm.datas import direct
-        return direct
