@@ -15,12 +15,15 @@ from os.path import join, normpath, isfile
 from cbm.utils import config
 
 
-def parcel_by_loc(aoi, year, lon, lat, geom=False, wgs84=False, debug=False):
+def parcel_by_loc(aoi, year, lon, lat, ptype=None,
+                  geom=False, wgs84=False, debug=False):
 
     api_url, api_user, api_pass = config.credentials('api')
     requrl = """{}/query/parcelByLocation?aoi={}&year={}&lon={}&lat={}"""
     if geom is True:
         requrl = f"{requrl}&withGeometry=True"
+    if ptype not in [None, '']:
+        requrl = f"{requrl}&ptype={ptype}"
     if wgs84 is True:
         requrl = f"{requrl}&wgs84={wgs84}"
     # print(requrl.format(api_url, aoi, year, pid))
@@ -49,7 +52,7 @@ def parcel_by_id(aoi, year, pid, ptype=None, geom=False,
     return response.content
 
 
-def parcel_by_polygon(aoi, year, polygon, ptype='', geom=False,
+def parcel_by_polygon(aoi, year, polygon, ptype=None, geom=False,
                       wgs84=False, only_ids=True, debug=False):
 
     api_url, api_user, api_pass = config.credentials('api')
@@ -58,7 +61,7 @@ def parcel_by_polygon(aoi, year, polygon, ptype='', geom=False,
         requrl = f"{requrl}&withGeometry=True"
     if only_ids is True:
         requrl = f"{requrl}&only_ids=True"
-    if ptype != '':
+    if ptype not in [None, '']:
         requrl = f"{requrl}&ptype={ptype}"
     if wgs84 is True:
         requrl = f"{requrl}&wgs84={wgs84}"
@@ -69,11 +72,14 @@ def parcel_by_polygon(aoi, year, polygon, ptype='', geom=False,
     return response.content
 
 
-def parcel_ts(aoi, year, pid, tstype, band='', debug=False):
+def parcel_ts(aoi, year, pid, tstype='s2', ptype=None, band='', debug=False):
 
     api_url, api_user, api_pass = config.credentials('api')
-    requrl = """{}/query/parcelTimeSeries?aoi={}&year={}&pid={}&tstype={}&band={}"""
-
+    requrl = """{}/query/parcelTimeSeries?aoi={}&year={}&pid={}&tstype={}"""
+    if ptype not in [None, '']:
+        requrl = f"{requrl}&ptype={ptype}"
+    if band not in [None, '']:
+        requrl = f"{requrl}&band={band}"
     response = requests.get(requrl.format(api_url, aoi, year,
                                           pid, tstype, band),
                             auth=(api_user, api_pass))

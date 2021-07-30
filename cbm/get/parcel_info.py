@@ -27,7 +27,7 @@ def by_location(aoi, year, lon, lat, ptype=None, geom=False,
         lon, lat, the the coords of the parcel (float).
     """
     get_requests = data_source()
-    parcel = json.loads(get_requests.parcel_by_loc(aoi, year, lon, lat,
+    parcel = json.loads(get_requests.parcel_by_loc(aoi, year, lon, lat, ptype,
                                                    geom, wgs84, debug))
     if type(parcel['ogc_fid']) is list:
         pid = parcel['ogc_fid'][0]
