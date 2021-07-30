@@ -56,8 +56,8 @@ def by_pid(aoi, year, pid, ptype=None, geom=False,
         year, the year of parcels table
         pid, the parcel id (int).
     """
-    workdir = config.get_value(['paths', 'temp'])
     get_requests = data_source()
+    workdir = config.get_value(['paths', 'temp'])
     file_pinf = normpath(join(workdir, aoi, str(year), str(pid), 'info.json'))
     parcel = json.loads(get_requests.parcel_by_id(aoi, year, pid, ptype,
                                                   geom, wgs84, debug))
@@ -65,6 +65,13 @@ def by_pid(aoi, year, pid, ptype=None, geom=False,
     with open(file_pinf, "w") as f:
         json.dump(parcel, f)
     return parcel
+
+
+def by_polygon(aoi, year, polygon, ptype='', geom=False,
+               wgs84=False, only_ids=True, debug=False):
+    get_requests = data_source()
+    return get_requests.parcel_by_polygon(aoi, year, polygon, ptype, geom,
+                                          wgs84, only_ids, debug)
 
 
 def data_source():
