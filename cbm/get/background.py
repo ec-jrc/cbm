@@ -72,7 +72,7 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512,
 
 
 def by_pid(aoi, year, pid, chipsize=512, extend=512,
-           tms=['Google'], axis=True, debug=False):
+           tms=['Google'], ptype=None, axis=True, debug=False):
     """Download the background image with parcels polygon overlay by selected
     location.
 
@@ -95,21 +95,12 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512,
         tms = [tms]
     workdir = normpath(join(config.get_value(['paths', 'temp']),
                             aoi, str(year), str(pid)))
+
+    parcel = parcel_info.by_pid(aoi, year, pid, ptype, True, False, debug)
     if debug:
         print('workdir: ', workdir)
-    json_file = normpath(join(workdir, 'info.json'))
-    if not isfile(json_file):
-        json_data = json.loads(get_requests.parcel_by_id(aoi, year, pid, None,
-                                                         True, False, debug))
-        os.makedirs(workdir, exist_ok=True)
-        with open(json_file, "w") as f:
-            json.dump(json_data, f)
-    else:
-        with open(json_file, 'r') as f:
-            json_data = json.load(f)
-
-    lon = json_data['clon'][0]
-    lat = json_data['clat'][0]
+    lon = parcel['clon'][0]
+    lat = parcel['clat'][0]
 
     bg_path = normpath(join(workdir, 'backgrounds'))
     os.makedirs(bg_path, exist_ok=True)

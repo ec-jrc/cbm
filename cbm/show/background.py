@@ -32,7 +32,7 @@ def overlay_parcel(img, geom):
 
 
 def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['Google'],
-                columns=4, debug=False):
+                ptype=None, columns=4, debug=False):
     """Show the background image with parcels polygon overlay by selected
     parcel id. This function will get an image from the center of the polygon.
 
@@ -55,8 +55,8 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['Google'],
         tms = [tms]
 
     try:
-        parcel = parcel_info.by_location(aoi, year, lon, lat,
-                                            True, False, debug)
+        parcel = parcel_info.by_location(aoi, year, lon, lat, ptype,
+                                         True, False, debug)
         if type(parcel['ogc_fid']) is list:
             pid = parcel['ogc_fid'][0]
         else:
@@ -82,16 +82,18 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['Google'],
     if debug:
         print('path: ', bg_path)
         print('same args: ', same_args)
-        print('aoi, year, lon, lat, chipsize, extend, tms, columns, debug')
-        print(aoi, year, lon, lat, chipsize, extend, tms, columns, debug)
+        print('aoi-year-lon-lat-chipsize-extend-tms-ptype-columns-debug')
+        print(aoi, year, lon, lat, chipsize,
+              extend, tms, ptype, columns, debug)
 
     for t in tms:
         if not isfile(normpath(join(bg_path, f'{t.lower()}.tif'))) or same_args is False:
             if parcel_id:
-                get_bg.by_pid(aoi, year, pid, chipsize, extend, t, True, debug)
+                get_bg.by_pid(aoi, year, pid, chipsize,
+                              extend, t, ptype, True, debug)
             else:
-                get_bg.by_location(aoi, year, lon, lat,
-                                   chipsize, extend, t, True, debug)
+                get_bg.by_location(aoi, year, lon, lat, chipsize,
+                                   extend, t, ptype, True, debug)
 
     if parcel_id:
         with open(normpath(join(workdir, 'info.json')), 'r') as f:
@@ -126,7 +128,7 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['Google'],
 
 
 def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['Google'],
-           columns=4, debug=False):
+           ptype=None, columns=4, debug=False):
     """Show the background image with parcels polygon overlay by selected
     parcel id. This function will get an image from the center of the polygon.
 
@@ -165,7 +167,8 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['Google'],
 
     for t in tms:
         if not isfile(normpath(join(bg_path, f'{t.lower()}.tif'))) or same_args is False:
-            get_bg.by_pid(aoi, year, pid, chipsize, extend, t, True, debug)
+            get_bg.by_pid(aoi, year, pid, chipsize,
+                          extend, t, ptype, True, debug)
 
     with open(normpath(join(workdir, 'info.json')), 'r') as f:
         parcel = json.load(f)

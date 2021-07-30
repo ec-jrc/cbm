@@ -37,8 +37,11 @@ def by_location(aoi, year, lon, lat, tstype, ptype=None, band='', debug=False):
     workdir = config.get_value(['paths', 'temp'])
     file_ts = normpath(join(workdir, aoi, year, str(pid),
                             f'time_series_{tstype}{band}.csv'))
+    if debug:
+        print(file_ts)
+        print(parcel)
     ts = json.loads(get_requests.parcel_ts(
-        aoi, year, pid, tstype, band, debug))
+        aoi, year, pid, tstype, ptype, band, debug))
     try:
         if isinstance(ts, pd.DataFrame):
             ts.to_csv(file_ts, index=True, header=True)
@@ -55,7 +58,7 @@ def by_location(aoi, year, lon, lat, tstype, ptype=None, band='', debug=False):
     return ts
 
 
-def by_pid(aoi, year, pid, tstype, band='', debug=False):
+def by_pid(aoi, year, pid, tstype, ptype=None, band='', debug=False):
     """Download the time series for the selected year
 
     Examples:
@@ -66,12 +69,12 @@ def by_pid(aoi, year, pid, tstype, band='', debug=False):
         aoi, the area of interest and year e.g.: es2019, nld2020 (str)
         pid, the parcel id (int).
     """
-    workdir = config.get_value(['paths', 'temp'])
     get_requests = data_source()
+    workdir = config.get_value(['paths', 'temp'])
     file_ts = normpath(join(workdir, aoi, year, str(pid),
                             f'time_series_{tstype}{band}.csv'))
     ts = json.loads(get_requests.parcel_ts(
-        aoi, year, pid, tstype, band, debug))
+        aoi, year, pid, tstype, ptype, band, debug))
     if isinstance(ts, pd.DataFrame):
         ts.to_csv(file_ts, index=True, header=True)
     elif isinstance(ts, dict):
