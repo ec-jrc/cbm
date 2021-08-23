@@ -19,7 +19,7 @@ from cbm.utils import config
 from cbm.get import parcel_info, time_series
 
 
-def ndvi(aoi, pid):
+def ndvi(aoi, yearpid):
 
     path = normpath(join(config.get_value(['paths', 'temp']), aoi, str(pid)))
     file_info = normpath(join(path, 'info.json'))
@@ -94,22 +94,24 @@ def ndvi(aoi, pid):
     return plt.show()
 
 
-def s2(aoi, pid, bands):
+def s2(aoi, year, pid, tstype, ptype=None, bands='B02', debug=False):
+    ts = time_series.by_pid(aoi, year, pid, tstype, ptype, debug)
     if type(bands) is str:
         bands = [bands]
-    path = normpath(join(config.get_value(['paths', 'temp']), aoi, str(pid)))
-    file_info = normpath(join(path, 'info.json'))
-    if not isfile(file_info):
-        parcel_info.by_pid(aoi, pid)
-    with open(file_info, 'r') as f:
-        info_data = json.loads(f.read())
+    path = normpath(join(config.get_value(['paths', 'temp']),
+                         aoi, year, str(pid)))
+    parcel_file = normpath(join(path, 'info.json'))
+    if not isfile(parcel_file):
+        parcel_info.by_pid(aoi, year, pid, ptype, True)
+    with open(parcel_file, 'r') as f:
+        parcel = json.loads(f.read())
 
-    crop_name = info_data['cropname'][0]
-    area = info_data['area'][0]
+    crop_name = parcel['cropname'][0]
+    area = parcel['area'][0]
 
     file_ts = normpath(join(path, 'time_series_s2.csv'))
     if not isfile(file_ts):
-        time_series.by_pid(aoi, pid, 'st')
+        time_series.by_pid(aoi, year, pid, tstype, ptype, '', debug)
     df = pd.read_csv(file_ts, index_col=0)
 
     df['date'] = pd.to_datetime(df['date_part'], unit='s')
