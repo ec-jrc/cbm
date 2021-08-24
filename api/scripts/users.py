@@ -49,7 +49,7 @@ def auth(username, password, aoi=None):
 
     """
     try:
-        users = get_list()
+        users = get_list(users_file, False)
         user = users[username.lower()]
 
         salt = encode(user['salt'].encode().decode('unicode_escape'),
@@ -63,7 +63,7 @@ def auth(username, password, aoi=None):
 
         if key == new_key:
             if aoi:
-                users = get_list(users_file)
+                users = get_list(users_file, False)
                 if aoi in users[username]['aois']:
                     return True
                 else:
@@ -78,7 +78,7 @@ def auth(username, password, aoi=None):
 
 
 def data_auth(aoi, username):
-    users = get_list(users_file)
+    users = get_list(users_file, False)
     if aoi in users[username]['aois']:
         return True
     else:
@@ -99,7 +99,7 @@ def add(username, password='', aoi=''):
         password, Tee user password (str)
 
     """
-    users = get_list()
+    users = get_list(users_file, False)
 
     salt = os.urandom(32)
     key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
@@ -117,7 +117,7 @@ def add(username, password='', aoi=''):
     print(f"The user '{username}' was created.")
 
 
-def get_list(file=users_file):
+def get_list(file=users_file, only_names=True):
     """Get the list of active users
 
     Example:
@@ -130,7 +130,10 @@ def get_list(file=users_file):
     try:
         with open(file, 'r') as u:
             users = json.load(u)
-        return [*users]
+        if only_names:
+            return [*users]
+        else:
+            return users
     except Exception:
         try:
             with open(file, 'w') as u:
@@ -150,7 +153,7 @@ def delete(username):
         username, The user name to be deleted (str)
 
     """
-    users = get_list()
+    users = get_list(users_file, False)
 
     if username.lower() in users:
         del users[username.lower()]
@@ -178,7 +181,7 @@ if __name__ == '__main__':
     elif sys.argv[1].lower() == 'delete':
         delete(sys.argv[2])
     elif sys.argv[1].lower() == 'list':
-        for key in get_list():
+        for key in get_list(users_file, False):
             print(key)
     else:
         print("""Not recognized arguments. Available options:
