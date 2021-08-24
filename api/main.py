@@ -52,9 +52,10 @@ def auth_required(f):
                 aoi = request.args.get('aoi')
                 if users.data_auth(aoi, auth.username):
                     return f(*args, **kwargs)
-                return make_response(
-                    """Not authorized for this dataset.
-                    Please contact user system administrator.""", 401)
+                else:
+                    return make_response(
+                        """Not authorized for this dataset.
+                        Please contact the system administrator.""", 401)
             else:
                 return f(*args, **kwargs)
         return make_response(
