@@ -162,6 +162,16 @@ def delete(username):
         json.dump(users, u, indent=2)
 
 
+def sort(data_file):
+    with open(data_file) as f:
+        ds = json.load(f)
+
+    with open(data_file, 'w') as f:
+        json.dump(dict(sorted(ds.items())), f, indent=4)
+
+    print("Data is sorted.", data_file)
+
+
 if __name__ == '__main__':
     if sys.argv[1].lower() == 'add' or sys.argv[1].lower() == 'create':
         add(sys.argv[2], sys.argv[3], sys.argv[4])
