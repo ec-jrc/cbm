@@ -130,7 +130,7 @@ def get_list(file=users_file):
     try:
         with open(file, 'r') as u:
             users = json.load(u)
-        return users
+        return [*users]
     except Exception:
         try:
             with open(file, 'w') as u:
