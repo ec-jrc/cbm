@@ -64,7 +64,7 @@ def auth(username, password, aoi=None):
         if key == new_key:
             if aoi:
                 users = get_list(users_file, False)
-                if aoi in users[username]['aois']:
+                if any(aoi, 'admin') in users[username]['aois']:
                     return True
                 else:
                     return False
