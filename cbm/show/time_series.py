@@ -19,12 +19,14 @@ from cbm.utils import config
 from cbm.get import parcel_info, time_series
 
 
-def ndvi(aoi, yearpid):
+def ndvi(aoi, year, pid, ptype=None, debug=False):
 
-    path = normpath(join(config.get_value(['paths', 'temp']), aoi, str(pid)))
+    path = normpath(join(config.get_value(['paths', 'temp']),
+                         aoi, year, str(pid)))
+
     file_info = normpath(join(path, 'info.json'))
     if not isfile(file_info):
-        parcel_info.by_pid(aoi, pid)
+        parcel_info.by_pid(aoi, year, pid)
     with open(file_info, 'r') as f:
         info_data = json.loads(f.read())
 
@@ -33,7 +35,7 @@ def ndvi(aoi, yearpid):
 
     file_ts = normpath(join(path, 'time_series_s2.csv'))
     if not isfile(file_ts):
-        time_series.by_pid(aoi, pid, 's2')
+        time_series.by_pid(aoi, year, pid, 's2', ptype, debug)
     df = pd.read_csv(file_ts, index_col=0)
 
     df['date'] = pd.to_datetime(df['date_part'], unit='s')
@@ -94,12 +96,12 @@ def ndvi(aoi, yearpid):
     return plt.show()
 
 
-def s2(aoi, year, pid, tstype, ptype=None, bands='B02', debug=False):
-    ts = time_series.by_pid(aoi, year, pid, tstype, ptype, debug)
+def s2(aoi, year, pid, ptype=None, bands=['B02'], debug=False):
     if type(bands) is str:
         bands = [bands]
     path = normpath(join(config.get_value(['paths', 'temp']),
                          aoi, year, str(pid)))
+
     parcel_file = normpath(join(path, 'info.json'))
     if not isfile(parcel_file):
         parcel_info.by_pid(aoi, year, pid, ptype, True)
@@ -111,7 +113,7 @@ def s2(aoi, year, pid, tstype, ptype=None, bands='B02', debug=False):
 
     file_ts = normpath(join(path, 'time_series_s2.csv'))
     if not isfile(file_ts):
-        time_series.by_pid(aoi, year, pid, tstype, ptype, '', debug)
+        time_series.by_pid(aoi, year, pid, 's2', ptype, '', debug)
     df = pd.read_csv(file_ts, index_col=0)
 
     df['date'] = pd.to_datetime(df['date_part'], unit='s')
