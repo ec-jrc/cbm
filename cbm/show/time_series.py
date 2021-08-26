@@ -19,7 +19,8 @@ from cbm.utils import config
 from cbm.get import parcel_info, time_series
 
 
-def ndvi(aoi, year, pid, ptype=None, debug=False):
+def ndvi(aoi, year, pid, ptype=None, cloud_free=True,
+         scl='3_8_9_10_11', debug=False):
 
     path = normpath(join(config.get_value(['paths', 'temp']),
                          aoi, year, str(pid)))
@@ -62,8 +63,20 @@ def ndvi(aoi, year, pid, ptype=None, debug=False):
     # Plot Cloud free NDVI.
     dfNDVI = (dfB8['mean'] - dfB4['mean']) / (dfB8['mean'] + dfB4['mean'])
 
-    dfSC = df[df.band == 'SC'].copy()
-    cloudfree = ((dfSC['mean'] >= 4) & (dfSC['mean'] < 6))
+    if 'hist' in df.columns:
+        df['cf'] = pd.Series(dtype='str')
+        scls = scl.split('_')
+        for index, row in df.iterrows():
+            if any(x in scls for x in [*json.loads(row['hist'].replace("\'",
+                                                                       "\""))]):
+                df.at[index, 'cf'] = 'False'
+            else:
+                df.at[index, 'cf'] = 'True'
+        cloudfree = (df['cf'] == 'True')
+        cloudfree = cloudfree[~cloudfree.index.duplicated()]
+    else:
+        dfSC = df[df.band == 'SC'].copy()
+        cloudfree = ((dfSC['mean'] >= 4) & (dfSC['mean'] < 6))
 
     fig = plt.figure(figsize=(16.0, 10.0))
     axb = fig.add_subplot(1, 1, 1)
@@ -77,18 +90,19 @@ def ndvi(aoi, year, pid, ptype=None, debug=False):
     axb.plot(dfNDVI.index, dfNDVI, linestyle=' ', marker='s',
              markersize=10, color='DarkBlue',
              fillstyle='none', label='NDVI')
-    try:
-        axb.plot(dfNDVI[cloudfree].index, dfNDVI[cloudfree],
-                 linestyle=' ', marker='P',
-                 markersize=10, color='Red',
-                 fillstyle='none', label='Cloud free NDVI')
-    except Exception as err:
-        message = f"Could not mark cloud free images: {err}"
+    if cloud_free:
+        try:
+            axb.plot(dfNDVI[cloudfree].index, dfNDVI[cloudfree],
+                     linestyle=' ', marker='P',
+                     markersize=10, color='Red',
+                     fillstyle='none', label='Cloud free NDVI')
+        except Exception as err:
+            message = f"Could not mark cloud free images: {err}"
 
     axb.set_xlim(start_date, end_date + timedelta(1))
     axb.set_ylim(0, 1.0)
 
-    axb.legend(frameon=False)  # loc=2)
+    axb.legend(frameon=False)
 
     if 'message' in locals():
         print(message)
@@ -96,7 +110,8 @@ def ndvi(aoi, year, pid, ptype=None, debug=False):
     return plt.show()
 
 
-def s2(aoi, year, pid, ptype=None, bands=['B02'], debug=False):
+def s2(aoi, year, pid, ptype=None, bands=['B02'], cloud_free=True,
+       scl='3_8_9_10_11', debug=False):
     if type(bands) is str:
         bands = [bands]
     path = normpath(join(config.get_value(['paths', 'temp']),
@@ -141,8 +156,20 @@ def s2(aoi, year, pid, ptype=None, bands=['B02'], debug=False):
             bz = [b, f'{b[0]}0{b[-1]}']
         dfb[b] = df[df.band.isin(bz)].copy()
 
-    dfSC = df[df.band == 'SC'].copy()
-    cloudfree = ((dfSC['mean'] >= 4) & (dfSC['mean'] < 6))
+    if 'hist' in df.columns:
+        df['cf'] = pd.Series(dtype='str')
+        scls = scl.split('_')
+        for index, row in df.iterrows():
+            if any(x in scls for x in [*json.loads(row['hist'].replace("\'",
+                                                                       "\""))]):
+                df.at[index, 'cf'] = 'False'
+            else:
+                df.at[index, 'cf'] = 'True'
+        cloudfree = (df['cf'] == 'True')
+        cloudfree = cloudfree[~cloudfree.index.duplicated()]
+    else:
+        dfSC = df[df.band == 'SC'].copy()
+        cloudfree = ((dfSC['mean'] >= 4) & (dfSC['mean'] < 6))
 
     datesFmt = mdates.DateFormatter('%-d %b %Y')
 
@@ -188,13 +215,14 @@ def s2(aoi, year, pid, ptype=None, bands=['B02'], debug=False):
                  fillstyle='none', label=b)
 
         seriesB[b] = pd.Series(dfb[b]['mean'], index=dfb[b].index)
-        try:
-            axb.plot(seriesB[b][cloudfree].index, seriesB[b][cloudfree],
-                     linestyle=' ', marker='x',
-                     markersize=8, color=colors[b],
-                     fillstyle='none', label=f'{b} Cloud free')
-        except Exception as err:
-            message = f"Could not mark cloud free images: {err}"
+        if cloud_free:
+            try:
+                axb.plot(seriesB[b][cloudfree].index, seriesB[b][cloudfree],
+                         linestyle=' ', marker='x',
+                         markersize=8, color=colors[b],
+                         fillstyle='none', label=f'{b} Cloud free')
+            except Exception as err:
+                message = f"Could not mark cloud free images: {err}"
 
     axb.set_xlim(start_date, end_date + timedelta(1))
     axb.set_ylim(0, 10000)
