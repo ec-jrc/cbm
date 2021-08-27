@@ -490,7 +490,7 @@ def parcelTimeSeries_query():
 
     if 'tstype' in request.args.keys():
         tstype = request.args.get('tstype')
-        if tstype.lower() == 's1':
+        if tstype.lower() in ['bs', 'c6']:
             scl = False
 
     dataset = datasets[f'{aoi}_{year}']
@@ -704,8 +704,7 @@ def upload_file():
 @auth_required
 def uploaded_file(filename):
     if UPLOAD_ENABLE is True:
-        return send_from_directory(app.config['UPLOAD_FOLDER'],
-                                   filename)
+        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
 # ======== Main ============================================================== #
