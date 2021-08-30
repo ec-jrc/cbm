@@ -475,6 +475,7 @@ def parcelTimeSeries_query():
     tstype = ''
     band = ''
     scl = True
+    ref = False
 
     if 'scl' in request.args.keys():
         scl = True if request.args.get('scl') == 'True' else False
@@ -493,12 +494,15 @@ def parcelTimeSeries_query():
         if tstype.lower() in ['bs', 'c6']:
             scl = False
 
+    if 'ref' in request.args.keys():
+        ref = True if request.args.get('ref') == 'True' else False
+
     dataset = datasets[f'{aoi}_{year}']
     if tstype.lower() == 'scl':
         data = db_queries.getParcelSCL(dataset, pid, ptype)
     else:
         data = db_queries.getParcelTimeSeries(dataset, pid, ptype,
-                                              tstype, band, scl)
+                                              tstype, band, scl, ref)
 
     # print(data)
     if not data:

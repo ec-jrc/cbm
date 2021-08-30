@@ -216,7 +216,7 @@ def getParcelsByPolygon(dataset, polygon, ptype='', withGeometry=False,
 # Parcel Time Series
 
 def getParcelTimeSeries(dataset, pid, ptype='',
-                        tstype='s2', band=None, scl=True):
+                        tstype='s2', band=None, scl=True, ref=False):
     """Get the time series for the given parcel"""
 
     conn = db.conn(dataset['db'])
@@ -228,6 +228,7 @@ def getParcelTimeSeries(dataset, pid, ptype='',
 
     from_hists = f", {dataset['tables']['scl']}{ptype} h" if scl else ''
     select_scl = ', h.hist' if scl else ''
+    select_ref = ', d.reference' if ref else ''
 
     where_shid = 'And s.pid = h.pid And h.obsid = s.obsid' if scl else ''
     where_band = f"And s.band = '{band}' " if band else ''
@@ -244,7 +245,8 @@ def getParcelTimeSeries(dataset, pid, ptype='',
     try:
         getTableDataSql = f"""
             SELECT extract('epoch' from d.obstime), s.band, s.count,
-                s.mean, s.std, s.min, s.p25, s.p50, s.p75, s.max{select_scl}
+                s.mean, s.std, s.min, s.p25, s.p50, s.p75,
+                s.max{select_scl}{select_ref}
             FROM {sigs_table}{ptype} s,
                 {dias_catalog} d{from_hists}
             WHERE
