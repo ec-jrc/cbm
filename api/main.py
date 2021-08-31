@@ -472,7 +472,7 @@ def parcelTimeSeries_query():
     year = request.args.get('year')
     pid = request.args.get('pid')
     ptype = ''
-    tstype = ''
+    tstype = 's2'
     band = ''
     scl = True
     ref = False
