@@ -36,7 +36,7 @@ def ndvi(aoi, year, pid, ptype=None, cloud_free=True,
 
     file_ts = normpath(join(path, 'time_series_s2.csv'))
     if not isfile(file_ts):
-        time_series.by_pid(aoi, year, pid, 's2', ptype, debug)
+        time_series.by_pid(aoi, year, pid, 's2', ptype, '', debug)
     df = pd.read_csv(file_ts, index_col=0)
 
     df['date'] = pd.to_datetime(df['date_part'], unit='s')
