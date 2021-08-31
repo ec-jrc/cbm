@@ -418,18 +418,18 @@ def getParcelCentroid(dataset, pid, ptype=''):
 
     try:
         getTableDataSql = f"""
-            SELECT ST_X(ST_AsText(ST_Centroid(wkb_geometry))),
-                    ST_Y(ST_AsText(ST_Centroid(wkb_geometry)))
-            FROM {dataset['tables']['parcels']}{ptype}
-            WHERE ogc_fid = {pid};
+        SELECT ST_Asgeojson(ST_transform(ST_Centroid(wkb_geometry), 4326))
+        FROM {dataset['tables']['parcels']}{ptype}
+        WHERE ogc_fid = {pid}
+        LIMIT 1;
         """
         #  Return a list of tuples
         cur.execute(getTableDataSql)
-        return cur.fetchall()[0]
+        json_centroid = cur.fetchall()[0]
+        return json.loads(json_centroid[0])['coordinates']
 
     except Exception as err:
-        print("Did not find data, please select the right database and table: ",
-              err)
+        print("Can not get the parcel centroid: ", err)
         return data.append('Ended with no data')
 
 
