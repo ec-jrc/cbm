@@ -391,13 +391,16 @@ def getParcelSCL(dataset, pid, ptype=''):
     conn = db.conn(dataset['db'])
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
+    parcel_id = dataset['pcolumns']['parcel_id']
 
     try:
         getTableDataSql = f"""
-            SELECT *
-            FROM {dataset['tables']['parcels']}{ptype} h
-            WHERE h.pid = {pid}
-            ORDER By h.pid Asc;
+            SELECT h.obsid, h.hist
+            FROM {dataset['tables']['scl']}{ptype} h,
+                {dataset['tables']['parcels']}{ptype} p
+            WHERE h.pid = p.ogc_fid
+            And p.{parcel_id} = {pid}
+            ORDER By h.obsid Asc;
         """
         #  Return a list of tuples
         cur.execute(getTableDataSql)
