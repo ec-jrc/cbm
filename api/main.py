@@ -34,7 +34,7 @@ app.config['SWAGGER'] = {
 }
 
 # Enable upload page (http://HOST/upload).
-UPLOAD_ENABLE = False  # True or False
+UPLOAD_ENABLE = True  # True or False
 DEFAULT_AOI = ''
 datasets = db_queries.get_datasets()
 
@@ -669,6 +669,21 @@ def allowed_file(filename):
     # Allow specific file types.
     return '.' in filename and \
            filename.split('.', 1)[1].lower() in ['zip', 'tar.gz']
+
+
+@app.route('/files', methods=['GET', 'POST'])
+@auth_required
+def download_files():
+    aoi = request.args.get('aoi')
+    aoi_files = glob.glob(f'ms_files/{aoi}/*')
+    # print(aoi_files)
+    return render_template("ms_files.html", files=aoi_files)
+
+
+@app.route('/ms_files/<aoi>/<filename>')
+@auth_required
+def download_file(aoi, filename):
+    return send_from_directory('ms_files', f'{aoi}/{filename}')
 
 
 @app.route('/upload', methods=['GET', 'POST'])
