@@ -1,0 +1,12 @@
+<!doctype html>
+<html>
+   <body>
+    <title>Available files.</title>
+    <h1>Available files:</h1>
+    <ul>
+    {% for file in files %}
+        <li><h3><a href="{{ file }}">{{ file }}</a></h3></li>
+    {% endfor %}
+    </ul>
+    </body>
+</html>
