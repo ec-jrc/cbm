@@ -675,7 +675,10 @@ def allowed_file(filename):
 @auth_required
 def download_files():
     aoi = request.args.get('aoi')
-    aoi_files = glob.glob(f'ms_files/{aoi}/*')
+    if aoi in [k.split('_')[0] for k in datasets]:
+        aoi_files = glob.glob(f'ms_files/{aoi}/*')
+    else:
+        aoi_files = []
     # print(aoi_files)
     return render_template("ms_files.html", files=aoi_files)
 
