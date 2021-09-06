@@ -53,7 +53,7 @@ def getParcelByLocation(dataset, lon, lat, ptype='',
             geometrySql = ""
 
         getTableDataSql = f"""
-            SELECT {parcel_id}, {cropname} as cropname, {cropcode} as cropcode,
+            SELECT {parcel_id} as pid, {cropname} as cropname, {cropcode} as cropcode,
                 st_srid(wkb_geometry) as srid{geometrySql},
                 st_area(wkb_geometry) as area,
                 st_X(st_transform(st_centroid(wkb_geometry), 4326)) as clon,
@@ -117,7 +117,7 @@ def getParcelById(dataset, pid, ptype='', withGeometry=False,
             geometrySql = ""
 
         getTableDataSql = f"""
-            SELECT {parcel_id}, {cropname} as cropname, {cropcode}::text as cropcode,
+            SELECT {parcel_id} as pid, {cropname} as cropname, {cropcode}::text as cropcode,
                 st_srid(wkb_geometry) as srid{geometrySql},
                 st_area(wkb_geometry) as area,
                 st_X(st_transform(st_centroid(wkb_geometry), 4326)) as clon,
@@ -180,10 +180,10 @@ def getParcelsByPolygon(dataset, polygon, ptype='', withGeometry=False,
             geometrySql = ""
 
         if only_ids:
-            selectSql = f"{parcel_id}{geometrySql}"
+            selectSql = f"{parcel_id} as pid{geometrySql}"
         else:
             selectSql = f"""
-                {parcel_id}, {cropname} As cropname, {cropcode} As cropcode,
+                {parcel_id} as pid, {cropname} As cropname, {cropcode} As cropcode,
                 st_srid(wkb_geometry) As srid{geometrySql},
                 st_area(wkb_geometry) As area,
                 st_X(st_transform(st_centroid(wkb_geometry), 4326)) As clon,
