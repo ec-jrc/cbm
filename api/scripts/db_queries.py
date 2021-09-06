@@ -231,7 +231,7 @@ def getParcelTimeSeries(dataset, pid, ptype='',
     parcels_table = dataset['tables']['parcels']
     parcel_id = dataset['pcolumns']['parcel_id']
 
-    from_hists = f", {dataset['tables']['scl']}{ptype} h" if scl else ''
+    from_hists = f", {dataset['tables']['scl']} h" if scl else ''
     select_scl = ', h.hist' if scl else ''
     select_ref = ', d.reference' if ref else ''
 
@@ -252,7 +252,7 @@ def getParcelTimeSeries(dataset, pid, ptype='',
             SELECT extract('epoch' from d.obstime), s.band,
                 s.count, s.mean, s.std, s.min, s.p25, s.p50, s.p75,
                 s.max{select_scl}{select_ref}
-            FROM {parcels_table} p, {sigs_table}{ptype} s,
+            FROM {parcels_table}{ptype} p, {sigs_table} s,
                 {dias_catalog} d{from_hists}
             WHERE
                 p.ogc_fid = s.pid
