@@ -29,10 +29,10 @@ def by_location(aoi, year, lon, lat, tstype, ptype=None, band='', debug=False):
     get_requests = data_source()
     parcel = parcel_info.by_location(aoi, year, lon, lat,
                                      ptype, True, False, debug)
-    if type(parcel['ogc_fid']) is list:
-        pid = parcel['ogc_fid'][0]
+    if type(parcel['pid']) is list:
+        pid = parcel['pid'][0]
     else:
-        pid = parcel['ogc_fid']
+        pid = parcel['pid']
 
     workdir = config.get_value(['paths', 'temp'])
     file_ts = normpath(join(workdir, aoi, year, str(pid),

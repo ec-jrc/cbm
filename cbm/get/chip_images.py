@@ -38,10 +38,10 @@ def by_location(aoi, lon, lat, start_date, end_date, band, chipsize,
     year = start_date.split('-')[0]
     parcel = json.loads(get_requests.parcel_by_loc(aoi, year,
                                                    lon, lat, True))
-    if type(parcel['ogc_fid']) is list:
-        pid = parcel['ogc_fid'][0]
+    if type(parcel['pid']) is list:
+        pid = parcel['pid'][0]
     else:
-        pid = parcel['ogc_fid']
+        pid = parcel['pid']
 
     workdir = normpath(join(config.get_value(['paths', 'temp']),
                             aoi, str(pid)))

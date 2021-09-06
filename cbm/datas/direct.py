@@ -92,7 +92,7 @@ def rcbl(parcel, start_date, end_date, bands, chipsize, filespath):
     from cbm.datas import object_storage
 
     start = time.time()
-    pid = parcel['ogc_fid'][0]
+    pid = parcel['pid'][0]
     reference_list = db.getS2frames(pid, start_date, end_date)
     df_polygon = db.getPolygonCentroid(pid)
     json_centroid = json.loads(df_polygon['center'][0])
