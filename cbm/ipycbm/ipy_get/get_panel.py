@@ -401,7 +401,7 @@ def get():
 
     def get_data(parcel):
         get_requests = data_source()
-        pid = parcel['ogc_fid'][0]
+        pid = parcel['pid'][0]
         source = config.get_value(['set', 'data_source'])
         if source == 'api':
             datapath = normpath(
@@ -452,7 +452,7 @@ def get():
         outlog(f"Finding parcel information for coordinates: {lon}, {lat}")
         parcel = parcel_info.by_location(aois.value, year.value, lon, lat,
                                          ptype.value, True, False, debug)
-        pid = parcel['ogc_fid'][0]
+        pid = parcel['pid'][0]
         outlog(f"The parcel '{pid}' was found at this location.")
         try:
             get_data(parcel)

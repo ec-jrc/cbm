@@ -140,7 +140,7 @@ def rcbl(parcel, start_date, end_date, bands, chipsize, filespath,
         centroid.Transform(transform)
 
         # Use pid for next request
-        # pid = parcel['ogc_fid'][0]
+        # pid = parcel['pid'][0]
         # cropname = parcel['cropname'][0]
 
         # Set up the rawChip request
