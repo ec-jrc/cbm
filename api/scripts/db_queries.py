@@ -396,10 +396,10 @@ def getParcelSCL(dataset, pid, ptype=''):
     try:
         getTableDataSql = f"""
             SELECT h.obsid, h.hist
-            FROM {dataset['tables']['scl']}{ptype} h,
+            FROM {dataset['tables']['scl']} h,
                 {dataset['tables']['parcels']}{ptype} p
             WHERE h.pid = p.ogc_fid
-            And p.{parcel_id} = {pid}
+            And p.{parcel_id} = '{pid}'
             ORDER By h.obsid Asc;
         """
         #  Return a list of tuples
