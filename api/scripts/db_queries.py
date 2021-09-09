@@ -53,7 +53,7 @@ def getParcelByLocation(dataset, lon, lat, ptype='',
             geometrySql = ""
 
         getTableDataSql = f"""
-            SELECT {parcel_id} as pid, {cropname} as cropname, {cropcode} as cropcode,
+            SELECT {parcel_id}::text as pid, {cropname} as cropname, {cropcode} as cropcode,
                 st_srid(wkb_geometry) as srid{geometrySql},
                 st_area(wkb_geometry) as area,
                 st_X(st_transform(st_centroid(wkb_geometry), 4326)) as clon,
@@ -117,7 +117,7 @@ def getParcelById(dataset, pid, ptype='', withGeometry=False,
             geometrySql = ""
 
         getTableDataSql = f"""
-            SELECT {parcel_id} as pid, {cropname} as cropname, {cropcode}::text as cropcode,
+            SELECT {parcel_id}::text as pid, {cropname} as cropname, {cropcode}::text as cropcode,
                 st_srid(wkb_geometry) as srid{geometrySql},
                 st_area(wkb_geometry) as area,
                 st_X(st_transform(st_centroid(wkb_geometry), 4326)) as clon,
@@ -306,7 +306,7 @@ def getParcelPeers(dataset, pid, distance, maxPeers, ptype=''):
         getTableDataSql = f"""
             WITH current_parcel AS (select {cropname},
                 wkb_geometry from {parcels_table}{ptype} where {parcel_id} = {pid})
-            SELECT {parcel_id} as pid, st_distance(wkb_geometry,
+            SELECT {parcel_id}::text as pid, st_distance(wkb_geometry,
                 (SELECT wkb_geometry FROM current_parcel)) As distance
             FROM {parcels_table}{ptype}
             WHERE {cropname} = (select {cropname} FROM current_parcel)
