@@ -16,9 +16,9 @@ import pandas as pd
 from scripts import db
 
 
-logging.basicConfig(filename='logs/queryHandler.log', filemode='w',
-                    format='%(name)s - %(levelname)s - %(message)s',
-                    level=logging.ERROR)
+# logging.basicConfig(filename='logs/db_queries.log', filemode='w',
+#                     format='%(name)s - %(levelname)s - %(message)s',
+#                     level=logging.ERROR)
 
 
 # Requests

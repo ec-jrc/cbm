@@ -12,6 +12,8 @@ import os
 import json
 import glob
 import logging
+import traceback
+from time import strftime
 from decimal import Decimal
 from functools import wraps
 from flasgger import Swagger
@@ -38,11 +40,39 @@ UPLOAD_ENABLE = True  # True or False
 DEFAULT_AOI = ''
 datasets = db_queries.get_datasets()
 
+
 # -------- Core functions ---------------------------------------------------- #
 
+# Logging
+# app.debug = True
+logname = 'logs/main.log'
+handler = TimedRotatingFileHandler(logname, when='midnight', interval=1)
+handler.suffix = '%Y%m%d'
+logger = logging.getLogger('tdm')
+logger.setLevel(logging.INFO)
+logger.addHandler(handler)
+
+
+@app.after_request
+def after_request(response):
+    timestamp = strftime('[%Y-%b-%d %H:%M]')
+    logger.error('%s %s %s %s %s %s', timestamp, request.remote_addr,
+                 request.method, request.scheme, request.full_path,
+                 response.status)
+    return response
+
+
+@app.errorhandler(Exception)
+def exceptions(e):
+    tb = traceback.format_exc()
+    timestamp = strftime('[%Y-%b-%d %H:%M]')
+    logger.error('%s %s %s %s %s 5xx INTERNAL SERVER ERROR\n%s', timestamp,
+                 request.remote_addr, request.method, request.scheme,
+                 request.full_path, tb)
+    return e
+
+
 # Authentication decorator.
-
-
 def auth_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -104,6 +134,7 @@ def options():
 
 
 # -------- Queries - Chip Images --------------------------------------------- #
+
 
 @app.route('/dump/<unique_id>/<png_id>')
 # @auth_required
@@ -731,11 +762,5 @@ def uploaded_file(filename):
 
 # ======== Main ============================================================== #
 if __name__ == "__main__":
-    logname = 'logs/app.log'
-    handler = TimedRotatingFileHandler(logname, when='midnight', interval=1)
-    handler.suffix = '%Y%m%d'
-    logger = logging.getLogger('tdm')
-    logger.setLevel(logging.INFO)
-    logger.addHandler(handler)
     app.run(debug=True, use_reloader=True,
             host='0.0.0.0', port=80, threaded=True)
