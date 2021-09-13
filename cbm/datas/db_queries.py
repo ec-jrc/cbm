@@ -7,20 +7,12 @@
 # Copyright : 2021 European Commission, Joint Research Centre
 # License   : 3-Clause BSD
 
-import os
 import json
 import psycopg2
 import psycopg2.extras
 import logging
 import pandas as pd
-
 from cbm.datas import db
-
-
-os.makedirs("logs", exist_ok=True)
-logging.basicConfig(filename='logs/queryHandler.log', filemode='w',
-                    format='%(name)s - %(levelname)s - %(message)s',
-                    level=logging.ERROR)
 
 
 # Requests
@@ -44,6 +36,7 @@ def getParcelByLocation(dataset, lon, lat, ptype='',
         logging.debug(srid)
         cropname = dataset['pcolumns']['crop_name']
         cropcode = dataset['pcolumns']['crop_code']
+        parcel_id = dataset['pcolumns']['parcel_id']
 
         if withGeometry:
             if wgs84:
@@ -54,7 +47,7 @@ def getParcelByLocation(dataset, lon, lat, ptype='',
             geometrySql = ""
 
         getTableDataSql = f"""
-            SELECT ogc_fid, {cropname} as cropname, {cropcode} as cropcode,
+            SELECT {parcel_id}::text as pid, {cropname} as cropname, {cropcode} as cropcode,
                 st_srid(wkb_geometry) as srid{geometrySql},
                 st_area(wkb_geometry) as area,
                 st_X(st_transform(st_centroid(wkb_geometry), 4326)) as clon,
@@ -107,6 +100,7 @@ def getParcelById(dataset, pid, ptype='', withGeometry=False,
         logging.debug(srid)
         cropname = dataset['pcolumns']['crop_name']
         cropcode = dataset['pcolumns']['crop_code']
+        parcel_id = dataset['pcolumns']['parcel_id']
 
         if withGeometry:
             if wgs84:
@@ -117,13 +111,13 @@ def getParcelById(dataset, pid, ptype='', withGeometry=False,
             geometrySql = ""
 
         getTableDataSql = f"""
-            SELECT ogc_fid, {cropname} as cropname, {cropcode}::text as cropcode,
+            SELECT {parcel_id}::text as pid, {cropname} as cropname, {cropcode}::text as cropcode,
                 st_srid(wkb_geometry) as srid{geometrySql},
                 st_area(wkb_geometry) as area,
                 st_X(st_transform(st_centroid(wkb_geometry), 4326)) as clon,
                 st_Y(st_transform(st_centroid(wkb_geometry), 4326)) as clat
             FROM {parcels_table}{ptype}
-            WHERE ogc_fid = {pid};
+            WHERE {parcel_id} = '{pid}';
         """
 
         #  Return a list of tuples
@@ -169,6 +163,7 @@ def getParcelsByPolygon(dataset, polygon, ptype='', withGeometry=False,
         logging.debug(srid)
         cropname = dataset['pcolumns']['crop_name']
         cropcode = dataset['pcolumns']['crop_code']
+        parcel_id = dataset['pcolumns']['parcel_id']
 
         if withGeometry:
             if wgs84:
@@ -179,10 +174,10 @@ def getParcelsByPolygon(dataset, polygon, ptype='', withGeometry=False,
             geometrySql = ""
 
         if only_ids:
-            selectSql = f"ogc_fid{geometrySql}"
+            selectSql = f"{parcel_id} as pid{geometrySql}"
         else:
             selectSql = f"""
-                ogc_fid, {cropname} As cropname, {cropcode} As cropcode,
+                {parcel_id} as pid, {cropname} As cropname, {cropcode} As cropcode,
                 st_srid(wkb_geometry) As srid{geometrySql},
                 st_area(wkb_geometry) As area,
                 st_X(st_transform(st_centroid(wkb_geometry), 4326)) As clon,
@@ -218,7 +213,7 @@ def getParcelsByPolygon(dataset, polygon, ptype='', withGeometry=False,
 # Parcel Time Series
 
 def getParcelTimeSeries(dataset, pid, ptype='',
-                        tstype='s2', band=None, scl=True):
+                        tstype='s2', band=None, scl=True, ref=False):
     """Get the time series for the given parcel"""
 
     conn = db.conn(dataset['db'])
@@ -227,28 +222,35 @@ def getParcelTimeSeries(dataset, pid, ptype='',
 
     sigs_table = dataset['tables'][tstype]
     dias_catalog = dataset['tables']['dias_catalog']
+    parcels_table = dataset['tables']['parcels']
+    parcel_id = dataset['pcolumns']['parcel_id']
 
-    from_hists = f", {dataset['tables']['scl']}{ptype} h" if scl else ''
+    from_hists = f", {dataset['tables']['scl']} h" if scl else ''
     select_scl = ', h.hist' if scl else ''
+    select_ref = ', d.reference' if ref else ''
 
     where_shid = 'And s.pid = h.pid And h.obsid = s.obsid' if scl else ''
     where_band = f"And s.band = '{band}' " if band else ''
 
     if tstype.lower() == 's2':
         where_tstype = "And band IN ('B02', 'B03', 'B04', 'B05', 'B08', 'B11') "
-    elif tstype.lower() == 's1':
-        where_tstype = "And band IN ('VVc', 'VHc', 'VVb', 'VHb') "
+    elif tstype.lower() == 'c6':
+        where_tstype = "And band IN ('VVc', 'VHc') "
+    elif tstype.lower() == 'bs':
+        where_tstype = "And band IN ('VVb', 'VHb') "
     else:
         where_tstype = ""
 
     try:
         getTableDataSql = f"""
-            SELECT extract('epoch' from d.obstime), s.band, s.count,
-                s.mean, s.std, s.min, s.p25, s.p50, s.p75, s.max{select_scl}
-            FROM {sigs_table}{ptype} s,
+            SELECT extract('epoch' from d.obstime), s.band,
+                s.count, s.mean, s.std, s.min, s.p25, s.p50, s.p75,
+                s.max{select_scl}{select_ref}
+            FROM {parcels_table}{ptype} p, {sigs_table} s,
                 {dias_catalog} d{from_hists}
             WHERE
-                s.pid = {pid}
+                p.ogc_fid = s.pid
+                And p.{parcel_id} = '{pid}'
                 And s.obsid = d.id
                 {where_shid}
                 {where_band}
@@ -293,15 +295,16 @@ def getParcelPeers(dataset, pid, distance, maxPeers, ptype=''):
         srid = cur.fetchone()[0]
         logging.debug(srid)
         cropname = dataset['pcolumns']['crop_name']
+        parcel_id = dataset['pcolumns']['parcel_id']
 
         getTableDataSql = f"""
             WITH current_parcel AS (select {cropname},
-                wkb_geometry from {parcels_table}{ptype} where ogc_fid = {pid})
-            SELECT ogc_fid as pid, st_distance(wkb_geometry,
+                wkb_geometry from {parcels_table}{ptype} where {parcel_id} = {pid})
+            SELECT {parcel_id}::text as pid, st_distance(wkb_geometry,
                 (SELECT wkb_geometry FROM current_parcel)) As distance
             FROM {parcels_table}{ptype}
             WHERE {cropname} = (select {cropname} FROM current_parcel)
-            And ogc_fid != {pid}
+            And {parcel_id} != {pid}
             And st_dwithin(wkb_geometry,
                 (SELECT wkb_geometry FROM current_parcel), {distance})
             And st_area(wkb_geometry) > 3000.0
@@ -336,6 +339,7 @@ def getS2frames(dataset, pid, start, end, ptype=''):
 
     dias_catalog = dataset['tables']['dias_catalog']
     parcels_table = dataset['tables']['parcels']
+    parcel_id = dataset['pcolumns']['parcel_id']
     # Get the S2 frames that cover a parcel identified by parcel
     # ID from the dias_catalogue for the selected date.
 
@@ -346,7 +350,7 @@ def getS2frames(dataset, pid, start, end, ptype=''):
         FROM {dias_catalog}, {parcels_table}{ptype}
         WHERE card = 's2'
         And footprint && st_transform(wkb_geometry, 4326)
-        And ogc_fid = {pid}
+        And {parcel_id} = {pid}
         And obstime between '{start}' and '{end_date}'
         ORDER by obstime asc;
     """
@@ -381,13 +385,16 @@ def getParcelSCL(dataset, pid, ptype=''):
     conn = db.conn(dataset['db'])
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
+    parcel_id = dataset['pcolumns']['parcel_id']
 
     try:
         getTableDataSql = f"""
-            SELECT *
-            FROM {dataset['tables']['parcels']}{ptype} h
-            WHERE h.pid = {pid}
-            ORDER By h.pid Asc;
+            SELECT h.obsid, h.hist
+            FROM {dataset['tables']['scl']} h,
+                {dataset['tables']['parcels']}{ptype} p
+            WHERE h.pid = p.ogc_fid
+            And p.{parcel_id} = '{pid}'
+            ORDER By h.obsid Asc;
         """
         #  Return a list of tuples
         cur.execute(getTableDataSql)
@@ -413,21 +420,22 @@ def getParcelCentroid(dataset, pid, ptype=''):
     conn = db.conn(dataset['db'])
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
+    parcel_id = dataset['pcolumns']['parcel_id']
 
     try:
         getTableDataSql = f"""
-            SELECT ST_X(ST_AsText(ST_Centroid(wkb_geometry))),
-                    ST_Y(ST_AsText(ST_Centroid(wkb_geometry)))
-            FROM {dataset['tables']['parcels']}{ptype}
-            WHERE ogc_fid = {pid};
+        SELECT ST_Asgeojson(ST_transform(ST_Centroid(wkb_geometry), 4326))
+        FROM {dataset['tables']['parcels']}{ptype}
+        WHERE {parcel_id} = {pid}
+        LIMIT 1;
         """
         #  Return a list of tuples
         cur.execute(getTableDataSql)
-        return cur.fetchall()[0]
+        json_centroid = cur.fetchall()[0]
+        return json.loads(json_centroid[0])['coordinates']
 
     except Exception as err:
-        print("Did not find data, please select the right database and table: ",
-              err)
+        print("Can not get the parcel centroid: ", err)
         return data.append('Ended with no data')
 
 
@@ -435,12 +443,13 @@ def getPolygonCentroid(dataset, pid, ptype=''):
     """Get the centroid of the given polygon"""
 
     conn = db.conn(dataset['db'])
+    parcel_id = dataset['pcolumns']['parcel_id']
 
     getParcelPolygonSql = f"""
         SELECT ST_Asgeojson(ST_transform(ST_Centroid(wkb_geometry), 4326))
             As center, ST_Asgeojson(st_transform(wkb_geometry, 4326)) As polygon
         FROM {dataset['tables']['parcels']}{ptype}
-        WHERE ogc_fid = {pid}
+        WHERE {parcel_id} = {pid}
         LIMIT 1;
     """
 
