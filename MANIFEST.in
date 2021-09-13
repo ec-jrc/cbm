@@ -1,3 +1,4 @@
+include README.md
 include cbm/utils/default/main.json
 include cbm/utils/default/datasets.json
 include cbm/utils/default/api_options.json
