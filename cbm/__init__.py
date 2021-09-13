@@ -15,11 +15,12 @@ __status__ = "Development"
 
 import sys
 
+import os
 from os.path import join, normcase, normpath
 from cbm.utils import update
 from pkg_resources import get_distribution, DistributionNotFound
 
-from cbm import show, get, extract, foi, card2db, ipycbm
+from cbm import show, get, extract, foi, card2db
 
 if sys.version_info < (3, 6):
     print("Not supoted python version, cbm needs python version > 3.6")
@@ -38,8 +39,18 @@ except DistributionNotFound:
 else:
     __version__ = _dist.version
 
+os.makedirs("temp", exist_ok=True)
 update.check()
 
 
 def init():
     from cbm.utils import init
+
+
+def set_api_account(url, username, password):
+    from cbm.utils import config
+    config.set_value(['api', 'url'], url)
+    config.set_value(['api', 'user'], username)
+    config.set_value(['api', 'pass'], password)
+    print("The 'api' key in config/main.json file is updated:")
+    print(config.get_value(['api']))
