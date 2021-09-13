@@ -15,6 +15,12 @@ Can be instaled with:
 pip3 install cbm
 ```
 
+To upgrade use the -U flag
+
+```bash
+pip3 install cbm -U
+```
+
 ## Installing for development
 
 For development install cbm in [editable mode](https://pip.pypa.io/en/stable/reference/pip_install/#cmdoption-e) with:
