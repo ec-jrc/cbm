@@ -7,6 +7,11 @@ python3 -c "import cbm"
 nano config/main.json
 ```
 
+or run in python
+```python
+cbm.set_api_account('http://0.0.0.0/', 'USERNAME', 'PASSWORD')
+```
+
 The main configuration file for cbm library ‘main.json’ is used in all the subpackages:
 
 ```json
@@ -16,8 +21,7 @@ The main configuration file for cbm library ‘main.json’ is used in all the s
     "files": {}, // Location of files used it some functions
     "api": {}, // The RESTful API access information
     "db": {}, // Database access information
-    "dataset": {}, // Dataset information and tables configuration
-    "obst": {} // the object storage credentials
+    "s3": {} // the object storage credentials
 }
 ```
 
