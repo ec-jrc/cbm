@@ -305,12 +305,13 @@ def getParcelPeers(dataset, pid, distance, maxPeers, ptype=''):
 
         getTableDataSql = f"""
             WITH current_parcel AS (select {cropname},
-                wkb_geometry from {parcels_table}{ptype} where {parcel_id} = {pid})
+                wkb_geometry from {parcels_table}{ptype}
+                WHERE {parcel_id} = '{pid}')
             SELECT {parcel_id}::text as pid, st_distance(wkb_geometry,
                 (SELECT wkb_geometry FROM current_parcel)) As distance
             FROM {parcels_table}{ptype}
             WHERE {cropname} = (select {cropname} FROM current_parcel)
-            And {parcel_id} != {pid}
+            And {parcel_id} != '{pid}'
             And st_dwithin(wkb_geometry,
                 (SELECT wkb_geometry FROM current_parcel), {distance})
             And st_area(wkb_geometry) > 3000.0
@@ -356,7 +357,7 @@ def getS2frames(dataset, pid, start, end, ptype=''):
         FROM {dias_catalog}, {parcels_table}{ptype}
         WHERE card = 's2'
         And footprint && st_transform(wkb_geometry, 4326)
-        And {parcel_id} = {pid}
+        And {parcel_id} = '{pid}'
         And obstime between '{start}' and '{end_date}'
         ORDER by obstime asc;
     """
@@ -432,7 +433,7 @@ def getParcelCentroid(dataset, pid, ptype=''):
         getTableDataSql = f"""
         SELECT ST_Asgeojson(ST_transform(ST_Centroid(wkb_geometry), 4326))
         FROM {dataset['tables']['parcels']}{ptype}
-        WHERE {parcel_id} = {pid}
+        WHERE {parcel_id} = '{pid}'
         LIMIT 1;
         """
         #  Return a list of tuples
@@ -455,7 +456,7 @@ def getPolygonCentroid(dataset, pid, ptype=''):
         SELECT ST_Asgeojson(ST_transform(ST_Centroid(wkb_geometry), 4326))
             As center, ST_Asgeojson(st_transform(wkb_geometry, 4326)) As polygon
         FROM {dataset['tables']['parcels']}{ptype}
-        WHERE {parcel_id} = {pid}
+        WHERE {parcel_id} = '{pid}'
         LIMIT 1;
     """
 
