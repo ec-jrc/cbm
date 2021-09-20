@@ -2,9 +2,10 @@
 The cbm Python library provides an easy and organized way to run a variety of different tasks for checks by monitoring.
 
 Python library for Checks by Monitoring, includes:
-- card2db : Transfer metadata from the DIAS catalog
-- extract : Parcel extraction routines
+- card2db : Transfer metadata from the DIAS catalog (direct access required)
+- extract : Parcel extraction routines (direct access required)
 - get : To download data locally
+- show : to show plots
 - foi : FOI analysis module
 - report : For reports creation
 - ipycbm : Interactive notebook tools, includes:
@@ -35,7 +36,7 @@ A subpackage 'ipycbm' is available for use in Jupyter Notebooks and provides int
 |----------|------|------|
 | config() |  To configure the config/main.json file interactively | D,R |
 | get() |  Get data from servers with different methods (coordinates, parcels ids, map marker, polygon*) | D,R |
-| view() | View the data in many different ways**, with easy selection of the view method. | D,R |
+| show() | View the data with many different ways**, with easy selection of the view method. | D,R |
 | extract() | For running extraction routines and other cbm tasks | D |
 | foi() | The FOI procedures notebook graphical interface | D,R |
 | qa() | The Quality Assessment (QA) notebook graphical interface | D,R |
