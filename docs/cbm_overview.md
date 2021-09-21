@@ -43,3 +43,35 @@ A subpackage 'ipycbm' is available for use in Jupyter Notebooks and provides int
 
 Use: D=Can be used with direct access, R=Can be used with RESTful API
 
+
+## Data stracture
+
+Example folder structure for parcel with ID 12345 stored in temp folder:
+```sh
+temp/
+    aoi/2020/12345/info.json                             # Parcel information in .json format
+    aoi/2020/12345/time_series_s2.csv                    # Time series form the parcel in .csv format
+    aoi/2020/12345/backgrounds/*                         # Background images
+    aoi/2020/12345/chipimages/images_list.B04.csv        # A list of downloaded images in .csv format
+    aoi/2020/12345/chipimages/S2A_MSIL2A_2019---.B04.tif # The downloaded chip images
+    aoi/2020/12345/chipimages/S2A_MSIL2A_...             # ...
+```
+
+
+## Get widget
+
+The get() function of ipycbm library provides an interactive Jupyter Notebook widget to get data from different sources, with variety of different methods (coordinates, parcels ids, map marker, polygon).
+
+```python
+from cbm import ipycbm
+ipycbm.get()
+```
+
+![](https://raw.githubusercontent.com/konanast/cbm_media/main/ipycbm_get_01.png)
+
+## View widget
+
+```python
+from cbm import ipycbm
+ipycbm.view()
+```

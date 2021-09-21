@@ -36,5 +36,7 @@ from cbm import ipycbm
 # Open the configuration widget
 ipycbm.config() 
 ```
+
+This will provide a widget with all configuration within a graphical interface
 ![](https://raw.githubusercontent.com/konanast/cbm_media/main/ipycbm_config_01.png)
 
