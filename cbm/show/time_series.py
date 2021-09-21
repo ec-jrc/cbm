@@ -23,7 +23,7 @@ def ndvi(aoi, year, pid, ptype=None, cloud_free=True,
          scl='3_8_9_10_11', debug=False):
 
     path = normpath(join(config.get_value(['paths', 'temp']),
-                         aoi, year, str(pid)))
+                         aoi, str(year), str(pid)))
 
     file_info = normpath(join(path, 'info.json'))
     if not isfile(file_info):
@@ -115,7 +115,7 @@ def s2(aoi, year, pid, ptype=None, bands=['B02'], cloud_free=True,
     if type(bands) is str:
         bands = [bands]
     path = normpath(join(config.get_value(['paths', 'temp']),
-                         aoi, year, str(pid)))
+                         aoi, str(year), str(pid)))
 
     parcel_file = normpath(join(path, 'info.json'))
     if not isfile(parcel_file):
@@ -235,8 +235,9 @@ def s2(aoi, year, pid, ptype=None, bands=['B02'], cloud_free=True,
     return plt.show()
 
 
-def s1_bs(aoi, pid):
-    path = normpath(join(config.get_value(['paths', 'temp']), aoi, str(pid)))
+def s1_bs(aoi, year, pid, ptype=None, bands=['']):
+    path = normpath(join(config.get_value(['paths', 'temp']),
+                         aoi, str(year), str(pid)))
     file_info = normpath(join(path, 'info.json'))
     if not isfile(file_info):
         parcel_info.by_pid(aoi, pid)
