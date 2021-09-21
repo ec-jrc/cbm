@@ -50,8 +50,7 @@
    cbm_card
    cbm_ext
    cbm_foi
-   cbm_get
-   cbm_cal
+   cbm_data
 
 
 .. toctree::
