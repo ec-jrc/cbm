@@ -32,7 +32,7 @@ Set the dataset to the data that the user will be restricted to.
 
 Example:
 ```bash
-python3 scripts/users.py add john_doe Pass4John aoi2020
+python3 scripts/users.py add john_doe Pass4John aoi
 ```
 
 Alternatively import the module in a python script or notebook cell:
@@ -72,6 +72,40 @@ and set the database connection information. e.g.:
         "bucket": "DIAS",
         "access_key": "anystring",
         "secret_key": "anystring"
+    }
+}
+```
+
+
+## Dataset configuration
+
+All dataset configuration are set in the config/dataset.json file.
+```json
+{
+    "default_2020": {
+        "db": "main",
+        "description": "Dataset description",
+        "center": "51.0,14.0",
+        "zoom": "5",
+        "year": "",
+        "start_date": "",
+        "end_date": "",
+        "extent": "",
+        "flip_coordinates": "False",
+        "tables": {
+            "parcels": "par",
+            "dias_catalog": "dias_catalogue",
+            "scl": "hists_2020",
+            "s2": "s2_sigs_2020",
+            "bs": "bs_sigs_2020",
+            "c6": "c6_sigs_2020",
+            "bs_tf": "bs_tensorflow"
+        },
+        "pcolumns": {
+            "parcel_id": "id",
+            "crop_name": "name",
+            "crop_code": "code"
+        }
     }
 }
 ```
