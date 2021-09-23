@@ -31,9 +31,9 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 
 vms = ['192.168.0.11', '192.168.0.13', '192.168.0.2', '192.168.0.15']
 
-logging.basicConfig(filename=os.path.basename(
-    sys.argv[0]).replace('.py', '.log'), filemode='w',
-    format='%(name)s - %(levelname)s - %(message)s', level=logging.DEBUG)
+# logging.basicConfig(filename=os.path.basename(
+#     sys.argv[0]).replace('.py', '.log'), filemode='w',
+#     format='%(name)s - %(levelname)s - %(message)s', level=logging.DEBUG)
 
 
 def parallelExtract(unique_dir):

@@ -17,9 +17,9 @@ from scripts import rawS1ChipBatchExtract as rces1
 aois_table = 'public.aois'
 dias_cat_table = 'public.dias_catalogue'
 
-logging.basicConfig(filename='logs/queryHandler.log', filemode='w',
-                    format='%(name)s - %(levelname)s - %(message)s',
-                    level=logging.ERROR)
+# logging.basicConfig(filename='logs/queryHandler.log', filemode='w',
+#                     format='%(name)s - %(levelname)s - %(message)s',
+#                     level=logging.ERROR)
 
 
 # Parcel Images
