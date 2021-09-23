@@ -34,9 +34,12 @@ app.config['SWAGGER'] = {
     'title': 'CbM API',
     'uiversion': 3
 }
+app.config["MS_FILES"] = 'ms_files'
+app.config['UPLOAD_FOLDER'] = 'uploads'
 
 # Enable upload page (http://HOST/upload).
 UPLOAD_ENABLE = True  # True or False
+DEBUG = False
 DEFAULT_AOI = ''
 datasets = db_queries.get_datasets()
 
@@ -56,19 +59,40 @@ logger.addHandler(handler)
 @app.after_request
 def after_request(response):
     timestamp = strftime('[%Y-%b-%d %H:%M]')
-    logger.error('%s %s %s %s %s %s', timestamp, request.remote_addr,
-                 request.method, request.scheme, request.full_path,
-                 response.status)
+    if response.status == '200 OK':
+        try:
+            logger.error('%s %s %s %s %s %s %s', timestamp, request.remote_addr,
+                         user, request.method, request.scheme,
+                         request.full_path, response.status)
+        except Exception:
+            logger.error('%s %s %s %s %s %s', timestamp, request.remote_addr,
+                         request.method, request.scheme, request.full_path,
+                         response.status)
+    elif DEBUG is True:
+        try:
+            print('%s %s %s %s %s %s %s', timestamp, request.remote_addr,
+                  user, request.method, request.scheme, request.full_path,
+                  response.status)
+        except Exception:
+            print('%s %s %s %s %s %s', timestamp, request.remote_addr,
+                  request.method, request.scheme, request.full_path,
+                  response.status)
     return response
 
 
 @app.errorhandler(Exception)
 def exceptions(e):
-    tb = traceback.format_exc()
-    timestamp = strftime('[%Y-%b-%d %H:%M]')
-    logger.error('%s %s %s %s %s 5xx INTERNAL SERVER ERROR\n%s', timestamp,
-                 request.remote_addr, request.method, request.scheme,
-                 request.full_path, tb)
+    if DEBUG is True:
+        tb = traceback.format_exc()
+        timestamp = strftime('[%Y-%b-%d %H:%M]')
+        try:
+            print('%s %s %s %s %s %s 5xx INTERNAL SERVER ERROR\n%s', timestamp,
+                  user, request.remote_addr, request.method, request.scheme,
+                  request.full_path, tb)
+        except Exception:
+            print('%s %s %s %s %s 5xx INTERNAL SERVER ERROR\n%s', timestamp,
+                  request.remote_addr, request.method, request.scheme,
+                  request.full_path, tb)
     return e
 
 
@@ -76,7 +100,12 @@ def exceptions(e):
 def auth_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
+        global user
         auth = request.authorization
+        try:
+            user = auth.username
+        except Exception:
+            user = 'None'
         if auth and users.auth(auth.username, auth.password) is True:
             if 'aoi' in request.args.keys():
                 aoi = request.args.get('aoi')
@@ -535,7 +564,6 @@ def parcelTimeSeries_query():
         data = db_queries.getParcelTimeSeries(dataset, pid, ptype,
                                               tstype, band, scl, ref)
 
-    # print(data)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
@@ -693,8 +721,6 @@ def parcelsByPolygon_query():
 
 # -------- Uploader ---------------------------------------------------------- #
 
-app.config['UPLOAD_FOLDER'] = 'uploads'
-
 
 def allowed_file(filename):
     # Allow specific file types.
@@ -707,17 +733,17 @@ def allowed_file(filename):
 def download_files():
     aoi = request.args.get('aoi')
     if aoi in [k.split('_')[0] for k in datasets]:
-        aoi_files = glob.glob(f'ms_files/{aoi}/*')
+        aoi_files = glob.glob(f'{app.config["MS_FILES"]}/{aoi}/*')
     else:
         aoi_files = []
-    # print(aoi_files)
     return render_template("ms_files.html", files=aoi_files)
 
 
-@app.route('/ms_files/<aoi>/<filename>')
+@app.route(f'/{app.config["MS_FILES"]}/<aoi>/<filename>')
 @auth_required
 def download_file(aoi, filename):
-    return send_from_directory('ms_files', f'{aoi}/{filename}')
+    return send_from_directory(f'{app.config["MS_FILES"]}/{aoi}',
+                               filename, as_attachment=True)
 
 
 @app.route('/upload', methods=['GET', 'POST'])

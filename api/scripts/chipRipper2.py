@@ -40,8 +40,8 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 
 from scripts import download_with_boto3 as dwb
 
-logging.basicConfig(filename=os.path.basename(sys.argv[0]).replace(
-    '.py', '.log'), filemode='w', format='%(name)s - %(levelname)s - %(message)s', level=logging.DEBUG)
+# logging.basicConfig(filename=os.path.basename(sys.argv[0]).replace(
+#     '.py', '.log'), filemode='w', format='%(name)s - %(levelname)s - %(message)s', level=logging.DEBUG)
 
 
 def main(lon, lat, reference, unique_dir, lut, bands, plevel):
