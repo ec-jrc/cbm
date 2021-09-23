@@ -127,7 +127,7 @@ tstype = 's2'     # time series type (str)
 cbm.get.time_series.by_location(aoi, year, lat, lon, tstype, ptype)
 ```
 
-The files will be saved by default in the **temp/** folder
+The files will be saved by default in the ```temp/ms/year/parcel/...``` folder.
 
 
 ## Background images
@@ -157,7 +157,7 @@ cbm.show.background.by_pid(aoi, year, pid, ptype, chipsize, extend, tms, ptype, 
 
 ### Download background images
 
-To download background images without preview 
+To download background images without plotting the images for a knowing parcel ID.
 ```python
 import cbm
 
@@ -168,7 +168,30 @@ chipsize = 512         # size of the chip in pixels
 extend = 512           # size of the chip in meters
 tms = ['Google']       # tile map server, Google, Bing or MS orthophotos
 ptype = None           # (optional) specify the dataset*
+axis = True            # show axis
 debug = False          # show debugging output
 
-cbm.get.background.by_pid(aoi, year, pid, ptype, chipsize, extend, tms, ptype, debug)
+cbm.get.background.by_pid(aoi, year, pid, ptype, chipsize, extend, tms, ptype, axis, debug)
 ```
+
+To download background images without plotting the images based on the parcel location.
+```python
+import cbm
+
+aoi = 'ms'             # area of interest (str)
+year = 2020            # the year of the parcels dataset (int)
+pid = '12345'          # parcel id (str)
+lat = 50.12345         # latitude in decimal degrees
+lon = 5.12345          # longitude in decimal degrees
+chipsize = 512         # size of the chip in pixels
+extend = 512           # size of the chip in meters
+tms = ['Google']       # tile map server, Google, Bing or MS orthophotos
+ptype = None           # (optional) specify the dataset*
+axis = True            # show axis
+debug = False          # show debugging output
+
+cbm.get.background.by_location(aoi, year, lat, lon, tstype, axis, ptype)
+```
+
+The files will be saved by default in the ```temp/ms/year/parcel/...``` folder.
+
