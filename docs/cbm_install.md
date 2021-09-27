@@ -129,6 +129,11 @@ or [How To Install GDAL/OGR Packages on Ubuntu](https://mothergeo-py.readthedocs
 
 ## Troubleshooting
 
+In case of permission errors try using 'user' flag:
+```python
+pip install cbm --user
+```
+
 On Windowns GDAL may need to be installed with the [osgeo4w](https://trac.osgeo.org/osgeo4w/) installation package
 
 In some cases the rasterio package may need to be installed with:
