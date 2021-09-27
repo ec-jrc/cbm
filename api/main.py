@@ -23,6 +23,7 @@ from flask import (Flask, request, send_from_directory, make_response,
                    render_template, flash, redirect, jsonify, abort, url_for)
 
 
+import flask_monitoringdashboard as dashboard
 from scripts import db_queries
 from scripts import image_requests
 from scripts import users
@@ -43,6 +44,8 @@ DEBUG = False
 DEFAULT_AOI = ''
 datasets = db_queries.get_datasets()
 
+dashboard.bind(app)
+
 
 # -------- Core functions ---------------------------------------------------- #
 
@@ -59,15 +62,10 @@ logger.addHandler(handler)
 @app.after_request
 def after_request(response):
     timestamp = strftime('[%Y-%b-%d %H:%M]')
-    if response.status == '200 OK':
-        try:
-            logger.error('%s %s %s %s %s %s %s', timestamp, request.remote_addr,
-                         user, request.method, request.scheme,
-                         request.full_path, response.status)
-        except Exception:
-            logger.error('%s %s %s %s %s %s', timestamp, request.remote_addr,
-                         request.method, request.scheme, request.full_path,
-                         response.status)
+    if request.path.split('/')[1] == 'query':
+        logger.error('%s %s %s %s %s %s %s', timestamp, request.remote_addr,
+                     user, request.method, request.scheme,
+                     request.full_path, response.status)
     elif DEBUG is True:
         try:
             print('%s %s %s %s %s %s %s', timestamp, request.remote_addr,
