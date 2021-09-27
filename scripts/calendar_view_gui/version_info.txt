@@ -1,0 +1,2 @@
+Option added to read SCL histogram from the database through RESTful service, instead of downloading the SCL layers and calculating the histogram locally.
+Still: there is a possibility to force download of SCL layers if we want to doulbe check the calculation of the SCL histogram.

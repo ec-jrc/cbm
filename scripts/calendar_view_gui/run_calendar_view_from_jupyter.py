@@ -16,6 +16,7 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('./utils'))
 import download_utils, plot_utils, batch_utils, graph_utils, parcel_utils
+import db_utils
 import geopandas
 import json
 import datetime
@@ -78,6 +79,16 @@ def run_calendar_view(**kwargs):
     exclude_cirrus = kwargs.get("exclude_cirrus") 
     buffer_size_meter = kwargs.get("buffer_size_meter") 
     centroid_shift_degrees = kwargs.get("centroid_shift_degrees") 
+    
+    MS = kwargs.get("MS") 
+    year = kwargs.get("year")
+    
+    api_user = kwargs.get("api_user")
+    api_pass = kwargs.get("api_pass")
+    ptype = kwargs.get("ptype")
+    
+  
+
 
     if not os.path.exists(out_tif_folder_base):
         os.makedirs(out_tif_folder_base)
@@ -89,22 +100,13 @@ def run_calendar_view(**kwargs):
     
     # setting parameters that are used by the different functions below
 #    and are still hard-coded
-    # username and password to chip extract RESTFul service needs to be specified
-    # according to the DIAS instance used
-    username = ''
-    password = ''
+    username = 'JRC_D5'
+    password = 'djB2_e'
     url_base = "http://185.178.85.226"
     if exclude_cirrus:
-        cloud_categories = [3,8,9,10,11] # exclude 10 which is thin cirrus
+        cloud_categories = [0,1,3,8,9,10,11] # exclude 10 which is thin cirrus
     else:
-        cloud_categories = [3,8,9,11]
-    # cloud_categories = [3,8,9,11]
-#    cloud_categories = []
-    
-#    centroid_shift_degrees = 0.00002 # if we want to make sure that the chips are not read from the cash from the Restful server
-#                                     # we change the fifth digit of the lat lon coordinates. this will not move much but 
-#                                     # assures the chips are regenerated
-                        
+        cloud_categories = [0,1,3,8,9,11]
     
     if stats_band:
         bands =  ["B02", "B03", "B04", "B05", "B06", "B07", "B08", "B8A", "B11", "B12"]
@@ -117,6 +119,7 @@ def run_calendar_view(**kwargs):
     raw_chips_batch_url = url_base + "/query/rawChipsBatch"
     raw_chips_s1_batch_url = url_base + "/query/rawS1ChipsBatch"
     
+    # histogram cut at both ends for dynamic LUT stretching
     left_percent = 1
     right_percent = 1
     s1_bs_left_percent = 1
@@ -131,7 +134,6 @@ def run_calendar_view(**kwargs):
     #number of tiles we can request at one go is 36/3=12
     max_number_of_tiles_per_request = int(36 / len(bands))
     
-    pixel_size_meter = 10
     vector_color = "yellow"
     
     jpg_resolution = 100
@@ -154,7 +156,10 @@ def run_calendar_view(**kwargs):
         
         print(parcel_id, crop, parcel_area_ha)
         
-        chip_folder = str(parcel_id) + '_' + crop
+        # convert parcel_id to a string that can be used as filename           
+        parcel_id_as_filename = batch_utils.convert_string_to_filename(parcel_id)
+        chip_folder = str(parcel_id_as_filename) + '_' + crop     
+        
         out_s1_bs_folder = out_tif_folder_base + "/" + chip_folder + "_s1_bs"
         out_s1_coh6_folder = out_tif_folder_base + "/" + chip_folder + "_s1_coh6"
         out_s1_bs_folder_rescale = out_tif_folder_base + "/" + chip_folder + "_s1_bs_rescale"
@@ -174,10 +179,38 @@ def run_calendar_view(**kwargs):
                                      url_base, lon, lat, logfile
                                     )
         
-         #create a list of tiles to be downloaded (based on cloud cover inside the parcel)
-        tiles_to_download = batch_utils.create_list_of_tiles_to_be_downloaded(parcel, parcel_id, crop, out_tif_folder_base, 
-                                                                               cloud_categories, logfile)
-         #         print(tiles_to_download)
+         #create a list of tiles to be downloaded (based on cloud cover inside the parcel) only if necessary
+        if  get_bands or \
+            cv_lut_magic or \
+            cv_lut_dynamic or \
+            cv_ndvi or \
+            stats_ndvi or \
+            cv_ndvi_hist or \
+            cv_red_nir_scatter:
+
+            if get_scl:
+                tiles_to_download = batch_utils.create_list_of_tiles_to_be_downloaded(parcel, parcel_id, crop, out_tif_folder_base, 
+                                                                                   cloud_categories, logfile)
+            else:
+                tstype = "s2"    
+                tiles_to_download = db_utils.create_list_of_tiles_to_be_downloaded_from_RESTful(MS, year, parcel_id, 
+                                                        search_window_start_date, search_window_end_date,
+                                                        cloud_categories, api_user, api_pass, tstype, ptype)                
+
+                if tiles_to_download == None or len(tiles_to_download) == 0:
+                    print("No histogram data in the database, we need to download the SCL files " \
+                          "and calculate statistics from those")
+                    batch_utils.run_get_scl_imagettes(parcel, parcel_id, crop, out_tif_folder_base, 
+                             search_window_start_date, search_window_end_date, search_split_days,
+                             raw_chips_by_location_url, username, password, chipsize,
+                             url_base, lon, lat, logfile
+                            )
+                    tiles_to_download = batch_utils.create_list_of_tiles_to_be_downloaded(parcel, parcel_id, crop, out_tif_folder_base, 
+                                                                   cloud_categories, logfile)
+
+                else:    
+                    print(tiles_to_download)                
+                
         
          #Get and download band imagettes
         if get_bands:
@@ -325,6 +358,11 @@ def run_calendar_view(**kwargs):
         if graph_coh:
             add_error_bars = False
             graph_utils.display_s1_coh6_profiles_together(parcel_id, crop, plot_title, out_tif_folder_base, logfile, add_error_bars)
+            graph_utils.display_s1_coh6_profiles_together_with_fixed_date_range(parcel_id, crop, plot_title, 
+                                                                                out_tif_folder_base, logfile,
+                                                                                index_graph_start_date, index_graph_end_date,
+                                                                                parcel_area_ha,
+                                                                                add_error_bars = False)
           
         if get_bs:
             batch_utils.run_get_and_download_s1_bs_imagettes(raw_chips_s1_batch_url, out_s1_bs_folder,
