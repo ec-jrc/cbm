@@ -13,6 +13,7 @@
 import pptx
 import matplotlib.pyplot as plt
 import os
+import batch_utils
 
 """
     Summary: 
@@ -41,6 +42,8 @@ def add_slide( prs, out_tif_folder_base, parcel_id, crop, buffer_size_meter, vec
     # # sorry for patching it here (by Csaba), we could add it as a parameter later
     # path = out_tif_folder_base + '/ndvi_graphs_with_mean_new/'
     
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = batch_utils.convert_string_to_filename(parcel_id)
     
     if parcel_id.isnumeric() :
         parcel_id_as_num = int(parcel_id)   # this is to remove initial 0s
@@ -49,16 +52,18 @@ def add_slide( prs, out_tif_folder_base, parcel_id, crop, buffer_size_meter, vec
         parcel_id_as_str = parcel_id
     
     # search for file 
-    ndvi_files = [f for f in os.listdir(path) if parcel_id_as_str in f and f.endswith('_NDVI.jpg') ]
+    ndvi_files = [f for f in os.listdir(path) if parcel_id_as_filename in f and f.endswith('_NDVI.jpg') ]
     
     if len(ndvi_files) == 0 :
         return
     else :
         ndvi_jpg = path + ndvi_files[ 0 ] 
+        
+        
     
     # build the address of the imaginettes summary 
     summary_jpg = out_tif_folder_base + '/overview_jpg_half_weekly/'
-    summary_jpg += ( parcel_id + '_')
+    summary_jpg += ( parcel_id_as_filename + '_')
     summary_jpg += ( crop + '_')
     summary_jpg += "buff%dm_" % buffer_size_meter
     summary_jpg += vector_color + '.jpg'
