@@ -7,8 +7,6 @@
 # Copyright : 2021 European Commission, Joint Research Centre
 # License   : 3-Clause BSD
 
-
-import requests
 import rasterio
 import numpy as np
 import matplotlib.pyplot as plt

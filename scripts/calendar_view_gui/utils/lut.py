@@ -10,7 +10,6 @@
 
 from osgeo import gdal
 import sys
-import numpy as np
     
 def getCumulativeCutCountForOneBand(tifFileName, band, leftPercent, rightPercent):
     src_ds = gdal.Open( tifFileName )

@@ -3,6 +3,7 @@
 Created on Sat Mar 27 18:42:49 2021
 
 @author: Csaba
+Define GUI elements
 """
 
 import ipywidgets as widgets
@@ -10,7 +11,6 @@ from ipywidgets import HBox, VBox, Layout
 from ipyfilechooser import FileChooser
 import datetime
 import os
-import sys
 import geopandas
 import pandas as pd
 from pathlib import Path
@@ -63,7 +63,13 @@ def calendar_view_gui(**kwargs):
     
     default_shapefile=kwargs.get("default_shapefile")   
     default_out_tif_folder_base=kwargs.get("default_out_tif_folder_base")
-    
+    default_MS = kwargs.get("MS")
+    default_year = kwargs.get("year")
+        
+    default_api_user = kwargs.get("api_user")
+    default_api_pass = kwargs.get("api_pass")
+    default_ptype = kwargs.get("ptype")
+ 
     
     layout1 = Layout(width='96%', height='35px')
     style1 = {'description_width': 'initial'}
@@ -121,15 +127,20 @@ def calendar_view_gui(**kwargs):
             plot_title = w_plot_title.value,
             exclude_cirrus = w_exclude_cirrus.value,
             buffer_size_meter = w_buffer_size_meter.value,
-            centroid_shift_degrees = w_centroid_shift_degrees.value
+            centroid_shift_degrees = w_centroid_shift_degrees.value,
+            MS = default_MS,
+            year = str(default_year),
+            api_user = default_api_user,
+            api_pass = default_api_pass,
+            ptype = default_ptype
             )
 
 
 ##############################################################    
-#Define the elements of the "What to run?" tab
+### Define the elements of the "What to run?" tab
 ##############################################################
     def set_minimum_options_what_to_run():       
-        w_get_scl.value = True
+        w_get_scl.value = False
         w_get_bands.value = True
         w_merge_bands.value = True
         w_lut_stretch_magic.value = True
@@ -161,7 +172,7 @@ def calendar_view_gui(**kwargs):
     #define check box widgets for the first column
     w_get_scl = widgets.Checkbox(
         value=True,
-        description='Get and download SCL imagettes',
+        description='Force the use of SCL imagettes',
         disabled=False,
         indent=False
     )
@@ -477,7 +488,7 @@ def calendar_view_gui(**kwargs):
  
     
 ##############################################################    
-#Define the elements of the "Set dates" tab
+### Define the elements of the "Set dates" tab
 ##############################################################
     # define widgets for window parameters (start and end dates)
     w_search_window_start_date = widgets.DatePicker(
@@ -523,7 +534,7 @@ def calendar_view_gui(**kwargs):
     tab_dates = HBox(children=[search_window_column,index_graph_column])
     
 ##############################################################    
-#Define the elements of the Vector/Output folder selector tab
+#### Define the elements of the Vector/Output folder selector tab
 ##############################################################
     #text widget holding the full path of the selected vector shapefile
     w_select_vector = widgets.Text(
@@ -650,12 +661,12 @@ def calendar_view_gui(**kwargs):
     w_select_vector.observe(add_column_names_to_dropdowns)
 
 ##############################################################    
-#Define the elements of the "Other parameters" tab
+### Define the elements of the "Other parameters" tab
 ##############################################################
     #text widget holding the title of the graphs
     w_plot_title = widgets.Text(
-        value='',
-        placeholder='eg. DK 2019',
+        value = default_MS + ' ' + default_year,
+#        placeholder='eg. DK 2019',
         description='Title for graphs:',
         disabled=False, 
         style={'description_width': 'initial'}
