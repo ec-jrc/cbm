@@ -41,9 +41,12 @@ def run_get_scl_imagettes(parcel, parcel_id, crop, out_tif_folder_base,
                             url_base, lon, lat, logfile
                            ):
     fout = open(logfile, 'a')
-    start = time.time()                        
+    start = time.time()             
+
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
     # get the list of SCL imagettes for the parcel in a given date range 
-    chip_folder = str(parcel_id) + '_' + crop
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
     out_tif_folder = out_tif_folder_base + "/" + chip_folder
 
     # lon, lat = download_utils.get_centroid_of_parcel(parcel)
@@ -77,8 +80,10 @@ def run_get_scl_imagettes_l1c(parcel, parcel_id, crop, out_tif_folder_base,
                            ):
     fout = open(logfile, 'a')
     start = time.time()                        
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
     # get the list of SCL imagettes for the parcel in a given date range 
-    chip_folder = str(parcel_id) + '_' + crop
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
     out_tif_folder = out_tif_folder_base + "/" + chip_folder
 
     # lon, lat = download_utils.get_centroid_of_parcel(parcel)
@@ -110,7 +115,9 @@ def create_list_of_tiles_to_be_downloaded(parcel, parcel_id, crop, out_tif_folde
     warnings.simplefilter(action='ignore', category=FutureWarning)
     fout = open(logfile, 'a')
     start = time.time()
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
     out_tif_folder = out_tif_folder_base + "/" + chip_folder
     
     # get downloaded SCL tile tifs and see if they are cloudfree
@@ -129,6 +136,7 @@ def create_list_of_tiles_to_be_downloaded(parcel, parcel_id, crop, out_tif_folde
 
     fout.close()
     return tiles_to_download
+
     
 def create_list_of_tiles_to_be_downloaded_l1c(parcel, parcel_id, crop, out_tif_folder_base, cloud_categories, logfile):
     print('valami')
@@ -136,7 +144,10 @@ def create_list_of_tiles_to_be_downloaded_l1c(parcel, parcel_id, crop, out_tif_f
     warnings.simplefilter(action='ignore', category=FutureWarning)
     fout = open(logfile, 'a')
     start = time.time()
-    chip_folder = str(parcel_id) + '_' + crop
+    
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
     out_tif_folder = out_tif_folder_base + "/" + chip_folder
     
     # get downloaded SCL tile tifs and see if they are cloudfree
@@ -165,7 +176,9 @@ def run_get_and_download_band_imagettes(max_number_of_tiles_per_request, tiles_t
     # and download the cloudfree band imagettes
     fout = open(logfile, 'a')
     start = time.time()
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
     out_tif_folder = out_tif_folder_base + "/" + chip_folder
 
     # max_number_of_tiles_per_request = 12
@@ -225,7 +238,10 @@ def run_get_and_download_band_imagettes_l1c(max_number_of_tiles_per_request, til
     # and download the cloudfree band imagettes
     fout = open(logfile, 'a')
     start = time.time()
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
+
     out_tif_folder = out_tif_folder_base + "/" + chip_folder
 
     # max_number_of_tiles_per_request = 12
@@ -301,7 +317,10 @@ def run_lut_stretch(parcel_id, crop, out_tif_folder_base, left_percent, right_pe
     # lut stretch
     fout = open(logfile, 'a')
     start = time.time()
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
+
     out_tif_folder = out_tif_folder_base + "/" + chip_folder    
     
     lut_bands=[1,2,3]
@@ -346,7 +365,10 @@ def run_lut_stretch_dynamic(parcel_id, crop, out_tif_folder_base, left_percent, 
     # lut stretch
     fout = open(logfile, 'a')
     start = time.time()
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
+    
     out_tif_folder = out_tif_folder_base + "/" + chip_folder    
     
     lut_bands=[1,2,3]
@@ -390,7 +412,10 @@ def run_lut_stretch_dynamic(parcel_id, crop, out_tif_folder_base, left_percent, 
 def get_merged_lutstretched_files_and_acquisition_dates(parcel_id, crop, out_tif_folder_base, logfile):
     fout = open(logfile, 'a')
     start = time.time()
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
+    
     out_tif_folder = out_tif_folder_base + "/" + chip_folder        
     merge_lut_folder = out_tif_folder + "_merged_lut_magic"
     # merge_lut_folder = out_tif_folder + "_merged_lut_dynamic"
@@ -412,7 +437,10 @@ def get_merged_lutstretched_files_and_acquisition_dates(parcel_id, crop, out_tif
 def get_merged_lutstretched_files_and_acquisition_dates_dynamic(parcel_id, crop, out_tif_folder_base, logfile):
     fout = open(logfile, 'a')
     start = time.time()
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
+
     out_tif_folder = out_tif_folder_base + "/" + chip_folder        
     # merge_lut_folder = out_tif_folder + "_merged_lut_magic"
     merge_lut_folder = out_tif_folder + "_merged_lut_dynamic"
@@ -433,7 +461,10 @@ def get_merged_lutstretched_files_and_acquisition_dates_dynamic(parcel_id, crop,
           
 
 def get_merged_ndvi_files_and_acquisition_dates(parcel_id, crop, out_tif_folder_base):
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
+    
     out_tif_folder = out_tif_folder_base + "/" + chip_folder        
     merge_lut_folder = out_tif_folder + "_merged_ndvi"
     merged_lut_files_pattern = merge_lut_folder + "/*.tif"
@@ -450,7 +481,10 @@ def get_merged_ndvi_files_and_acquisition_dates(parcel_id, crop, out_tif_folder_
     return acq_dates, merged_lut_files
     
 def get_merged_ndwi_files_and_acquisition_dates(parcel_id, crop, out_tif_folder_base):
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
+    
     out_tif_folder = out_tif_folder_base + "/" + chip_folder        
     merge_lut_folder = out_tif_folder + "_merged_ndwi"
     merged_lut_files_pattern = merge_lut_folder + "/*.tif"
@@ -467,7 +501,10 @@ def get_merged_ndwi_files_and_acquisition_dates(parcel_id, crop, out_tif_folder_
     return acq_dates, merged_lut_files    
     
 def get_merged_tif_files_and_acquisition_dates(parcel_id, crop, out_tif_folder_base):
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
+    
     out_tif_folder = out_tif_folder_base + "/" + chip_folder        
     merge_lut_folder = out_tif_folder + "_merged"
     merged_lut_files_pattern = merge_lut_folder + "/*.tif"
@@ -484,7 +521,10 @@ def get_merged_tif_files_and_acquisition_dates(parcel_id, crop, out_tif_folder_b
     return acq_dates, merged_lut_files
     
 def get_merged_tif_files_and_acquisition_dates_in_dict(parcel_id, crop, out_tif_folder_base):
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
+    
     out_tif_folder = out_tif_folder_base + "/" + chip_folder        
     merge_lut_folder = out_tif_folder + "_merged"
     merged_lut_files_pattern = merge_lut_folder + "/*.tif"
@@ -501,7 +541,10 @@ def get_merged_tif_files_and_acquisition_dates_in_dict(parcel_id, crop, out_tif_
     return collections.OrderedDict(sorted(acq_dates_tif_files_dict.items()))
     
 def get_index_files_and_acquisition_dates_in_dict(parcel_id, crop, out_tif_folder_base, index_name):
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
+
     out_tif_folder = out_tif_folder_base + "/" + chip_folder        
     index_folder = out_tif_folder + "_merged_" + index_name
     index_files_pattern = index_folder + "/*.tif"
@@ -518,7 +561,10 @@ def get_index_files_and_acquisition_dates_in_dict(parcel_id, crop, out_tif_folde
     return collections.OrderedDict(sorted(acq_dates_tif_files_dict.items()))    
     
 def get_acq_dates_band_names_tif_files_list(parcel_id, crop, out_tif_folder_base):
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
+    
     out_tif_folder = out_tif_folder_base + "/" + chip_folder        
     band_tif_files_pattern = out_tif_folder + "/????-??-??/*.B??.tif"
     # S2A_MSIL2A_20180326T103021_N0207_R108_T32TMR_20180326T155240.B11.tif
@@ -548,7 +594,10 @@ def run_ndvi_creation(parcel_id, crop, out_tif_folder_base, logfile):
     fout = open(logfile, 'a')
     start = time.time()
     # create ndvi image
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
+    
     out_tif_folder = out_tif_folder_base + "/" + chip_folder    
     
     lut_bands=[1,2,3]
@@ -590,7 +639,10 @@ def run_ndwi_creation(parcel_id, crop, out_tif_folder_base, logfile):
     fout = open(logfile, 'a')
     start = time.time()
     # create ndwi image
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
+    
     out_tif_folder = out_tif_folder_base + "/" + chip_folder    
     
     lut_bands=[1,2,3]
@@ -632,11 +684,12 @@ def run_bare_soil_index_creation(parcel_id, crop, out_tif_folder_base, logfile):
     fout = open(logfile, 'a')
     start = time.time()
     # create ndvi image
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
+    
     out_tif_folder = out_tif_folder_base + "/" + chip_folder    
     
-    lut_bands=[1,2,3]
-
     merge_folder = out_tif_folder + "_merged"
     merge_ndvi_folder = out_tif_folder + "_merged_ndvi"
 
@@ -649,12 +702,8 @@ def run_bare_soil_index_creation(parcel_id, crop, out_tif_folder_base, logfile):
     for merged_file in merged_files:
     #     print(merged_file)
         merged_file_base = os.path.basename(merged_file)
-        merged_file_path = os.path.dirname(merged_file)
         tile_name = merged_file_base.split(".")[0] 
-        #get acquisition date from tile name
-        acq_date = download_utils.get_acquisition_date_from_tile_name(tile_name)
 
-    #     print(tile_name)
         output = merge_ndvi_folder + "/" + tile_name + ".tif"
 
     #     here again: if the ndvi image image is already created we do not create it again
@@ -677,7 +726,10 @@ def calculate_ndvi_statistics(parcel_id, crop, out_tif_folder_base, tiles_to_dow
                                                                                               
     acq_dates, merged_ndvi_files = get_merged_ndvi_files_and_acquisition_dates(parcel_id, crop, out_tif_folder_base)                                                                                         
 
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
+
     output_ndvi_folder = out_tif_folder_base + "/ndvi"
     output_ndvi_csv_file = output_ndvi_folder + "/" + chip_folder + "_ndvi.csv"
 
@@ -710,7 +762,10 @@ def calculate_ndwi_statistics(parcel_id, crop, out_tif_folder_base, tiles_to_dow
                                                                                               
     acq_dates, merged_ndwi_files = get_merged_ndwi_files_and_acquisition_dates(parcel_id, crop, out_tif_folder_base)                                                                                         
 
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
+
     output_ndwi_folder = out_tif_folder_base + "/ndwi"
     output_ndwi_csv_file = output_ndwi_folder + "/" + chip_folder + "_ndwi.csv"
 
@@ -740,8 +795,11 @@ def calculate_ndwi_statistics(parcel_id, crop, out_tif_folder_base, tiles_to_dow
 def calculate_bs_statistics(parcel_id, crop, out_tif_folder_base, parcel, logfile, polarisation, orbit_orientation):
     fout = open(logfile, 'a')   
     start = time.time()
+
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
                                                                                               
-    chip_folder = str(parcel_id) + '_' + crop
     output_s1_bs_folder = out_tif_folder_base + "/s1_bs"
     output_s1_bs_csv_file = output_s1_bs_folder + "/" + chip_folder + "_s1bs_" + polarisation + "_" + orbit_orientation + ".csv"
 
@@ -771,7 +829,10 @@ def calculate_coh6_statistics(parcel_id, crop, out_tif_folder_base, parcel, logf
     fout = open(logfile, 'a')   
     start = time.time()
                                                                                               
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
+    
     output_s1_coh6_folder = out_tif_folder_base + "/s1_coh6"
     output_s1_coh6_csv_file = output_s1_coh6_folder + "/" + chip_folder + "_s1coh6_" + polarisation + "_" + orbit_orientation + ".csv"
 
@@ -803,7 +864,10 @@ def calculate_index_statistics(parcel_id, crop, out_tif_folder_base, parcel, log
 
     acquisition_dates_and_index_files_dict = get_index_files_and_acquisition_dates_in_dict(parcel_id, crop, out_tif_folder_base, index_name)  
 
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
+
     output_index_folder = out_tif_folder_base + "/" + index_name
     output_index_csv_file = output_index_folder + "/" + chip_folder + "_" + index_name + ".csv"
 
@@ -838,8 +902,11 @@ def get_all_parcel_ids_from_parcel_shape(parcel_shp, parcel_id_column, crop_name
 def getKey(item):
     return item[0]
     
-def does_ndvi_csv_exist(parcel_id, crop, out_tif_folder_base):    
-    chip_folder = str(parcel_id) + '_' + crop
+def does_ndvi_csv_exist(parcel_id, crop, out_tif_folder_base): 
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop
+    
     output_ndvi_folder = out_tif_folder_base + "/ndvi"
     output_ndvi_csv_file = output_ndvi_folder + "/" + chip_folder + "_ndvi.csv"
 
@@ -851,7 +918,10 @@ def does_ndvi_csv_exist(parcel_id, crop, out_tif_folder_base):
         
 def does_ndvi_graph_exist(parcel_id, out_tif_folder_base):    
     output_ndvi_graph_folder = out_tif_folder_base + "/ndvi_graphs"
-    output_ndvi_graph_file = output_ndvi_graph_folder + "/parcel_id_" + str(parcel_id) + "_NDVI.jpg"
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+
+    output_ndvi_graph_file = output_ndvi_graph_folder + "/parcel_id_" + str(parcel_id_as_filename) + "_NDVI.jpg"
 
     
     if os.path.isfile(output_ndvi_graph_file):
@@ -1043,7 +1113,9 @@ def run_lut_stretch_dynamic(parcel_id, crop, out_tif_folder_base, left_percent, 
     # lut stretch
     fout = open(logfile, 'a')
     start = time.time()
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop    
     out_tif_folder = out_tif_folder_base + "/" + chip_folder    
     
     lut_bands=[1,2,3]
@@ -1087,7 +1159,9 @@ def run_lut_stretch_dynamic(parcel_id, crop, out_tif_folder_base, left_percent, 
 def get_merged_dynamically_lutstretched_files_and_acquisition_dates(parcel_id, crop, out_tif_folder_base, logfile):
     fout = open(logfile, 'a')
     start = time.time()
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop    
     out_tif_folder = out_tif_folder_base + "/" + chip_folder        
     # merge_lut_folder = out_tif_folder + "_merged_lut_magic"
     merge_lut_folder = out_tif_folder + "_merged_lut_dynamic"
@@ -1107,7 +1181,10 @@ def get_merged_dynamically_lutstretched_files_and_acquisition_dates(parcel_id, c
     return acq_dates, merged_lut_files    
     
 def calculate_band_statistics_orig(parcel_id, crop, out_tif_folder_base, parcel):
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop    
+
     out_tif_folder = out_tif_folder_base + "/" + chip_folder
     downloaded_band04_files_pattern = out_tif_folder + "/*/*.B04.tif"
     downloaded_band04_files = glob(downloaded_band04_files_pattern)
@@ -1115,10 +1192,13 @@ def calculate_band_statistics_orig(parcel_id, crop, out_tif_folder_base, parcel)
     band_stats_folder = out_tif_folder_base + "/band_stats"
     if not os.path.exists(band_stats_folder):
         os.makedirs(band_stats_folder)
+
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
         
-    band_stats_file_b04 = band_stats_folder + "/" + str(parcel_id) + "_b04.csv"
-    band_stats_file_b08 = band_stats_folder + "/" + str(parcel_id) + "_b08.csv"
-    band_stats_file_b11 = band_stats_folder + "/" + str(parcel_id) + "_b11.csv"    
+    band_stats_file_b04 = band_stats_folder + "/" + str(parcel_id_as_filename) + "_b04.csv"
+    band_stats_file_b08 = band_stats_folder + "/" + str(parcel_id_as_filename) + "_b08.csv"
+    band_stats_file_b11 = band_stats_folder + "/" + str(parcel_id_as_filename) + "_b11.csv"    
         
     first_line ="Field_ID,acq_date,band_mean,band_count,band_std"
     print(first_line, file=open(band_stats_file_b04, "w"))
@@ -1158,7 +1238,10 @@ def calculate_band_statistics_orig(parcel_id, crop, out_tif_folder_base, parcel)
                         file=open(band_stats_file_b11, "a"))
 
 def calculate_band_statistics(parcel_id, crop, out_tif_folder_base, parcel):
-    chip_folder = str(parcel_id) + '_' + crop
+   # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop        
+
     out_tif_folder = out_tif_folder_base + "/" + chip_folder
     downloaded_band04_files_pattern = out_tif_folder + "/*/*.B04.tif"
     downloaded_band04_files = glob(downloaded_band04_files_pattern)
@@ -1171,7 +1254,7 @@ def calculate_band_statistics(parcel_id, crop, out_tif_folder_base, parcel):
     if not os.path.exists(band_stats_folder):
         os.makedirs(band_stats_folder)
 
-    band_stats_file = band_stats_folder + "/" + str(parcel_id) + ".csv"
+    band_stats_file = band_stats_folder + "/" + str(parcel_id_as_filename) + ".csv"
 
     first_date = True
     for downloaded_band04_file in downloaded_band04_files:
@@ -1245,7 +1328,10 @@ def create_index_images(parcel_id, crop, out_tif_folder_base, acq_dates_band_nam
     # create bare soil index image
     # https://giscrack.com/list-of-spectral-indices-for-sentinel-and-landsat/
 
-    chip_folder = str(parcel_id) + '_' + crop
+  # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop 
+    
     out_tif_folder = out_tif_folder_base + "/" + chip_folder 
 
     if index_name == "bare_soil_index":
@@ -1343,4 +1429,11 @@ def create_bare_soil_index_images(acq_dates_band_names_tif_files_list, index_nam
             print("We do not have all bands for this index")
 
 
-
+def convert_string_to_filename(input_string):
+    invalid = '<>:"/\|?* '
+    if type(input_string) == str:
+        for char in invalid:
+            input_string = input_string.replace(char, '-')
+    else:
+        input_string = str(input_string)
+    return input_string

@@ -14,9 +14,8 @@ import time
 import os
 from matplotlib import pyplot
 import rasterio
-from rasterio import plot
 import rasterio.mask
-import numpy as np
+from rasterio import plot
 from glob import glob
 import collections
 import textwrap 
@@ -336,8 +335,11 @@ def calendar_view_half_weekly_more_param(parcel_id, crop, out_tif_folder_base, t
     ############################################################### 
     fout = open(logfile, 'a')
     start = time.time()
+
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = batch_utils.convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop     
     
-    chip_folder = str(parcel_id) + '_' + crop
     output_jpg_folder = out_tif_folder_base + "/overview_jpg_half_weekly"
     pixel_size_meter = 10
 
@@ -413,10 +415,18 @@ def calendar_view_half_weekly_more_param(parcel_id, crop, out_tif_folder_base, t
             src_image = rasterio.open(merged_lut_file)
             parcel = parcel.to_crs(src_image.crs)
             win = get_window(parcel, src_image, buffer_size_meter, pixel_size_meter)
-            toPlot = src_image.read(window=win)  
-            a[act_row][act_col].set_title(acq_date, verticalalignment='center', fontdict={'fontsize': 8, 'fontweight': 'medium'})
-            rasterio.plot.show(toPlot, ax=a[act_row][act_col], transform=src_image.window_transform(win)) 
-            parcel.plot(ax=a[act_row][act_col], facecolor='none', edgecolor=vector_color) 
+            
+#            if win.col_off >= src_image.width or win.row_off >= src_image.height:
+            if win.col_off >= src_image.width \
+                or win.row_off >= src_image.height \
+                or win.col_off < 0 \
+                or win.row_off < 0:
+                print("Image does not intersect with the parcel")
+            else:
+                toPlot = src_image.read(window=win)  
+                a[act_row][act_col].set_title(acq_date, verticalalignment='center', fontdict={'fontsize': 8, 'fontweight': 'medium'})
+                rasterio.plot.show(toPlot, ax=a[act_row][act_col], transform=src_image.window_transform(win)) 
+                parcel.plot(ax=a[act_row][act_col], facecolor='none', edgecolor=vector_color) 
 
     output_jpg_file = output_jpg_folder + "/" + chip_folder + "_buff" + str(buffer_size_meter) + "m_" + vector_color + ".jpg"
     fig.savefig(output_jpg_file, dpi=jpg_resolution, bbox_inches='tight')  
@@ -434,7 +444,10 @@ def calendar_view_half_weekly_more_param_dynamic(parcel_id, crop, out_tif_folder
     fout = open(logfile, 'a')
     start = time.time()
 
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = batch_utils.convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop     
+
     output_jpg_folder = out_tif_folder_base + "/overview_jpg_half_weekly_dyn"
     pixel_size_meter = 10
 
@@ -514,8 +527,11 @@ def calendar_view_half_weekly_more_param_ndvi(parcel_id, crop, out_tif_folder_ba
     ############################################################### 
     fout = open(logfile, 'a')
     start = time.time()
+
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = batch_utils.convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop     
     
-    chip_folder = str(parcel_id) + '_' + crop
     output_jpg_folder = out_tif_folder_base + "/overview_jpg_half_weekly_ndvi"
     pixel_size_meter = 10
 
@@ -605,7 +621,10 @@ def plot_histogram_for_one_parcel(parcel_id, crop, out_tif_folder_base, tiles_to
     
     acq_dates, merged_ndvi_files = batch_utils.get_merged_ndvi_files_and_acquisition_dates(parcel_id, crop, out_tif_folder_base)   
 
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = batch_utils.convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop     
+
     output_hist_folder = out_tif_folder_base + "/overview_hist_half_weekly"
 
     if not os.path.exists(output_hist_folder):
@@ -694,7 +713,10 @@ def plot_scatter_for_one_parcel_fixed_scale_cumulative(parcel_id, crop, out_tif_
     
     acq_dates, merged_tif_files = batch_utils.get_merged_tif_files_and_acquisition_dates(parcel_id, crop, out_tif_folder_base)   
 
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = batch_utils.convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop     
+
     output_scatter_folder = out_tif_folder_base + "/overview_scatter_half_weekly_fixed_scale_cumulative"
 
     if not os.path.exists(output_scatter_folder):
@@ -907,9 +929,10 @@ def calendar_view_s1_bs_imagettes(parcel_id, crop, out_s1_bs_folder_rescale_lut,
     if len(acq_dates)==0:
         return
 
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = batch_utils.convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop     
 
-    chip_folder = str(parcel_id) + '_' + crop
-   
     pixel_size_meter = 10
 
     if not os.path.exists(output_s1_bs_calendar_view_folder):
@@ -995,7 +1018,10 @@ def calendar_view_half_weekly_more_param_index(parcel_id, crop, out_tif_folder_b
     acq_dates = list(acquisition_dates_and_index_files_dict.keys())
     # print(acq_dates)
 
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = batch_utils.convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop     
+
     output_jpg_folder = out_tif_folder_base + "/overview_jpg_half_weekly_" + index_name
     pixel_size_meter = 10
 

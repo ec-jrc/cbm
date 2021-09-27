@@ -19,6 +19,7 @@ import datetime
 import time
 import rasterio
 import warnings
+import batch_utils
 
 
 def get_scl_imagettes(raw_chips_by_location_url, lon, lat, start_date, end_date, username, password, chipsize):
@@ -302,7 +303,10 @@ def download_band_imagettes(url_base, list_of_band_imagettes, out_tif_folder, us
     return was_error
 
 def merge_bands(parcel_id, crop, out_tif_folder_base):
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = batch_utils.convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop     
+    
     out_tif_folder = out_tif_folder_base + "/" + chip_folder
     downloaded_band04_files_pattern = out_tif_folder + "/*/*.B04.tif"
     downloaded_band04_files = glob(downloaded_band04_files_pattern)
@@ -335,7 +339,10 @@ def merge_bands(parcel_id, crop, out_tif_folder_base):
                 gm.main(['', '-o', out_merge, '-ot', 'Int16', '-separate', band08, band11, band04]) 
 
 def merge_4_bands(parcel_id, crop, out_tif_folder_base):
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = batch_utils.convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop     
+    
     out_tif_folder = out_tif_folder_base + "/" + chip_folder
     downloaded_band04_files_pattern = out_tif_folder + "/*/*.B04.tif"
     downloaded_band04_files = glob(downloaded_band04_files_pattern)

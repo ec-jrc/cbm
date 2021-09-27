@@ -17,6 +17,7 @@ import calendar
 import os
 import time
 import numpy as np
+import batch_utils
 
 def get_ndvi_profiles_from_csv(csv_file):
     ndvi_profile = pd.read_csv(csv_file) 
@@ -113,7 +114,10 @@ def display_ndvi_profiles(parcel_id, crop, plot_title, out_tif_folder_base, logf
     y_tick_spacing = 0.1
     fout = open(logfile, 'a')
     start = time.time()
-    chip_folder = str(parcel_id) + '_' + crop
+    
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = batch_utils.convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop         
     ndvi_folder = out_tif_folder_base + "/ndvi"
     ndvi_csv_file = ndvi_folder + "/" + chip_folder + "_ndvi.csv"
     output_graph_folder = out_tif_folder_base + "/ndvi_graphs"
@@ -201,7 +205,7 @@ def display_ndvi_profiles(parcel_id, crop, plot_title, out_tif_folder_base, logf
 
                 
     # save the figure to a jpg file
-    fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id) + '_NDVI.jpg') 
+    fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id_as_filename) + '_NDVI.jpg') 
     pyplot.close(fig)    
     print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "\t", parcel_id,  "\traph_utils.display_ndvi_profiles:\t", "{0:.3f}".format(time.time() - start), file=fout)
     fout.close()
@@ -215,7 +219,11 @@ def display_ndwi_profiles(parcel_id, crop, plot_title, out_tif_folder_base, logf
     y_tick_spacing = 0.1
     fout = open(logfile, 'a')
     start = time.time()
-    chip_folder = str(parcel_id) + '_' + crop
+    
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = batch_utils.convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop     
+
     ndwi_folder = out_tif_folder_base + "/ndwi"
     ndwi_csv_file = ndwi_folder + "/" + chip_folder + "_ndwi.csv"
     output_graph_folder = out_tif_folder_base + "/ndwi_graphs"
@@ -295,7 +303,7 @@ def display_ndwi_profiles(parcel_id, crop, plot_title, out_tif_folder_base, logf
 
     ax0.yaxis.set_major_locator(ticker.MultipleLocator(y_tick_spacing))                
     # save the figure to a jpg file
-    fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id) + '_ndwi.jpg') 
+    fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id_as_filename) + '_ndwi.jpg') 
     pyplot.close(fig)    
     print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "\t", parcel_id,  "\traph_utils.display_ndwi_profiles:\t", "{0:.3f}".format(time.time() - start), file=fout)
     fout.close()
@@ -310,7 +318,11 @@ def display_ndvi_profiles_with_mean_profile_of_the_crop(parcel_id, crop, plot_ti
     
     fout = open(logfile, 'a')
     start = time.time()
-    chip_folder = str(parcel_id) + '_' + crop
+    
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = batch_utils.convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop         
+
     ndvi_folder = out_tif_folder_base + "/ndvi"
     ndvi_csv_file = ndvi_folder + "/" + chip_folder + "_ndvi.csv"
     mean_ndvi_csv_file = mean_profile_folder + "/" + crop  #+ ".csv"
@@ -405,7 +417,7 @@ def display_ndvi_profiles_with_mean_profile_of_the_crop(parcel_id, crop, plot_ti
                 color='blue', fontsize=13)
 
     # save the figure to a jpg file
-    fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id) + '_NDVI.jpg') 
+    fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id_as_filename) + '_NDVI.jpg') 
     pyplot.close(fig)    
     print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "\t", parcel_id,  "\graph_utils.display_ndvi_profiles_with_mean_profile_of_the_crop:\t", "{0:.3f}".format(time.time() - start), file=fout)
     fout.close()
@@ -421,7 +433,11 @@ def display_ndvi_profiles_with_mean_profile_of_the_crop_with_std(parcel_id, crop
     
     fout = open(logfile, 'a')
     start = time.time()
-    chip_folder = str(parcel_id) + '_' + crop
+    
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = batch_utils.convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop         
+
     ndvi_folder = out_tif_folder_base + "/ndvi"
     ndvi_csv_file = ndvi_folder + "/" + chip_folder + "_ndvi.csv"
 
@@ -523,7 +539,7 @@ def display_ndvi_profiles_with_mean_profile_of_the_crop_with_std(parcel_id, crop
                 color='blue', fontsize=13)
 
     # save the figure to a jpg file
-    fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id) + '_NDVI.jpg') 
+    fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id_as_filename) + '_NDVI.jpg') 
     pyplot.close(fig)    
     print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "\t", parcel_id,  "\graph_utils.display_ndvi_profiles_with_mean_profile_of_the_crop:\t", "{0:.3f}".format(time.time() - start), file=fout)
     fout.close()
@@ -537,7 +553,11 @@ def display_s1_bs_profiles(parcel_id, crop, plot_title, out_tif_folder_base, log
     y_tick_spacing = 0.1
     fout = open(logfile, 'a')
     start = time.time()
-    chip_folder = str(parcel_id) + '_' + crop
+    
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = batch_utils.convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop         
+
     s1_bs_folder = out_tif_folder_base + "/s1_bs"
     s1_bs_csv_file = s1_bs_folder + "/" + chip_folder + "_s1bs_" + polarisation + "_" + orbit_orientation + ".csv"
     output_graph_folder = out_tif_folder_base + "/s1_bs_graphs_" + polarisation + "_" + orbit_orientation
@@ -619,7 +639,7 @@ def display_s1_bs_profiles(parcel_id, crop, plot_title, out_tif_folder_base, log
     ax0.yaxis.set_major_locator(ticker.MultipleLocator(y_tick_spacing))
                 
     # save the figure to a jpg file
-    fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id) + '_NDVI.jpg') 
+    fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id_as_filename) + '_NDVI.jpg') 
     pyplot.close(fig)    
     print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "\t", parcel_id,  "\tgraph_utils.display_s1_bs_profiles:\t", "{0:.3f}".format(time.time() - start), file=fout)
     fout.close()
@@ -633,7 +653,10 @@ def display_s1_bs_profiles_together(parcel_id, crop, plot_title, out_tif_folder_
 
     fout = open(logfile, 'a')
     start = time.time()
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = batch_utils.convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop     
+    
     s1_bs_folder = out_tif_folder_base + "/s1_bs"
     output_graph_folder = out_tif_folder_base + "/s1_bs_graphs_together"
     if not os.path.exists(output_graph_folder):
@@ -722,7 +745,7 @@ def display_s1_bs_profiles_together(parcel_id, crop, plot_title, out_tif_folder_
                 color='blue', fontsize=13)
 
     # save the figure to a jpg file
-    fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id) + '_BS.jpg') 
+    fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id_as_filename) + '_BS.jpg') 
     pyplot.close(fig)    
     print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "\t", parcel_id,  "\tgraph_utils.display_s1_bs_profiles:\t", "{0:.3f}".format(time.time() - start), file=fout)
     fout.close()
@@ -736,7 +759,11 @@ def display_s1_coh6_profiles_together(parcel_id, crop, plot_title, out_tif_folde
     there_is_on_valid_profile = False
     fout = open(logfile, 'a')
     start = time.time()
-    chip_folder = str(parcel_id) + '_' + crop
+    
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = batch_utils.convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop         
+
     s1_coh6_folder = out_tif_folder_base + "/s1_coh6"
     output_graph_folder = out_tif_folder_base + "/s1_coh6_graphs_together"
     if not os.path.exists(output_graph_folder):
@@ -832,11 +859,101 @@ def display_s1_coh6_profiles_together(parcel_id, crop, plot_title, out_tif_folde
                 color='blue', fontsize=13)
 
     # save the figure to a jpg file
-    fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id) + '_COH6.jpg') 
+    fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id_as_filename) + '_COH6.jpg') 
     pyplot.close(fig)    
     print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "\t", parcel_id,  "\tgraph_utils.display_s1_coh6_profiles_together:\t", "{0:.3f}".format(time.time() - start), file=fout)
     fout.close()
     return s1_coh6_profile     
+
+def display_s1_coh6_profiles_together_with_fixed_date_range(parcel_id, crop, plot_title, out_tif_folder_base, logfile,
+                                                            x_start_date, x_end_date,
+                                                            parcel_area_ha,
+                                                            add_error_bars = False):      
+    """
+    this function plots the Sentinel-1 backscatter profile and saves the figures to the output_graph_folder
+    """  
+    there_is_on_valid_profile = False
+    fout = open(logfile, 'a')
+    start = time.time()
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = batch_utils.convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop         
+
+    s1_coh6_folder = out_tif_folder_base + "/s1_coh6"
+    output_graph_folder = out_tif_folder_base + "/s1_coh6_graphs_together_fixed_date_range"
+    if not os.path.exists(output_graph_folder):
+        os.makedirs(output_graph_folder)    
+    
+    polarisations = ["VV", "VH"]
+    orbit_orientations = ["D", "A"]
+    for polarisation in polarisations:
+        for orbit_orientation in orbit_orientations:
+        
+            s1_coh6_csv_file = s1_coh6_folder + "/" + chip_folder + "_s1coh6_" + polarisation + "_" + orbit_orientation + ".csv"
+            s1_coh6_profile = pd.read_csv(s1_coh6_csv_file)
+
+            s1_coh6_profile['acq_date'] = pd.to_datetime(s1_coh6_profile.acq_date)
+            s1_coh6_profile = s1_coh6_profile.sort_values(by=['acq_date'])
+
+            profile_name = 'S1 COH6 ' + polarisation + " " + orbit_orientation
+            s1_coh6_profile = s1_coh6_profile.rename(columns={'coh6_mean': profile_name})
+            s1_coh6_profile = s1_coh6_profile.rename(columns={'acq_date': 'date'})   
+
+            # s1_coh6_profile[profile_name] = s1_coh6_profile[profile_name].map(lambda s: 10.0*np.log10(s))
+            
+
+            # check if there are real backscatter and stdev values in the dataframe 
+            # (for very small parcels the values in the csv can be None which evaluates as object in 
+            # the dataframe, insted of dtype float64
+#            if not s1_coh6_profile[profile_name].dtypes == "float64" or \
+#                not s1_coh6_profile['coh6_std'].dtypes == "float64":
+#                return    
+
+            # plot the time series
+            ax0 = pyplot.gca()
+
+            if not s1_coh6_profile.empty:
+                # set this for later getting the min_month and other paramegters for the graph
+                s1_coh6_for_min_month = s1_coh6_profile
+                there_is_on_valid_profile = True
+                if add_error_bars:
+                    s1_coh6_profile.plot(kind='line', marker='+', x='date',y=profile_name, yerr='coh6_std', ax=ax0, 
+                                      capsize=4, ecolor='grey', barsabove = 'True')   
+                else:
+                    s1_coh6_profile.plot(kind='line', marker='+', x='date',y=profile_name, ax=ax0)
+
+    # format the graph a little bit
+
+    if not there_is_on_valid_profile:
+        return
+    pyplot.ylabel(r'Coherence')
+#    pyplot.title(plot_title + ", Parcel id: " + str(parcel_id) + " " + crop)
+    pyplot.title(plot_title + ", Parcel id: " + str(parcel_id) + " (" + crop + ", " + parcel_area_ha + " ha)")
+    ax0.xaxis.set_major_locator(mdates.MonthLocator(interval=1))
+    ax0.xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
+    
+
+
+    
+    
+    ax0.xaxis.grid() # horizontal lines
+    ax0.yaxis.grid() # vertical lines
+    ax0.set_ylim([0,1])
+
+    fig = pyplot.gcf()
+
+    fig_size_x = 13
+    fig_size_y = 7
+    fig.set_size_inches(fig_size_x, fig_size_y)
+    
+    add_month_names_to_the_graph(x_start_date, x_end_date, ax0)    
+
+    # save the figure to a jpg file
+    fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id_as_filename) + '_COH6.jpg') 
+    pyplot.close(fig)    
+    print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "\t", parcel_id,  "\tgraph_utils.display_s1_coh6_profiles_together:\t", "{0:.3f}".format(time.time() - start), file=fout)
+    fout.close()
+    return s1_coh6_profile 
 
 def display_ndvi_profiles_with_fixed_date_range(parcel_id, crop, plot_title, out_tif_folder_base, 
                                                 logfile, x_start_date, x_end_date,
@@ -848,7 +965,10 @@ def display_ndvi_profiles_with_fixed_date_range(parcel_id, crop, plot_title, out
     y_tick_spacing = 0.1
     fout = open(logfile, 'a')
     start = time.time()
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = batch_utils.convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop         
+
     ndvi_folder = out_tif_folder_base + "/ndvi"
     ndvi_csv_file = ndvi_folder + "/" + chip_folder + "_ndvi.csv"
     output_graph_folder = out_tif_folder_base + "/ndvi_graphs_fixed_date_range"
@@ -933,7 +1053,7 @@ def display_ndvi_profiles_with_fixed_date_range(parcel_id, crop, plot_title, out
     ax0.yaxis.set_major_locator(ticker.MultipleLocator(y_tick_spacing))
                 
     # save the figure to a jpg file
-    fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id) + '_NDVI.jpg') 
+    fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id_as_filename) + '_NDVI.jpg') 
     pyplot.close(fig)    
     print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "\t", parcel_id,  "\traph_utils.display_ndvi_profiles:\t", "{0:.3f}".format(time.time() - start), file=fout)
     fout.close()
@@ -949,7 +1069,10 @@ def display_index_profiles_with_fixed_date_range(parcel_id, crop, plot_title, ou
     y_tick_spacing = 0.1
     fout = open(logfile, 'a')
     start = time.time()
-    chip_folder = str(parcel_id) + '_' + crop
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = batch_utils.convert_string_to_filename(parcel_id)
+    chip_folder = str(parcel_id_as_filename) + '_' + crop         
+
     index_folder = out_tif_folder_base + "/" + index_name
     index_csv_file = index_folder + "/" + chip_folder + "_" + index_name + ".csv"
     output_graph_folder = out_tif_folder_base + "/" + index_name + "_graphs"
@@ -998,7 +1121,7 @@ def display_index_profiles_with_fixed_date_range(parcel_id, crop, plot_title, ou
     add_month_names_to_the_graph(x_start_date, x_end_date, ax0)    
                 
     # save the figure to a jpg file
-    fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id) + '_' + index_name + '.jpg') 
+    fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id_as_filename) + '_' + index_name + '.jpg') 
     pyplot.close(fig)    
     print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "\t", parcel_id,  "\traph_utils.display_index_profiles:\t", "{0:.3f}".format(time.time() - start), file=fout)
     fout.close()
@@ -1009,12 +1132,14 @@ def display_band_profiles_with_fixed_date_range(field_id, index_graph_start_date
     output_graph_folder = out_tif_folder_base + "/band_graphs"
     if not os.path.exists(output_graph_folder):
         os.makedirs(output_graph_folder)
-    band_data = pd.read_csv(out_tif_folder_base + "/band_stats/" + str(field_id)+ ".csv")
-    band_ind = np.where(band_data['Field_ID'] == field_id)[0]
+        
+    # convert parcel_id to a string that can be used as filename           
+    parcel_id_as_filename = batch_utils.convert_string_to_filename(field_id)
+        
+    band_data = pd.read_csv(out_tif_folder_base + "/band_stats/" + str(parcel_id_as_filename)+ ".csv")
 
     # data in band_data, indexed by band_ind
     band_data['acq_date'] = pd.to_datetime(band_data.acq_date)
-    bd = band_data.iloc[band_ind]
 
     # Now plot the final results
     fig, ax = pyplot.subplots(1, 1)
@@ -1022,10 +1147,10 @@ def display_band_profiles_with_fixed_date_range(field_id, index_graph_start_date
     for col in band_data.columns:
         if col.split("_")[1]=="mean":
             band = col.split("_")[0]
-            bd.plot(x='acq_date', y=band + '_mean', ax=ax, label=band.upper())
+            band_data.plot(x='acq_date', y=band + '_mean', ax=ax, label=band.upper())
 
     ax.set_xlim([index_graph_start_date, index_graph_end_date])
-    ax.set_ylim(0,6000)
+    ax.set_ylim(0,7000)
     ax.grid( color='k', linestyle='--', linewidth=0.5)     # add the grid     
     ax.set_ylabel( 'BoA Reflectance * 10000', fontsize = 16 )
     ax.set_xlabel( 'Acquisition date')
@@ -1043,7 +1168,7 @@ def display_band_profiles_with_fixed_date_range(field_id, index_graph_start_date
     fig.autofmt_xdate() # Rotation
     
    # save the figure to a jpg file
-    fig.savefig(output_graph_folder + '/' + str(field_id) + '.jpg') 
+    fig.savefig(output_graph_folder + '/' + str(parcel_id_as_filename) + '.jpg') 
     pyplot.close(fig)
                 
 def add_month_names_to_the_graph(start_date, stop_date, ax0):

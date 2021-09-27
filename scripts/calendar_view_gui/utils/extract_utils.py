@@ -8,20 +8,10 @@
 # License   : 3-Clause BSD
 
 
-
-import os
-import os.path
 from rasterstats import zonal_stats
-import batch_utils, download_utils
-import geopandas
-
 import rasterio
 import numpy
-import matplotlib.pyplot as plt
 import warnings
-
-
-
 
 
 def calculate_ndvi(image_file, ndvi_file):
