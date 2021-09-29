@@ -57,12 +57,13 @@ handler.suffix = '%Y%m%d'
 logger = logging.getLogger('tdm')
 logger.setLevel(logging.INFO)
 logger.addHandler(handler)
+user = 'None'
 
 
 @app.after_request
 def after_request(response):
     timestamp = strftime('[%Y-%b-%d %H:%M]')
-    if request.path.split('/')[1] == 'query':
+    if request.path.split('/')[1] == 'query' and user != 'None':
         logger.error('%s %s %s %s %s %s %s', timestamp, request.remote_addr,
                      user, request.method, request.scheme,
                      request.full_path, response.status)
