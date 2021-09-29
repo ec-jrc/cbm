@@ -144,7 +144,7 @@ def query():
 def options():
     """
     Get the available options (for current the user).
-    ---
+    _
     tags:
       - options
     responses:
@@ -180,7 +180,7 @@ def backgroundByLocation_query():
     Generate an extract from either Google or Bing.
     It uses the WMTS standard to grab and compose, which makes it fast
     (does not depend on DIAS S3 store).
-    ---
+    _
     tags:
       - backgroundByLocation
     responses:
@@ -242,7 +242,7 @@ def backgroundByID_query():
     Generate an extract from either Google or Bing.
     It uses the WMTS standard to grab and compose, which makes it fast
     (does not depend on DIAS S3 store).
-    ---
+    _
     tags:
       - backgroundByLocation
     responses:
@@ -313,7 +313,7 @@ def chipsByLocation_query():
     Get chips images by location.
     Generates a series of extracted Sentinel-2 LEVEL2A segments
     of 128x128 pixels as a composite of 3 bands.
-    ---
+    _
     tags:
       - chipsByLocation
     responses:
@@ -368,7 +368,7 @@ def chipsByParcelId_query():
     Get chips images by parcel id.
     Generates a series of extracted Sentinel-2 LEVEL2A segments
     of 128x128 pixels as a composite of 3 bands.
-    ---
+    _
     tags:
       - chipsByParcelId
     responses:
@@ -421,7 +421,7 @@ def rawChipByLocation_query():
     Get chips images by parcel id.
     Generates a series of extracted Sentinel-2 LEVEL2A segments of 128x128 (10m
     resolution bands) or 64x64 (20 m) pixels as list of full resolution GeoTIFFs
-    ---
+    _
     tags:
       - rawChipByLocation
     responses:
@@ -471,7 +471,7 @@ def rawChipByLocation_query():
 def parcelPeers_query():
     """
     Get the parcel “peers” for a known parcel ID,
-    ---
+    _
     tags:
       - parcelPeers
     responses:
@@ -520,7 +520,7 @@ def parcelPeers_query():
 def parcelTimeSeries_query():
     """
     Get the time series for a parcel ID.
-    ---
+    _
     tags:
       - parcelTimeSeries
     responses:
@@ -581,7 +581,7 @@ def parcelTimeSeries_query():
 def parcelByLocation_query():
     """
     Find parcel information for a geographical location.
-    ---
+    _
     tags:
       - parcelByLocation
     responses:
@@ -627,7 +627,7 @@ def parcelByLocation_query():
 def parcelById_query():
     """
     Get a parcel information for a known parcel ID,
-    ---
+    _
     tags:
       - parcelById
     responses:
@@ -672,7 +672,7 @@ def parcelById_query():
 def parcelsByPolygon_query():
     """
     Find a parcel ID for within a given polygon.
-    ---
+    _
     tags:
       - parcelsByPolygon
     responses:
@@ -750,7 +750,7 @@ def download_file(aoi, filename):
 def upload_file():
     """
     Upload file.
-    ---
+    _
     tags:
       - upload
     """
