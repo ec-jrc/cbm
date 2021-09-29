@@ -23,7 +23,6 @@ from flask import (Flask, request, send_from_directory, make_response,
                    render_template, flash, redirect, jsonify, abort, url_for)
 
 
-import flask_monitoringdashboard as dashboard
 from scripts import db_queries
 from scripts import image_requests
 from scripts import users
@@ -44,8 +43,12 @@ DEBUG = False
 DEFAULT_AOI = ''
 datasets = db_queries.get_datasets()
 
-dashboard.bind(app)
 
+try:
+    import flask_monitoringdashboard as dashboard
+    dashboard.bind(app)
+except Exception:
+    print("!ERROR! Can not start dashboard.")
 
 # -------- Core functions ---------------------------------------------------- #
 
@@ -731,8 +734,8 @@ def allowed_file(filename):
 @auth_required
 def download_files():
     aoi = request.args.get('aoi')
-    if aoi in [k.split('_')[0] for k in datasets]:
-        aoi_files = glob.glob(f'{app.config["MS_FILES"]}/{aoi}/*')
+    if aoi.lower() in [k.split('_')[0] for k in datasets]:
+        aoi_files = glob.glob(f'{app.config["MS_FILES"]}/{aoi.upper()}/*')
     else:
         aoi_files = []
     return render_template("ms_files.html", files=aoi_files)
@@ -741,7 +744,7 @@ def download_files():
 @app.route(f'/{app.config["MS_FILES"]}/<aoi>/<filename>')
 @auth_required
 def download_file(aoi, filename):
-    return send_from_directory(f'{app.config["MS_FILES"]}/{aoi}',
+    return send_from_directory(f'{app.config["MS_FILES"]}/{aoi.upper()}',
                                filename, as_attachment=True)
 
 
