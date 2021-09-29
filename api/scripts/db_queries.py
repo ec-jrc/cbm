@@ -308,18 +308,20 @@ def getParcelPeers(dataset, pid, distance, maxPeers, ptype=''):
 
         getTableDataSql = f"""
             WITH current_parcel AS (select {cropname},
-                wkb_geometry from {parcels_table}{ptype}
+                ST_Transform(wkb_geometry,3035) as geom
+                FROM {parcels_table}{ptype}
                 WHERE {parcel_id} = '{pid}')
-            SELECT {parcel_id}::text as pid, st_distance(wkb_geometry,
-                (SELECT wkb_geometry FROM current_parcel)) As distance
+            SELECT {parcel_id}::text as pid,
+                st_distance(ST_Transform(wkb_geometry,3035),
+                (SELECT geom FROM current_parcel)) As distance
             FROM {parcels_table}{ptype}
             WHERE {cropname} = (select {cropname} FROM current_parcel)
             And {parcel_id} != '{pid}'
-            And st_dwithin(wkb_geometry,
-                (SELECT wkb_geometry FROM current_parcel), {distance})
-            And st_area(wkb_geometry) > 3000.0
-            ORDER by st_distance(wkb_geometry,
-                (SELECT wkb_geometry FROM current_parcel)) asc
+            And st_dwithin(ST_Transform(wkb_geometry,3035),
+                (SELECT geom FROM current_parcel), {distance})
+            And st_area(ST_Transform(wkb_geometry,3035)) > 3000.0
+            ORDER by st_distance(ST_Transform(wkb_geometry,3035),
+                (SELECT geom FROM current_parcel)) asc
             LIMIT {maxPeers};
             """
         #  Return a list of tuples
