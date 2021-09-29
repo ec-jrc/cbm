@@ -502,7 +502,7 @@ def parcelPeers_query():
         maxPeers = 100
 
     dataset = datasets[f'{aoi}_{year}']
-    data = db_queries.getParcelPeers(dataset, pid, ptype, distance, maxPeers)
+    data = db_queries.getParcelPeers(dataset, pid, distance, maxPeers, ptype)
     if not data:
         return json.dumps({})
     elif len(data) == 1:
