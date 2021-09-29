@@ -1,5 +1,5 @@
 {
-    "default_2020": {
+    "ms_2020": {
         "db": "main",
         "description": "Dataset description",
         "center": "51.0,14.0",
@@ -8,19 +8,20 @@
         "start_date": "",
         "end_date": "",
         "extent": "",
-        "flipcoordinates": "False"
+        "flip_coordinates": "False",
         "tables": {
-            "parcels": "par",
-            "dias_catalog": "dias_cat",
-            "s2": "s2_sig",
-            "bs": "bs_sig",
-            "c6": "c6_sig",
-            "bs_tf": "bs_ten"
+            "parcels": "ms.parcels_2020",
+            "dias_catalog": "dias_catalogue",
+            "scl": "ms.hists_2020",
+            "s2": "ms.sigs_2020",
+            "bs": "ms.sigs_2020",
+            "c6": "ms.sigs_2020",
+            "bs_tf": "ms.bs_ten"
         },
         "pcolumns": {
             "parcel_id": "id",
-            "crop_name": "name",
-            "crop_code": "code"
+            "crop_name": "crop_name",
+            "crop_code": "crop_code"
         }
     }
 }
