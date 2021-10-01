@@ -45,6 +45,7 @@ update.check()
 
 def init():
     from cbm.utils import init
+    init.main()
 
 
 def set_api_account(url, username, password):
