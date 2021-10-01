@@ -26,7 +26,7 @@ except Exception as err:
 
 
 def foi_tab_v1():
-    path_foi = f"{config.get_value(['paths', 'temp'])}/foi/"
+    path_foi = "foi/"
     path_foi_func = foi_v1.path_foi_func
 
     progress = Output()
@@ -230,8 +230,8 @@ def foi_tab_v1():
         with progress:
             foi_v1.main(
                 db_tables.value,
-                f"{path_foi}raster/{img_file.children[1].children[0].value}",
-                f"{path_foi}{yml_file.children[1].children[0].value}",
+                f"{img_file.children[1].children[0].value}",
+                f"{yml_file.children[1].children[0].value}",
                 param_min_het.value, param_max_het.value, param_area.value)
 
     wbox = VBox([foi_info,
@@ -248,7 +248,7 @@ def foi_tab_v1():
 
 
 def foi_tab_v2():
-    path_foi = f"{config.get_value(['paths', 'temp'])}/foi/"
+    path_foi = "foi/"
     progress = Output()
 
     def outlog(*text):
@@ -349,7 +349,8 @@ def foi_tab_v2():
         pre_info, pre_heto_chec, pre_heto_chec_box,
         pre_pixel_connectivity, pre_negative_buffer,
         HBox([pre_min_cluster_size,
-              HTML("Minimum area for clusters selection - only clusters bigger from this threshold will be counted.")])
+              HTML("""Minimum area for clusters selection - only clusters bigger
+                    from this threshold will be counted.""")])
     ])
 
     # Run FOI analysis
@@ -368,9 +369,9 @@ def foi_tab_v2():
     def run_analysis_on_click(b):
         with progress:
             foi_v2.main(
-                f"{path_foi}vector/{shp_file.children[1].children[0].value}",
-                f"{path_foi}raster/{img_file.children[1].children[0].value}",
-                f"{path_foi}{yml_file.children[1].children[0].value}",
+                f"{shp_file.children[1].children[0].value}",
+                f"{img_file.children[1].children[0].value}",
+                f"{yml_file.children[1].children[0].value}",
                 pre_negative_buffer.value,
                 pre_min_het.value,
                 pre_max_het.value,
