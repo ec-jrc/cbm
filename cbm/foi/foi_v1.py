@@ -30,8 +30,8 @@ import geopandas as gpd
 path_foi_func = normpath(join(dirname(abspath(__file__)), 'foi_db_func'))
 
 
-def main(vector_file, raster_file, yaml_file, pre_min_het,
-         pre_max_het, area_threshold, db_='main'):
+def main(reference_data, raster_classif_file, yaml_file, pre_min_het,
+         pre_max_het, area_threshold, db_str='main'):
     """FOI assessment is based on spatial analysis of a “thematic” raster
     produced in advance.
 
@@ -49,10 +49,16 @@ def main(vector_file, raster_file, yaml_file, pre_min_het,
     distribution of different types of pixels inside the FOI.
 
     Args:
-        vector_file (str): The parcels poligons in .shp file format or
+        reference_data (str): Spatial data to be tested -
+            parcels that will be checked for heterogeneity and cardinality
+            The parcels poligons in .shp file format or
             database table name without .shp ending.
-        raster_file (str): The raster file <...>.
+        raster_classif_file (str): Thematic raster - classification raster, or
+            raster from other source that will be used for testing
+            heterogeneity and cardinality
         yaml_file: YAML file that holds the classes of thematic raster file.
+            can be also a simple list of values in the notebook corespondence
+            between pixel values and names for the classes
         pre_min_het: Minimum thresholds for heterogeneity checks.
         pre_max_het: Maximum thresholds for heterogeneity checks.
         area_threshold: Minimum area for clusters selection.
@@ -62,33 +68,32 @@ def main(vector_file, raster_file, yaml_file, pre_min_het,
 
     """
 
-    path_temp = normpath(join(config.get_value(['paths', 'temp']), 'foi'))
-    path_data = normpath(join(config.get_value(['paths', 'data']), 'foi'))
     # database connection string
-    db_connection = f"PG:{db.conn_str(db_)}"
+    if type(db_str) is str:
+        db_connection = f"PG:{db.conn_str(db_str)}"
+    elif type(db_str) is list:
+        db_connection = "PG:host={} port={} dbname={} user={} password={}".format(
+            *db_str)
+
+    def db_conn():
+        if type(db_str) is str:
+            return db.conn(db_str)
+        elif type(db_str) is list:
+            return psycopg2.connect("host={} port={} dbname={} user={} password={}".format(*db_str))
+
     # ogr2ogr options
     geom_field_name = "GEOMETRY_NAME=wkb_geometry"
     overwrite_option = "-OVERWRITE"
     geom_type = "MULTIPOLYGON"
     output_format = "PostgreSQL"
 
-
     # Path for storing the processed data - final spatial data that will be
     #    exported after database processing
-    processed_data = normpath(join(path_temp, 'processed_data'))
+    processed_data = normpath(join('foi', 'processed_data'))
     os.makedirs(processed_data, exist_ok=True)
-    # Spatial data to be tested - parcels that will be checked for
-    #   heterogeneity and cardinality
-    reference_data = vector_file
-    # Thematic raster - classification raster, or raster from other
-    # source that will be used for testing heterogeneity and cardinality
-    raster_classif_file = raster_file
-    # YAML file that holds the classes form the thematic raster file - can be
-    #    also a simple list of values in the notebook
-    # corespondence between pixel values and names for the classes
-    # yaml_file = f'{path_data}pixelvalues_classes.yml'
 
-    output_data = normpath(join(path_data, 'output_data'))
+    # Path for storing the final output data
+    output_data = normpath(join('foi', 'output_data'))
     os.makedirs(output_data, exist_ok=True)
     reference_data_name = os.path.splitext(os.path.basename(reference_data))[0]
     try:
@@ -100,11 +105,9 @@ def main(vector_file, raster_file, yaml_file, pre_min_het,
     # Vector file resulted from the raster stats pixel count
     # pixelcount_output = f'{output_data}pixel_count_{reference_data_table}.shp'
 
-    pixelcount_output = f'{processed_data}' + \
-        reference_data_name + '_pixelcount.shp'
+    pixelcount_output = f'{processed_data}/{reference_data_name}_pixelcount.shp'
     # Vector file resulted from raster to vector process (polygonize)
-    polygonize_output = f'{processed_data}' + \
-        reference_data_name + '_polygonize.shp'
+    polygonize_output = f'{processed_data}/{reference_data_name}_polygonize.shp'
 
     # Name of the table to be created in the database - import of the pixel
     #   count into the database
@@ -114,22 +117,20 @@ def main(vector_file, raster_file, yaml_file, pre_min_het,
     polygonize_table = f"{reference_data_name}_polygonize"
 
     # Name and path of the files resulted from the analysis
-    heterogeneity_output = f'{output_data}' + \
-        reference_data_name + '_foih_v1.shp'
-    cardinality_output = f'{output_data}' + \
-        reference_data_name + '_foic_v1.shp'
-    cardinality_output_clusters = f'{output_data}' + \
-        reference_data_name + '_foic_clusters_v1.shp'
+    heterogeneity_output = f'{output_data}/{reference_data_name}_foih_v1.shp'
+    cardinality_output = f'{output_data}/{reference_data_name}_foic_v1.shp'
+    cardinality_output_clusters = f'{output_data}/{reference_data_name}_foic_clusters_v1.shp'
 
     sql = "SELECT * FROM " + reference_data_table + ";"
     try:
-        ps_connection = db.conn(db_)
+        ps_connection = db_conn()
 
         ps_connection.autocommit = True
 
         cursor = ps_connection.cursor()
 
-        gpd_data = gpd.read_postgis(sql=sql, con=ps_connection, geom_col='wkb_geometry')
+        gpd_data = gpd.read_postgis(
+            sql=sql, con=ps_connection, geom_col='wkb_geometry')
 
     except (Exception, psycopg2.DatabaseError) as error:
         print("Error while connecting to PostgreSQL", error)
@@ -139,13 +140,11 @@ def main(vector_file, raster_file, yaml_file, pre_min_het,
         if(ps_connection):
             cursor.close()
             ps_connection.close()
-            #print("PostgreSQL connection is closed")
+            # print("PostgreSQL connection is closed")
 
-    temp_reference_data = f'{path_temp}' + \
-        reference_data_name + '_temp.shp'
+    temp_reference_data = f'foi/{reference_data_name}_temp.shp'
 
     gpd_data.to_file(temp_reference_data)
-
 
     shape = fiona.open(temp_reference_data)
     spatialRef = shape.crs["init"]
@@ -216,7 +215,7 @@ def main(vector_file, raster_file, yaml_file, pre_min_het,
     # The function calculates the percentages and sets an attribute
     # "foi_h" to 1 when the percentage of pixels is between thresholds
     try:
-        ps_connection = db.conn(db_)
+        ps_connection = db_conn()
 
         ps_connection.autocommit = True
 
@@ -292,7 +291,7 @@ def main(vector_file, raster_file, yaml_file, pre_min_het,
     # TO DO: put the unique identifier as function param
 
     try:
-        ps_connection = db.conn(db_)
+        ps_connection = db_conn()
 
         ps_connection.autocommit = True
 
@@ -328,10 +327,12 @@ def main(vector_file, raster_file, yaml_file, pre_min_het,
                      cardinality_output, db_connection, processed_cardinality])
     print("Cardinality analysis output downloaded")
 
-    filelist_temp = [ f for f in os.listdir( f'{path_temp}') if f.startswith(Path(temp_reference_data).stem) ]
+    filelist_temp = [f for f in os.listdir(
+        'foi') if f.startswith(Path(temp_reference_data).stem)]
     for f in filelist_temp:
-        os.remove(os.path.join(f'{path_temp}', f))
+        os.remove(os.path.join('foi', f))
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    main(sys.argv)
