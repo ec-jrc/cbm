@@ -41,9 +41,9 @@ def conn_str(db='main'):
     DB_USER = values['db'][db]['user']
     DB_PORT = values['db'][db]['port']
     DB_PASS = values['db'][db]['pass']
-    postgres = ("host={} dbname={} user={} port={} password={}"
+    conn_str = ("host={} dbname={} user={} port={} password={}"
                 .format(DB_HOST, DB_NAME, DB_USER, DB_PORT, DB_PASS))
-    return postgres
+    return conn_str
 
 
 def conn(db='main'):
