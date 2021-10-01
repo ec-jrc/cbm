@@ -1,9 +1,22 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# This file is part of CbM (https://github.com/ec-jrc/cbm).
+# Author    : Gilbert Voican, Konstantinos Anastasakis
+# Credits   : GTCAP Team
+# Copyright : 2021 European Commission, Joint Research Centre
+# License   : 3-Clause BSD
+import os
+
+
 def v1(*args):
+    os.makedirs("foi", exist_ok=True)
     from cbm.foi import foi_v1
     return foi_v1.main(*args)
 
 
 def v2(*args):
+    os.makedirs("foi", exist_ok=True)
     from cbm.foi import foi_v2
     return foi_v2.main(*args)
 
