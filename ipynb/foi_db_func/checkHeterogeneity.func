@@ -1,0 +1,91 @@
+-- FUNCTION: {schema}.check_heterogeneity(text, int, numeric, numeric)
+-- DROP FUNCTION {schema}.check_heterogeneity(text, int, numeric, numeric);
+CREATE OR REPLACE FUNCTION {schema}.check_heterogeneity(
+    tabela text,
+    num_classes int,
+    min_percentage numeric,
+    max_percentage numeric)
+    RETURNS void
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE
+AS $BODY$
+
+DECLARE
+    text_suma varchar;
+    i record;
+
+BEGIN
+EXECUTE FORMAT('ALTER TABLE {schema}.%s
+    DROP COLUMN IF EXISTS foi_h', tabela);
+
+FOR i in (SELECT column_name
+    FROM information_schema.columns
+        WHERE table_schema = '{schema}'
+        AND table_name = tabela
+        AND column_name LIKE 'p\_%')
+
+LOOP
+EXECUTE FORMAT('ALTER TABLE  {schema}.%I
+    DROP COLUMN %I', tabela, i.column_name);
+END LOOP;
+
+EXECUTE FORMAT('SELECT string_agg(column_name, ''+'')
+    FROM (
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_schema = ''{schema}''
+        AND table_name   = %L 
+        AND NOT (column_name = ''total''
+            OR column_name = ''wkb_geometry'' ) 
+        ORDER BY ordinal_position DESC 
+        LIMIT %L
+    ) a;', tabela, num_classes) into text_suma;
+
+EXECUTE FORMAT('ALTER TABLE {schema}.%s
+    DROP COLUMN IF EXISTS total', tabela);
+EXECUTE FORMAT('ALTER TABLE {schema}.%s
+    ADD COLUMN total BIGINT',  tabela);
+EXECUTE FORMAT('UPDATE  {schema}.%s
+    SET total =  %s', tabela, text_suma);
+
+FOR i in (SELECT column_name
+    FROM information_schema.columns
+        WHERE table_schema = '{schema}'
+        AND table_name   = tabela
+        AND NOT (column_name = 'total'
+            OR column_name = 'wkb_geometry')
+        ORDER BY ordinal_position DESC
+        LIMIT num_classes)
+
+LOOP
+EXECUTE FORMAT('ALTER TABLE  {schema}.%s
+    ADD COLUMN p_%I NUMERIC', tabela, i.column_name);
+EXECUTE FORMAT('UPDATE  {schema}.%s
+    SET p_%I = case when total > 0
+    THEN round(CAST(%I AS NUMERIC)/total*100, 2) else null end ',
+    tabela, i.column_name, i.column_name);
+END LOOP;
+
+EXECUTE FORMAT('ALTER TABLE  {schema}.%s
+    ADD COLUMN foi_h INT DEFAULT 0', tabela);
+
+FOR i in (SELECT column_name
+    FROM information_schema.columns
+        WHERE table_schema = '{schema}'
+        AND table_name   = tabela
+        AND column_name like 'p_%'
+        ORDER BY ordinal_position DESC
+        LIMIT num_classes)
+
+LOOP
+EXECUTE FORMAT('UPDATE {schema}.%I SET foi_h = 1
+    WHERE  %I BETWEEN %L AND %L',
+    tabela, i.column_name,
+    min_percentage, max_percentage);
+END LOOP;
+END
+
+$BODY$;
+ALTER FUNCTION {schema}.check_heterogeneity(text, int, numeric, numeric)
+    OWNER TO {owner};
