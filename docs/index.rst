@@ -4,27 +4,19 @@
 
 .. toctree::
    :maxdepth: 3
-   :caption: Introduction:
+   :caption: Introduction
 
-   intro_dias4cbm
-   
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Use cases:
-
-   uc_calendar
-   uc_foi
-   uc_ml
+   dias4cbm_intro
 
 
 .. toctree::
    :maxdepth: 3
-   :caption: Setup:
+   :caption: Setup
 
    setup_prerequisites
    setup_prepare
    setup_software
+   setup_database
    setup_extract
    setup_db_backup
    setup_build_api
@@ -32,7 +24,7 @@
 
 .. toctree::
    :maxdepth: 3
-   :caption: RESTful API:
+   :caption: RESTful API
 
    api_ts
    api_imgs
@@ -42,7 +34,7 @@
 
 .. toctree::
    :maxdepth: 3
-   :caption: CbM package:
+   :caption: CbM python package
 
    cbm_install
    cbm_overview
@@ -55,9 +47,16 @@
 
 .. toctree::
    :maxdepth: 3
-   :caption: Developers:
+   :caption: Use cases
+
+   uc_calendar
+   uc_foi
+   uc_ml
+
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Developers
 
    dev_contributing
    dev_pull_request
-   dev_proposals
-   dev_learn
