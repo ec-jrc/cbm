@@ -1,4 +1,4 @@
-![Image of European Commission](https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/jrc_cbm_banner.png)
+![Image of European Commission](/docs/img/jrc_cbm.png)
 
 # Repository of the JRC-CbM for the CAP
 
