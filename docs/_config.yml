@@ -1,0 +1,15 @@
+lsi: false
+safe: true
+source: https://github.com/ec-jrc/cbm
+incremental: false
+highlighter: rouge
+gist:
+  noscript: false
+kramdown:
+  math_engine: mathjax
+  syntax_highlighter: rouge
+remote_theme: pages-themes/leap-day@v0.2.0
+plugins:
+- jekyll-remote-theme # add this line to the plugins list if you already have one
+title: DIAS for Checks by Monitoring - an Overview
+description: Documentation of DIAS for JRC-CbM
