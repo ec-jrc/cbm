@@ -26,7 +26,7 @@ In the first section (CbM system requirements) of this CbM architecture overview
 
 ---
 
-## [CbM system requirements](#id1)
+## <a name="id1">CbM system requirements</a>
 
 The main elements of a CbM system are illustrated in Figure 1. This architecture is modular and reflects the general requirements of any CbM system. The individual elements are described in the following sub-sections.  
 
