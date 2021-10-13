@@ -2,14 +2,14 @@
 
 The Joint Research Centre (JRC) Checks by Monitoring (CbM) is as a proof of concept that demonstrates the feasibility of agricultural monitoring systems for the common agricultural policy (CAP) of the European Union (EU) based on Copernicus [Sentinel](https://sentinels.copernicus.eu/) data and on cloud-based infrastructures, particularly the [Data and Information Access Systems (DIAS)](https://www.copernicus.eu/en/access-data/dias). Its goal is to help Paying Agencies (PA) of Member States (MS) and their technological partners to get started with CbM and to define a set of best practices in context of the [Integrated Administration and Control Systems (IACS)](https://ec.europa.eu/info/food-farming-fisheries/key-policies/common-agricultural-policy/financing-cap/financial-assurance/managing-payments_en). The same approach can potentially be applied to the area monitoring system (AMS) of the future CAP.  
 
-In this section of the [Guidance and Tools for CAP (GTCAP) WEBSITE](https://marswiki.jrc.ec.europa.eu/) we present an overview of JRC CbM. The detailed description of methods and tools is provided in the [JRC CbM TECHNICAL DOCUMENTATION](https://jrc-cbm.readthedocs.io) and the code is made available as open source in [JRC CbM GitHub REPOSITORY](https://github.com/ec-jrc/cbm)..  
+In this section of the [Guidance and Tools for CAP (GTCAP) WEBSITE](https://marswiki.jrc.ec.europa.eu/) we present an overview of JRC CbM. The detailed description of methods and tools is provided in the [JRC CbM TECHNICAL DOCUMENTATION](https://jrc-cbm.readthedocs.io) and the code is made available as open source in [JRC CbM GitHub REPOSITORY](https://github.com/ec-jrc/cbm).  
 
 The general documentation is organized in four components: one for the general description of the system and three for the main groups of tasks.
 
-1. **[Overview of the system architecture](dias4cbm_architecture.md)**: overview of the cloud-based CbM elements. Target users: all.
-2. **[System development](dias4cbm_setup.md)**: manuals to set up the software and hardware infrastructure (backend). Target users: system administrators.
-3. **[Data analysis](dias4cbm_analysis.md)**: tutorials to create methods and tools to detect the agricultural events of interest through specific interfaces for data analysis (frontend/backend). Target users: analysts.
-4. **[Data use](dias4cbm_use.md)**: demos to apply the system's outputs to the control of farmers' declarations using simple graphical interfaces (frontend). Target users: final users/decision makers.
+1. [Overview of the system architecture](dias4cbm_architecture.md): overview of the cloud-based CbM elements. Target users: all.
+2. [System development](dias4cbm_setup.md): manuals to set up the software and hardware infrastructure (backend). Target users: system administrators.
+3. [Data analysis](dias4cbm_analysis.md): tutorials to create methods and tools to detect the agricultural events of interest through specific interfaces for data analysis (frontend/backend). Target users: analysts.
+4. [Data use](dias4cbm_use.md): demos to apply the system's outputs to the control of farmers' declarations using simple graphical interfaces (frontend). Target users: final users/decision makers.
 
 ---
 
