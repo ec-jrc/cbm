@@ -1,6 +1,6 @@
 # Database for JRC CbM
 
-## Table of contents
+## Content
 * [DB in the CbM architecture](#db-in-the-cbm-architecture)
 * [Spatial database in a nutshell](#spatial-database-in-a-nutshell)
 * [JRC CbM DB structure](#jrc-cbm-db-structure)
@@ -19,9 +19,7 @@ In the JRC CbM system, the open-source Relational DataBase Management System (RD
 
 In an operational national Paying Agency (PA) CbM system, a relational database can be used not only to support signatures extraction and management data but is also a good candidate as central repository for all the information relevant for the CAP process. In such a context, the technical solution depends on the specific goals and constraints of each PA.  
 
-Learning database administration and advanced use (CbM backend) require a technical background and dedicated training, while for basic interaction (data retrieval and visualization, CbM frontend) limited expertise is needed. The scope of this documentation is to show how the database is used in the JRC CbM system and demonstrates its potentialities to support CbM.
-
----
+Learning database administration and advanced use (CbM backend) require a technical background and dedicated training, while for basic interaction (data retrieval and visualization, CbM frontend) limited expertise is needed. The scope of this documentation is to show how the database is used in the JRC CbM system and demonstrates its potentialities to support CbM.  
 
 ## Spatial database in a nutshell
 
@@ -126,8 +124,6 @@ Many tutorials on SQL are available on the web. Among the others:
 * [webcheatsheet](http://webcheatsheet.com/sql/interactive_sql_tutorial/)
 * [www.sql.org](http://www.sql.org)
 
----
-
 ## JRC CbM DB structure
 
 The primary goal of the JRC CbM database is to store and make available the time series of Sentinel bands signature for each parcel. This is calculated by a Python module by rasterizing parcel polygons stored in the database and intersecting them with satellite images stored in the DIAS [Object Storage](https://en.wikipedia.org/wiki/Object_storage). Images are selected and retrieved based on the metadata provided by the DIAS and stored in the database (particularly the area covered and the acquisition date and time). Basic statistics are calculated from the set of pixels belonging to the each parcel, which are then stored back in the database. The number of pixels with cloudy flags for Sentinel 2 is extracted for each parcel in order to identify images affected by atmospheric disturbance (and thus with not reliable statistics). This information is also stored back in the database. To sum up, the main database objects (tables) are:  
@@ -143,17 +139,15 @@ In the Outreach database, a single *dias_catalogue* table for all countries is g
 In the JRC CbM database, tables are organized in schemas. The general tables (e.g. *dia_catalogue*) are stored in the *public* schema. The other working tables are stored in a specific schema. In the case of the Outreach project, the country specific tables (parcels, signatures, histograms) are stored in a dedicated schema identified by the [2-letters ISO code](https://en.wikipedia.org/wiki/ISO_3166-1) of each country (for example *hr* in case of Hungary). When multiple Paying Agencies of the same Member State are joining, two additional letters are used to identify the PA. In this way it is easy to move data if the database has to be transferred to another local or cloud-based system.  
 The corresponding database data model (i.e. the conceptual representation of the real world in the structures of a relational database: tables and their relationships) in form of a simplified Entity-Relationship (ER) diagram is illustrated in Figure 1. It describes what types of data are stored and how they are organised. Columns used as primary key are indicated in bold and external keys are represented as connecting lines between tables. For each column is also indicated the data type.
 
-[![](/img/jrc_cbm_datamodel_core.png)](/cbm/img/jrc_cbm_datamodel_core.png)  
-[![](/docs/img/jrc_cbm_datamodel_core.png)](/docs/img/jrc_cbm_datamodel_core.png)
+![](/img/jrc_cbm_datamodel_core.png)  
+![](/docs/img/jrc_cbm_datamodel_core.png)  
 Figure 1. Outreach database data model (core tables)
 
 In some cases, the parcels table can be split in multiple tables according to the specific declaration (e.g. grazing: parcels_2020_g, mowing: parcels_2020_m, bare soil: parcels_2020_b) or to the pilot area (e.g. south: parcels_2020_s, north: parcels_2020_n). These differences can also be accommodated using specific columns in the parcels table (e.g. the *sub* column in the ER diagram) or using partitioned tables (see section on optimization of performances). If the parcels tables is divided in physical tables, an approach must be used to generate unique ID in the different tables that are referred to in the signatures and histograms or specific hist and sigs tables must be created (e.g. sigs_2020_g, hist_2020_g for grazing).
 
 What is reported in the diagram and used in this demonstrative JRC CbM database is only part of the information involved in the CbM processing. The database can be easily extended to include for example additional data like present and past declarations, parcel classification according to traffic light classes and based on markers, other relevant environmental layers.  
 
-The information from different tables can be combined in a SQL statement to generate the complex information required for a specific task in form of a single table as a view. Practical examples are provided in the next section.
-
----
+The information from different tables can be combined in a SQL statement to generate the complex information required for a specific task in form of a single table as a view. Practical examples are provided in the next section.  
 
 ## Database access
 
@@ -180,9 +174,7 @@ In the Outreach project, if requested, these information are provided directly t
 ### User access policy
 One of the most important functions of a database is the possibility of restricting access and possible operations (e.g. read, edit, insert, delete) on the data according to the different types of users, and in a differentiated manner for the different tables/rows of the database.  
 PostgreSQL manages access permissions to the database through [ROLES](https://www.postgresql.org/docs/devel/user-manag.html). A role is an entity that can own objects and have privileges on the database. It can be an individual user or a group of users. Users can be grouped to facilitate privilege management: privileges can be granted to, or revoked from, a group as a whole simplifying a lot the management of the permission policy. This is done by creating a role that represents the group (for example *administrators* that can create/delete objects in the database, *editors* that can add, delete and update data in existing tables, and *viewer* that can only view all or part of the data but not change it), and then granting membership of the group role to individual user roles (administrators, analysts, final users). Database roles apply to all databases in a cluster, but permissions are then associated with the individual objects in each database. Each user is assigned a password together with the role to ensure data security. Access to the server itself can be restricted to certain IP addresses to further reinforce security. In PostgreSQL, permissions can go down to the single record level.  
-In the Outreach project, access is managed by the intermediate layer connected to a read-only role defined in the database (*api_bot*).
-
----
+In the Outreach project, access is managed by the intermediate layer connected to a read-only role defined in the database (*api_bot*).  
 
 ##  Data retrieval
 To interact with a PostgreSQL database, it is not necessary to install PostgreSQL, but it is sufficient to install a client that connects to the database (server). The database with the data is instead physically installed on the server (e.g. in the DIAS). In this Section we show examples of connection of typical clients for spatial and non spatial data.  
@@ -194,8 +186,8 @@ PgAdmin is not the only client that you can use to manipulate data and objects i
 Note that when you open PgAdmin for the first time, it asks you to create a password. This is not the password for accessing the databases, but only the password for accessing PgAdmin (since PgAdmin stores all database access passwords internally).  
 The PgAdmin interface is organised into 5 main sections (see Figure 2). The display of the elements can be optimised through the customisation options.  
 
-[![](/img/pgadmin_panels.png)](/cbm/img/pgadmin_panels.png)  
-[![](/docs/img/pgadmin_panels.png)](/docs/img/pgadmin_panels.png)
+![](/img/pgadmin_panels.png)  
+![](/docs/img/pgadmin_panels.png)  
 Figure 2. PgAdmin interface (numbers correspond to the description given below)
 
 The 5 sections (or panels) are:  
@@ -209,8 +201,8 @@ Each part is used to perform different types of management tasks. The most commo
 
 To create a connection to a database, select *Object/Create/Server* from the menu (or right-click on the Server icon in the menu and select *Create/Server*). A window opens in which the connection parameters must be entered. On the *General* tab you only need to enter a name (any name) for the connection. In the tab *Connection* you have to enter the IP address of the server, the port, the user and the password (see Figure 3).  
 
-[![](/img/connection_server.png)](/cbm/img/connection_server.png)  
-[![](/docs/img/connection_server.png)](/docs/img/connection_server.png)
+![](/img/connection_server.png)  
+![](/docs/img/connection_server.png)  
 Figure 3. Creating a connection to a database server  
 
 Once saved, the connection will appear in the menu tree by expanding the *Server* icon.  
@@ -225,9 +217,9 @@ There is an alternative to PgAdmin that does not require the installation of any
 PostgreSQL/PostGIS itself offers no tool for spatial data visualization, but this can be done by a number of client applications, in particular GIS desktop software like QGIS (a powerful and complete open source software). It offers all the functions needed to deal with spatial data and offers many tools specifically for managing and visualizing PostGIS data. Connecting to the database is pretty simple and the process is well documented. Data can be accessed in three steps: 1) create a connection to the db (the first time that you connect to the db, see Figure 4) using the database access parameters, 2) open the connection, 3) get the data.  
 Once the connection is created, you can use the dedicated DB Manager interface to explore, preview, visualize in the main canvas and also export spatial data (both vector and raster).
 
-[![](/img/qgis_connection.png)](/cbm/img/qgis_connection.png)  
-[![](/docs/img/qgis_connection.png)](/docs/img/qgis_connection.png)
-Figure 4. Coonecting with the database from QGIS
+![](/img/qgis_connection.png)  
+![](/docs/img/qgis_connection.png)  
+Figure 4. Connecting with the database from QGIS
 
 ### Jupiter Notebook
 Python is the suggested tool to access the JRC CbM and the examples provided in the system documentation are always based on it. Here a simple example of connection with the database using the Python psycopg2 is reported:
@@ -281,8 +273,6 @@ dbClearResult(rs)
 
 In the *dbSendQuery* command, you can insert any SQL code that will be executed by the database and then inserted into a dataframe as specified by the user (in the code above, *df*). In the example, the Sentinel metadata is loaded into the *df* dataframe.  
 It is also possible to import data into the database from R. You can find all the documentation and a list of the most interesting packages for working with a PostgreSQL database from R on the Internet.  
-
----
 
 ## Export and import data
 
