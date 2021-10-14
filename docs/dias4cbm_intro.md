@@ -6,10 +6,10 @@ In this section of the [Guidance and Tools for CAP (GTCAP) WEBSITE](https://mars
 
 The general documentation is organized in four components: one for the general description of the system and three for the main groups of tasks.
 
-1. [Overview of the system architecture](dias4cbm_architecture.md): overview of the cloud-based CbM elements. Target users: all.
-2. [System development](dias4cbm_setup.md): manuals to set up the software and hardware infrastructure (backend). Target users: system administrators.
-3. [Data analysis](dias4cbm_analysis.md): tutorials to create methods and tools to detect the agricultural events of interest through specific interfaces for data analysis (frontend/backend). Target users: analysts.
-4. [Data use](dias4cbm_use.md): demos to apply the system's outputs to the control of farmers' declarations using simple graphical interfaces (frontend). Target users: final users/decision makers.
+1. [OVERVIEW OF THE SYSTEM ARCHITECTURE](dias4cbm_architecture.md): overview of the cloud-based CbM elements. Target users: all.
+2. [SYSTEM DEVELOPMENT](dias4cbm_setup.md): manuals to set up the software and hardware infrastructure (backend). Target users: system administrators.
+3. [DATA ANALYSIS](dias4cbm_analysis.md): tutorials to create methods and tools to detect the agricultural events of interest through specific interfaces for data analysis (frontend/backend). Target users: analysts.
+4. [DATA USE](dias4cbm_use.md): demos to apply the system's outputs to the control of farmers' declarations using simple graphical interfaces (frontend). Target users: final users/decision makers.
 
 ---
 
@@ -27,7 +27,7 @@ In 2018 **Checks by Monitoring (CbM)** were introduced for area-based support sc
 
 ## GTCAP support for JRC CbM
 ### JRC CbM DIAS
-The ongoing implementation of the CAP and the development of a CAP post-2020 that comply with new EU commitments on climate change and sustainable development are priorities for the [Joint Research Centre (JRC)](https://ec.europa.eu/jrc/). In this framework, the JRC Directorate D5 and the [Directorate General Agriculture and Rural Development - DG Agri](https://ec.europa.eu/info/departments/agriculture-and-rural-development_en) signed an Administrative Arrangement for CAP Implementation Support Activities CAPISA 2 that covers the period from October 2020 to September 2022. One of the work packages (WP) is on supporting Member States/Paying Agencies on the deployment and use of cloud solutions for CAP area aid schemes. The GTCAP group in liaison with other JRC teams and in close consultation with DG AGRI  
+The ongoing implementation of the CAP and the development of a CAP post-2020 that comply with new EU commitments on climate change and sustainable development are priorities for the [Joint Research Centre (JRC)](https://ec.europa.eu/jrc/). In this framework, the JRC Directorate D5 and the [Directorate General Agriculture and Rural Development - DG Agri](https://ec.europa.eu/info/departments/agriculture-and-rural-development_en) signed an Administrative Arrangement for CAP Implementation Support Activities CAPISA 2 that covers the period from October 2020 to September 2022. One of the work packages (WP) is on supporting Member States/Paying Agencies on the deployment and use of cloud solutions for CAP area aid schemes. The GTCAP group in liaison with other JRC teams and in close consultation with DG AGRI:  
 
 * validates the specific functional requirements of the CAP on cloud instances and addresses deployment issues including portability  
 * develops and operates a repository of shared technical solutions, best practices and algorithms, particularly on the implementation of methods based on earth observation (EO) signals  
@@ -35,8 +35,7 @@ The ongoing implementation of the CAP and the development of a CAP post-2020 tha
 * implements and monitors contract for purchase of DIAS services  
 
 In addition, we advice on long term cloud-based solutions for CAP monitoring to ensure their future/continued availability.  
-JRC CbM has substantial differences compared to the ESA project [SEN4CAP](dias4cbm_sen4cap.md)  
-Decisions on CAP 2022+ and Copernicus DIAS are key drivers for future development of JRC CbM.  
+JRC CbM has substantial differences compared to the ESA project [SEN4CAP](dias4cbm_sen4cap.md). Decisions on CAP 2022+ and Copernicus DIAS are key drivers for future development of JRC CbM.  
 
 ### Outreach activity
 The Outreach activity offers to the Member State willing to take up initiative on detection of agricultural phenomena with Sentinel data the possibility to use an JRC CbM environment set up by GTCAP that takes care of the backend. Here final users and analysts can test the tools and the code with technical support before they create their own CbM system.  

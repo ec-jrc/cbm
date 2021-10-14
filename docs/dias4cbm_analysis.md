@@ -1,4 +1,4 @@
-# Use of DIAS for development of methods in the CbM
+# JRC CbM for data analysis
 
 ## CbM frontend for analysis  
 
