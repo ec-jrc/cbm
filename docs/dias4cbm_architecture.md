@@ -27,7 +27,7 @@ In the first section (CbM system requirements) of this CbM architecture overview
 ## CbM system requirements
 
 The main elements of a CbM system are illustrated in [Figure 1](#figure1). This architecture is modular and reflects the general requirements of any CbM system. The individual elements are described in the following sub-sections.  
-
+![](/docs/img/cbm_dias_structure.png)  
 ![](/img/cbm_dias_structure.png)  
 <a name="figure1">Figure 1.</a> Main elements of a CbM system   
 
@@ -68,7 +68,7 @@ In addition to an intermediate layer to access the CbM data, analysts and final 
 ## JRC CbM implementation
 The JRC CbM implements the architecture shown in [Figure 1](#figure1) according to the requirements discussed in the previous section. It is a tailored solution based on the specific set of tools indicated in [Figure 2](#figure2) and described below. Software modules selected are all open source and make use of open standards. The code created by JRC is open source and available in the [JRC CbM GitHub repository](https://github.com/ec-jrc/cbm/).  
 The same structure can be operationalized using other software with similar functionalities if the system has to be integrated in an already existing infrastructure. JRC CbM is designed on a cloud-centric basis, but can also be adapted to run stand-alone.  
-
+![](/docs/img/cbm_dias_software.png)
 ![](/img/cbm_dias_software.png)  
  <a name="figure2">Figure 2.</a> JRC CbM software platform
 
@@ -96,8 +96,8 @@ The DIAS Virtual Machines (VMs) are managed using Linux as operating system ([Ub
 * transient VMs (use on demand, run large tasks in parallel, tear down)
 
 As a first step, we use Openstack resources "marshalling". [OpenStack](https://www.openstack.org/) is a free, open standard cloud computing platform. It is deployed as infrastructure as a service where virtual servers and other resources are made available to users. It scales horizontally and is designed to scale on hardware without specific requirements.  
-In a second step, we "orchestrate" the resources to execute parallel tasks (for example parcel and chip extraction). We use Docker containerization to ease cross-VM installation. [Docker](https://www.docker.com/) is an open platform for developing, shipping, and running applications. It uses OS-level virtualization to deliver software in packages called containers. Containers are isolated from one another and bundle their own software, libraries and configuration files. They can communicate with each other through well-defined channels. Docker enables to separate applications from the infrastructure so that the infrastructure can be managed in the same ways you manage the applications. Docker containers behave like specialized VMs. We use Docker Swarm as container orchestration tool, meaning that it allows us to manage multiple containers deployed across multiple host machines. Figure 3 shows the Copernicus DIAS IaaS architecture.
-
+In a second step, we "orchestrate" the resources to execute parallel tasks (for example parcel and chip extraction). We use Docker containerization to ease cross-VM installation. [Docker](https://www.docker.com/) is an open platform for developing, shipping, and running applications. It uses OS-level virtualization to deliver software in packages called containers. Containers are isolated from one another and bundle their own software, libraries and configuration files. They can communicate with each other through well-defined channels. Docker enables to separate applications from the infrastructure so that the infrastructure can be managed in the same ways you manage the applications. Docker containers behave like specialized VMs. We use Docker Swarm as container orchestration tool, meaning that it allows us to manage multiple containers deployed across multiple host machines. Figure 3 shows the Copernicus DIAS IaaS architecture.  
+![](/docs/img/DIAS_IaaS.png)
 ![](/img/DIAS_IaaS.png)  
 Figure 3. Copernicus DIAS Infrastructures as a Service (*click on the image to enlarge*).  
 
@@ -144,11 +144,11 @@ The analysts and final users (decision makers) need to access the information st
 Direct access to a DIAS account that has the credentials to access the various data sets is possible. Data can then be retrieved and visualized with specific tools, e.g. [Python Jupiter Notebooks](https://jupyter.org/) (see next section) and database clients like [PgAdmin](https://www.pgadmin.org/) or [QGIS](https://www.qgis.org/). Nevertheless, we recommend to limit direct DB access to the data to specific cases (i.e. system administrators, developers, users with advanced skills in SQL and good knowledge of the database structure). These users can also generate new data that are stored back in the server and made available to final users (e.g. applying machine learning algorithms to the extracted time series). In all the other cases, the DIAS platform can provide access to data via server interfaces. The final users can use these intermediate layers that provide predefined functionalities to extract data based on a limited and controlled set of parameters. This ensures performance and security by preventing poorly designed resource-intensive image retrieval and database queries and facilitates access to basic users with no knowledge of tools for data extraction (e.g. SQL) as it can serve standard queries and abstracts more complex tasks.  
 
 In the JRC CbM system, the frontend access the backend data sets though a RESTful API. A RESTful API is an application programming interface (API) that conforms to the constraints of REST architectural style. An [API](https://en.wikipedia.org/wiki/API) is a set of definitions and protocols for communicating what you want to that system so it can understand and fulfil the request (sse Figure 4). [REST](https://en.wikipedia.org/wiki/Representational_state_transfer) stands for representational state transfer. It is an architectural style for distributed hypermedia systems: it defines a set of constraints for how the architecture of an Internet-scale distributed hypermedia system should behave. An essential character of the RESTful services is that they follow standard calling conventions, which allow their use both in interactive testing and scriptable machine access. RESTful services are further described in [the documentation pages on RESTful service use](api_ts.md) and subsequent pages.  
-
+![](/docs/img/rest_api.png)
 ![](/img/rest_api.png)  
-Figure 4. Schema of the interaction between users and the database through the RESTful API   
+Figure 4. Schema of the interaction between users and the database through the RESTful API  
 
-In the JRC CbM system, the RESTful API provides:
+In the JRC CbM system, the RESTful API provides:  
 * abstracted access to database tables  
 * abstracted access to sub-selections of S3 stored CARD data  
 * abstracted access to advanced server-side processing routines  
