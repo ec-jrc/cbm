@@ -230,24 +230,6 @@ def close_conn(close_1='', close_2=''):
         pass
 
 
-def insert_function(func, db='main'):
-    """
-    Insert functions to database.
-    Args:
-    func: Sql text to add a new function to the database.
-        type: srt
-    db: Database configurarion
-    """
-    import psycopg2.extras
-    import psycopg2.extensions
-    conn = psycopg2.connect(conn_str(db))
-    conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-
-    # Execute function.
-    cur.execute(func)
-
-
 def exact_count(table, db='main'):
     """Return the exact count of rown of the given table"""
     conn = psycopg2.connect(conn_str(db))
@@ -320,6 +302,24 @@ def tb_exist(table, db='main'):
     conn.close()
     cur.close()
     return exist
+
+
+def insert_function(func, db='main'):
+    """
+    Insert functions to database.
+    Args:
+    func: Sql text to add a new function to the database.
+        type: srt
+    db: Database configurarion
+    """
+    import psycopg2.extras
+    import psycopg2.extensions
+    conn = psycopg2.connect(conn_str(db))
+    conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    # Execute function.
+    cur.execute(func)
 
 
 def db_func_exist(func, db='main'):

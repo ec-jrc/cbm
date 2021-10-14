@@ -26,7 +26,7 @@ def parcel_by_loc(aoi, year, lon, lat, ptype=None,
         requrl = f"{requrl}&ptype={ptype}"
     if wgs84 is True:
         requrl = f"{requrl}&wgs84={wgs84}"
-    # print(requrl.format(api_url, aoi, year, pid))
+    # print(requrl.format(api_url, aoi, year, lon, lat))
     response = requests.get(requrl.format(api_url, aoi, year, lon, lat),
                             auth=(api_user, api_pass))
     if debug:
@@ -267,9 +267,9 @@ def background(lon, lat, chipsize=512, extend=512, tms='Google',
 
     # The url to get the background image
     requrl = f"lon={lon}&lat={lat}&chipsize={chipsize}&extend={extend}"
-    # print(f"{api_url}/query/backgroundByLocation?{requrl}&tms={tms}&raw")
+    # print(f"{api_url}/query/backgroundByLocation?{requrl}&tms={tms}&iformat=tif")
     response = requests.get(
-        f"{api_url}/query/backgroundByLocation?{requrl}&tms={tms}&raw",
+        f"{api_url}/query/backgroundByLocation?{requrl}&tms={tms}&iformat=tif",
         auth=(api_user, api_pass))
     # print(response)
 
@@ -281,12 +281,12 @@ def background(lon, lat, chipsize=512, extend=512, tms='Google',
             if debug:
                 print("Image not found...")
                 print(
-                    f"{api_url}/query/backgroundByLocation?{requrl}&tms={tms}&raw", response)
+                    f"{api_url}/query/backgroundByLocation?{requrl}&tms={tms}&iformat=tif", response)
             return response
         else:
             if debug:
                 print(
-                    f"{api_url}/query/backgroundByLocation?{requrl}&tms={tms}&raw", response)
+                    f"{api_url}/query/backgroundByLocation?{requrl}&tms={tms}&iformat=tif", response)
             res = requests.get(img_url, stream=True)
             image_name = img_url.split('/')[-1].lower()
             bg_file = normpath(join(bg_path, image_name))
