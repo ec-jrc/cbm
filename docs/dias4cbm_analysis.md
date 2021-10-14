@@ -29,7 +29,7 @@ This page of the [JRC Checks by Monitoring (CbM) DOCUMENTATION](dias4cbm_intro.m
 ## TASKS description
 
 ### RESTful API
-JRC RESTful (see  the [introduction to JRC CbM architecture](dias4cbm_architecture.md) for more info) service requests have predefined logical query names that need to be configured with a set parameters. The response is a JSON formatted dictionary with the data requested by the user, extracted from the [JRC CbM database](setup_database.md) or from the Sentinel images stored in the DIAS object storage. In the documentation pages you find the available queries with use examples.  
+JRC RESTful (see the [introduction to JRC CbM architecture](dias4cbm_architecture.md) for more info) service requests have predefined logical query names that need to be configured with a set parameters. The response is a JSON formatted dictionary with the data requested by the user, extracted from the [JRC CbM database](setup_database.md) or from the Sentinel images stored in the DIAS object storage. In the documentation pages you find the available queries with use examples.  
 
 In the [Time series documentation page](api_ts.md), you can see an example of the use of the *parcelByLocation* command to find a parcel ID for a given geographical location, *parcelTimeSeries* to get the signature time series for a parcel ID, and *parcelPeers* to retrieve parcels with the same crop type as the reference parcel within a certain distance. The documentation shows how to integrate these RESTful queries in a Python script to generate products such as graphs.  
 

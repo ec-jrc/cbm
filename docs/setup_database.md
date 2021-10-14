@@ -130,8 +130,8 @@ The primary goal of the JRC CbM database is to store and make available the time
 Parcels, signatures and histograms are year-specific because parcels change every year. The year used as suffix in the names is thus related to the year of the parcel definition, not to the year of the Sentinel data. For example, for the parcels declared in 2020 it is possible to extract the complete set of Sentinel 2 from 2016). The *dias_catalogue* table is not "timestamped" because it contains information about satellite images for all years. The evolution of parcels can be potentially tracked with a object-oriented versioned approach where only changing elements are recorded keeping track of all the history giving the possibility of queering both current and history record. This solution has not been implemented in the JRC CbM system.  
 In the Outreach database, a single *dias_catalogue* table for all countries is generated and another table (*aois*) stores the information about pilot areas, particularly their extension.  
 In the JRC CbM database, tables are organized in schemas. The general tables (e.g. *dia_catalogue*) are stored in the *public* schema. The other working tables are stored in a specific schema. In the case of the Outreach project, the country specific tables (parcels, signatures, histograms) are stored in a dedicated schema identified by the [2-letters ISO code](https://en.wikipedia.org/wiki/ISO_3166-1) of each country (for example *hr* in case of Hungary). When multiple Paying Agencies of the same Member State are joining, two additional letters are used to identify the PA. In this way it is easy to move data if the database has to be transferred to another local or cloud-based system.  
-The corresponding database data model (i.e. the conceptual representation of the real world in the structures of a relational database: tables and their relationships) in form of a simplified Entity-Relationship (ER) diagram is illustrated in Figure 1. It describes what types of data are stored and how they are organised. Columns used as primary key are indicated in bold and external keys are represented as connecting lines between tables. For each column is also indicated the data type.
-
+The corresponding database data model (i.e. the conceptual representation of the real world in the structures of a relational database: tables and their relationships) in form of a simplified Entity-Relationship (ER) diagram is illustrated in Figure 1. It describes what types of data are stored and how they are organised. Columns used as primary key are indicated in bold and external keys are represented as connecting lines between tables. For each column is also indicated the data type.  
+![](/docs/img/jrc_cbm_datamodel_core.png)  
 ![](/img/jrc_cbm_datamodel_core.png)  
 Figure 1. Outreach database data model (core tables)
 
@@ -174,7 +174,7 @@ Only a limited set of information is provided here. Practical demonstrations are
 PgAdmin is not the only client that you can use to manipulate data and objects in the database. An alternative to PgAdmin for database management is for example [dBeaver](https://dbeaver.io/download/) (Community version), which is also very useful for generating ER diagrams.
 Note that when you open PgAdmin for the first time, it asks you to create a password. This is not the password for accessing the databases, but only the password for accessing PgAdmin (since PgAdmin stores all database access passwords internally).  
 The PgAdmin interface is organised into 5 main sections (see Figure 2). The display of the elements can be optimised through the customisation options.  
-
+![](/docs/img/pgadmin_panels.png)  
 ![](/img/pgadmin_panels.png)   
 Figure 2. PgAdmin interface (numbers correspond to the description given below)
 
@@ -188,7 +188,7 @@ The 5 sections (or panels) are:
 Each part is used to perform different types of management tasks. The most common example of an operation is selecting a database object in the tree menu of panel 4 (e.g. a table) and displaying it in panel 5 (tab contents). The *Help* buttons in the bottom left-hand corner of each dialogue box open the online help for that box. Additional information can be accessed by navigating through the Help menu.  
 
 To create a connection to a database, select *Object/Create/Server* from the menu (or right-click on the Server icon in the menu and select *Create/Server*). A window opens in which the connection parameters must be entered. On the *General* tab you only need to enter a name (any name) for the connection. In the tab *Connection* you have to enter the IP address of the server, the port, the user and the password (see Figure 3).  
-
+![](/docs/img/connection_server.png)  
 ![](/img/connection_server.png)  
 Figure 3. Creating a connection to a database server  
 
@@ -203,8 +203,8 @@ There is an alternative to PgAdmin that does not require the installation of any
 ### QGIS
 PostgreSQL/PostGIS itself offers no tool for spatial data visualization, but this can be done by a number of client applications, in particular GIS desktop software like QGIS (a powerful and complete open source software). It offers all the functions needed to deal with spatial data and offers many tools specifically for managing and visualizing PostGIS data. Connecting to the database is pretty simple and the process is well documented. Data can be accessed in three steps: 1) create a connection to the db (the first time that you connect to the db, see Figure 4) using the database access parameters, 2) open the connection, 3) get the data.  
 Once the connection is created, you can use the dedicated DB Manager interface to explore, preview, visualize in the main canvas and also export spatial data (both vector and raster).
-
-![](/img/qgis_connection.png)   
+![](/docs/img/qgis_connection.png)  
+![](/img/qgis_connection.png)  
 Figure 4. Connecting with the database from QGIS
 
 ### Jupiter Notebook
