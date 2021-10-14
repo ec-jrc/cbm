@@ -17,12 +17,12 @@ In this section of the [JRC Checks by Monitoring (CbM) DOCUMENTATION](dias4cbm_i
 
 1. [CONFIGURE DIAS VIRTUAL MACHINES](setup_prerequisites.md)  
 2. [REQUIRED SOFTWARE](setup_software.md)
-3. **GENERATE CARD** - Work in progress
+3. GENERATE CARD - Work in progress
 4. [INTRODUCTION TO THE CbM DATABASE](setup_database.md)  
-5. **CREATE THE DATABASE STRUCTURE** - Work in progress  
+5. CREATE THE DATABASE STRUCTURE - Work in progress  
 6. [POPULATE THE DATABASE](setup_prepare.md)  
 7. [EXTRACT SIGNATURE TIME SERIES](setup_db_extract.md)
-8. [BACK UP THE DATABASE](setup_db_backup.md) 
+8. [BACK UP THE DATABASE](setup_db_backup.md)
 9. [BUILD THE RESTful API](setup_build_api.md)  
 
 ## TASKS description
