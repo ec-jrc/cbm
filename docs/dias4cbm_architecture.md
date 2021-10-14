@@ -1,10 +1,10 @@
 # JRC CbM system architecture
 
-The objective of these pages, as part of the [JRC Checks by Monitoring (CbM) DOCUMENTATION](dias4cbm_intro.md), is to describe the **general logic, concepts and elements of the JRC CbM architecture** to all the experts of the Paying Agencies (system administrators, analysts, decision makers, project managers and consultants) to help them to assess and plan its operational implementation. It is first step to understand the approach and the software solutions proposed. The technical details of JRC CbM are discussed in the [TECHNICAL DOCUMENTATION](https://jrc-cbm.readthedocs.io/) and the code is made available in the [JRC CbM GitHub space](https://github.com/ec-jrc/cbm/).  
+The objective of these pages, as part of the [JRC CbM GENERAL DOCUMENTATION](dias4cbm_intro.md), is to provide an overview on **logic, concepts and elements of the JRC CbM architecture** to all the experts of the Paying Agencies (system administrators, analysts, decision makers, project managers and consultants). The aim is to help them to understand the approach and the software solutions proposed and assess and plan its operational implementation. The technical details of JRC CbM are discussed in the [TECHNICAL DOCUMENTATION](https://jrc-cbm.readthedocs.io/) and the code is made available in the [JRC CbM GitHub space](https://github.com/ec-jrc/cbm/).  
 
 In the first section (CbM system requirements) of this CbM architecture overview, we analyse the requirements of a CbM system. In the second section (JRC CbM implementation), we describe the software platform that we created to implement them. In the last section (JRC CbM roles), we provide additional information on the different roles in the system. The numbers in the table of contents correspond to the marks in [Figure 1](#figure1) (Section 1) and [Figure 2](#figure2) (section 2).
 
-### Content
+### Table of contents
 
 * [CbM system requirements](#cbm-system-requirements)
   * [Scope of the CbM system](#scope-of-the-cbm-system)  
@@ -69,8 +69,8 @@ In addition to an intermediate layer to access the CbM data, analysts and final 
 The JRC CbM implements the architecture shown in [Figure 1](#figure1) according to the requirements discussed in the previous section. It is a tailored solution based on the specific set of tools indicated in [Figure 2](#figure2) and described below. Software modules selected are all open source and make use of open standards. The code created by JRC is open source and available in the [JRC CbM GitHub repository](https://github.com/ec-jrc/cbm/).  
 The same structure can be operationalized using other software with similar functionalities if the system has to be integrated in an already existing infrastructure. JRC CbM is designed on a cloud-centric basis, but can also be adapted to run stand-alone.  
 
-![](/docs/img/cbm_dias_software.png)  
- <a name="figure2">Figure 2.</a> JRC CbM software platform (*click on the image to enlarge*)
+![](/img/cbm_dias_software.png)  
+ <a name="figure2">Figure 2.</a> JRC CbM software platform
 
 ### Overview
 In the JRC CbM, satellite data are made available in the Object Storage of the [Copernicus Data and Information Access Services (DIAS)](https://www.copernicus.eu/en/access-data/dias) infrastructure and processed in that environment by Python-based modules. The base layers are stored in a spatial database based on PostgreSQL/PostGIS installed in the DIAS server, inside the same environment of the satellite image archive. The server is set up and managed using Ubuntu, Docker and OpenStack. Data access is filtered by a RESTful API that feed the user's interface, based on Jupiter Notebook and Voilà.  
@@ -98,7 +98,7 @@ The DIAS Virtual Machines (VMs) are managed using Linux as operating system ([Ub
 As a first step, we use Openstack resources "marshalling". [OpenStack](https://www.openstack.org/) is a free, open standard cloud computing platform. It is deployed as infrastructure as a service where virtual servers and other resources are made available to users. It scales horizontally and is designed to scale on hardware without specific requirements.  
 In a second step, we "orchestrate" the resources to execute parallel tasks (for example parcel and chip extraction). We use Docker containerization to ease cross-VM installation. [Docker](https://www.docker.com/) is an open platform for developing, shipping, and running applications. It uses OS-level virtualization to deliver software in packages called containers. Containers are isolated from one another and bundle their own software, libraries and configuration files. They can communicate with each other through well-defined channels. Docker enables to separate applications from the infrastructure so that the infrastructure can be managed in the same ways you manage the applications. Docker containers behave like specialized VMs. We use Docker Swarm as container orchestration tool, meaning that it allows us to manage multiple containers deployed across multiple host machines. Figure 3 shows the Copernicus DIAS IaaS architecture.
 
-![](https://github.com/ec-jrc/cbm/blob/main/docs/img/DIAS_IaaS.png)  
+![](/img/DIAS_IaaS.png)  
 Figure 3. Copernicus DIAS Infrastructures as a Service (*click on the image to enlarge*).  
 
 ### Object storage  
@@ -145,7 +145,7 @@ Direct access to a DIAS account that has the credentials to access the various d
 
 In the JRC CbM system, the frontend access the backend data sets though a RESTful API. A RESTful API is an application programming interface (API) that conforms to the constraints of REST architectural style. An [API](https://en.wikipedia.org/wiki/API) is a set of definitions and protocols for communicating what you want to that system so it can understand and fulfil the request (sse Figure 4). [REST](https://en.wikipedia.org/wiki/Representational_state_transfer) stands for representational state transfer. It is an architectural style for distributed hypermedia systems: it defines a set of constraints for how the architecture of an Internet-scale distributed hypermedia system should behave. An essential character of the RESTful services is that they follow standard calling conventions, which allow their use both in interactive testing and scriptable machine access. RESTful services are further described in [the documentation pages on RESTful service use](api_ts.md) and subsequent pages.  
 
-![](https://github.com/ec-jrc/cbm/blob/main/docs/img/rest_api.png)  
+![](/img/rest_api.png)  
 Figure 4. Schema of the interaction between users and the database through the RESTful API   
 
 In the JRC CbM system, the RESTful API provides:
@@ -180,6 +180,6 @@ JRC CbM considers roles. Not all roles need to work with all modules. The are th
 * Data consumers (frontend) extract, cross-check, verify, combine, decide and report.  
 
 The three roles roughly correspond to the three main task categories. You can find more information on the related documentation pages:
-* [System development](dias4cbm_setup.md)
-* [Data analysis](dias4cbm_analysis.md)
-* [Data use](dias4cbm_use.md)
+* [SYSTEM DEVELOPMENT](dias4cbm_setup.md)
+* [DATA ANALYSIS](dias4cbm_analysis.md)
+* [DATA USE](dias4cbm_use.md)
