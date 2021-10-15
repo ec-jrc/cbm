@@ -7,7 +7,9 @@
    :caption: Introduction
 
    dias4cbm_intro
-
+   dias4cbm_architecture
+   dias4cbm_setup
+   dias4cbm_analysis
 
 .. toctree::
    :maxdepth: 3
