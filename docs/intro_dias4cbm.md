@@ -3,7 +3,7 @@
 
 ## DIAS for CAP checks by monitoring (CbM)
 
-The “Data and Information Access Systems” (DIAS) are the European Union’s Copernicus program element funding the deployment of five cloud-based platforms  providing  centralised  access  to  Copernicus  data  and  information,  as  well as to processing tools. Four DIAS instances (CREODIAS, MUNDI, ONDA and SOBLOO), managed under contract with the European Space Agency (ESA), became operational in 2018 and provide access, amongst others, to high resolution Sentinel-1 and Sentinel-2. The fifth is managed by EUMETSAT, and became operational in late 2019.
+The “Data and Information Access Systems” (DIAS) are the European Union’s Copernicus program element funding the deployment of five cloud-based platforms  providing  centralised  access  to  Copernicus  data  and  information,  as  well as to processing tools. Four DIAS instances (CREODIAS, MUNDI, ONDA and SOBLOO), managed under contract with the European Space Agency (ESA), became operational in 2018 and provide access, amongst others, to high resolution Sentinel-1 and Sentinel-2. The fifth is managed by EUMETSAT, and became operational in late 2019.  
 ![DIAS](https://www.copernicus.eu/sites/default/files/DIAS_0.jpg)
 
 In support to Member States (MS) opting for “CAP checks by monitoring” (CAP-CbM) starting in 2019, DIAS accounts are provided to demonstrate the processing requirements for Sentinel-1 and -2 data. Each DIAS implements access to the full archive of Sentinel data [for Europe] and provides computing resources in a cloud environment, which are closely coupled with the data store. Thus, processing to the required level of analysis and further data extraction and analysis can be run on the DIAS cloud platforms. The obvious advantage of such a set-up is in:
@@ -12,7 +12,7 @@ In support to Member States (MS) opting for “CAP checks by monitoring” (CAP-
 * and the possibility to create modular processing pipelines, that are tailored to the specific needs of CbM and the technical capacities of the end user.
 
 
-The DIAS contracts finance the establishment and maintenance of this core computing and storage infrastructure. The actual DIAS use by end users, such as MS Paying Agencies (PA), or any other public or private user, is managed through DIAS accounts, i.e. subscription services that are costed on the basis of actual use of computing resources (e.g. CPU time, data transfer, additional storage requirements, etc.).
+The DIAS contracts finance the establishment and maintenance of this core computing and storage infrastructure. The actual DIAS use by end users, such as MS Paying Agencies (PA), or any other public or private user, is managed through DIAS accounts, i.e. subscription services that are costed on the basis of actual use of computing resources (e.g. CPU time, data transfer, additional storage requirements).
 
 In the context of CAP CbM, DG AGRI together with DG DEFIS (the Copernicus program managers, previously known as DG GROW) have decided to fund the DIAS onboarding of Member State PA’s in 2019 and 2020 through ESA work orders. In 2019, the work orders were structured in 3 phases: (1) technical readiness review (2) onboarding MS PA on one of the DIAS instances and (3) operational use of the DIAS in the 2019 CAP CbM. In 2020, the first 2 phases are no longer required, and, based on the experience built up in 2019, onboarding MS can jump directly into the operational phase.
 
