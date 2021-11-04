@@ -36,6 +36,7 @@ app.config['SWAGGER'] = {
 }
 app.config["MS_FILES"] = 'ms_files'
 app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['HOST_URL'] = "https://cap.users.creodias.eu"
 
 # Enable upload page (http://HOST/upload).
 UPLOAD_ENABLE = True  # True or False
@@ -47,6 +48,8 @@ datasets = db_queries.get_datasets()
 try:
     import flask_monitoringdashboard as dashboard
     dashboard.bind(app)
+    dashboard.config.init_from(file='dashboard.cfg')
+
 except Exception:
     print("!ERROR! Can not start dashboard.")
 
@@ -136,6 +139,13 @@ class CustomJsonEncoder(json.JSONEncoder):
         return super(CustomJsonEncoder, self).default(obj)
 
 
+def get_user_id():
+    return user
+
+
+dashboard.config.group_by = get_user_id
+
+
 @app.route('/query/', methods=['GET'])
 @auth_required
 def query():
@@ -164,17 +174,16 @@ def options():
         return str(err)
 
 
-# -------- Queries - Chip Images --------------------------------------------- #
-
-
 @app.route('/dump/<unique_id>/<png_id>')
 # @auth_required
 def dump(unique_id, png_id):
     try:
-        return send_from_directory(f"files/dump/{unique_id}", png_id)
+        return send_from_directory(f"chip_extract/dump/{unique_id}", png_id)
     except FileNotFoundError:
         abort(404)
 
+
+# -------- Queries - Background Images --------------------------------------- #
 
 @app.route('/query/backgroundByLocation', methods=['GET'])
 @auth_required
@@ -218,17 +227,17 @@ def backgroundByLocation_query():
     if 'iformat' in request.args.keys():
         iformat = request.args.get('iformat')
     else:
-        iformat = 'tif'
+        iformat = 'png'
 
     unique_id = f"static/dump/{rip}E{lon}N{lat}_{chipsize}_{chipextend}_{tms}".replace(
         '.', '_')
 
     data = image_requests.getBackgroundByLocation(
-        lon, lat, chipsize, chipextend, tms, unique_id, iformat)
+        lon, lat, chipsize, chipextend, tms, unique_id, iformat, False)
 
     if data:
-        if 'raw' in request.args.keys():
-            return f"{request.host_url}{unique_id}/{tms.lower()}.{iformat}"
+        if 'raw' in request.args.keys() or iformat == 'tif':
+            return f"{app.config['HOST_URL']}/{unique_id}/{tms.lower()}.{iformat}"
         else:
             flist = glob.glob(f"{unique_id}/{tms.lower()}.{iformat}")
             full_filename = url_for(
@@ -263,6 +272,7 @@ def backgroundByID_query():
     year = request.args.get('year')
     pid = request.args.get('pid')
     dataset = datasets[f'{aoi}_{year}']
+    withGeometry = False
 
     if 'ptype' in request.args.keys():
         ptype = f"_{request.args.get('ptype')}"
@@ -289,16 +299,22 @@ def backgroundByID_query():
     if 'iformat' in request.args.keys():
         iformat = request.args.get('iformat')
     else:
-        iformat = 'tif'
+        iformat = 'png'
+
+    if 'withGeometry' in request.args.keys():
+        if request.args.get('withGeometry') == 'True':
+            withGeometry = [aoi, year, pid, ptype]
+        else:
+            withGeometry = False
 
     unique_id = f"static/dump/{rip}E{lon}N{lat}_{chipsize}_{chipextend}_{tms}".replace(
         '.', '_')
 
     data = image_requests.getBackgroundByLocation(
-        lon, lat, chipsize, chipextend, tms, unique_id, iformat)
+        lon, lat, chipsize, chipextend, tms, unique_id, iformat, withGeometry)
 
     if data:
-        if 'raw' in request.args.keys():
+        if 'raw' in request.args.keys() or iformat == 'tif':
             return f"{unique_id}/{tms.lower()}.{iformat}"
         else:
             flist = glob.glob(f"{unique_id}/{tms.lower()}.{iformat}")
@@ -308,6 +324,8 @@ def backgroundByID_query():
     else:
         return json.dumps({})
 
+
+# -------- Queries - Chip Images --------------------------------------------- #
 
 @app.route('/query/chipsByLocation', methods=['GET'])
 @auth_required
@@ -359,7 +377,7 @@ def chipsByLocation_query():
         lon, lat, start_date, end_date, unique_id, lut, bands, plevel)
 
     if data:
-        return send_from_directory(f"files/{unique_id}", 'dump.html')
+        return send_from_directory(f"chip_extract/{unique_id}", 'dump.html')
     else:
         return json.dumps({})
 
@@ -385,34 +403,132 @@ def chipsByParcelId_query():
     else:
         rip = request.environ['HTTP_X_FORWARDED_FOR']
 
-    aoi = request.args.get('aoi')
+    aoi = DEFAULT_AOI
+    ptype = ''
+    withGeometry = False
+    wgs84 = False
+    year = request.args.get('year')
     pid = request.args.get('pid')
+
+    if 'ptype' in request.args.keys():
+        ptype = f"_{request.args.get('ptype')}"
+
+    if 'aoi' in request.args.keys():
+        aoi = request.args.get('aoi')
+
+    dataset = datasets[f'{aoi}_{year}']
+    pdata = db_queries.getParcelById(dataset, pid, ptype, withGeometry, wgs84)
+    if not pdata:
+        parcel = json.dumps({})
+    elif len(pdata) == 1:
+        parcel = json.dumps(dict(zip(list(pdata[0]),
+                                     [[] for i in range(len(pdata[0]))])))
+    else:
+        parcel = json.dumps(dict(zip(list(pdata[0]),
+                                     [list(i) for i in zip(*pdata[1:])])))
+
+    lon = str(json.loads(parcel)['clon'][0])
+    lat = str(json.loads(parcel)['clat'][0])
+
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
 
-    if 'lut' in request.args.keys():
-        lut = request.args.get('lut')
-    else:
-        lut = '5_95'
-
-    if 'bands' in request.args.keys():
-        bands = request.args.get('bands')
-    else:
-        bands = 'B08_B04_B03'
+    band = request.args.get('band')
 
     if 'plevel' in request.args.keys():
         plevel = request.args.get('plevel')
     else:
         plevel = 'LEVEL2A'
 
-    unique_id = f"dump/{rip}_{aoi}_{pid}_{lut}_{plevel}_{bands}".replace(
+    if 'chipsize' in request.args.keys():
+        chipsize = request.args.get('chipsize')
+    else:
+        chipsize = '1280'
+
+    unique_id = f"dump/{rip}E{lon}N{lat}_{plevel}_{chipsize}_{band}".replace(
         '.', '_')
 
-    data = image_requests.getChipsByParcelId(aoi, pid, start_date, end_date,
-                                             unique_id, lut, bands, plevel)
+    data = image_requests.getRawChipByLocation(
+        lon, lat, start_date, end_date, unique_id, band, chipsize, plevel)
 
     if data:
-        return send_from_directory(f"files/{unique_id}", 'dump.html')
+        return send_from_directory(f"chip_extract/{unique_id}", 'dump.json')
+    else:
+        return json.dumps({})
+
+
+@app.route('/query/rawChipByParcelID', methods=['GET'])
+@auth_required
+def rawChipByParcelID_query():
+    """
+    Get chips images by parcel ID.
+    Generates a series of extracted Sentinel-2 LEVEL2A segments of 128x128 (10m
+    resolution bands) or 64x64 (20 m) pixels as list of full resolution GeoTIFFs
+    _
+    tags:
+      - rawChipByLocation
+    responses:
+      200:
+        description: A JSON dictionary with date labels and
+        relative URLs to cached GeoTIFFs.
+    """
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+    # Start by getting the request IP address
+    if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
+        rip = request.environ['REMOTE_ADDR']
+    else:
+        rip = request.environ['HTTP_X_FORWARDED_FOR']
+
+    aoi = DEFAULT_AOI
+    ptype = ''
+    withGeometry = False
+    wgs84 = False
+    year = request.args.get('year')
+    pid = request.args.get('pid')
+
+    if 'ptype' in request.args.keys():
+        ptype = f"_{request.args.get('ptype')}"
+
+    if 'aoi' in request.args.keys():
+        aoi = request.args.get('aoi')
+
+    dataset = datasets[f'{aoi}_{year}']
+    pdata = db_queries.getParcelById(dataset, pid, ptype, withGeometry, wgs84)
+    if not pdata:
+        parcel = json.dumps({})
+    elif len(pdata) == 1:
+        parcel = json.dumps(dict(zip(list(pdata[0]),
+                                     [[] for i in range(len(pdata[0]))])))
+    else:
+        parcel = json.dumps(dict(zip(list(pdata[0]),
+                                     [list(i) for i in zip(*pdata[1:])])))
+
+    lon = str(json.loads(parcel)['clon'][0])
+    lat = str(json.loads(parcel)['clat'][0])
+
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+
+    band = request.args.get('band')
+
+    if 'plevel' in request.args.keys():
+        plevel = request.args.get('plevel')
+    else:
+        plevel = 'LEVEL2A'
+
+    if 'chipsize' in request.args.keys():
+        chipsize = request.args.get('chipsize')
+    else:
+        chipsize = '1280'
+
+    unique_id = f"dump/{rip}E{lon}N{lat}_{plevel}_{chipsize}_{band}".replace(
+        '.', '_')
+
+    data = image_requests.getRawChipByLocation(
+        lon, lat, start_date, end_date, unique_id, band, chipsize, plevel)
+
+    if data:
+        return send_from_directory(f"chip_extract/{unique_id}", 'dump.json')
     else:
         return json.dumps({})
 
@@ -421,7 +537,7 @@ def chipsByParcelId_query():
 @auth_required
 def rawChipByLocation_query():
     """
-    Get chips images by parcel id.
+    Get chips images by parcel location.
     Generates a series of extracted Sentinel-2 LEVEL2A segments of 128x128 (10m
     resolution bands) or 64x64 (20 m) pixels as list of full resolution GeoTIFFs
     _
@@ -464,10 +580,101 @@ def rawChipByLocation_query():
         lon, lat, start_date, end_date, unique_id, band, chipsize, plevel)
 
     if data:
-        return send_from_directory(f"files/{unique_id}", 'dump.json')
+        return send_from_directory(f"chip_extract/{unique_id}", 'dump.json')
     else:
         return json.dumps({})
 
+
+# -------- Queries - raw Chip Images Batch ----------------------------------- #
+
+@app.route('/query/rawChipsBatch', methods=['POST'])
+@auth_required
+def rawChipsBatch_query():
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+    # Start by getting the request IP address
+    if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
+        rip = request.environ['REMOTE_ADDR']
+    else:
+        rip = request.environ['HTTP_X_FORWARDED_FOR']
+
+    required = ["lon", "lat", "tiles", "bands", "chipsize"]
+
+    if request.is_json:
+        params = request.get_json()
+
+        i = 0
+        for k in params.keys():
+            if k not in required:
+                return json.dumps({"error": f"{k} not allowed as key"})
+            else:
+                i += 1
+        if i != len(required):
+            return json.dumps({"error": f"{i} parameters supplied, {len(required)} required"})
+
+    unique_id = f"dump/{rip}_{params.get('lon')}_{params.get('lat')}_{params.get('chipsize')}_RAW".replace(
+        '.', '_')
+    logger.info(unique_id)
+
+    if not os.path.exists(f"chip_extract/{unique_id}"):
+        logger.info("Creating dir")
+        os.makedirs(f"chip_extract/{unique_id}")
+
+    with open(f"chip_extract/{unique_id}/params.json", "w") as sink:
+        logger.info("Dumping params")
+        sink.write(json.dumps(params))
+
+    data = image_requests.getRawChipsBatch(unique_id)
+
+    if data:
+        return send_from_directory(f"chip_extract/{unique_id}", 'dump.json')
+    else:
+        return json.dumps({})
+
+
+@app.route('/query/rawS1ChipsBatch', methods=['POST'])
+@auth_required
+def rawS1ChipsBatch_query():
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+    # Start by getting the request IP address
+    if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
+        rip = request.environ['REMOTE_ADDR']
+    else:
+        rip = request.environ['HTTP_X_FORWARDED_FOR']
+
+    required = ["lon", "lat", "dates", "chipsize", "plevel"]
+
+    if request.is_json:
+        params = request.get_json()
+
+        i = 0
+        for k in params.keys():
+            if k not in required:
+                return json.dumps({"error": f"{k} not allowed as key"})
+            else:
+                i += 1
+        if i != len(required):
+            return json.dumps({"error": f"{i} parameters supplied, {len(required)} required"})
+
+    unique_id = f"dump/{rip}_{params.get('lon')}_{params.get('lat')}_{params.get('chipsize')}_{params.get('plevel')}_RAW".replace('.', '_')
+    logger.info(unique_id)
+
+    if not os.path.exists(f"chip_extract/{unique_id}"):
+        logger.info("Creating dir")
+        os.makedirs(f"chip_extract/{unique_id}")
+
+    with open(f"chip_extract/{unique_id}/params.json", "w") as sink:
+        logger.info("Dumping params")
+        sink.write(json.dumps(params))
+
+    data = image_requests.getRawS1ChipsBatch(unique_id)
+
+    if data:
+        return send_from_directory(f"chip_extract/{unique_id}", 'dump.json')
+    else:
+        return json.dumps({})
+
+
+# -------- Queries - Parcel Peers -------------------------------------------- #
 
 @app.route('/query/parcelPeers', methods=['GET'])
 @auth_required
