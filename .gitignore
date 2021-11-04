@@ -1,16 +1,23 @@
 # itignore CbM files
 
+# CbM General
+config/*
+
+# RESTful API
+api/static/dump/*
+api/ms_files/*
+api/uploads/*
+api/logs/*
 api/tms/*
 !api/tms/google_tms.xml
 !api/tms/bing_tms.xml
 
 api/core
 api/gunicorn
-api/static/dump/
 api/config/users.json
 api/config/data_auth.json
 
-config/*
+# Notebooks folder
 ipynb/temp/*
 ipynb/config/*
 ipynb/data/*
@@ -18,6 +25,10 @@ ipynb/*/temp/*
 ipynb/*/config/*
 ipynb/*/data/*
 ipynb/test*
+
+# Dashboard
+api/flask_monitoringdashboard.db
+api/config/dashboard.cfg
 
 # ---> Python
 # Byte-compiled / optimized / DLL files
