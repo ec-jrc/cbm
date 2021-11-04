@@ -14,8 +14,6 @@ from scripts import rawChipBatchExtract as rceb
 from scripts import rawChipExtractor as rce
 from scripts import rawS1ChipBatchExtract as rces1
 
-aois_table = 'public.aois'
-dias_cat_table = 'public.dias_catalogue'
 
 # logging.basicConfig(filename='logs/queryHandler.log', filemode='w',
 #                     format='%(name)s - %(levelname)s - %(message)s',
@@ -25,12 +23,12 @@ dias_cat_table = 'public.dias_catalogue'
 # Parcel Images
 
 def getBackgroundByLocation(lon, lat, chipsize, chipextend, tms,
-                            unique_id, iformat):
+                            unique_id, iformat, withGeometry):
     try:
         logging.debug(unique_id)
         logging.debug(f"{unique_id} {iformat}")
-        bgext.getWindowedExtract(lon, lat, chipsize, chipextend,
-                                 unique_id, tms, iformat)
+        bgext.getBackgroundExtract(lon, lat, chipsize, chipextend,
+                                   unique_id, tms, iformat, withGeometry)
         return True
     except Exception as err:
         print(err)
