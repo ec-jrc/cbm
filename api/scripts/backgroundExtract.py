@@ -27,8 +27,8 @@ from rasterio.transform import Affine
 from osgeo import osr, ogr
 
 
-def getWindowedExtract(lon, lat, chipSize, chipExtend, unique_dir,
-                       tms="Google", format='tif'):
+def getBackgroundExtract(lon, lat, chipSize, chipExtend, unique_dir,
+                         tms="Google", iformat='tif', withGeometry=False):
     """Generate an extract from either Google or Bing.
     It uses the WMTS standard to grab and compose,
     which makes it fast (does not depend on DIAS S3 store).
@@ -38,7 +38,7 @@ def getWindowedExtract(lon, lat, chipSize, chipExtend, unique_dir,
         chipExtend (float): size of the chip in meters
         unique_dir (str): the path for the file to be stored
         tms (str): tile map server
-        format (str): File format '.tif' or '.png'
+        iformat (str): File format '.tif' or '.png'
     """
     lon, lat = float(lon), float(lat)
     chipSize = int(chipSize)
@@ -96,7 +96,7 @@ def getWindowedExtract(lon, lat, chipSize, chipExtend, unique_dir,
             transform = Affine.translation(
                 west + res / 2, north - res / 2) * Affine.scale(res, -res)
 
-            if format == 'tif':
+            if iformat == 'tif':
                 chipset = rio.open(f"{unique_dir}/{tms.lower()}.tif", 'w',
                                    driver='GTiff',
                                    width=output_dataset.shape[2],
@@ -106,7 +106,7 @@ def getWindowedExtract(lon, lat, chipSize, chipExtend, unique_dir,
                                    transform=transform,
                                    dtype=TMS_dataset.profile['dtype']
                                    )
-            elif format == 'png':
+            elif iformat == 'png':
                 chipset = rio.open(f"{unique_dir}/{tms.lower()}.png", 'w',
                                    driver='PNG',
                                    width=output_dataset.shape[2],
@@ -118,9 +118,47 @@ def getWindowedExtract(lon, lat, chipSize, chipExtend, unique_dir,
                                    )
             else:
                 return False
-
             chipset.write(output_dataset)
             chipset.close()
+            if withGeometry and iformat == 'png':
+                from copy import copy
+                from rasterio.plot import show
+                import matplotlib.pyplot as plt
+                from descartes import PolygonPatch
+
+                from scripts import spatial_utils
+                from scripts import db_queries
+
+                def overlay_parcel(img, geom):
+                    """Create parcel polygon overlay"""
+                    patche = [PolygonPatch(feature, edgecolor="yellow",
+                                           facecolor="none", linewidth=2
+                                           ) for feature in geom['geom']]
+                    return patche
+                datasets = db_queries.get_datasets()
+                aoi, year, pid, ptype = withGeometry
+                dataset = datasets[f'{aoi}_{year}']
+                pdata = db_queries.getParcelById(dataset, pid, ptype,
+                                                 withGeometry, False)
+                if len(pdata) == 1:
+                    parcel = dict(zip(list(pdata[0]),
+                                      [[] for i in range(len(pdata[0]))]))
+                else:
+                    parcel = dict(zip(list(pdata[0]),
+                                      [list(i) for i in zip(*pdata[1:])]))
+
+                with rio.open(f"{unique_dir}/{tms.lower()}.png") as img:
+                    geom = spatial_utils.transform_geometry(parcel, 3857)
+                    patches = overlay_parcel(img, geom)
+                    for patch in patches:
+                        fig = plt.figure()
+                        ax = fig.gca()
+                        plt.axis('off')
+                        plt.box(False)
+                        ax.add_patch(copy(patch))
+                        show(img, ax=ax)
+                        plt.savefig(f"{unique_dir}/{tms.lower()}.png",
+                                    bbox_inches='tight')
             return True
     else:
         return False
