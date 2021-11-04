@@ -72,7 +72,7 @@ def swap_xy(indata):
             for sub_geom in geom['coordinates'][0]:
                 geom_list.append([swap_xy_coords(coords)
                                   for coords in sub_geom])
-                geom['coordinates'] = geom_list
+                geom['coordinates'] = [geom_list]
         else:
             raise ValueError("Type {geom['type']} not recognized")
         if 'geom' in indata:
