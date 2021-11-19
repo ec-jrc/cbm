@@ -527,3 +527,22 @@ def get_datasets():
             json.dump(json.loads(datasets), outfile, indent=4)
         print("The datasets.json file did not exist, a new file was created.")
         return json.loads(datasets)
+
+
+def pids(dataset, limit=1, ptype='', random=False):
+    conn = db.conn(dataset['db'])
+
+    if random:
+        randomSql = "TABLESAMPLE SYSTEM(0.1)"
+    else:
+        randomSql = ""
+
+    getSql = f"""
+        SELECT {dataset['pcolumns']['parcel_id']}
+        FROM {dataset['tables']['parcels']}{ptype}
+        {randomSql} LIMIT {limit};
+    """
+    # Read result set into a pandas dataframe
+    df = pd.read_sql_query(getSql, conn)
+
+    return df
