@@ -1,0 +1,18 @@
+paths:
+  parcelTimeSeries:
+    get:
+      operationId: parcelTimeSeries
+      tags:
+        - Parcel Time Series
+      summary: Get parcel signatures extraction time series by parcel ID.
+      parameters:
+        - $ref: "params.yaml#/components/parameters/aoi"
+        - $ref: "params.yaml#/components/parameters/year"
+        - $ref: "params.yaml#/components/parameters/pid"
+        - $ref: "params.yaml#/components/parameters/ptype"
+        - $ref: "params.yaml#/components/parameters/tstype"
+        - $ref: "params.yaml#/components/parameters/scl"
+        - $ref: "params.yaml#/components/parameters/ref"
+      responses:
+        200:
+          description: Parcel time series for the given parcel ID in json format.

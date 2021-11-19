@@ -1,0 +1,40 @@
+paths:
+  rawChipByParcelID:
+    get:
+      operationId: rawChipByParcelID
+      tags:
+        - Sentinel images
+      summary: Get sentinel images for a parcel by parcel ID.
+      parameters:
+        - $ref: "params.yaml#/components/parameters/aoi"
+        - $ref: "params.yaml#/components/parameters/year"
+        - $ref: "params.yaml#/components/parameters/pid"
+        - $ref: "params.yaml#/components/parameters/ptype"
+        - $ref: "params.yaml#/components/parameters/start_date"
+        - $ref: "params.yaml#/components/parameters/end_date"
+        - $ref: "params.yaml#/components/parameters/band"
+        - $ref: "params.yaml#/components/parameters/chipsize"
+        - $ref: "params.yaml#/components/parameters/plevel"
+      responses:
+        200:
+          description: List of parcel sentinel images for the given parcel ID in json format.
+  rawChipByLocation:
+    get:
+      operationId: rawChipByLocation
+      tags:
+        - Sentinel images
+      summary: Get sentinel images for a parcel by location.
+      parameters:
+        - $ref: "params.yaml#/components/parameters/aoi"
+        - $ref: "params.yaml#/components/parameters/year"
+        - $ref: "params.yaml#/components/parameters/lat"
+        - $ref: "params.yaml#/components/parameters/lon"
+        - $ref: "params.yaml#/components/parameters/ptype"
+        - $ref: "params.yaml#/components/parameters/start_date"
+        - $ref: "params.yaml#/components/parameters/end_date"
+        - $ref: "params.yaml#/components/parameters/band"
+        - $ref: "params.yaml#/components/parameters/chipsize"
+        - $ref: "params.yaml#/components/parameters/plevel"
+      responses:
+        200:
+          description: List of parcel sentinel images for a geographical location in json format.

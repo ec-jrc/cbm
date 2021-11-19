@@ -1,0 +1,38 @@
+paths:
+  backgroundByParcelID:
+    get:
+      operationId: backgroundByParcelID
+      tags:
+        - Background images
+      summary: Get background images for a parcel by parcel ID.
+      parameters:
+        - $ref: "params.yaml#/components/parameters/aoi"
+        - $ref: "params.yaml#/components/parameters/year"
+        - $ref: "params.yaml#/components/parameters/pid"
+        - $ref: "params.yaml#/components/parameters/ptype"
+        - $ref: "params.yaml#/components/parameters/chipsize"
+        - $ref: "params.yaml#/components/parameters/extend"
+        - $ref: "params.yaml#/components/parameters/tms"
+        - $ref: "params.yaml#/components/parameters/iformat"
+      responses:
+        200:
+          description: List of parcel background images for the given parcel ID in json format.
+  backgroundByLocation:
+    get:
+      operationId: backgroundByLocation
+      tags:
+        - Background images
+      summary: Get background images for a parcel by location.
+      parameters:
+        - $ref: "params.yaml#/components/parameters/aoi"
+        - $ref: "params.yaml#/components/parameters/year"
+        - $ref: "params.yaml#/components/parameters/lat"
+        - $ref: "params.yaml#/components/parameters/lon"
+        - $ref: "params.yaml#/components/parameters/ptype"
+        - $ref: "params.yaml#/components/parameters/chipsize"
+        - $ref: "params.yaml#/components/parameters/extend"
+        - $ref: "params.yaml#/components/parameters/tms"
+        - $ref: "params.yaml#/components/parameters/iformat"
+      responses:
+        200:
+          description: List of parcel background images for a geographical location in json format.

@@ -1,0 +1,72 @@
+paths:
+  info:
+    get:
+      operationId: info
+      tags:
+        - Information
+      summary: Get information of the data that is available for the user in json format.
+      responses:
+        200:
+          description: Datasets information and examples.
+  parcelByID:
+    get:
+      operationId: parcelByID
+      tags:
+        - Parcel information
+      summary: Get parcel information by parcel ID.
+      parameters:
+        - $ref: "params.yaml#/components/parameters/aoi"
+        - $ref: "params.yaml#/components/parameters/year"
+        - $ref: "params.yaml#/components/parameters/pid"
+        - $ref: "params.yaml#/components/parameters/ptype"
+        - $ref: "params.yaml#/components/parameters/withGeometry"
+      responses:
+        200:
+          description: Parcel information for the given parcel ID in json format.
+  parcelByLocation:
+    get:
+      operationId: parcelByLocation
+      tags:
+        - Parcel information
+      summary: Get parcel information by location.
+      parameters:
+        - $ref: "params.yaml#/components/parameters/aoi"
+        - $ref: "params.yaml#/components/parameters/year"
+        - $ref: "params.yaml#/components/parameters/lat"
+        - $ref: "params.yaml#/components/parameters/lon"
+        - $ref: "params.yaml#/components/parameters/ptype"
+        - $ref: "params.yaml#/components/parameters/withGeometry"
+      responses:
+        200:
+          description: Parcel information for a geographical location in json format.
+  parcelByPolygon:
+    get:
+      operationId: parcelByPolygon
+      tags:
+        - Parcel information
+      summary: Get parcel information within a poligon.
+      parameters:
+        - $ref: "params.yaml#/components/parameters/aoi"
+        - $ref: "params.yaml#/components/parameters/year"
+        - $ref: "params.yaml#/components/parameters/poly"
+        - $ref: "params.yaml#/components/parameters/ptype"
+        - $ref: "params.yaml#/components/parameters/withGeometry"
+      responses:
+        200:
+          description: Parcel information for a geographical location in json format.
+  parcelPeers:
+    get:
+      operationId: parcelPeers
+      tags:
+        - Parcel information
+      summary: Get parcel information within a poligon.
+      parameters:
+        - $ref: "params.yaml#/components/parameters/aoi"
+        - $ref: "params.yaml#/components/parameters/year"
+        - $ref: "params.yaml#/components/parameters/pid"
+        - $ref: "params.yaml#/components/parameters/ptype"
+        - $ref: "params.yaml#/components/parameters/distance"
+        - $ref: "params.yaml#/components/parameters/maxPeers"
+      responses:
+        200:
+          description: Parcels with the same crop type as the reference within a certain distance.
