@@ -1,0 +1,64 @@
+paths:
+  rawChipsBatch:
+    post:
+      operationId: rawChipsBatch
+      tags:
+        - Sentinel images
+      summary: Get sentinel images for a parcel by location.
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "The cartesian product of selected references and unique bands is returned (e.g. if 4 references and 3 bands are provided as parameters, 12 GeoTIFF chips are produced)."
+          required: true
+          schema:
+            $ref: "#/definitions/batch"
+      responses:
+        200:
+          description: List of parcel sentinel images for a geographical location in json format.
+  rawS1ChipsBatch:
+    post:
+      operationId: rawS1ChipsBatch
+      tags:
+        - Sentinel images
+      summary: Get sentinel images for a parcel by location.
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "The cartesian product of selected references and unique bands is returned (e.g. if 4 references and 3 bands are provided as parameters, 12 GeoTIFF chips are produced)."
+          required: true
+          schema:
+            $ref: "#/definitions/batch"
+      responses:
+        200:
+          description: List of parcel sentinel images for a geographical location in json format.
+definitions:
+  batch:
+    type: object
+    properties:
+      lon:
+        type: number
+        format: float
+      lat:
+        type: number
+        format: float
+      tiles:
+        type: array
+        items:
+            type: string
+      bands:
+        type: array
+        items:
+            type: string
+      chipsize:
+        type: integer
+        format: int64
+    xml:
+      name: batch
