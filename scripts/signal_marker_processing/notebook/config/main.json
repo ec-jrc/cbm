@@ -1,0 +1,265 @@
+{
+    "parcelSource": {
+        "type": "shape",
+        "parcelFile": "MY_PATH/parcels_2020.shp",
+        "fidAttribute": "id"
+    },
+    "dataReaders": [
+        {
+            "type": "rest_s2",
+            "signal": "s2_bands",
+            "connection_options": {
+                "api_user": "",
+                "api_pass": "",
+                "ms": "MS",
+                "year": "2020",
+                "ptype": ""
+            },
+            "cloud_categories": [
+                3,
+                8,
+                9,
+                10,
+                11
+            ]
+        },
+        {
+            "type": "rest_c6",
+            "signal": "coh",
+            "connection_options": {
+                "api_user": "",
+                "api_pass": "",
+                "ms": "MS",
+                "year": "2020",
+                "ptype": ""
+            }
+        },
+        {
+            "type": "rest_bs",
+            "signal": "bs",
+            "connection_options": {
+                "api_user": "",
+                "api_pass": "",
+                "ms": "MS",
+                "year": "2020",
+                "ptype": ""
+            }
+        }
+    ],
+    "pre-processors": [
+        {
+            "outnames": [
+                "ndvi",
+                "b04_b08_b11_st",
+                "band_class"
+            ],
+            "processors": [
+                {
+                    "type": "filter",
+                    "signals": [
+                        "s2_bands"
+                    ],
+                    "components": [
+                        "B03_mean",
+                        "B08_mean",
+                        "B11_mean",
+                        "B04_mean",
+                        "B02_mean",
+                        "B05_mean"
+                    ],
+                    "by": "cloud_pct",
+                    "criterion": "greater",
+                    "threshold": 0.0
+                },
+                {
+                    "type": "index_adder",
+                    "signals": [
+                        "s2_bands"
+                    ],
+                    "components": [
+                        "B08_mean",
+                        "B04_mean"
+                    ],
+                    "as": "ndvi_mean",
+                    "function": "diff_div_by_sum"
+                },
+                {
+                    "type": "band_filter",
+                    "signals": [
+                        "s2_bands"
+                    ],
+                    "components": [
+                        "B08_mean",
+                        "B11_mean",
+                        "B04_mean",
+                        "ndvi_mean"
+                    ],
+                    "excluded_categories": [
+                        "cloudy",
+                        "hazy",
+                        "shady",
+                        "other"
+                    ]
+                }
+            ]
+        },
+        {
+            "outnames": [
+                "coh_compo"
+            ],
+            "processors": [
+                {
+                    "type": "split",
+                    "signals": [
+                        "coh"
+                    ],
+                    "components": [
+                        "VHc_mean",
+                        "VVc_mean"
+                    ],
+                    "by": "orbit"
+                },
+                {
+                    "type": "interp",
+                    "method": "linear",
+                    "Ts": 1
+                },
+                {
+                    "type": "butter_smoother",
+                    "fc": 0.05
+                }
+            ]
+        },
+        {
+            "outnames": [
+                "ndvi_filt"
+            ],
+            "processors": [
+                {
+                    "type": "interp",
+                    "signals": [
+                        "ndvi"
+                    ],
+                    "components": [
+                        "ndvi_mean"
+                    ],
+                    "method": "linear",
+                    "Ts": 1
+                },
+                {
+                    "type": "butter_smoother",
+                    "fc": 0.05
+                }
+            ]
+        },
+        {
+            "outnames": [
+                "b04_b08_b11"
+            ],
+            "processors": [
+                {
+                    "type": "interp",
+                    "signals": [
+                        "b04_b08_b11_st"
+                    ],
+                    "method": "nearest",
+                    "Ts": 1
+                }
+            ]
+        },
+        {
+            "outnames": [
+                "coh_norm"
+            ],
+            "processors": [
+                {
+                    "type": "norm",
+                    "signals": [
+                        "coh_compo"
+                    ],
+                    "normalize": true
+                }
+            ]
+        }
+    ],
+    "marker-detectors": [
+        {
+            "type": "peak-detector",
+            "signals": [
+                "coh_norm"
+            ],
+            "start_date": "2020-04-01",
+            "stop_date": "2020-10-31",
+            "min_duration": 14,
+            "min_increase": 0.08,
+            "filter_by_angle": true,
+            "aggregate": 2
+        },
+        {
+            "type": "drop-detector",
+            "signals": [
+                "ndvi_filt"
+            ],
+            "start_date": "2020-04-01",
+            "stop_date": "2020-10-31",
+            "min_duration": 14,
+            "min_drop": 0.1,
+            "filter_by_angle": true,
+            "aggregate": 2
+        },
+        {
+            "type": "data-gaps",
+            "signals": [
+                "ndvi"
+            ],
+            "start_date": "2020-04-01",
+            "stop_date": "2020-10-31",
+            "min_gap_len": 20
+        },
+        {
+            "type": "state_change",
+            "signals": [
+                "band_class"
+            ],
+            "start_date": "2020-04-01",
+            "stop_date": "2020-10-31",
+            "min_duration": 10,
+            "to_state": 4
+        }
+    ],
+    "data-displayers": [
+        {
+            "signals": [
+                "ndvi",
+                "coh_compo",
+                "ndvi_filt",
+                "coh_norm"
+            ],
+            "bottom_bar": "b04_b08_b11",
+            "bottom_bar_components": [
+                "B08_mean",
+                "B11_mean",
+                "B04_mean"
+            ],
+            "start_date": "2020-04-01",
+            "stop_date": "2020-10-31",
+            "output_folder": "./results",
+            "file_name_prefix": "final",
+            "add_months": true,
+            "ylim": [
+                0.0,
+                1.0
+            ],
+            "resolution": 72
+        }
+    ],
+    "marker-aggregator": [
+        {}
+    ],
+    "marker-sink": [
+        {
+            "output_file": "./marker_output.csv",
+            "include_header": true
+        }
+    ]
+}
