@@ -747,6 +747,8 @@ class db_s2_time_series_source(base_time_series_source) :
         self.sql_select = self.sql_statement(db_schema, fid_col, parcels_table, sigs_table, hists_table , sentinel_metadata_table, sql_additional_conditions, cloud_free)
         # Variable that stores the complete ts retrieved from the DB and that is initialize when the object is created
         self.ts_db = self.get_ts_db(host, port, dbname, user, password, self.sql_select)
+        # Variable that stores the list of components retrieved from the dataframe imported from the db
+        self.components = list(self.ts_db.columns)
 
     def sql_statement(self, db_schema : str, fid_col : str, parcels_table : str, sigs_table : str, hists_table : str, sentinel_metadata_table : str, sql_additional_conditions : str, cloud_free : str) -> str :
         """
@@ -904,10 +906,12 @@ class db_c6_time_series_source(base_time_series_source) :
         """
         super().__init__(signal_type)
 
+        # Variable that stores the SQL to be executed on the DB and that is initialize when the object is created
         self.sql_select = self.sql_statement(db_schema, fid_col, parcels_table, sigs_table, sentinel_metadata_table, sql_additional_conditions)
-
+        # Variable that stores the complete ts retrieved from the DB and that is initialize when the object is created
         self.ts_db = self.get_ts_db(host, port, dbname, user, password, self.sql_select)
-
+        # Variable that stores the list of components retrieved from the dataframe imported from the db
+        self.components = list(self.ts_db.columns)
         #self.connection_opt = connection_opt
 
     def sql_statement(self, db_schema : str, fid_col : str, parcels_table : str, sigs_table : str, sentinel_metadata_table : str, sql_additional_conditions : str) -> str :
@@ -1033,10 +1037,12 @@ class db_bs_time_series_source(base_time_series_source) :
         """
         super().__init__(signal_type)
 
+        # Variable that stores the SQL to be executed on the DB and that is initialize when the object is created
         self.sql_select = self.sql_statement(db_schema, fid_col, parcels_table, sigs_table, sentinel_metadata_table, sql_additional_conditions)
-
+        # Variable that stores the complete ts retrieved from the DB and that is initialize when the object is created
         self.ts_db = self.get_ts_db(host, port, dbname, user, password, self.sql_select)
-
+        # Variable that stores the list of components retrieved from the dataframe imported from the db
+        self.components = list(self.ts_db.columns)
         #self.connection_opt = connection_opt
 
     def sql_statement(self, db_schema : str, fid_col : str, parcels_table : str, sigs_table : str, sentinel_metadata_table : str, sql_additional_conditions : str) -> str :
