@@ -1,0 +1,41 @@
+info:
+  title: RESTful API for CbM.
+  description: powered by Flasgger and CbM template
+  version: 0.0.2
+  termsOfService: "/tos"
+servers:
+  - url: https://cap.users.creodias.eu/
+    description: Main development server for CbM
+contact:
+  name: "CbM API Support"
+  url: "http://www.ec-jrc/cbm.com/support"
+  email: "support@.com"
+license:
+  name: "3-Clause BSD"
+  url: "https://github.com/ec-jrc/cbm/blob/main/LICENSE"
+basePath: "/query"
+paths:
+  /info:
+    $ref: "./static/swagger_specs/parcel_info.yaml#/paths/info"
+  /parcelByID:
+    $ref: "./static/swagger_specs/parcel_info.yaml#/paths/parcelByID"
+  /parcelByLocation:
+    $ref: "./static/swagger_specs/parcel_info.yaml#/paths/parcelByLocation"
+  /parcelByPolygon:
+    $ref: "./static/swagger_specs/parcel_info.yaml#/paths/parcelByPolygon"
+  /parcelPeers:
+    $ref: "./static/swagger_specs/parcel_info.yaml#/paths/parcelPeers"
+  /parcelTimeSeries:
+    $ref: "./static/swagger_specs/parcel_ts.yaml#/paths/parcelTimeSeries"
+  /rawChipByParcelID:
+    $ref: "./static/swagger_specs/chips_raw.yaml#/paths/rawChipByParcelID"
+  /rawChipByLocation:
+    $ref: "./static/swagger_specs/chips_raw.yaml#/paths/rawChipByLocation"
+  /rawChipsBatch:
+    $ref: "./static/swagger_specs/chips_raw_batch.yaml#/paths/rawChipsBatch"
+  /rawS1ChipsBatch:
+    $ref: "./static/swagger_specs/chips_raw_batch.yaml#/paths/rawS1ChipsBatch"
+  /backgroundByParcelID:
+    $ref: "./static/swagger_specs/orthophotos.yaml#/paths/backgroundByParcelID"
+  /backgroundByLocation:
+    $ref: "./static/swagger_specs/orthophotos.yaml#/paths/backgroundByLocation"
