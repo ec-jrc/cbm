@@ -549,7 +549,9 @@ class interpolator(base_pre_processor) :
                 
             for component in self.components :
                 ots = pd.Series(index=dates, data = ts[signal][component].values)
-                its = ots.resample('%dD' % self.Ts).mean().interpolate(method=self.method)
+                its = ots.resample('%dD' % self.Ts).mean().interpolate(
+                    method=self.method, limit_direction="both"
+                )
                 out_data.append(its)
                 compo_names.append( signal + '_' + component)
                 
