@@ -77,7 +77,7 @@ class simple_list_data_source(base_parcel_data_source) :
         Returns :
             Nothing.
         """
-        self.fid_list = np.loadtxt(filename, dtype = int)
+        self.fid_list = np.loadtxt(filename, dtype = int, ndmin=1)
 
     def get_fid_list(self) :
         """
