@@ -28,10 +28,14 @@
    :maxdepth: 3
    :caption: RESTful API
 
-   api_ts
-   api_imgs
+   api_overview
+   api_parcel_info
+   api_time_series
+   api_sentinel_images
+   api_background_images
+   api_parcels_lists
    api_analytics
-   api_post
+   api_post_requests
 
 
 .. toctree::
