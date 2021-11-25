@@ -56,61 +56,43 @@ returns
 An HTML page that displays the selected chips in a table with max. 8 columns.
 
 
-## backgroundByLocation
-
-It is often handy to have a high resolution overview of the parcel situation. A (globally) useful set are the Google and Bing (or Virtual Earth) background image sets.
-
-This query generates an extract from either Google or Bing. It uses the WMTS standard to grab and compose, which makes it fast (does not depend on DIAS S3 store).
-
-
-| Parameters  | Description   | Example call                  |
-| ----------- | --------------------- | ------------------------ |
-| **lon**         | longitude in decimal degrees  | [default](http://185.178.85.226/query/backgroundByLocation?lon=6.32&lat=52.34&chipsize=512&extend=256.0)                         |
-| **lat**         | latitude in decimal degrees |                |
-| **chipsize**         | size of the chip in pixels |                |
-| **extend**         | size of the chip in meters |                |
-| *tms*  | tile map server   |  [+option](http://185.178.85.226/query/backgroundByLocation?lon=6.32&lat=52.34&chipsize=512&extend=256.0&tms=Bing)                        |
-
-
-Currently, parameter values can be as follows:
-
-| Parameters  | Format   | Description                  |
-| ----------- | --------------------- | ------------------------ |
-| **lon, lat**   | a string representing a float number  | Any geographical coordinate           |
-| **chipsize**         | integer   | (not truncated yet, expected to be limited to 512 in a next update)        |
-| **extend**         | float   | the effective resolution of the chip is extend/chipsize        |
-| *tms*         | string      | Google (default), Bing       |
-
-
-returns
-
-An HTML page that displays the selected chip as a PNG tile. Generates a GeoTIFF as well, for use in rasterio processing.
-
-
 ## rawChipByLocation
+
+**rawChipByLocation - rawChipByParcelID**
 
 Generates a series of extracted Sentinel-2 LEVEL2A segments of 128x128 (10m resolution bands) or 64x64 (20 m) pixels as list of full resolution GeoTIFFs.
 
-| Parameters  | Description   | Example call                  |
-| ----------- | --------------------- | ------------------------ |
-| **lon**         | longitude in decimal degrees  | [default](http://185.178.85.226/query/rawChipByLocation?lon=6.32&lat=52.34&start_date=2018-04-01&end_date=2018-04-30&band=B08)                         |
-| **lat**         | latitude in decimal degrees |                |
-| **start_date**         | start date of time window |                |
-| **end_date**         | end date of time window |                |
-| **band**  | band selection    |                          |
-| *chipsize*  | chipsize in meters   |                          |
-| *plevel*  | processing level   |                          |
+Table: **rawChipByLocation** Parameters
+
+| Parameters  | Description   | Values | Default Value |
+| ----------- | --------------------- | ------------------------ |------------------------ |
+| **lon**         | longitude in decimal degrees  | e.g.: 6.31 | - |
+| **lat**         | latitude in decimal degrees | e.g.: 52.34 | - |
+| **start_date, end_date** | Time window for which Level-2A Sentinel-2 is available (after 27 March 2018) | Format: YYYY-mm-dd | - |
+| **band**  | Sentinel-2 band name. One of ['B02', 'B03', 'B04', 'B08'] (10 m bands) or ['B05', 'B06', 'B07', 'B8A', 'B11', 'B12', 'SCL'] (20 m bands). | Format: BXX | - |
+| chipsize     | size of the chip in pixels   | < 5120 | 1280 |
+| plevel  | Processing levels. Use LEVEL1C where LEVEL2A is not avaiable | LEVEL2A, LEVEL1C | LEVEL2A |
 
 
-Currently, parameter values can be as follows:
+Table: **rawChipByParcelID** Parameters
 
-| Parameters  | Format   | Description                  |
-| ----------- | --------------------- | ------------------------ |
-| **lon, lat**   | a string representing a float number  | Any geographical coordinate where Level-2A Sentinel-2 is available          |
-| **start_date, end_date**         | YYYY-mm-dd   | Time window for which Level-2A Sentinel-2 is available (after 27 March 2018)        |
-| **band**         | Bn1   | Sentinel-2 band name. One of ['B02', 'B03', 'B04', 'B08'] (10 m bands) or ['B05', 'B06', 'B07', 'B8A', 'B11', 'B12', 'SCL'] (20 m bands).     |
-| *chipsize*         | string      | Defaults to '1280'. Cannot be larger than '5120'        |
-| *plevel*         | string      | 'LEVEL2A' (default), 'LEVEL1C'. Use LEVEL1C where LEVEL2A is not avaiable        |
+
+| Parameters  | Description   | Example call | Values |
+| ----------- | --------------------- | ------------------------ |------------------------ |
+| **aoi** | Area of Interest (Member state or region code) | e.g.: at, pt, ie, etc. | - |
+| **year**     | year of parcels dataset   | e.g.: 2018, 2019 | - |
+| **pid**     | parcel id   |   | - |
+| ptype     | parcels type   | b, g, m, atc. | - |
+| **start_date, end_date** | Time window for which Level-2A Sentinel-2 is available (after 27 March 2018) | Format: YYYY-mm-dd | - |
+| **band**  | Sentinel-2 band name. One of ['B02', 'B03', 'B04', 'B08'] (10 m bands) or ['B05', 'B06', 'B07', 'B8A', 'B11', 'B12', 'SCL'] (20 m bands). | Format: BXX | - |
+| chipsize     | size of the chip in pixels   | < 5120 | 1280 |
+| plevel  | Processing levels. Use LEVEL1C where LEVEL2A is not avaiable | LEVEL2A, LEVEL1C | LEVEL2A |
+
+Examples:
+- Example 1: List of downloadable Sentinel images for a given location:
+https://cap.users.creodias.eu/query/rawChipByLocation?lon=5.123&lat=55.123&start_date=2020-01-01&end_date=2020-01-30&band=SCL&chipsize=920
+- Example 2: List of downloadable Sentinel images for a given parcel ID:
+https://cap.users.creodias.eu/query/rawChipByParcelID?aoi=MS&year=2020&pid=1234&start_date=2020-01-01&end_date=2020-01-30&band=B04&chipsize=920
 
 
 returns
@@ -150,17 +132,18 @@ from osgeo import osr, ogr
 # Define your credentials here
 username = 'YOURUSERNAME'
 password = 'YOURPASSWORD'
+host = 'http://0.0.0.0'
 
 # Get the parcel id for this location, make sure to get the parcel geometry as well
-locurl = """http://185.178.85.226/query/parcelByLocation?parcels={}&lon={}&lat={}&withGeometry=True"""
+locurl = """{}/query/parcelByLocation?parcels={}&lon={}&lat={}&withGeometry=True"""
 
 # set the query parameters
-parcels = 'nld2019'
+parcels = 'ms2019'
 lon='5.6637'
 lat='52.6936'
 
 # Parse the response with the standard json module
-response = requests.get(locurl.format(parcels, lon, lat), auth = (username, password))
+response = requests.get(locurl.format(host, parcels, lon, lat), auth = (username, password))
 
 parcel = json.loads(response.content)
 
@@ -198,7 +181,7 @@ pid = parcel['ogc_fid'][0]
 cropname = parcel['cropname'][0]
 
 # Set up the rawChip request
-rawurl = """http://185.178.85.226/query/rawChipByLocation?lon={}&lat={}&start_date={}&end_date={}&band={}&chipsize={}"""
+rawurl = """{}/query/rawChipByLocation?lon={}&lat={}&start_date={}&end_date={}&band={}&chipsize={}"""
 
 # query parameter values
 start_date='2019-06-01'
@@ -206,7 +189,7 @@ end_date ='2019-06-30'
 band = 'SCL'    # Start with the SCL scene, to check cloud cover conditions
 chipsize = 2560 # Size of the extracted chip in meters (5120 is maximum)
 
-response = requests.get(rawurl.format(str(centroid.GetX()), str(centroid.GetY()), start_date, end_date, band, chipsize), auth = (username, password))
+response = requests.get(rawurl.format(host, str(centroid.GetX()), str(centroid.GetY()), start_date, end_date, band, chipsize), auth = (username, password))
 
 # Directly create a pandas DataFrame from the json response
 df = pd.read_json(response.content)
@@ -299,8 +282,3 @@ thus, only 3 out of the 11 image in June 2018 are cloud free. One has mixed valu
 You can now decide to go pick up the relevant bands for the 4 cloud free acquisitions. This can, in principle, be done with *rawChipByLocation* but that is not a very efficient procedure, because that query does not benefit well from parallel processing.
 
 Continue on the [next WIKI page](https://jrc-cbm.readthedocs.io/en/latest/api_post.html) to find a more advanced solution.
-
-
-## Quiz question
-
-There is an alternative, more approximate, solution to understand whether the parcel is cloud free. Try to find out which, and write a script to compare to the histogram extractions.

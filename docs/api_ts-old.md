@@ -1,5 +1,6 @@
-# Overview
+# Time series
 
+**Using RESTful services to get parcel time series**
 
 JRC RESTful service example requests have predefined logical query names that need to be configured with a set parameters. All requests return a response as a JSON formatted dictionary. The values in this dictionary are always lists, i.e. even if the query produced no (empty list) or only 1 value.
 
@@ -8,60 +9,38 @@ If the query is not valid, and empty dictionary will be returned ({}).
 In this page, we keep a list of actual queries and provide some use examples.
 
 
-The server of JRC RESTful example currently runs from a CloudFerro server. The root URL of the RESTful server is https://cap.users.creodias.eu/query/
+**Current queries**
+
+The server of JRC RESTful example currently runs from a CloudFerro server. The root URL of the RESTful server is http://185.178.85.226/query/
 The URL requires authentication with a username and password (which has been provided to users upon request).
 
-Query parameters are either required or optional. The order of parameters is not significant.
+Query parameters are either **required** or *optional*. The order of parameters is not significant. 
 
-![Requests structure example](https://raw.githubusercontent.com/konanast/cbm_media/main/requests_structure_01.png)
+## parcelByLocation
 
-**Current queries**
-* Parcel information in json format by location or ID.
-    * parcelByLocation
-    * parcelByID
-* Parcel signatures time series
-    * parcelTimeSeries
-* Parcel sentinel images
-    * chipByLocation
-    * rawChipByLocation
-* Parcel orthophotos
-    * backgroundByLocation
-    * backgroundByParcelId
-* Parcel peers,
-    * parcelPeers
+Find a parcel ID for a geographical location. The parcels in the annual declaration sets have unique IDs, but these are not consistent between years (also, the actual parcel geometries may have changed). Thus, a query is needed to "discover" which parcel ID is at a particular geographical coordinate. Agricultural parcels are supposed to be without overlap, a unique ID will normally be returned (this is, however, not a pre-condition).
 
-
-# Parcel information
-
-**parcelByLocation - parcelByID**
-
-Find a parcel ID for a geographical location or a by the parcel ID. The parcels in the annual declaration sets have unique IDs, but these are not consistent between years (also, the actual parcel geometries may have changed). Thus, a query is needed to "discover" which parcel ID is at a particular geographical coordinate. Agricultural parcels are supposed to be without overlap, a unique ID will normally be returned (this is, however, not a pre-condition).
-
-| Parameters  | Description   | Example call | query |
-| ----------- | --------------------- | ------------------------ |------------------------ |
-| **aoi**     | member state or region code     | | parcelByLocation & parcelByID |
-| **year**     | year of parcels dataset   |  | parcelByLocation & parcelByID  |
-| **lon**         | longitude in decimal degrees  | [default](https://cap.users.creodias.eu/query/parcelByLocation?aoi=nld&year=2018&lon=6.32&lat=52.34) | parcelByLocation |
-| **lat**         | latitude in decimal degrees | [empty](https://cap.users.creodias.eu/query/parcelByLocation?aoi=nld&year=2018&lon=6.31&lat=52.34) | parcelByLocation |
-| **pid**     | parcel id   |   | parcelByID |
-| *withGeometry=True*  | adds geometry   | [+option](https://cap.users.creodias.eu/query/parcelByLocation?aoi=nld&year=2018&lon=6.32&lat=52.34&withGeometry=True) | parcelByLocation & parcelByID |
+| Parameters  | Description   | Example call |
+| ----------- | --------------------- | ------------------------ |
+| **parcels**     | parcel table name     |   |
+| **lon**         | longitude in decimal degrees  | [default](http://185.178.85.226/query/parcelByLocation?parcels=nld2018&lon=6.32&lat=52.34) |
+| **lat**         | latitude in decimal degrees | [empty](http://185.178.85.226/query/parcelByLocation?parcels=nld2018&lon=6.31&lat=52.34) |
+| *withGeometry=True*  | adds geometry   | [+option](http://185.178.85.226/query/parcelByLocation?parcels=nld2018&lon=6.32&lat=52.34&withGeometry=True) |
 
 
 Currently, parameter values can be as follows:
 
 | Parameters  | Values   | Description                  |
 | ----------- | --------------------- | ------------------------ |
-| **aoi** | e.g: nld, nrw   | Netherlands, Nordrhein Westfalen|
-| **year** | e.g.: 2018, 2019,  | year of parcels dataset |
+| **parcels** | nld2018, nld2019, nrw2018, nrw2019   | Netherlands, Nordrhein Westfalen, 2018 or 2019 |
 | **lon, lat** |       | Any geographical coordinate inside the respective territories |
-| **pid** |       | Parcel ID |
 
 
 returns
 
 | Key            | Values  | Description   |
 | ---------------| ------- | ----------- |
-| pid     | a list of parcel ID     | Normally, only 1 ID should be returned. Empty list is no parcel found |
+| ogc_fid     | a list of parcel ID     | Normally, only 1 ID should be returned. Empty list is no parcel found | 
 | cropname  | a list of crop names    | Placeholder for the crop name, mapped to the original parcel table |
 | cropcode  | a list of crop code     | Placeholder for the crop code, mapped to the original parcel table |
 | srid        | a list of EPSG codes  | Describes the projection for the parcel geometry |
@@ -72,19 +51,17 @@ returns
 
 
 
-# parcelTimeSeries
+## parcelTimeSeries
 
-**Using RESTful services to get parcel time series**
-
-Get the time series for a parcel ID.
+Get the time series for a parcel ID. 
 
 | Parameters  | Description   | Example call |
 | ----------- | --------------------- | ------------------------ |
 | **aoi** | area of interest | |
 | **year** | year | |
-| **pid** | parcel ID |     [default](https://cap.users.creodias.eu/query/parcelTimeSeries?aoi=nld&year=2018&pid=324792&tstype=c6) |
-| **tstype** | time series type | [empty](https://cap.users.creodias.eu/query/parcelTimeSeries?aoi=nld&year=2018&pid=5000000&tstype=c6) |
-| *band* | a selected band | [+option](https://cap.users.creodias.eu/query/parcelTimeSeries?aoi=nld&year=2018&pid=324792&tstype=c6&band=VV) |
+| **pid** | parcel ID |     [default](http://185.178.85.226/query/parcelTimeSeries?aoi=nld&year=2018&pid=324792&tstype=c6) |
+| **tstype** | time series type | [empty](http://185.178.85.226/query/parcelTimeSeries?aoi=nld&year=2018&pid=5000000&tstype=c6) |
+| *band* | a selected band | [+option](http://185.178.85.226/query/parcelTimeSeries?aoi=nld&year=2018&pid=324792&tstype=c6&band=VV) |
 
 Currently, parameter values can be as follows:
 
@@ -101,7 +78,7 @@ returns
 
 | Key            | Values  | Description   |
 | ---------------| ------- | ----------- |
-| date_part     | a list of timestamps     | as seconds since 'Unix epoch' (1970-01-01 00:00:00 UTC)  |
+| date_part     | a list of timestamps     | as seconds since 'Unix epoch' (1970-01-01 00:00:00 UTC)  | 
 | *band*        | a list of image bands  | Missing if *band* query parameter is provided |
 | count      | a list of counts  | count of pixels extracted for each parcel and observation |
 | mean       | a list of means   | mean etc. |
@@ -136,18 +113,16 @@ from datetime import datetime
 username = 'YOUR USERNAME'
 password = 'YOUR PASSWORD'
 
-# Get the parcel id for this location, make sure to get the parcel geometry as well
-locurl = """https://{}/query/parcelByLocation?aoi={}&year={}&lon={}&lat={}&withGeometry=True&ptype={}"""
+# Get the parcel id for this location
+locurl = """http://185.178.85.226/query/parcelByLocation?parcels={}&lon={}&lat={}"""
 
 # set the query parameters
-aoi = 'nl'
-year = '2018'
-ptype = 'm'
-lon='6.24617'
-lat='52.99011'
+parcels = 'nld2018'
+lon='6.32'
+lat='52.34'
 
 # Parse the response with the standard json module
-response = requests.get(locurl.format(host, aoi, year, lon, lat, ptype), auth = (username, password))
+response = requests.get(locurl.format(parcels, lon, lat), auth = (username, password))
 
 parcel = json.loads(response.content)
 
@@ -162,11 +137,11 @@ elif not parcel.get(list(parcel.keys())[0]):
 print(parcel)
 
 # Use pid for next request
-pid = parcel['pid'][0]
+pid = parcel['ogc_fid'][0]
 cropname = parcel['cropname'][0]
 
 # Set up the timeseries request
-tsurl = """https://cap.users.creodias.eu/query/parcelTimeSeries?aoi={}&year={}&pid={}&tstype={}"""
+tsurl = """http://185.178.85.226/query/parcelTimeSeries?aoi={}&year={}&pid={}&tstype={}"""
 
 # query parameter values
 aoi = 'nld'
@@ -228,9 +203,8 @@ Get the parcel "peers" for a known parcel ID, i.e. parcels with the same crop ty
 
 | Parameters  | Description   | Example call                  |
 | ----------- | --------------------- | ------------------------ |
-| **aoi**         | parcel set       |                          |
-| **year**         | e.g.: 2018, 2019   |  |
-| **pid**         | parcel ID              | [default](https://cap.users.creodias.eu/query/parcelPeers?parcels=nld&year=2019&pid=315141)                        |
+| **parcels**         | parcel set       |                          |
+| **pid**         | parcel ID              | [default](http://185.178.85.226/query/parcelPeers?parcels=nld2019&pid=315141)                        |
 | *distance*         | maximum distance to search around parcel with **pid**    |                          |
 | *max*         | maximum number of peers to return              |                          |
 
@@ -238,8 +212,7 @@ Currently, parameter values can be as follows:
 
 | Parameters  | Values   | Description                  |
 | ----------- | --------------------- | ------------------------ |
-| **aoi**         | e.g: nld, nrw  | Netherlands, Nordrhein Westfalen  |
-| **year**         | e.g.: 2018, 2019   |  |
+| **aoi**         | nld2018, nld2019, nrw2018   | Netherlands, Nordrhein Westfalen  |
 | **pid**      | int | any valid parcel ID in **parcels**
 | *distance*          | float | in meters. Defaults to 1000.0. Truncated to 5000.0 if larger.
 | *max*          | int | Defaults to 10. Truncated to 100 if larger.   
@@ -249,5 +222,5 @@ returns
 
 | Key            | Values  | Description   |
 | ---------------| ------- | ----------- |
-| pid     | a list of parcel IDs     |   |
+| pid     | a list of parcel IDs     |   | 
 | distance        | a list of distances  | In ascending order |
