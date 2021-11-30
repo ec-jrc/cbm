@@ -50,11 +50,6 @@ def get_number_of_columns(acq_dates):
 
         year_months_dict[year_month].append(day)
 
-    #we need rows for the months where there is not acquisition at all
-    #so we take the lowest and highest dateMonth value and calculate the difference
-    #this will be the number of rows needed for the imagettes in the monthly view
-    number_of_year_months = max(year_months) - min(year_months) + 1
-
     # now check which year_month has the most days in it
     max_number_of_days = 0
     for key, value in year_months_dict.items():
@@ -69,8 +64,6 @@ def get_current_col(acq_date,year_months_dict):
     # let's check the position of a given date in the monthly view grid
     act_year_month = int(acq_date.split('-')[0] + acq_date.split('-')[1])
     act_day = int(acq_date.split('-')[2])
-    year_months = list(year_months_dict.keys())
-    act_row = year_months.index(act_year_month) + 1
     act_col = year_months_dict[act_year_month].index(act_day) + 1
 
     return act_col
@@ -89,17 +82,33 @@ def get_window(parcel, src_image, buffer_size_meter, pixel_size_meter):
     pmax_col, pmax_row = src_image.index(maxx, miny)
     
 # calculate parcel extent in pixels
-    y_extent_pixels = pmax_col[0] - pmin_col[0]
-    x_extent_pixels = pmax_row[0] - pmin_row[0]
+    # in the new version of rasterio the src_image.index returns an int not a list
+    # so we have to handle this
+    if type(pmin_col) == list:
+        # it is a list, old style
+        # calculate parcel extent in pixels
+        y_extent_pixels = pmax_col[0] - pmin_col[0]
+        x_extent_pixels = pmax_row[0] - pmin_row[0]
 
-# translate buffer size around the parcel from meter to pixels
-    buffer_size_pixel = int(round(buffer_size_meter / pixel_size_meter,0))
+        # translate buffer size around the parcel from meter to pixels
+        buffer_size_pixel = int(round(buffer_size_meter / pixel_size_meter,0))
 
-    y_offset_pixels = pmin_col[0] - buffer_size_pixel
-    x_offset_pixels = pmin_row[0] - buffer_size_pixel
+        y_offset_pixels = pmin_col[0] - buffer_size_pixel
+        x_offset_pixels = pmin_row[0] - buffer_size_pixel    
 
+
+    else:
+        # it is not a list but integer, new style
+        y_extent_pixels = pmax_col - pmin_col
+        x_extent_pixels = pmax_row - pmin_row
+
+        # translate buffer size around the parcel from meter to pixels
+        buffer_size_pixel = int(round(buffer_size_meter / pixel_size_meter,0))
+
+        y_offset_pixels = pmin_col - buffer_size_pixel
+        x_offset_pixels = pmin_row - buffer_size_pixel
+        
     win = Window(x_offset_pixels, y_offset_pixels, x_extent_pixels + 2*buffer_size_pixel + 1, y_extent_pixels + 2*buffer_size_pixel + 1)
-
     return win  
 
 def get_current_list_of_textsts(first_year_month, number_of_year_months):
