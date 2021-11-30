@@ -21,10 +21,10 @@ import rasterio
 import warnings
 import batch_utils
 
-
 def get_scl_imagettes(raw_chips_by_location_url, lon, lat, start_date, end_date, username, password, chipsize):
     list_of_scl_imagettes = []
     was_error = False
+    wrong_credentials = False
     band = 'SCL'
     locurl = raw_chips_by_location_url + """?lon=\
 """ + lon + """&lat=""" + lat + """&start_date=""" + start_date + """&end_date=""" + end_date + """&band=""" + band + """&chipsize=""" + chipsize
@@ -35,7 +35,12 @@ def get_scl_imagettes(raw_chips_by_location_url, lon, lat, start_date, end_date,
     try:
         response = requests.get(locurl, auth = (username, password), timeout=180)
         print(response)
-        if response.status_code == 404:
+        if response.status_code == 404 or response.status_code == 401:
+            if response.status_code == 401:
+                print("Please, provide valid credentials to access the RESTFul server")
+                wrong_credentials = True
+
+                
             was_error = True
         else:
             list_of_scl_imagettes = json.loads(response.content)
@@ -58,7 +63,7 @@ def get_scl_imagettes(raw_chips_by_location_url, lon, lat, start_date, end_date,
         
     
     
-    return locurl, list_of_scl_imagettes, was_error
+    return locurl, list_of_scl_imagettes, was_error, wrong_credentials
     
 def get_scl_imagettes_l1c(raw_chips_by_location_url, lon, lat, start_date, end_date, username, password, chipsize):
     list_of_scl_imagettes = []
@@ -100,6 +105,8 @@ def get_scl_imagettes_l1c(raw_chips_by_location_url, lon, lat, start_date, end_d
     
 def get_centroid_of_parcel(parcel_id, parcel, centroid_shift_degrees, logfile):
     warnings.simplefilter(action='ignore', category=FutureWarning)
+    warnings.simplefilter(action='ignore', category=UserWarning)
+    
     fout = open(logfile, 'a')
     start = time.time()
     # get centroid of parcel in wgs84 lat, lon
@@ -118,7 +125,6 @@ def get_centroid_of_parcel(parcel_id, parcel, centroid_shift_degrees, logfile):
     return lon, lat
     
 def download_scl_imagettes(url_base, list_of_scl_imagettes, out_tif_folder, username, password):
-    band = 'SCL'
     chips_list = list_of_scl_imagettes['chips']
     was_error = False
     
@@ -198,7 +204,7 @@ def get_band_imagettes(raw_chips_batch_url, lon, lat, tiles_to_download, bands, 
     post_dict["chipsize"] = int(chipsize)
     print(post_dict)
     try:
-        response = requests.post(raw_chips_batch_url, json=post_dict, auth = (username, password), timeout=180)
+        response = requests.post(raw_chips_batch_url, json=post_dict, auth = (username, password), timeout=300)
         print(response)
         if response.status_code == 404:
             was_error = True
