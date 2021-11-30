@@ -100,13 +100,16 @@ def run_calendar_view(**kwargs):
     
     # setting parameters that are used by the different functions below
 #    and are still hard-coded
-    username = 'JRC_D5'
-    password = 'djB2_e'
-    url_base = "http://185.178.85.226"
+    url_base = "https://cap.users.creodias.eu" # this is the new restful server
+    username = api_user
+    password = api_pass
+
+
     if exclude_cirrus:
         cloud_categories = [0,1,3,8,9,10,11] # exclude 10 which is thin cirrus
     else:
-        cloud_categories = [0,1,3,8,9,11]
+        cloud_categories = []
+#        cloud_categories = [0,1,3,8,9,11]
     
     if stats_band:
         bands =  ["B02", "B03", "B04", "B05", "B06", "B07", "B08", "B8A", "B11", "B12"]
@@ -129,10 +132,12 @@ def run_calendar_view(**kwargs):
     logfile = out_tif_folder_base + "/log.txt"
     
     search_split_days = 30
+    max_number_of_requests = 36
+    # max_number_of_requests = 12
     #built in maximum number of tiles that can be requested is 36
     #but that by separate bands, so if we have 3 bands the max
     #number of tiles we can request at one go is 36/3=12
-    max_number_of_tiles_per_request = int(36 / len(bands))
+    max_number_of_tiles_per_request = int(max_number_of_requests / len(bands))
     
     vector_color = "yellow"
     
@@ -218,6 +223,10 @@ def run_calendar_view(**kwargs):
                                                          raw_chips_batch_url,
                                                  lon, lat, bands, username, password, chipsize, url_base, 
                                                  parcel_id, crop, out_tif_folder_base, logfile)
+             
+                         
+            #calculate the statistics for the 3 bands downloaded.
+             batch_utils.calculate_band_statistics_orig(parcel_id, crop, out_tif_folder_base, parcel)
         
          #merge downloaded bands
         if merge_bands:
@@ -226,10 +235,6 @@ def run_calendar_view(**kwargs):
          #Create LUT stretched images with fixed stretching        
         if lut_stretch_magic:
             batch_utils.run_lut_stretch(parcel_id, crop, out_tif_folder_base, left_percent, right_percent, lut_txt_file, logfile)
-
-
-
-
  
         if cv_lut_magic:
             #Get list of fix LUT stretched images

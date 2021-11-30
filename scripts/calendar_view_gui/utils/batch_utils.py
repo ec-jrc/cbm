@@ -61,9 +61,13 @@ def run_get_scl_imagettes(parcel, parcel_id, crop, out_tif_folder_base,
         was_error_1 = True
         was_error_2 = True
         while was_error_1:
-            locurl, list_of_scl_imagettes, was_error_1 = download_utils.get_scl_imagettes(raw_chips_by_location_url, lon, lat, 
+            locurl, list_of_scl_imagettes, was_error_1, wrong_credentials_1 = download_utils.get_scl_imagettes(raw_chips_by_location_url, lon, lat, 
                                                                 start_date, end_date, 
                                                                 username, password, chipsize)
+            if wrong_credentials_1:
+                print("Wrong credentials given for RESTful database access")
+                raise ValueError("Wrong credentials provided")
+       
             
                                                                 
         while was_error_2:                                                        
@@ -1193,9 +1197,6 @@ def calculate_band_statistics_orig(parcel_id, crop, out_tif_folder_base, parcel)
     if not os.path.exists(band_stats_folder):
         os.makedirs(band_stats_folder)
 
-    # convert parcel_id to a string that can be used as filename           
-    parcel_id_as_filename = convert_string_to_filename(parcel_id)
-        
     band_stats_file_b04 = band_stats_folder + "/" + str(parcel_id_as_filename) + "_b04.csv"
     band_stats_file_b08 = band_stats_folder + "/" + str(parcel_id_as_filename) + "_b08.csv"
     band_stats_file_b11 = band_stats_folder + "/" + str(parcel_id_as_filename) + "_b11.csv"    

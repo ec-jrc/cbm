@@ -1,16 +1,26 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Tue May 18 14:52:21 2021
 
-@author: Csaba
-"""
+# This file is part of CbM (https://github.com/ec-jrc/cbm).
+
+__author__ = ["Csaba Wirnhardt"]
+__copyright__ = "Copyright 2021, European Commission Joint Research Centre"
+__credits__ = ["GTCAP Team"]
+__license__ = "3-Clause BSD"
+__version__ = ""
+__maintainer__ = [""]
+__status__ = "Development"
+
+
 import math
 import geopandas
+import warnings
 
 def get_parcel_area_ha_2decimals_str(parcel):
+    warnings.simplefilter(action='ignore', category=UserWarning)
     # check the parcels projection. if it is not geographic then project it to WG84
-
     orig_crs = parcel.crs
+    # print("orig_crs:"+str(orig_crs))
     if int(geopandas.__version__.split(".")[1]) > 6:
         print("this is a new geopandas above version 6")
         if not orig_crs.is_geographic:
@@ -23,10 +33,11 @@ def get_parcel_area_ha_2decimals_str(parcel):
             #reproject parcel to 4326
             parcel = parcel.to_crs("EPSG:4326") 
 
-    print(parcel.crs)
+    # print(parcel.crs)
     # longitude is the "x" axis
     lon = parcel.centroid.x
-    print(lon)
+    
+    # print(lon)
     
     # determine the UTM zone
     utm_zone = int(math.floor((lon + 180) / 6) + 1)
