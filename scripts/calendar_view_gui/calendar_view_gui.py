@@ -15,7 +15,6 @@ import geopandas
 import pandas as pd
 from pathlib import Path
 home = str(Path.home())
-#sys.path.insert(0, os.path.abspath(home + '/ownCloud/GTCAP/scripts/from_github/cbm/scripts/calendar_view'))
 
 import run_calendar_view_from_jupyter
 
@@ -598,8 +597,10 @@ def calendar_view_gui(**kwargs):
     default_out_tif_folder_base_path = os.path.dirname(w_select_out_tif_folder_base.value)
 
     fc_shapefile = FileChooser(default_shapefile_path)
-    fc_shapefile.filter_pattern = '*.shp'
+    fc_shapefile.filter_pattern = ['*.shp', '*.geojson']
     
+    if not os.path.exists(default_out_tif_folder_base_path):
+        os.makedirs(default_out_tif_folder_base_path)
     fc_out_tif_folder_base = FileChooser(default_out_tif_folder_base_path)
     fc_out_tif_folder_base.show_only_dirs = True
 
