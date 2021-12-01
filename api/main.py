@@ -259,11 +259,11 @@ def backgroundByID_query():
     pid = request.args.get('pid')
     dataset = datasets[f'{aoi}_{year}']
     withGeometry = False
+    ptype = ''
 
     if 'ptype' in request.args.keys():
-        ptype = f"_{request.args.get('ptype')}"
-    else:
-        ptype = ''
+        if request.args.get('ptype') != '':
+            ptype = f"_{request.args.get('ptype')}"
 
     lon, lat = db_queries.getParcelCentroid(dataset, pid, ptype)
 
@@ -397,7 +397,8 @@ def chipsByParcelID_query():
     pid = request.args.get('pid')
 
     if 'ptype' in request.args.keys():
-        ptype = f"_{request.args.get('ptype')}"
+        if request.args.get('ptype') != '':
+            ptype = f"_{request.args.get('ptype')}"
 
     if 'aoi' in request.args.keys():
         aoi = request.args.get('aoi')
@@ -525,7 +526,8 @@ def rawChipByParcelID_query():
     pid = request.args.get('pid')
 
     if 'ptype' in request.args.keys():
-        ptype = f"_{request.args.get('ptype')}"
+        if request.args.get('ptype') != '':
+            ptype = f"_{request.args.get('ptype')}"
 
     if 'aoi' in request.args.keys():
         aoi = request.args.get('aoi')
@@ -682,7 +684,8 @@ def parcelPeers_query():
     maxPeers = 10
 
     if 'ptype' in request.args.keys():
-        ptype = f"_{request.args.get('ptype')}"
+        if request.args.get('ptype') != '':
+            ptype = f"_{request.args.get('ptype')}"
 
     if 'aoi' in request.args.keys():
         aoi = request.args.get('aoi')
@@ -737,7 +740,8 @@ def parcelTimeSeries_query():
         scl = True if request.args.get('scl') == 'True' else False
 
     if 'ptype' in request.args.keys():
-        ptype = f"_{request.args.get('ptype')}"
+        if request.args.get('ptype') != '':
+            ptype = f"_{request.args.get('ptype')}"
 
     if 'aoi' in request.args.keys():
         aoi = request.args.get('aoi')
@@ -807,7 +811,8 @@ def parcelByLocation_query():
     wgs84 = False
 
     if 'ptype' in request.args.keys():
-        ptype = f"_{request.args.get('ptype')}"
+        if request.args.get('ptype') != '':
+            ptype = f"_{request.args.get('ptype')}"
 
     if 'aoi' in request.args.keys():
         aoi = request.args.get('aoi')
@@ -853,7 +858,8 @@ def parcelByID_query():
     wgs84 = False
 
     if 'ptype' in request.args.keys():
-        ptype = f"_{request.args.get('ptype')}"
+        if request.args.get('ptype') != '':
+            ptype = f"_{request.args.get('ptype')}"
 
     if 'aoi' in request.args.keys():
         aoi = request.args.get('aoi')
@@ -899,7 +905,8 @@ def parcelsByPolygon_query():
     wgs84 = False
 
     if 'ptype' in request.args.keys():
-        ptype = f"_{request.args.get('ptype')}"
+        if request.args.get('ptype') != '':
+            ptype = f"_{request.args.get('ptype')}"
 
     if 'aoi' in request.args.keys():
         aoi = request.args.get('aoi')
