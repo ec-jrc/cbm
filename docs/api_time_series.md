@@ -8,10 +8,10 @@ The table below shows the parameters for time series selection.
 
 | Parameters  | Description   | Values | Default value |
 | ----------- | ----------- | ----------- | ----------- |
-| **aoi** | Area of Interest (Member state or region code) | e.g.: at, pt, ie, etc. | - |
-| **year** | year of parcels dataset   | e.g.: 2018, 2019   | - |
-| **pid** | parcel ID | - | - |
-| ptype | parcels type | b, g, m, atc. | - |
+| **aoi** | Area of Interest (Member state or region code) | e.g.: at, pt, ie, etc. |   |
+| **year** | year of parcels dataset   | e.g.: 2018, 2019   |   |
+| **pid** | parcel ID |   |   |
+| ptype | parcels type | b, g, m, atc. |   |
 | **tstype** | Sentinel-2 Level 2A, S1 CARD Backscattering Coefficients, S1 CARD 6-day Coherence | s2, bs, c6, scl | s2 |
 | scl | Include scl in the s2 extraction, for use in cloud screening | True or False | True |
 | ref | Include Sentinel image reference in time series | True or False | False |
@@ -55,98 +55,113 @@ We show a complete example on how to use the RESTful queries in a python script.
 
 
 ```python
-import sys
-import json
+"""
+NDVI plot example
+"""
 
+import json
 import requests
 import pandas as pd
 import matplotlib.pyplot as plt
-from datetime import datetime
+import matplotlib.dates as mdates
+from datetime import timedelta
+
 
 # Define your credentials here
-username = 'YOUR USERNAME'
-password = 'YOUR PASSWORD'
+username = 'USERNAME'
+password = 'PASSWORD'
+host = 'https://THEHOSTNAME.com'
 
-# Get the parcel id for this location, make sure to get the parcel geometry as well
-locurl = """https://{}/query/parcelByLocation?aoi={}&year={}&lon={}&lat={}&withGeometry=True&ptype={}"""
+# Set parsel parameters
+aoi = 'ms'
+year = '2020'
+ptype = ''
+lon = '5.1234'
+lat = '50.1234'
 
-# set the query parameters
-aoi = 'nl'
-year = '2018'
-ptype = 'm'
-lon='6.24617'
-lat='52.99011'
+# Set the cloud Scene Classification (SC) values.
+scl = '3_8_9_10_11'
 
-# Parse the response with the standard json module
-response = requests.get(locurl.format(host, aoi, year, lon, lat, ptype), auth = (username, password))
 
-parcel = json.loads(response.content)
-
-# Check response
-if not parcel:
-    print("Parcel query returned empty result")
-    sys.exit()
-elif not parcel.get(list(parcel.keys())[0]):
-    print(f"No parcel found in {parcels} at location ({lon}, {lat})")
-    sys.exit()
-
-print(parcel)
-
-# Use pid for next request
-pid = parcel['pid'][0]
-cropname = parcel['cropname'][0]
-
-# Set up the timeseries request
-tsurl = """https://cap.users.creodias.eu/query/parcelTimeSeries?aoi={}&year={}&pid={}&tstype={}"""
-
-# query parameter values
-aoi = 'nld'
-year ='2018'
+# ------ Plot NDVI
 tstype = 's2'
 
-response = requests.get(tsurl.format(aoi, year, pid, tstype), auth = (username, password))
+# Get parcel information for a given location
+parcelurl = """{}/query/parcelByLocation?aoi={}&year={}&lon={}&lat={}&withGeometry=True&ptype={}"""
+response = requests.get(parcelurl.format(
+    host, aoi, year, lon, lat, ptype), auth=(username, password))
+parcel = json.loads(response.content)
 
+pid = parcel['pid'][0]
+crop_name = parcel['cropname'][0]
+area = parcel['area'][0]
+
+# Get the parcel Time Series
+tsurl = """{}/query/parcelTimeSeries?aoi={}&year={}&pid={}&tstype={}&ptype={}"""
+response = requests.get(tsurl.format(
+    host, aoi, year, pid, tstype, ptype), auth=(username, password))
 # Directly create a pandas DataFrame from the json response
 # This should work even if the response is and empty dictionary
 df = pd.read_json(response.content)
 
-# Check for an empty dataframe
-if df.empty:
-    print(f"Timeseries query returned empty result for parcel {pid} and {aoi}, {year} and {tstype}")
-    sys.exit()
+df['date'] = pd.to_datetime(df['date_part'], unit='s')
+start_date = df.iloc[0]['date'].date()
+end_date = df.iloc[-1]['date'].date()
+print(f"From '{start_date}' to '{end_date}'.")
 
-# Convert the epoch timestamp to a datetime
-df['date_part']=df['date_part'].map(lambda e: datetime.fromtimestamp(e))
+pd.set_option('max_colwidth', 200)
+pd.set_option('display.max_columns', 20)
 
-# Treat each band separately. Drop duplicate timestamps and rename the 'mean'
-df4 = df[df['band']=='B4'][['date_part', 'mean']]
-df4.drop_duplicates(['date_part'], inplace=True)
-df4.rename(columns={'mean': 'B4'}, inplace=True)
+# Plot settings are confirm IJRS graphics instructions
+plt.rcParams['axes.titlesize'] = 16
+plt.rcParams['axes.labelsize'] = 14
+plt.rcParams['xtick.labelsize'] = 12
+plt.rcParams['ytick.labelsize'] = 12
+plt.rcParams['legend.fontsize'] = 14
 
-df8 = df[df['band']=='B8'][['date_part', 'mean']]
-df8.drop_duplicates(['date_part'], inplace=True)
-df8.rename(columns={'mean': 'B8'}, inplace=True)
+df.set_index(['date'], inplace=True)
 
-dfQA = df[df['band']=='SC'][['date_part', 'mean']]
-dfQA.drop_duplicates(['date_part'], inplace=True)
-dfQA.rename(columns={'mean': 'SC'}, inplace=True)
+dfB4 = df[df.band.isin(['B4', 'B04'])].copy()
+dfB8 = df[df.band.isin(['B8', 'B08'])].copy()
+datesFmt = mdates.DateFormatter('%-d %b %Y')
 
-# Merge back into one DataFrame
-dff = pd.merge(df4, df8, on = 'date_part')
-dff = pd.merge(dff, dfQA, on = 'date_part')
-# Create a NDVI
-dff['ndvi'] = (dff['B8']-dff['B4'])/(dff['B8']+dff['B4'])
+# Plot Cloud free NDVI.
+dfNDVI = (dfB8['mean'] - dfB4['mean']) / (dfB8['mean'] + dfB4['mean'])
 
-print(dff)
+df['cf'] = pd.Series(dtype='str')
+scls = scl.split('_')
+for index, row in df.iterrows():
+    if any(x in scls for x in [*row['hist']]):
+        df.at[index, 'cf'] = 'False'
+    else:
+        df.at[index, 'cf'] = 'True'
+cloudfree = (df['cf'] == 'True')
+cloudfree = cloudfree[~cloudfree.index.duplicated()]
 
-# Define the criteria for having a cloud free observation
-cloudfree = ((dff['SC']>=4) & (dff['SC'] < 7))
+fig = plt.figure(figsize=(16.0, 10.0))
+axb = fig.add_subplot(1, 1, 1)
 
-plt.figure()
-plt.plot(dff['date_part'], dff['ndvi'], linestyle = ' ', marker = 'o', color = 'blue')
-plt.plot(dff[cloudfree]['date_part'], dff[cloudfree]['ndvi'], linestyle = ' ', marker = '*', color = 'red')
-plt.title(f"{tstype} time series for parcel {pid} ({cropname})")
-plt.xlabel('Date')
-plt.ylabel('NDVI')
+axb.set_title(f"Parcel {pid} (crop: {crop_name}, area: {area:.2f} sqm)")
+
+axb.set_xlabel("Date")
+axb.xaxis.set_major_formatter(datesFmt)
+
+axb.set_ylabel(r'NDVI')
+axb.plot(dfNDVI.index, dfNDVI, linestyle=' ', marker='s',
+         markersize=10, color='DarkBlue',
+         fillstyle='none', label='NDVI')
+
+axb.plot(dfNDVI[cloudfree].index, dfNDVI[cloudfree],
+         linestyle=' ', marker='P',
+         markersize=10, color='Red',
+         fillstyle='none', label='Cloud free NDVI')
+
+
+axb.set_xlim(start_date, end_date + timedelta(1))
+axb.set_ylim(0, 1.0)
+
+axb.legend(frameon=False)
+
 plt.show()
+
 ```
