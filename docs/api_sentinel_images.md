@@ -66,10 +66,10 @@ Table: **rawChipByLocation** Parameters
 
 | Parameters  | Description   | Values | Default Value |
 | ----------- | --------------------- | ------------------------ |------------------------ |
-| **lon**         | longitude in decimal degrees  | e.g.: 6.31 | - |
-| **lat**         | latitude in decimal degrees | e.g.: 52.34 | - |
-| **start_date, end_date** | Time window for which Level-2A Sentinel-2 is available (after 27 March 2018) | Format: YYYY-mm-dd | - |
-| **band**  | Sentinel-2 band name. One of ['B02', 'B03', 'B04', 'B08'] (10 m bands) or ['B05', 'B06', 'B07', 'B8A', 'B11', 'B12', 'SCL'] (20 m bands). | Format: BXX | - |
+| **lon**         | longitude in decimal degrees  | e.g.: 6.31 |   |
+| **lat**         | latitude in decimal degrees | e.g.: 52.34 |   |
+| **start_date, end_date** | Time window for which Level-2A Sentinel-2 is available (after 27 March 2018) | Format: YYYY-mm-dd |   |
+| **band**  | Sentinel-2 band name. One of ['B02', 'B03', 'B04', 'B08'] (10 m bands) or ['B05', 'B06', 'B07', 'B8A', 'B11', 'B12', 'SCL'] (20 m bands). | Format: BXX |   |
 | chipsize     | size of the chip in pixels   | < 5120 | 1280 |
 | plevel  | Processing levels. Use LEVEL1C where LEVEL2A is not avaiable | LEVEL2A, LEVEL1C | LEVEL2A |
 
@@ -79,12 +79,12 @@ Table: **rawChipByParcelID** Parameters
 
 | Parameters  | Description   | Example call | Values |
 | ----------- | --------------------- | ------------------------ |------------------------ |
-| **aoi** | Area of Interest (Member state or region code) | e.g.: at, pt, ie, etc. | - |
-| **year**     | year of parcels dataset   | e.g.: 2018, 2019 | - |
-| **pid**     | parcel id   |   | - |
-| ptype     | parcels type   | b, g, m, atc. | - |
-| **start_date, end_date** | Time window for which Level-2A Sentinel-2 is available (after 27 March 2018) | Format: YYYY-mm-dd | - |
-| **band**  | Sentinel-2 band name. One of ['B02', 'B03', 'B04', 'B08'] (10 m bands) or ['B05', 'B06', 'B07', 'B8A', 'B11', 'B12', 'SCL'] (20 m bands). | Format: BXX | - |
+| **aoi** | Area of Interest (Member state or region code) | e.g.: at, pt, ie, etc. |   |
+| **year**     | year of parcels dataset   | e.g.: 2018, 2019 |   |
+| **pid**     | parcel id   |   |   |
+| ptype     | parcels type   | b, g, m, atc. |   |
+| **start_date, end_date** | Time window for which Level-2A Sentinel-2 is available (after 27 March 2018) | Format: YYYY-mm-dd |   |
+| **band**  | Sentinel-2 band name. One of ['B02', 'B03', 'B04', 'B08'] (10 m bands) or ['B05', 'B06', 'B07', 'B8A', 'B11', 'B12', 'SCL'] (20 m bands). | Format: BXX |   |
 | chipsize     | size of the chip in pixels   | < 5120 | 1280 |
 | plevel  | Processing levels. Use LEVEL1C where LEVEL2A is not avaiable | LEVEL2A, LEVEL1C | LEVEL2A |
 
@@ -118,15 +118,11 @@ First, we locate a parcel by location, as before, but now use the geometry that 
 import sys
 import glob
 import json
-
 import requests
 import rasterio
-
 import pandas as pd
 from datetime import datetime
-
 from rasterstats import zonal_stats
-
 from osgeo import osr, ogr
 
 # Define your credentials here
@@ -134,17 +130,18 @@ username = 'YOURUSERNAME'
 password = 'YOURPASSWORD'
 host = 'http://0.0.0.0'
 
-# Get the parcel id for this location, make sure to get the parcel geometry as well
-locurl = """{}/query/parcelByLocation?parcels={}&lon={}&lat={}&withGeometry=True"""
+# Set parcel query parameters
+aoi = 'ms'
+year = '2020'
+ptype = ''
+lon = '5.1234'
+lat = '50.1234'
 
-# set the query parameters
-parcels = 'ms2019'
-lon='5.6637'
-lat='52.6936'
 
 # Parse the response with the standard json module
-response = requests.get(locurl.format(host, parcels, lon, lat), auth = (username, password))
-
+# Get parcel information for a given location
+parcelurl = """{}/query/parcelByLocation?aoi={}&year={}&lon={}&lat={}&withGeometry=True&ptype={}"""
+response = requests.get(parcelurl.format(host, aoi, year, lon, lat, ptype), auth = (username, password))
 parcel = json.loads(response.content)
 
 # Check response
@@ -155,7 +152,7 @@ elif not parcel.get(list(parcel.keys())[0]):
     print(f"No parcel found in {parcels} at location ({lon}, {lat})")
     sys.exit()
 
-print(parcel)
+print(parcelurl.format(host, aoi, year, lon, lat, ptype))
 
 # Create a valid geometry from the returned JSON withGeometry
 geom = ogr.CreateGeometryFromJson(parcel.get('geom')[0])
@@ -177,7 +174,7 @@ centroid = geom.Centroid()
 centroid.Transform(transform)
 
 # Use pid for next request
-pid = parcel['ogc_fid'][0]
+pid = parcel['pid'][0]
 cropname = parcel['cropname'][0]
 
 # Set up the rawChip request
@@ -189,7 +186,8 @@ end_date ='2019-06-30'
 band = 'SCL'    # Start with the SCL scene, to check cloud cover conditions
 chipsize = 2560 # Size of the extracted chip in meters (5120 is maximum)
 
-response = requests.get(rawurl.format(host, str(centroid.GetX()), str(centroid.GetY()), start_date, end_date, band, chipsize), auth = (username, password))
+print(rawurl.format(host, str(centroid.GetY()), str(centroid.GetX()), start_date, end_date, band, chipsize))
+response = requests.get(rawurl.format(host, str(centroid.GetY()), str(centroid.GetX()), start_date, end_date, band, chipsize), auth = (username, password))
 
 # Directly create a pandas DataFrame from the json response
 df = pd.read_json(response.content)
@@ -203,7 +201,7 @@ print(df)
 
 # Download the GeoTIFFs that were just created in the user cache
 for c in df.chips:
-    url = f"http://185.178.85.226{c}"
+    url = f"{host}{c}"
     res = requests.get(url, stream=True)
     outf = c.split('/')[-1]
     print(f"Downloading {outf}")
