@@ -1,0 +1,27 @@
+{
+    "ms_2020": {
+        "db": "main",
+        "description": "Dataset description",
+        "center": "51.0,14.0",
+        "zoom": "5",
+        "year": "",
+        "start_date": "",
+        "end_date": "",
+        "extent": "",
+        "flip_coordinates": "False",
+        "tables": {
+            "parcels": "ms.parcels_2020",
+            "dias_catalog": "dias_catalogue",
+            "scl": "ms.hists_2020",
+            "s2": "ms.sigs_2020",
+            "bs": "ms.sigs_2020",
+            "c6": "ms.sigs_2020",
+            "bs_tf": "ms.bs_ten"
+        },
+        "pcolumns": {
+            "parcel_id": "id",
+            "crop_name": "crop_name",
+            "crop_code": "crop_code"
+        }
+    }
+}

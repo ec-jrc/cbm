@@ -5,9 +5,11 @@ config/*
 *gdalwmscache*
 
 # RESTful API
+
 api/config/*
 !api/config/default.main.json
 !api/config/default.datasets.json
+
 api/static/dump/*
 api/ms_files/*
 api/uploads/*
@@ -21,7 +23,6 @@ api/gunicorn
 
 # Dashboard
 api/flask_monitoringdashboard.db
-api/config/dashboard.cfg
 
 # Notebooks folder
 ipynb/temp/*
