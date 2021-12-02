@@ -117,7 +117,7 @@ def add(username, password='', aoi=''):
     print(f"The user '{username}' was created.")
 
 
-def get_list(file=users_file, only_names=True):
+def get_list(file=users_file, only_names=True, aois=False):
     """Get the list of active users
 
     Example:
@@ -132,6 +132,11 @@ def get_list(file=users_file, only_names=True):
             users = json.load(u)
         if only_names:
             return [*users]
+        elif aois:
+            users_aois = {}
+            for user in users:
+                users_aois[user] = users[user]["aois"]
+            return users_aois
         else:
             return users
     except Exception:
