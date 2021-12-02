@@ -2,8 +2,12 @@
 
 # CbM General
 config/*
+*gdalwmscache*
 
 # RESTful API
+api/config/*
+!api/config/default.main.json
+!api/config/default.datasets.json
 api/static/dump/*
 api/ms_files/*
 api/uploads/*
@@ -14,8 +18,10 @@ api/tms/*
 
 api/core
 api/gunicorn
-api/config/users.json
-api/config/data_auth.json
+
+# Dashboard
+api/flask_monitoringdashboard.db
+api/config/dashboard.cfg
 
 # Notebooks folder
 ipynb/temp/*
@@ -25,10 +31,6 @@ ipynb/*/temp/*
 ipynb/*/config/*
 ipynb/*/data/*
 ipynb/test*
-
-# Dashboard
-api/flask_monitoringdashboard.db
-api/config/dashboard.cfg
 
 # ---> Python
 # Byte-compiled / optimized / DLL files
