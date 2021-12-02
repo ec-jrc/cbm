@@ -1,4 +1,4 @@
-# itignore CbM files
+# itignore files
 
 # CbM General
 config/*
@@ -7,8 +7,8 @@ config/*
 # RESTful API
 
 api/config/*
-!api/config/default.main.json
-!api/config/default.datasets.json
+!api/config/default_main.json
+!api/config/default_datasets.json
 
 api/static/dump/*
 api/ms_files/*
