@@ -1,14 +1,5 @@
 # Database for JRC CbM
 
-## Table of contents
-* [DB in the CbM architecture](#db-in-the-cbm-architecture)
-* [Spatial database in a nutshell](#spatial-database-in-a-nutshell)
-* [JRC CbM DB structure](#jrc-cbm-db-structure)
-* [Database access](#database-access)
-* [Data retrieval](#data-retrieval)
-* [Export and import data](#export-and-import-data)
-* [Performance optimization](#performance-optimization)
-
 ## DB in the CbM architecture
 
 Sentinel images offer the possibility to monitor in real time and on a continuous basis the conditions of the agricultural parcels and their coherence with the declarations made by the farmers within the Common Agricultural Policy (CAP). At the same time, this huge amount of data poses technical challenges for the extraction and handling of the information (signatures) that is relevant for the Checks by Monitoring (CbM). In this respect the **database** (DB) plays a central role in the demonstrative [JRC CbM architecture](https://jrc-cbm.readthedocs.io/en/latest/dias4cbm_architecture.html), as it is the tool used to store and manage the data involved in the process (except satellite images).  
@@ -44,7 +35,7 @@ The main features of (spatial) relational databases are:
 
 In a nutshell, we can define relational database as a tool to securely store and preserve large volume of standardized and consistent data (including spatio-temporal data) that can be efficiently retrieved by multiple remote users with different interfaces with no data duplication.
 
-### Main database elements
+#### Main database elements
 
 The basic element of a database is called a [TABLE](https://www.postgresql.org/docs/devel/static/sql-createtable.html). It is composed of columns and rows, but unlike what happens in spreadsheet, a table is declaratively created with a structure: each column has a defined [DATA TYPE](http://www.postgresql.org/docs/devel/static/datatype.html), and the rows (also called *records*) must respect this type: the system enforces this constraint, and does not allow the wrong kind of data to slip in.  
 Some of the frequently used data types are: `integer` for whole numbers, `numeric` for decimal numbers, `text` for character strings, `date` for dates, `boolean` for yes/no values, `timestamp` for attributes containing date and time. Each data type has specific properties and functions associated. For instance, a column declared to be of a numerical type will not accept arbitrary text strings, and the data stored in such a column can be used for mathematical computations. By contrast, a column declared to be of a character string type will accept almost any kind of data but it does not lend itself to mathematical calculations, although other operations such as string concatenation are available.  
@@ -66,7 +57,7 @@ Spatial data types can be manipulated with the SQL language through a comprehens
 A spatial database does not replace GIS software, especially for visualisation, map creation and some advanced functions, but facilitates the integration and management of spatial data with other available information. Moreover, spatial data are generally based on widely used shared standards, which makes the exchange of data between different platforms simple and straightforward and allows a seamless integration between spatial databases and GIS software, which can be used as database clients.  
 To visualise spatial data, like all other data in a database, a client application is needed that requests the data from the server and displays it to the user in the required format. For spatial data, the best client is QGIS. PgAdmin provides a very fast way of displaying spatial objects in a table, although it does not offer the functionality of GIS software.  
 
-### PostgreSQL and PostGIS
+#### PostgreSQL and PostGIS
 
 [PostgreSQL](https://www.postgresql.org/) represents the state of the art as regards relational databases, and in particular spatial databases thanks to its extension [PostGIS](https://postgis.net/). First of all, this is **open source** software. This has the following advantages:  
 * Use of standards  
@@ -94,7 +85,7 @@ Another important PostgreSQL feature is the possibility to scale it beyond runni
 As relational database are based on industrial standard, it is usually easy to move data from a specific software to another. Many other relational database software exist. PostgreSQL is the recommended choice, but if a database already exists in the organization that wants to implement a CbM system, it is probably better to keep the same platform. Other popular database with a spatial extension are for example MySQL, SQLServer and Oracle. For local, simple and single-user database SQLite with its spatial extension SpatiaLite is also a possibility (this is usually non the case for CbM).  
 Relational database is not the only option to store and manage data in a "modern" database. NoSQL database (as opposed to relational databases based on SQL) offers different features compared to relational database. It is more suited for contexts where the evolving data structure requires a flexible data model. Given the well structured and defined database schema of CbM, and because data integrity and consistency is better granted by SQL database, we opted for a solution based on relation database. However, given its ability to scale up easily, the NoSQL database can be considered as an alternative in specific cases.
 
-### SQL  
+#### SQL  
 **SQL** (Structured Query Language) is the universally used data definition and manipulation language in relational databases, i.e. the way for user to interact with SRDBMS. It does not require sequences of operations to be written, but to specify the logical properties of the information sought (declarative language). SQL statements are used to perform tasks such as retrieve data from a database (in this case they are commonly called "queries") or update and create database objects. SQL is highly standardized and while each database platform has some kind of SQL dialect, it can be used with any SRDBMS software with minimal changes. While complex queries can be hard to design, SQL itself is a simple language that combines a very limited sets of commands in a way that is similar to the natural language.  
 You can run SQL commands, explore database objects and see tables using any client that is able to connect with your DB (i.e. most of the software that deals with data). The reference graphical interface for PostgreSQL database management and query is [PgAdmin](https://www.pgadmin.org/). **Psql** is the interactive terminal for working with Postgres (command line).  
 The operation of choosing the records from a table or a combination of tables is called *selection*: the `SELECT` command allows you to express clearly which columns you need, which rows, and in which order; you can also generate computed data on the fly. The basic structure of a query is the following:
@@ -141,7 +132,7 @@ The information from different tables can be combined in a SQL statement to gene
 
 ## Database access
 
-### Server/client structure
+#### Server/client structure
 The database architecture is based on a client-server structure. It is divided into two distinct components: a "server" program that provides a service and a "client" program that accesses the service.  
 The database server (PostgreSQL) is the back-end system of the database application and provides database functionality to client applications.  
 The client is usually an interface through which a user makes a request to the server through SQL commands. The client then converts the server's response into the form requested by the user. Some examples of possible clients are PgAdmin, QGIS, Python through Psycopg2, R, Calc, Excel, PhP web interfaces, MS Access, ArcGIS.  
@@ -149,7 +140,7 @@ In this architecture the data management and storage layer is physically separat
 A database server is installed on a physical computer (server), or in services in the cloud. Several database servers can be installed on the same machine. Several databases can be created within the same database server.  
 In the JRC CbM, the database is installed on the DIAS (although installation on a local machine is also an option). For more information on installation and initialization (e.g. creation of the image database table and enabling of the PostGIS spatial extension) of the database check the [specific documentation](https://jrc-cbm.readthedocs.io/en/latest/setup_software.html).
 
-### Access parameters  
+#### Access parameters  
 In order to remotely access a database from any client, five parameters are usually necessary:  
 
 * Server IP address  
@@ -160,7 +151,7 @@ In order to remotely access a database from any client, five parameters are usua
 
 In the Outreach project, if requested, these information are provided directly to users limiting access to the specific MS data sets, but in general DB access to the Outreach database is granted through an intermediate layer. In an internal MS/PA CbM system, we recommend to limit direct DB access to specific cases (i.e. database administrators, users with advanced skills in SQL and good knowledge of the database structure). In all the other cases an intermediate layer can be used, as in the case of the Outreach DB. This ensures performance and security by preventing poorly designed resource-intensive queries and facilitates access to basic users with no knowledge of SQL who can be guided by predefined queries offered as a simple graphical interface where only defined parameters need to be defined. This can be implemented using a RestFUL API, as in the case of the Outreach database.
 
-### User access policy
+#### User access policy
 One of the most important functions of a database is the possibility of restricting access and possible operations (e.g. read, edit, insert, delete) on the data according to the different types of users, and in a differentiated manner for the different tables/rows of the database.  
 PostgreSQL manages access permissions to the database through [ROLES](https://www.postgresql.org/docs/devel/user-manag.html). A role is an entity that can own objects and have privileges on the database. It can be an individual user or a group of users. Users can be grouped to facilitate privilege management: privileges can be granted to, or revoked from, a group as a whole simplifying a lot the management of the permission policy. This is done by creating a role that represents the group (for example *administrators* that can create/delete objects in the database, *editors* that can add, delete and update data in existing tables, and *viewer* that can only view all or part of the data but not change it), and then granting membership of the group role to individual user roles (administrators, analysts, final users). Database roles apply to all databases in a cluster, but permissions are then associated with the individual objects in each database. Each user is assigned a password together with the role to ensure data security. Access to the server itself can be restricted to certain IP addresses to further reinforce security. In PostgreSQL, permissions can go down to the single record level.  
 In the Outreach project, access is managed by the intermediate layer connected to a read-only role defined in the database (*api_bot*).  
@@ -169,7 +160,7 @@ In the Outreach project, access is managed by the intermediate layer connected t
 To interact with a PostgreSQL database, it is not necessary to install PostgreSQL, but it is sufficient to install a client that connects to the database (server). The database with the data is instead physically installed on the server (e.g. in the DIAS). In this Section we show examples of connection of typical clients for spatial and non spatial data.  
 Only a limited set of information is provided here. Practical demonstrations are done during the MS trainings on JRC CbM. In addition, many tutorials are available on the Internet for further study.
 
-### PgAdmin
+#### PgAdmin
 [PgAdmin](https://www.pgadmin.org/) is the most common graphical interface for querying data and managing PostgreSQL. You can view tables, query and download data, create new tables and views, edit and insert data, manage users, make backups. PgAdmin is an open source software and has very frequent updates. If you install PostgreSQL, PgAdmin is installed automatically.  
 PgAdmin is not the only client that you can use to manipulate data and objects in the database. An alternative to PgAdmin for database management is for example [dBeaver](https://dbeaver.io/download/) (Community version), which is also very useful for generating ER diagrams.
 Note that when you open PgAdmin for the first time, it asks you to create a password. This is not the password for accessing the databases, but only the password for accessing PgAdmin (since PgAdmin stores all database access passwords internally).  
@@ -194,20 +185,20 @@ Figure 3. Creating a connection to a database server
 
 Once saved, the connection will appear in the menu tree by expanding the *Server* icon.  
 
-### phpPgAdmin
+#### phpPgAdmin
 There is an alternative to PgAdmin that does not require the installation of any local client because it uses a tool installed on the server: [PhpPgAdmin](https://github.com/phppgadmin/phppgadmin). The interface is similar to PgAdmin, but it has less functionalities and can have problems with unstable connections, and it has limited development support.
 
-### Psql
+#### Psql
 [Psql](https://www.postgresql.org/docs/devel/app-psql.html) is the interactive terminal for working with PostgreSQL. It enables to type in queries interactively, issue them to PostgreSQL, and see the query results. Alternatively, input can be from a file or from command line arguments. In addition, psql provides a number of meta-commands and various shell-like features to facilitate writing scripts and automating a wide variety of tasks. For example `\d` list tables in the database and `\d public.dias_catalogue` list all the columns of the specified table.
 
-### QGIS
+#### QGIS
 PostgreSQL/PostGIS itself offers no tool for spatial data visualization, but this can be done by a number of client applications, in particular GIS desktop software like QGIS (a powerful and complete open source software). It offers all the functions needed to deal with spatial data and offers many tools specifically for managing and visualizing PostGIS data. Connecting to the database is pretty simple and the process is well documented. Data can be accessed in three steps: 1) create a connection to the db (the first time that you connect to the db, see Figure 4) using the database access parameters, 2) open the connection, 3) get the data.  
 Once the connection is created, you can use the dedicated DB Manager interface to explore, preview, visualize in the main canvas and also export spatial data (both vector and raster).
 ![](/docs/img/qgis_connection.png)  
 ![](/img/qgis_connection.png)  
 Figure 4. Connecting with the database from QGIS
 
-### Jupiter Notebook
+#### Jupiter Notebook
 Python is the suggested tool to access the JRC CbM and the examples provided in the system documentation are always based on it. Here a simple example of connection with the database using the Python psycopg2 is reported:
 
 ```Python
@@ -236,10 +227,10 @@ for rows in cur:
     print(rows)
 ```
 
-### RESTful API
+#### RESTful API
 Several examples of interaction with the database using a RESTful api are provided in the [dedicated JRC CbM documentation](https://jrc-cbm.readthedocs.io/en/latest/api_ts.html).
 
-### R
+#### R
 To import data from the database into [R](https://www.r-project.org/), simply use the code below (via the RPostgreSQL library):  
 
 ```R

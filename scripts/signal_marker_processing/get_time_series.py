@@ -14,6 +14,7 @@ from matplotlib import pyplot
 import matplotlib.dates as mdates
 import matplotlib.ticker as ticker
 import calendar
+import psycopg2
 
 def get_extracted_data_from_restful(ms, year, parcel_id, api_user, api_pass, tstype,
                                     ptype):
