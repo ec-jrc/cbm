@@ -4,12 +4,13 @@
 
 .. toctree::
    :maxdepth: 3
-   :caption: Introduction
+   :caption: Introduction to JRC CbM
 
    dias4cbm_intro
    dias4cbm_architecture
    dias4cbm_setup
    dias4cbm_analysis
+   dias4cbm_use
 
 .. toctree::
    :maxdepth: 3
