@@ -13,6 +13,7 @@ import datetime
 import numpy as np
 import os
 import gc
+import psycopg2
 
 import get_time_series as gts
 

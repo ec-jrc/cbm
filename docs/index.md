@@ -5,10 +5,10 @@
 These pages are the technical documentation of the [JRC CbM CODE REPOSITORY](https://github.com/ec-jrc/cbm).  
 An introduction to the project, with an overview of its architecture and scope, is provided in the [JRC CbM GENERAL DOCUMENTATION](dias4cbm_intro.md).  
 
-The code and documentation of the two components of the JRC CbM (the backend and the frontend) are organized per tasks and grouped in three main categories: set up of the infrastructure (backend - system administrators), develop analytical functionalities (frontend - analysts), apply the functionalities (frontend - final users).  
-
-The **backend** components with an introduction to its features is described in the [BACKEND DOCUMENTATION](dias4cbm_setup.md).  
-The **frontend** components with an introduction to its features is described in the [FRONTEND DOCUMENTATION for data analysis](dias4cbm_analysis.md) and in the [FRONTEND DOCUMENTATION for data use](dias4cbm_use.md).
+The code and documentation of the main components of the JRC CbM are organized per tasks and grouped in three main categories: set up of the infrastructure (backend), make data available to users (frontend), apply the functionalities (data analytics - final users).  
+The **backend** component is introduced in the [BACKEND DOCUMENTATION](dias4cbm_setup.md).  
+The **frontend** component is introduced in the [FRONTEND DOCUMENTATION](dias4cbm_analysis.md).
+The **data analytics** component is introduced in the [DATA ANALYTICS DOCUMENTATION](dias4cbm_use.md).
 
 Go to the [JRC CbM documentation TABLE OF CONTENTS](index.rst) for the complete list of documentation sections.
 
