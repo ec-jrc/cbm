@@ -44,10 +44,10 @@ datasets = db_queries.get_datasets()
 try:
     import flask_monitoringdashboard as dashboard
     dashboard.bind(app)
-    dashboard.config.init_from(file='dashboard.cfg')
+    dashboard.config.init_from(file='config/dashboard.cfg')
 
-except Exception:
-    print("!ERROR! Can not start dashboard.")
+except Exception as err:
+    print("!ERROR! Can not start dashboard.", err)
 
 # -------- Core functions ---------------------------------------------------- #
 
@@ -139,7 +139,10 @@ def get_user_id():
     return user
 
 
-dashboard.config.group_by = get_user_id
+try:
+    dashboard.config.group_by = get_user_id
+except Exception:
+    pass
 
 
 @app.route('/query/', methods=['GET'])
@@ -150,7 +153,7 @@ def query():
 
 @app.route('/query/info', methods=['GET'])
 @auth_required
-def options():
+def info():
     info_dict = info_page.generator(user)
     return current_app.response_class(json.dumps(info_dict, indent=4),
                                       mimetype="application/json")
@@ -232,7 +235,6 @@ def backgroundByLocation_query():
         return json.dumps({})
 
 
-@app.route('/query/backgroundByParcelId', methods=['GET'])
 @app.route('/query/backgroundByParcelID', methods=['GET'])
 @auth_required
 def backgroundByID_query():
@@ -837,7 +839,6 @@ def parcelByLocation_query():
                                    [list(i) for i in zip(*data[1:])])))
 
 
-@app.route('/query/parcelById', methods=['GET'])
 @app.route('/query/parcelByID', methods=['GET'])
 @auth_required
 def parcelByID_query():
