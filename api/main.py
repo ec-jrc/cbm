@@ -19,32 +19,28 @@ from time import strftime
 from decimal import Decimal
 from functools import wraps
 from flasgger import Swagger
-from werkzeug.utils import secure_filename
 from logging.handlers import TimedRotatingFileHandler
 from flask import (Flask, request, send_from_directory, make_response,
-                   render_template, flash, redirect, abort, url_for,
-                   current_app)
+                   render_template, abort, url_for, current_app)
 
 
-from scripts import db_queries, image_requests, users, info_page
+from scripts import db_queries, image_requests, users, info_page, file_manager
 
+
+# Global variables
+UPLOAD_ENABLE = True  # Enable upload page (http://HOST/files/upload).
+DEBUG = False
+DEFAULT_AOI = ''
+STORAGE = 'files'
 
 app = Flask(__name__)
 app.secret_key = os.urandom(12)
-app.config["MS_FILES"] = 'ms_files'
-app.config['UPLOAD_FOLDER'] = 'uploads'
-
-# Enable upload page (http://HOST/upload).
-UPLOAD_ENABLE = True  # True or False
-DEBUG = False
-DEFAULT_AOI = ''
 datasets = db_queries.get_datasets()
-
 
 try:
     import flask_monitoringdashboard as dashboard
     dashboard.bind(app)
-    dashboard.config.init_from(file='config/dashboard.cfg')
+    # dashboard.config.init_from(file='config/dashboard.cfg')
 
 except Exception as err:
     print("!ERROR! Can not start dashboard.", err)
@@ -949,22 +945,28 @@ def allowed_file(filename):
 @app.route('/files', methods=['GET', 'POST'])
 @auth_required
 def download_files():
-    aoi = request.args.get('aoi')
-    if aoi.lower() in [k.split('_')[0] for k in datasets]:
-        aoi_files = glob.glob(f'{app.config["MS_FILES"]}/{aoi.upper()}/*')
+    users_list = users.get_list(only_names=False, aois=True)
+    aoi = users_list[user][0]
+    if aoi == 'admin':
+        aoi_files = glob.glob(f'{STORAGE}/*/*')
     else:
-        aoi_files = []
-    return render_template("ms_files.html", files=aoi_files)
+        aoi_files = glob.glob(f'{STORAGE}/{aoi.upper()}/*')
+
+    return render_template("ms_files.html", files=aoi_files, aoi=aoi.upper())
 
 
-@app.route(f'/{app.config["MS_FILES"]}/<aoi>/<filename>')
+@app.route(f'/{STORAGE}/<aoi>/<filename>')
 @auth_required
 def download_file(aoi, filename):
-    return send_from_directory(f'{app.config["MS_FILES"]}/{aoi.upper()}',
-                               filename, as_attachment=True)
+    if aoi == 'admin':
+        return send_from_directory(f'{STORAGE}',
+                                   filename, as_attachment=True)
+    else:
+        return send_from_directory(f'{STORAGE}/{aoi.upper()}',
+                                   filename, as_attachment=True)
 
 
-@app.route('/upload', methods=['GET', 'POST'])
+@app.route('/files/upload', methods=['GET', 'POST'])
 @auth_required
 def upload_file():
     """
@@ -973,35 +975,15 @@ def upload_file():
     tags:
       - upload
     """
-    # Show upload page only if the uploader is enabled.
-    if UPLOAD_ENABLE is True:
+    users_list = users.get_list(only_names=False, aois=True)
+    aoi = users_list[user][0]
+
+    if UPLOAD_ENABLE is True:  # Show upload page only if it is enabled.
         if request.method == 'POST':
-            if 'file' not in request.files:
-                flash('No file part')
-                return redirect(request.url)
-            file = request.files['file']
-            if not allowed_file(file.filename):
-                flash('Not allowed file type selection')
-                return render_template('not_allowed.html')
-            if file.filename == '':
-                flash('No selected file')
-                return render_template('no_selection.html')
-            if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                flash('The file is uploaded.')
-                return render_template('uploaded.html')
+            file_manager.upload(request, app.config['MS_FILES'], aoi)
         return render_template('upload.html')
     else:
         return ''
-
-
-# To download an uploaded file (http://0.0.0.0/uploads/FILENAME.zip).
-@app.route('/uploads/<filename>')
-@auth_required
-def uploaded_file(filename):
-    if UPLOAD_ENABLE is True:
-        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
 # ======== Main ============================================================== #
