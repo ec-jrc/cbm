@@ -28,7 +28,7 @@ def parcel_by_loc(aoi, year, lon, lat, geom=False):
 def parcel_by_id(aoi, year, pid, geom=False):
     values = config.read()
     db = int(values['dataset'][aoi]['db'])
-    data = db.getParcelById(aoi, year, pid, geom, db)
+    data = db.getParcelByID(aoi, year, pid, geom, db)
     if not data:
         return json.dumps({})
     elif len(data) == 1:

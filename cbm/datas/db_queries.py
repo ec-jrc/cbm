@@ -80,7 +80,7 @@ def getParcelByLocation(dataset, lon, lat, ptype='',
         return data.append('Ended with no data')
 
 
-def getParcelById(dataset, pid, ptype='', withGeometry=False,
+def getParcelByID(dataset, pid, ptype='', withGeometry=False,
                   wgs84=False):
 
     conn = db.conn(dataset['db'])

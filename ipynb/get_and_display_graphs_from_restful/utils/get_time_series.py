@@ -15,19 +15,19 @@ import matplotlib.dates as mdates
 import matplotlib.ticker as ticker
 import calendar
 
-def get_extracted_data_from_restful(ms, year, parcel_id, api_user, api_pass, tstype, 
+def get_extracted_data_from_restful(ms, year, parcel_id, api_user, api_pass, tstype,
                                     ptype):
     was_error = False
     if ms == "be-wa":
         ms = "bewa"
-  
+
     if ptype == "":
         url = "http://185.178.85.7/query/parcelTimeSeries?aoi=" + ms + "&year=" + str(year) + "&pid=" + str(parcel_id) + "&tstype=" + tstype + "&scl=True&ref=True"
     else:
         url = "http://185.178.85.7/query/parcelTimeSeries?aoi=" + ms + "&year=" + str(year) + "&pid=" + str(parcel_id) + "&ptype=" + ptype + "&tstype=" + tstype + "&scl=True&ref=True"
     print(url)
 #    response = requests.get(url, auth=(api_user, api_pass))
-    
+
     try:
         response = requests.get(url, auth=(api_user, api_pass))
         print(response)
@@ -41,7 +41,7 @@ def get_extracted_data_from_restful(ms, year, parcel_id, api_user, api_pass, tst
                     df['date_part']=df['date_part'].map(lambda e: datetime.datetime.fromtimestamp(e))
                     df['orbit'] = df['date_part'].apply(lambda s: 'D' if s.hour < 12 else 'A')
                     df['date'] = df['date_part'].apply(lambda s: s.date())
-        
+
                 if tstype == "bs":
                     df['date_part']=df['date_part'].map(lambda e: datetime.datetime.fromtimestamp(e))
                     df['orbit'] = df['date_part'].apply(lambda s: 'D' if s.hour < 12 else 'A')
@@ -63,22 +63,22 @@ def get_extracted_data_from_restful(ms, year, parcel_id, api_user, api_pass, tst
     except requests.exceptions.RequestException as err:
         was_error = True
         print ("OOps: Something Else",err)
- 
+
     if was_error:
         df = pd.DataFrame()
-    return url, df, was_error    
+    return url, df, was_error
 
 
 def get_parcel_data_from_restful(ms, year, parcel_id,api_user, api_pass, ptype):
-    was_error = False    
+    was_error = False
     if ms == "be-wa":
         ms = "bewa"
     if ptype == "":
-        url = "http://185.178.85.7/query/parcelById?aoi=" + ms + "&year=" + str(year) + "&pid=" + str(parcel_id) + "&withGeometry=True"
+        url = "http://185.178.85.7/query/parcelByID?aoi=" + ms + "&year=" + str(year) + "&pid=" + str(parcel_id) + "&withGeometry=True"
     else:
-        url = "http://185.178.85.7/query/parcelById?aoi=" + ms + "&year=" + str(year) + "&pid=" + str(parcel_id) + "&ptype=" + ptype + "&withGeometry=True"
+        url = "http://185.178.85.7/query/parcelByID?aoi=" + ms + "&year=" + str(year) + "&pid=" + str(parcel_id) + "&ptype=" + ptype + "&withGeometry=True"
 
-    print(url)        
+    print(url)
     try:
         response = requests.get(url, auth=(api_user, api_pass))
         print(response)
@@ -99,12 +99,12 @@ def get_parcel_data_from_restful(ms, year, parcel_id,api_user, api_pass, ptype):
     except requests.exceptions.RequestException as err:
         was_error = True
         print ("OOps: Something Else",err)
-   
+
     if was_error:
         df = pd.DataFrame()
-        
-    return url, df, was_error        
- 
+
+    return url, df, was_error
+
 def get_cloudyness(cloud_stats, cloud_categories):
     is_cloudy = False
     cloudy_pixels = 0
@@ -138,13 +138,13 @@ def calculate_ndvi_and_cloud_percent_for_the_parcel(df_ext, cloud_categories):
     df = df_ext.copy()
     # Convert the epoch timestamp to a datetime
     df['date_part']=df['date_part'].map(lambda e: datetime.datetime.fromtimestamp(e))
-    df['cloud_pct'] = df['hist'].apply(lambda s: get_cloudyness(s, cloud_categories)[1]) 
+    df['cloud_pct'] = df['hist'].apply(lambda s: get_cloudyness(s, cloud_categories)[1])
     bands = ['B04', 'B08']
     # Check if extraction exists for these bands 4 and 8 for NDVI calculation, otherwise quit
     length_of_band0 = len(df[df['band']==bands[0]])
     length_of_band1 = len(df[df['band']==bands[1]])
     if length_of_band0>0 and length_of_band1>0:
-         # Treat each band separately. 
+         # Treat each band separately.
         df0 = df[df['band']==bands[0]][['date_part', 'mean', 'count', 'std', 'cloud_pct', 'reference']]
         df1 = df[df['band']==bands[1]][['date_part', 'mean', 'count', 'std', 'cloud_pct', 'reference']]
         # Merge back into one DataFrame based on reference that should be unique
@@ -161,11 +161,11 @@ def calculate_ndvi_and_cloud_percent_for_the_parcel(df_ext, cloud_categories):
         return pd.DataFrame()
 
 def diff_month(d1, d2):
-    return (d1.year - d2.year) * 12 + d1.month - d2.month  
+    return (d1.year - d2.year) * 12 + d1.month - d2.month
 
-def display_ndvi_profiles(x_start_date, x_end_date, ndvi_profile, parcel_id, crop, plot_title, 
+def display_ndvi_profiles(x_start_date, x_end_date, ndvi_profile, parcel_id, crop, plot_title,
                          output_graph_folder, logfile, jpg_filename,
-                         add_error_bars = False, save_figures = False, fixed_date_range = False):                                         
+                         add_error_bars = False, save_figures = False, fixed_date_range = False):
     y_tick_spacing = 0.1
     if not os.path.exists(output_graph_folder):
         os.makedirs(output_graph_folder)
@@ -184,7 +184,7 @@ def display_ndvi_profiles(x_start_date, x_end_date, ndvi_profile, parcel_id, cro
     ax0.set_ylim([0,1])
     ax0.xaxis.set_major_locator(mdates.MonthLocator(interval=1))
     ax0.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
-         
+
     ax0.xaxis.grid() # horizontal lines
     ax0.yaxis.grid() # vertical lines
 
@@ -193,7 +193,7 @@ def display_ndvi_profiles(x_start_date, x_end_date, ndvi_profile, parcel_id, cro
     fig_size_x = 13
     fig_size_y = 7
     fig.set_size_inches(fig_size_x, fig_size_y)
-    
+
     if fixed_date_range:
         x_start_date_date = datetime.datetime.strptime(x_start_date, '%Y-%m-%d').date()
         x_end_date_date = datetime.datetime.strptime(x_end_date, '%Y-%m-%d').date()
@@ -208,11 +208,11 @@ def display_ndvi_profiles(x_start_date, x_end_date, ndvi_profile, parcel_id, cro
         max_month = max(ndvi_profile['acq_date']).date().month
         max_year = max(ndvi_profile['acq_date']).date().year
         number_of_months = diff_month(max(ndvi_profile['acq_date']).date(), min(ndvi_profile['acq_date']).date()) + 1
-        
-    ax0.set_xlim([datetime.date(min_year, min_month, 1), 
+
+    ax0.set_xlim([datetime.date(min_year, min_month, 1),
                   datetime.date(max_year, max_month,
                                 calendar.monthrange(max_year, max_month)[1])])
-    
+
     min_year_month = str(min_year) + ('0' + str(min_month))[-2:]
 #     start_x = 0.045
     step_x = 1/number_of_months
@@ -220,9 +220,9 @@ def display_ndvi_profiles(x_start_date, x_end_date, ndvi_profile, parcel_id, cro
                                      # so first year_month label is at half the size of the widht of
                                      # one month
     loc_y = 0.915
-    
+
     current_year_month_text = get_current_list_of_months(min_year_month, number_of_months)
-    
+
     for current_year_month_index in range (0, number_of_months):
         t = current_year_month_text[current_year_month_index]
         loc_x = start_x + (current_year_month_index) * step_x
@@ -232,26 +232,26 @@ def display_ndvi_profiles(x_start_date, x_end_date, ndvi_profile, parcel_id, cro
 
     # save the figure to a jpg file
     if save_figures:
-        fig.savefig(output_graph_folder + '/' + jpg_filename ) 
+        fig.savefig(output_graph_folder + '/' + jpg_filename )
         print("NDVI graph saved to file: " + output_graph_folder + '/' + jpg_filename )
-        pyplot.close(fig) 
+        pyplot.close(fig)
         return(output_graph_folder + '/' + jpg_filename)
-        
+
 def get_clean_cloudfree_unique_s2_data(ts, cloud_categories):
     if not ts.empty:
         ts_clean = calculate_ndvi_and_cloud_percent_for_the_parcel(ts, cloud_categories)
-        if ts_clean.empty:            
+        if ts_clean.empty:
             print("No clean, cloudfree data returned by function calculate_ndvi_and_cloud_percent_for_the_parcel", end =" ")
             print("in function get_clean_cloudfree_unique_s2_data")
             # we return an empty dataframe
             return pd.DataFrame()
         else:
-            ts_clean['dateB04'] = ts_clean['date_partB04'].apply(lambda s: s.date())  
-            ts_clean['dateB08'] = ts_clean['date_partB08'].apply(lambda s: s.date())  
+            ts_clean['dateB04'] = ts_clean['date_partB04'].apply(lambda s: s.date())
+            ts_clean['dateB08'] = ts_clean['date_partB08'].apply(lambda s: s.date())
             ts_clean = ts_clean.sort_values(by=['dateB04'])
 
         #                 The idea here is that we consider a date cloudfree only if in any UTM tile
-        #                 it is cloudfree - this is a conservative approach: if after the processing 
+        #                 it is cloudfree - this is a conservative approach: if after the processing
         #                 the image in any UTM there is a chance that it is cloudy we leave it out
             # first we calculate the maximum of the could percent for each date
             ts_clean_max_cc = ts_clean.groupby(['dateB04']).max()
@@ -267,7 +267,7 @@ def get_clean_cloudfree_unique_s2_data(ts, cloud_categories):
             # we calculate the max of NDVI and pixel count
             ts_clean_cloudfree_unique = ts_clean_cloudfree.groupby(['dateB04']).max()
             return ts_clean_cloudfree_unique
-    
+
 def get_current_list_of_months(first_year_month, number_of_year_months):
     textstrs_tuples = [
                     ("201701", "2017\nJAN"),
@@ -329,7 +329,7 @@ def get_current_list_of_months(first_year_month, number_of_year_months):
                     ("202109", "2021\nSEP"),
                     ("202110", "2021\nOCT"),
                     ("202111", "2021\nNOV"),
-                    ("202112", "2021\nDEC"),                       
+                    ("202112", "2021\nDEC"),
                       ]
 
     # find the index of the first occurrence of first_year_month in textstrs_tuples
@@ -346,13 +346,13 @@ def get_current_list_of_months(first_year_month, number_of_year_months):
     for i in range(first_year_month_index, first_year_month_index + number_of_year_months):
         current_textstrs.append(textstrs_tuples[i][1])
 
-    return current_textstrs    
+    return current_textstrs
 
 
 
 def plot_graph(ms,detection_type,year,ts_clean_cloudfree_unique,crop,out_base_folder,
                parcel_id, add_error_bars, save_figures, fixed_date_range):
-    
+
     parcel_id_as_filename = convert_string_to_filename(parcel_id)
 
     if ms == "pt":
@@ -373,7 +373,7 @@ def plot_graph(ms,detection_type,year,ts_clean_cloudfree_unique,crop,out_base_fo
         # select the parcel from the geopandas dataframe based on the fid_int column
         # and get real parcel id and crop name and other attributes if needed
         jpg_filename = str(parcel_id_as_filename) + ".jpg"
-        saved_figure = display_ndvi_profiles(x_start_date, x_end_date, ndvi_profile_filtered, parcel_id, crop, plot_title, 
+        saved_figure = display_ndvi_profiles(x_start_date, x_end_date, ndvi_profile_filtered, parcel_id, crop, plot_title,
                                                      output_graph_folder, logfile, jpg_filename,
                                                      add_error_bars, save_figures, fixed_date_range)
         return saved_figure
@@ -399,13 +399,13 @@ def get_crop_name_and_area(ms,year,parcel_id,api_user, api_pass, ptype):
         parcel_area_ha = area / 10000
         parcel_area_ha_str = str(round(parcel_area_ha,2))
     else:
-        crop = ""        
-        parcel_area_ha_str = ""        
+        crop = ""
+        parcel_area_ha_str = ""
     return crop, parcel_area_ha_str, url
 
 def save_ndvi_profile_to_csv(ts_clean_cloudfree_unique, out_csv_folder, parcel_id, crop):
     if not os.path.exists(out_csv_folder):
-        os.makedirs(out_csv_folder)    
+        os.makedirs(out_csv_folder)
     parcel_id_as_filename = convert_string_to_filename(parcel_id)
     output_df = ts_clean_cloudfree_unique.filter(items=['dateB08', 'ndvi','ndvi_std','countB08'])
     output_df.reset_index(drop=True, inplace=True)
@@ -414,20 +414,20 @@ def save_ndvi_profile_to_csv(ts_clean_cloudfree_unique, out_csv_folder, parcel_i
     output_df['crop']=crop
     output_df = output_df[[ 'parcel_id','date', 'ndvi', 'ndvi_std', 'count','crop']]
     out_csv_file = out_csv_folder + "/" + str(parcel_id_as_filename) + ".csv"
-    output_df.to_csv(out_csv_file, index=False)    
-    
+    output_df.to_csv(out_csv_file, index=False)
+
 def save_radar_profile_to_csv(radar_profile_filtered, out_csv_folder, parcel_id, crop):
     if not os.path.exists(out_csv_folder):
-        os.makedirs(out_csv_folder)    
+        os.makedirs(out_csv_folder)
     parcel_id_as_filename = convert_string_to_filename(parcel_id)
 #    parcel_id,date,ndvi,ndvi_std,count,crop
-    # parcel_id,date,meanVV,meanVH,orbit    
+    # parcel_id,date,meanVV,meanVH,orbit
     output_df = radar_profile_filtered.filter(items=['date', 'band','orbit','mean'])
     output_df['parcel_id']=parcel_id
     output_df['crop']=crop
     output_df = output_df[[ 'parcel_id','date', 'band', 'mean', 'orbit','crop']]
     out_csv_file = out_csv_folder + "/" + str(parcel_id_as_filename) + ".csv"
-    output_df.to_csv(out_csv_file, index=False)       
+    output_df.to_csv(out_csv_file, index=False)
 
 
 
@@ -442,21 +442,21 @@ def plot_radar_data_orbits_together(output_graph_folder, radar_profile_filtered,
     ax0 = pyplot.gca()
 
     if not separate_orbits:
-        radar_profile_filtered[(radar_profile_filtered["band"]=="VVc")].plot(kind='line', marker='+', x='date',y='mean', label='VV', color = 'lightblue', ax=ax0)          
-        radar_profile_filtered[(radar_profile_filtered["band"]=="VHc")].plot(kind='line', marker='+', x='date',y='mean', label='VH', color = 'orange', ax=ax0)          
+        radar_profile_filtered[(radar_profile_filtered["band"]=="VVc")].plot(kind='line', marker='+', x='date',y='mean', label='VV', color = 'lightblue', ax=ax0)
+        radar_profile_filtered[(radar_profile_filtered["band"]=="VHc")].plot(kind='line', marker='+', x='date',y='mean', label='VH', color = 'orange', ax=ax0)
     else:
-        radar_profile_filtered[(radar_profile_filtered["orbit"]=="D") & (radar_profile_filtered["band"]=="VVc")].plot(kind='line', marker='+', x='date',y='mean', label='VV Desc', ax=ax0)  
-        radar_profile_filtered[(radar_profile_filtered["orbit"]=="A") & (radar_profile_filtered["band"]=="VVc")].plot(kind='line', marker='+', x='date',y='mean', label='VV Asc', ax=ax0)  
+        radar_profile_filtered[(radar_profile_filtered["orbit"]=="D") & (radar_profile_filtered["band"]=="VVc")].plot(kind='line', marker='+', x='date',y='mean', label='VV Desc', ax=ax0)
+        radar_profile_filtered[(radar_profile_filtered["orbit"]=="A") & (radar_profile_filtered["band"]=="VVc")].plot(kind='line', marker='+', x='date',y='mean', label='VV Asc', ax=ax0)
 
-        radar_profile_filtered[(radar_profile_filtered["orbit"]=="D") & (radar_profile_filtered["band"]=="VHc")].plot(kind='line', marker='+', x='date',y='mean', label='VH Desc', ax=ax0)  
-        radar_profile_filtered[(radar_profile_filtered["orbit"]=="A") & (radar_profile_filtered["band"]=="VHc")].plot(kind='line', marker='+', x='date',y='mean', label='VH Asc', ax=ax0)  
+        radar_profile_filtered[(radar_profile_filtered["orbit"]=="D") & (radar_profile_filtered["band"]=="VHc")].plot(kind='line', marker='+', x='date',y='mean', label='VH Desc', ax=ax0)
+        radar_profile_filtered[(radar_profile_filtered["orbit"]=="A") & (radar_profile_filtered["band"]=="VHc")].plot(kind='line', marker='+', x='date',y='mean', label='VH Asc', ax=ax0)
 
     # format the graph a little bit
     # we check the first meanVV value and if it is positive we assume it is coherence
 
     pyplot.ylabel(r'Coherence')
-    
-    
+
+
 #    pyplot.ylabel(r'Backscattering coefficient, $\gamma\degree$ (dB)')
 
     pyplot.title(plot_title + ", Parcel id: " + str(parcel_id) + " " + crop)
@@ -489,7 +489,7 @@ def plot_radar_data_orbits_together(output_graph_folder, radar_profile_filtered,
         max_year = max(radar_profile_filtered['date']).date().year
         number_of_months = diff_month(max(radar_profile_filtered['date']).date(), min(radar_profile_filtered['date']).date()) + 1
 
-    ax0.set_xlim([datetime.date(min_year, min_month, 1), 
+    ax0.set_xlim([datetime.date(min_year, min_month, 1),
                   datetime.date(max_year, max_month,
                                 calendar.monthrange(max_year, max_month)[1])])
 
@@ -507,17 +507,17 @@ def plot_radar_data_orbits_together(output_graph_folder, radar_profile_filtered,
                 color='blue', fontsize=13)
     ax0.legend()
     ax0.set_ylim([0,1])
-    
+
 #     handles, labels = ax0.get_legend_handles_labels()
 #     order = [0,2,1,3]
-#     pyplot.legend([handles[idx] for idx in order],[labels[idx] for idx in order])    
+#     pyplot.legend([handles[idx] for idx in order],[labels[idx] for idx in order])
 
     # save the figure to a jpg file
     if save_figures:
         parcel_id_as_filename = convert_string_to_filename(parcel_id)
-        jpg_filename = str(parcel_id_as_filename) + ".jpg"        
-        fig.savefig(output_graph_folder + '/' + jpg_filename ) 
-        pyplot.close(fig) 
+        jpg_filename = str(parcel_id_as_filename) + ".jpg"
+        fig.savefig(output_graph_folder + '/' + jpg_filename )
+        pyplot.close(fig)
         print("COH6 graph saved to file: " + output_graph_folder + '/' + jpg_filename )
         return(output_graph_folder + '/' + jpg_filename)
 
@@ -525,7 +525,7 @@ def plot_radar_bs_data_orbits_together(output_graph_folder, radar_profile_filter
                                            plot_title, fixed_date_range, x_start_date, x_end_date,
                                            parcel_id, separate_orbits, crop, save_figures):
 
-    
+
     if not os.path.exists(output_graph_folder):
         os.makedirs(output_graph_folder)
 
@@ -533,20 +533,20 @@ def plot_radar_bs_data_orbits_together(output_graph_folder, radar_profile_filter
     ax0 = pyplot.gca()
 
     if not separate_orbits:
-        radar_profile_filtered[(radar_profile_filtered["band"]=="VVb")].plot(kind='line', marker='+', x='date',y='mean', label='VV', color = 'lightblue', ax=ax0)          
-        radar_profile_filtered[(radar_profile_filtered["band"]=="VHb")].plot(kind='line', marker='+', x='date',y='mean', label='VH', color = 'orange', ax=ax0)          
+        radar_profile_filtered[(radar_profile_filtered["band"]=="VVb")].plot(kind='line', marker='+', x='date',y='mean', label='VV', color = 'lightblue', ax=ax0)
+        radar_profile_filtered[(radar_profile_filtered["band"]=="VHb")].plot(kind='line', marker='+', x='date',y='mean', label='VH', color = 'orange', ax=ax0)
     else:
-        radar_profile_filtered[(radar_profile_filtered["orbit"]=="D") & (radar_profile_filtered["band"]=="VVb")].plot(kind='line', marker='+', x='date',y='mean', label='VV Desc', ax=ax0)  
-        radar_profile_filtered[(radar_profile_filtered["orbit"]=="A") & (radar_profile_filtered["band"]=="VVb")].plot(kind='line', marker='+', x='date',y='mean', label='VV Asc', ax=ax0)  
+        radar_profile_filtered[(radar_profile_filtered["orbit"]=="D") & (radar_profile_filtered["band"]=="VVb")].plot(kind='line', marker='+', x='date',y='mean', label='VV Desc', ax=ax0)
+        radar_profile_filtered[(radar_profile_filtered["orbit"]=="A") & (radar_profile_filtered["band"]=="VVb")].plot(kind='line', marker='+', x='date',y='mean', label='VV Asc', ax=ax0)
 
-        radar_profile_filtered[(radar_profile_filtered["orbit"]=="D") & (radar_profile_filtered["band"]=="VHb")].plot(kind='line', marker='+', x='date',y='mean', label='VH Desc', ax=ax0)  
-        radar_profile_filtered[(radar_profile_filtered["orbit"]=="A") & (radar_profile_filtered["band"]=="VHb")].plot(kind='line', marker='+', x='date',y='mean', label='VH Asc', ax=ax0)  
+        radar_profile_filtered[(radar_profile_filtered["orbit"]=="D") & (radar_profile_filtered["band"]=="VHb")].plot(kind='line', marker='+', x='date',y='mean', label='VH Desc', ax=ax0)
+        radar_profile_filtered[(radar_profile_filtered["orbit"]=="A") & (radar_profile_filtered["band"]=="VHb")].plot(kind='line', marker='+', x='date',y='mean', label='VH Asc', ax=ax0)
 
     # format the graph a little bit
     # we check the first meanVV value and if it is positive we assume it is coherence
 
-    
-    
+
+
     pyplot.ylabel(r'Backscattering coefficient, $\gamma\degree$ (dB)')
 
     pyplot.title(plot_title + ", Parcel id: " + str(parcel_id) + " " + crop)
@@ -579,7 +579,7 @@ def plot_radar_bs_data_orbits_together(output_graph_folder, radar_profile_filter
         max_year = max(radar_profile_filtered['date']).date().year
         number_of_months = diff_month(max(radar_profile_filtered['date']).date(), min(radar_profile_filtered['date']).date()) + 1
 
-    ax0.set_xlim([datetime.date(min_year, min_month, 1), 
+    ax0.set_xlim([datetime.date(min_year, min_month, 1),
                   datetime.date(max_year, max_month,
                                 calendar.monthrange(max_year, max_month)[1])])
 
@@ -597,17 +597,16 @@ def plot_radar_bs_data_orbits_together(output_graph_folder, radar_profile_filter
                 color='blue', fontsize=13)
     ax0.legend()
 #    ax0.set_ylim([0,1])
-    
+
 #     handles, labels = ax0.get_legend_handles_labels()
 #     order = [0,2,1,3]
-#     pyplot.legend([handles[idx] for idx in order],[labels[idx] for idx in order])    
+#     pyplot.legend([handles[idx] for idx in order],[labels[idx] for idx in order])
 
     # save the figure to a jpg file
     if save_figures:
         parcel_id_as_filename = convert_string_to_filename(parcel_id)
-        jpg_filename = str(parcel_id_as_filename) + ".jpg"        
-        fig.savefig(output_graph_folder + '/' + jpg_filename ) 
-        pyplot.close(fig) 
+        jpg_filename = str(parcel_id_as_filename) + ".jpg"
+        fig.savefig(output_graph_folder + '/' + jpg_filename )
+        pyplot.close(fig)
         print("COH6 graph saved to file: " + output_graph_folder + '/' + jpg_filename )
         return(output_graph_folder + '/' + jpg_filename)
-        

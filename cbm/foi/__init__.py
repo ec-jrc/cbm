@@ -37,4 +37,5 @@ def import_db_functions():
         if db.db_func_exist(basename(f).split('.')[0]):
             print(f"The '{basename(f)}' Was imported to the database.")
         else:
+            print(f"{path_foi_func}/{basename(f)}")
             print(f"Could not add function '{basename(f)}' to dattabase.")

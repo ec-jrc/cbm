@@ -37,7 +37,7 @@ def parcel_by_loc(aoi, year, lon, lat, ptype=None,
 def parcel_by_id(aoi, year, pid, ptype=None, geom=False,
                  wgs84=False, debug=False):
     api_url, api_user, api_pass = config.credentials('api')
-    requrl = """{}/query/parcelById?aoi={}&year={}&pid={}"""
+    requrl = """{}/query/parcelByID?aoi={}&year={}&pid={}"""
     if geom is True:
         requrl = f"{requrl}&withGeometry=True"
     if ptype not in [None, '']:
