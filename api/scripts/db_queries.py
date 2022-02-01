@@ -87,7 +87,7 @@ def getParcelByLocation(dataset, lon, lat, ptype='',
         return data.append('Ended with no data')
 
 
-def getParcelById(dataset, pid, ptype='', withGeometry=False,
+def getParcelByID(dataset, pid, ptype='', withGeometry=False,
                   wgs84=False):
 
     conn = db.conn(dataset['db'])
@@ -238,7 +238,7 @@ def getParcelTimeSeries(dataset, pid, ptype='',
     select_scl = ', h.hist' if scl else ''
     select_ref = ', d.reference' if ref else ''
 
-    where_shid = 'And s.pid = h.pid And h.obsid = s.obsid' if scl else ''
+    where_shid = 'And s.pid = h.pid And s.obsid = h.obsid' if scl else ''
     where_band = f"And s.band = '{band}' " if band else ''
 
     if tstype.lower() == 's2':

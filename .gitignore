@@ -11,7 +11,7 @@ api/config/*
 !api/config/default_datasets.json
 
 api/static/dump/*
-api/ms_files/*
+api/files/*
 api/uploads/*
 api/logs/*
 api/tms/*

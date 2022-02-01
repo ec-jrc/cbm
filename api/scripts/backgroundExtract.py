@@ -138,7 +138,7 @@ def getBackgroundExtract(lon, lat, chipSize, chipExtend, unique_dir,
                 datasets = db_queries.get_datasets()
                 aoi, year, pid, ptype = withGeometry
                 dataset = datasets[f'{aoi}_{year}']
-                pdata = db_queries.getParcelById(dataset, pid, ptype,
+                pdata = db_queries.getParcelByID(dataset, pid, ptype,
                                                  withGeometry, False)
                 if len(pdata) == 1:
                     parcel = dict(zip(list(pdata[0]),
