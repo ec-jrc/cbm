@@ -1,12 +1,35 @@
 <!doctype html>
 <html>
-   <body>
-    <title>Upload new File.</title>
-    <h1>Upload a file. Allowed file types: 'zip', 'tar.gz'</h1>
-       <p>For 500mb file, it will need around 15 min to upload.</p>
-    <form method=post enctype=multipart/form-data>
-      <input type=file name=file>
-      <input type=submit value=Upload>
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.4.0/min/dropzone.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.4.0/min/basic.min.css" />
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.4.0/min/dropzone.min.js">
+    </script>
+    <title>Upload File</title>
+</head>
+
+<body>
+    <h1>Upload files. Allowed file types: 'zip', 'tar.gz'</h1>
+    <br>
+    <form method="POST" action='/upload' class="dropzone dz-clickable" id="dropper" enctype="multipart/form-data">
     </form>
-    </body>
+
+    <script type="application/javascript">
+        Dropzone.options.dropper = {
+            paramName: 'file',
+            chunking: true,
+            forceChunking: true,
+            url: '/files/upload',
+            maxFilesize: 2050, // megabytes
+            chunkSize: 1000000 // bytes
+        }
+    </script>
+    <br>
+    <form action="/files">
+        <input type="submit" value="< Back" />
+    </form>
+</body>
+
 </html>

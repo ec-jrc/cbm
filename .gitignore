@@ -3,6 +3,7 @@
 # CbM General
 config/*
 *gdalwmscache*
+.cdsapirc
 
 # RESTful API
 

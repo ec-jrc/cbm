@@ -936,12 +936,6 @@ def parcelsByPolygon_query():
 # -------- Uploader ---------------------------------------------------------- #
 
 
-def allowed_file(filename):
-    # Allow specific file types.
-    return '.' in filename and \
-           filename.split('.', 1)[1].lower() in ['zip', 'tar.gz']
-
-
 @app.route('/files', methods=['GET', 'POST'])
 @auth_required
 def download_files():
@@ -952,7 +946,7 @@ def download_files():
     else:
         aoi_files = glob.glob(f'{STORAGE}/{aoi.upper()}/*')
 
-    return render_template("ms_files.html", files=aoi_files, aoi=aoi.upper())
+    return render_template("files.html", files=aoi_files, aoi=aoi.upper())
 
 
 @app.route(f'/{STORAGE}/<aoi>/<filename>')
@@ -980,7 +974,7 @@ def upload_file():
 
     if UPLOAD_ENABLE is True:  # Show upload page only if it is enabled.
         if request.method == 'POST':
-            file_manager.upload(request, app.config['MS_FILES'], aoi)
+            file_manager.upload(request, STORAGE, aoi)
         return render_template('upload.html')
     else:
         return ''
