@@ -180,7 +180,7 @@ cropname = parcel['cropname'][0]
 # Set up the rawChip request
 rawurl = """{}/query/rawChipByLocation?lon={}&lat={}&start_date={}&end_date={}&band={}&chipsize={}"""
 
-# query parameter values
+# Images query parameter values
 start_date='2019-06-01'
 end_date ='2019-06-30'
 band = 'SCL'    # Start with the SCL scene, to check cloud cover conditions

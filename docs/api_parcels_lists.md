@@ -6,10 +6,10 @@ Get the parcel "peers" for a known parcel ID, i.e. parcels with the same crop ty
 
 | Parameters  | Description   | Values | Default Value |
 | ----------- | --------------------- | ------------------------ |------------------------ |
-| **aoi** | Area of Interest (Member state or region code) | e.g.: at, pt, ie, etc. | - |
-| **year**     | year of parcels dataset   | e.g.: 2018, 2019 | - |
-| **pid**     | parcel id   |   | - |
-| ptype     | parcels type   | b, g, m, atc. | - |
+| **aoi** | Area of Interest (Member state or region code) | e.g.: at, pt, ie, etc. |   |
+| **year**     | year of parcels dataset   | e.g.: 2018, 2019 |   |
+| **pid**     | parcel id   |   |   |
+| ptype     | parcels type   | b, g, m, atc. |   |
 | distance     | maximum distance to search around parcel with **pid**   | < 5000.0 atc. | 1000.0 |
 | max  | maximum number of peers to return   | < 100 | 10 |
 
@@ -31,11 +31,11 @@ Get a list of parcels within a given polygon.
 
 | Parameters  | Description   | Values | Default Value |
 | ----------- | --------------------- | ------------------------ |------------------------ |
-| **aoi** | Area of Interest (Member state or region code) | e.g.: at, pt, ie, etc. | - |
-| **year**     | year of parcels dataset   | e.g.: 2018, 2019 | - |
-| **pid**     | parcel id   |   | - |
-| ptype     | parcels type   | b, g, m, atc. | - |
-| polygon     | polygon coordinates   | - | - |
+| **aoi** | Area of Interest (Member state or region code) | e.g.: at, pt, ie, etc. |   |
+| **year**     | year of parcels dataset   | e.g.: 2018, 2019 |   |
+| **pid**     | parcel id   |   |   |
+| ptype     | parcels type   | b, g, m, atc. |   |
+| polygon     | polygon coordinates   |   |   |
 | max  | maximum number of parcels to return   | < 100 | 10 |
 
 Example:

@@ -44,7 +44,7 @@ returns
 | p75       | a list of p75s   | 75% histogram percentile etc. |
 
 
-## Simple python client to consume parcelTimeSeries response
+## Simple python client to plot parcel Time Series
 
 We show a complete example on how to use the RESTful queries in a python script. The script first requests the parcel details at the geographical location, and than retrieves the Sentinel-2 time series in a second request. The response of the latter query is parsed into a pandas DataFrame, which allows some data reorganisation and cleanup. The cleaned data is used to generate an NDVI profile which is then plotted, resulting in a figure as the one below. The blue dots are showing all NDVI values, those with a red inset are for observations that are cloud-free according to the "scene classifier" band of Sentinel 2 Level 2A.
 
@@ -68,11 +68,11 @@ from datetime import timedelta
 
 
 # Define your credentials here
-username = 'USERNAME'
-password = 'PASSWORD'
-host = 'https://THEHOSTNAME.com'
+username = 'YOURUSERNAME'
+password = 'YOURPASSWORD'
+host = 'http://0.0.0.0'
 
-# Set parsel parameters
+# Set parcel query parameters
 aoi = 'ms'
 year = '2020'
 ptype = ''

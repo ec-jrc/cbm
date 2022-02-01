@@ -8,11 +8,11 @@ Table: **parcelByLocation** Parameters
 
 | Parameters  | Description   | Values | Default Value |
 | ----------- | --------------------- | ------------------------ |------------------------ |
-| **aoi** | Area of Interest (Member state or region code) | e.g.: at, pt, ie, etc. | - |
-| **year**     | year of parcels dataset   | e.g.: 2018, 2019   | - |
-| **lon**         | longitude in decimal degrees  | e.g.: 6.31 | - |
-| **lat**         | latitude in decimal degrees | e.g.: 52.34 | - |
-| ptype     | parcels type   | b, g, m, atc. | - |
+| **aoi** | Area of Interest (Member state or region code) | e.g.: at, pt, ie, etc. |   |
+| **year**     | year of parcels dataset   | e.g.: 2018, 2019   |   |
+| **lon**         | longitude in decimal degrees  | e.g.: 6.31 |   |
+| **lat**         | latitude in decimal degrees | e.g.: 52.34 |   |
+| ptype     | parcels type   | b, g, m, atc. |   |
 | withGeometry  | adds geometry   | True or False | False |
 
 
@@ -20,10 +20,10 @@ Table: **parcelByID** Parameters
 
 | Parameters  | Description   | Example call | Values |
 | ----------- | --------------------- | ------------------------ |------------------------ |
-| **aoi** | Area of Interest (Member state or region code) | e.g.: at, pt, ie, etc. | - |
-| **year**     | year of parcels dataset   | e.g.: 2018, 2019 | - |
-| **pid**     | parcel id   |   | - |
-| ptype     | parcels type   | b, g, m, atc. | - |
+| **aoi** | Area of Interest (Member state or region code) | e.g.: at, pt, ie, etc. |   |
+| **year**     | year of parcels dataset   | e.g.: 2018, 2019 |   |
+| **pid**     | parcel id   |   |   |
+| ptype     | parcels type   | b, g, m, atc. |   |
 | withGeometry  | adds geometry   | True or False | False |
 
 
