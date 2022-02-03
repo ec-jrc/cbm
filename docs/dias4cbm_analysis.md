@@ -14,10 +14,10 @@ While the CbM frontend can potentially access backend data directly, all the exa
 ## Links to the technical documentation
 
 **RESTful API functionalities**  
-1. [RESTful API: ACCESS TIME SERIES](https://jrc-cbm.readthedocs.io/en/latest/api_ts.html)  
-2. [RESTful API: ACCESS IMAGE CHIPS](https://jrc-cbm.readthedocs.io/en/latest/api_imgs.html)  
+1. [RESTful API: ACCESS TIME SERIES](https://jrc-cbm.readthedocs.io/en/latest/api_time_series.html)  
+2. [RESTful API: ACCESS IMAGE CHIPS](https://jrc-cbm.readthedocs.io/en/latest/api_sentinel_images.html)  
 3. [RESTful API: SUPPORT TO DATA ANALYTICS](https://jrc-cbm.readthedocs.io/en/latest/api_analytics.html)  
-4. [RESTful API: USE OF POST FOR ADVANCED SELECTIONS](https://jrc-cbm.readthedocs.io/en/latest/api_post.html)  
+4. [RESTful API: USE OF POST FOR ADVANCED SELECTIONS](https://jrc-cbm.readthedocs.io/en/latest/api_post_requests.html)  
 
 **CbM Python package**  
 5. [Python CbM: OVERVIEW OF THE PACKAGE](https://jrc-cbm.readthedocs.io/en/latest/cbm_overview.html)  
@@ -26,7 +26,7 @@ While the CbM frontend can potentially access backend data directly, all the exa
 8. [Python CbM: TRANSFERT OF DIAS CATAOG METADATA](https://jrc-cbm.readthedocs.io/en/latest/cbm_card.html)  
 9. [Python CbM: EXTRACTION OF STATISTICS](https://jrc-cbm.readthedocs.io/en/latest/cbm_ext.html)  
 10. [Python CbM: ASSESSMENT OF FOI HETEROGENEITY AND CARDINALITY](https://jrc-cbm.readthedocs.io/en/latest/cbm_foi.html)  
-11. [Python CbM: GET TIME SERIES, CHIPS AND BACKGROUND IMAGES](https://jrc-cbm.readthedocs.io/en/latest/cbm_get.html)  
+11. [Python CbM: GET TIME SERIES, CHIPS AND BACKGROUND IMAGES](https://jrc-cbm.readthedocs.io/en/latest/cbm_data.html)  
 
 ## RESTful API
 JRC RESTful (see the [introduction to JRC CbM architecture](https://jrc-cbm.readthedocs.io/en/latest/dias4cbm_architecture.html) for more info) service requests have predefined logical query names that need to be configured with a set parameters. The response is a JSON formatted dictionary with the data requested by the user, extracted from the [JRC CbM database](https://jrc-cbm.readthedocs.io/en/latest/setup_database.html) or from the Sentinel images stored in the DIAS object storage. In the documentation pages you find the available queries with use examples.  

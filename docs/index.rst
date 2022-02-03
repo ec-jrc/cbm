@@ -16,10 +16,10 @@
    :maxdepth: 3
    :caption: Setup
 
-   setup_prerequisites
-   setup_prepare
+   setup_dias
    setup_software
    setup_database
+   setup_prepare
    setup_extract
    setup_db_backup
    setup_build_api
@@ -43,8 +43,8 @@
    :maxdepth: 3
    :caption: CbM python package
 
-   cbm_install
    cbm_overview
+   cbm_install
    cbm_config
    cbm_card
    cbm_ext

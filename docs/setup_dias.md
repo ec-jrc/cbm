@@ -1,6 +1,4 @@
-# Prerequisites
-
-## DIAS VMs configuration
+# Setup DIAS VMs
 
 **Access and configuration for DIAS virtual machine instances.**
 
@@ -32,7 +30,7 @@ Some VMs can be combined e.g. the RESTful API VM with Jupyter VM or Worker Manag
 **From Linux (recommended):**
 
 To be able to remotely connect to an SSH server an SSH client program is needed. It can be installed on Ubuntu with the following command:
-   
+
     sudo apt install openssh-client
 
 
@@ -45,7 +43,7 @@ To connect with SSH using Ubuntu, in the Home directory make a hidden folder if 
 
 In .ssh make a text file “config” and a folder “keys”
 
-    
+
     touch ~/.ssh/config
     mkdir ~/.ssh/keys
 
@@ -70,7 +68,7 @@ Open the “config” file with a text editor, e.g.
 and add the following lines. Configure with the server information (HostName and User) and chage the NAMEOFTHEKEY with the filename of the key.
 
     Host bastion_vm
-      HostName 111.111.111.111 # or MYHOST.com 
+      HostName 111.111.111.111 # or MYHOST.com
       User USERNAME
       IdentityFile ~/.ssh/keys/NAMEOFTHEKEY.key
       ServerAliveInterval 10    #  number in seconds to wait if the connection is lost
@@ -81,11 +79,10 @@ and add the following lines. Configure with the server information (HostName and
 If everything is configured correctly it will be able to connect to the virtual machine remotely and manage and control the machine using the terminal. To connect to the VM run in the terminal:
 
     ssh my_vm01
- 
+
 
 **From Windows:**
 
 There are many different tools for window e.g.:
 PuTTY(https://www.putty.org), Bitvise(https://www.bitvise.com), Solar-Putty, KiTTY, MobaXterm, mRemoteNG, Xshell 6 Client, PuttyTray and SuperPutty.
 Documentation can be found in there website.
-
