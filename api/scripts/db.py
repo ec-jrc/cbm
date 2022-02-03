@@ -118,28 +118,6 @@ def check(db='main'):
 
 # ###### Geting informationand and data
 
-def get_value(dict_keys, var_name='', db='main'):
-    """Get value for tables.
-
-    Example:
-
-        database.get_value(['database', 'table'], variable_table_name)
-
-    Arguments:
-        dict_keys, list of keys to get value from.
-        var_name, the name ofthe variable
-
-    """
-    config_value = config.get_value(dict_keys)
-    value = config.autoselect(config_value, tables(db), True)
-    if var_name is not None:
-        if value in None:
-            print(f"!WARNING! The value for table '{var_name}' is: '{value}'.")
-        else:
-            print(f"The value for table '{var_name}' is: '{value}'.")
-    return value
-
-
 def info(db='main'):
     """Get postgres database connection information."""
     try:
@@ -156,34 +134,24 @@ def info(db='main'):
         print("Be sure the credentials are correct and restart the notebook.")
 
 
-def tables(db='main', matching_text=None, print_list=False):
+def tables(db='main', schema='public'):
     """Get the database tables as a python list"""
     list_ = []
     try:
         conn = psycopg2.connect(conn_str(db))
         cur = conn.cursor()
-        allTablesSql = """
+        allTablesSql = f"""
           SELECT table_name
           FROM information_schema.tables
           WHERE table_type='BASE TABLE'
-          AND table_schema='public'
+          AND table_schema='{schema}'
           ORDER BY table_name ASC;
         """
         # Execute the query
         cur.execute(allTablesSql)
         for row in cur:
             list_.append(row[0])
-        if matching_text is not None:
-            value = config.autoselect(matching_text, list_)
-            if value is not None:
-                list_.remove(value)
-                list_.insert(0, value)
-        if print_list is True:
-            print(f"-Tables in database {db}:-")
-            for t_ in list_:
-                print(t_)
-        else:
-            return list_
+        return list_
     except Exception:
         return []
 
@@ -204,7 +172,7 @@ def table_data(table, where, db='main'):
     return df_data
 
 
-def table_columns(table, db='main', matching_text=None):
+def table_columns(table, db='main'):
     """Get a list of the columns from a table."""
     conn = psycopg2.connect(conn_str(db))
     try:
@@ -215,11 +183,6 @@ def table_columns(table, db='main', matching_text=None):
             """
         df_columns = pd.read_sql_query(getTableColumns, conn)
         columns_list = df_columns['column_name'].tolist()
-        if matching_text is not None:
-            value = config.autoselect(matching_text, columns_list)
-            if value is not None:
-                columns_list.remove(value)
-                columns_list.insert(0, value)
     except Exception:
         print("Did not find any columns...")
         df_columns = pd.DataFrame(columns=['column_name'])
@@ -325,3 +288,14 @@ def tb_exist(table, db='main'):
     conn.close()
     cur.close()
     return exist
+
+
+def get_schemas(table, where, db='main'):
+    """Get the rows from a table with a limit 1000"""
+    conn = psycopg2.connect(conn_str(db))
+    getSchemasSql = f"""
+        SELECT schema_name
+        FROM information_schema.schemata;
+    """
+    df_data = pd.read_sql_query(getSchemasSql, conn)
+    return df_data
