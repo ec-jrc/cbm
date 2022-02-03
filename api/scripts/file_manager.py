@@ -8,9 +8,9 @@
 # License   : 3-Clause BSD
 
 import os
-
+import glob
+from datetime import datetime
 from werkzeug.utils import secure_filename
-
 from flask import (make_response, render_template, flash)
 
 
@@ -18,6 +18,41 @@ def allowed_file(filename):
     # Allow specific file types.
     return '.' in filename and \
            filename.split('.', 1)[1].lower() in ['zip', 'tar.gz']
+
+
+def get_files_list(path, aoi):
+    if aoi == 'admin':
+        aoi_files = glob.glob(f'{path}/*/*')
+    else:
+        aoi_files = glob.glob(f'{path}/{aoi.upper()}/*')
+
+    aoi_files_size_date = []
+    for file in aoi_files:
+        file_stats = os.stat(file)
+        if file_stats.st_size < 100000:
+            file_size = f"{round(file_stats.st_size / 1024, 2)} kB"
+        else:
+            file_size = f"{round(file_stats.st_size / (1024 * 1024), 2)} MB"
+        try:
+            file_date = datetime.fromtimestamp(file_stats.st_birthtime).date()
+        except AttributeError:
+            file_date = datetime.fromtimestamp(file_stats.st_mtime).date()
+        if aoi == 'admin':
+            file_name = file
+        else:
+            file_name = file.split('/')[-1]
+
+        aoi_files_size_date.append([file, file_name, file_size, file_date])
+
+    return aoi_files_size_date
+
+
+def creation_date(path_to_file):
+    stat = os.stat(path_to_file)
+    try:
+        return stat.st_birthtime
+    except AttributeError:
+        return stat.st_mtime
 
 
 def upload(request, files, aoi):

@@ -1,13 +1,22 @@
 <!doctype html>
 <html>
 
+<style>
+link1 {
+    font-size: 1.2em;
+    line-height: 1.6;
+    font-weight: bold;
+}
+</style>
+
 <body>
     <title>Available files.</title>
     <h1>Available files for {{ aoi }}:</h1>
     <ul>
         {% for file in files %}
         <li>
-            <h3><a href="{{ file }}">{{ file }}</a></h3>
+            <link1><a href="{{ file[0] }}">{{ file[1] }}</a>,</link1>
+                <b>{{ file[2] }},</b> {{ file[3] }}
         </li>
         {% endfor %}
     </ul>

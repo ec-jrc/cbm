@@ -941,10 +941,7 @@ def parcelsByPolygon_query():
 def download_files():
     users_list = users.get_list(only_names=False, aois=True)
     aoi = users_list[user][0]
-    if aoi == 'admin':
-        aoi_files = glob.glob(f'{STORAGE}/*/*')
-    else:
-        aoi_files = glob.glob(f'{STORAGE}/{aoi.upper()}/*')
+    aoi_files = file_manager.get_files_list(STORAGE, aoi)
 
     return render_template("files.html", files=aoi_files, aoi=aoi.upper())
 
