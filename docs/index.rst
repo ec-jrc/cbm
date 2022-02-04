@@ -12,6 +12,7 @@
    dias4cbm_analysis
    dias4cbm_use
 
+
 .. toctree::
    :maxdepth: 3
    :caption: Setup
@@ -19,7 +20,7 @@
    setup_dias
    setup_software
    setup_database
-   setup_prepare
+   setup_dbdata
    setup_extract
    setup_db_backup
    setup_build_api
@@ -41,6 +42,26 @@
 
 .. toctree::
    :maxdepth: 3
+   :caption: Use cases
+
+   uc_calendar
+   uc_foi
+   uc_ml
+
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Marker detection
+
+   md_overview
+   md_modules
+   md_optionfile
+   md_gui
+   md_examples
+
+
+.. toctree::
+   :maxdepth: 3
    :caption: CbM python package
 
    cbm_overview
@@ -50,15 +71,6 @@
    cbm_ext
    cbm_foi
    cbm_data
-
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Use cases
-
-   uc_calendar
-   uc_foi
-   uc_ml
 
 
 .. toctree::

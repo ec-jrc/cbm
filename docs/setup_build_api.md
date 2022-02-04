@@ -6,7 +6,7 @@ In order to facilitate the access to parcel time series, also for users who do n
 
 ## Prerequisites
 
-- Installed Docker (see: [Software requirements](https://jrc-cbm.readthedocs.io/en/latest/setup_prerequisites.html#required-software)).
+- Installed Docker (see: [Software requirements](https://jrc-cbm.readthedocs.io/en/latest/setup_software.html)).
 - Database with extractions (see: [Parcel extraction](https://jrc-cbm.readthedocs.io/en/latest/setup_extract.html)).
 
 To build a RESTful API with flask, first [access the virtual machine](https://jrc-cbm.readthedocs.io/en/latest/setup_prerequisites.html#connecting-to-the-tenant-host-vm-via-ssh) and download the CbM repository:
