@@ -49,7 +49,7 @@ def get():
             api_values = config.read('api_options.json')
             for aoi in api_values['aois']:
                 desc = f"{api_values['aois'][aoi]['description']}"
-                options[(desc, aoi)] = api_values['aois'][aoi]['year']
+                options[(desc, aoi)] = api_values['aois'][aoi]['years']
         elif values['set']['data_source'] == 'direct':
             values = config.read('api_options.json')
             for aoi in values['dataset']:
@@ -63,7 +63,7 @@ def get():
         if values['set']['data_source'] == 'api':
             api_values = config.read('api_options.json')
             for aoi in api_values['aois']:
-                years[aoi] = api_values['aois'][aoi]['year']
+                years[aoi] = api_values['aois'][aoi]['years']
         elif values['set']['data_source'] == 'direct':
             values = config.read()
             for aoi in values['dataset']:

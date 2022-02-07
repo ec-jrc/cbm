@@ -15,6 +15,15 @@ from os.path import join, normpath, isfile
 from cbm.utils import config
 
 
+def get_options(debug=False):
+    api_url, api_user, api_pass = config.credentials('api')
+    requrl = """{}/query/info"""
+    response = requests.get(requrl.format(api_url), auth=(api_user, api_pass))
+    if debug:
+        print(requrl.format(api_url), response)
+    return response.content
+
+
 def parcel_by_loc(aoi, year, lon, lat, ptype=None,
                   geom=False, wgs84=False, debug=False):
 
@@ -236,14 +245,6 @@ def clouds(geom):
 
         histogram = {int(float(k)): v for k, v in properties.items()}
         # print(t, histogram)
-
-
-def get_options():
-    api_url, api_user, api_pass = config.credentials('api')
-    requrl = """{}/query/options"""
-    response = requests.get(requrl.format(api_url),
-                            auth=(api_user, api_pass))
-    return response.content
 
 
 def background(lon, lat, chipsize=512, extend=512, tms='Google',
