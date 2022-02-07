@@ -115,7 +115,7 @@ def cbl(lon, lat, start_date, end_date, bands=None, lut=None, chipsize=None):
 
 
 def rcbl(parcel, start_date, end_date, bands, chipsize, filespath,
-         quiet=True):
+         debug=False):
     """Get parcel raw chip images from RESTful API by location"""
     import os
     import os.path
@@ -158,7 +158,7 @@ def rcbl(parcel, start_date, end_date, bands, chipsize, filespath,
         response = requests.get(requrl.format(api_url, cen_y, cen_x, start_date,
                                               end_date, band, chipsize),
                                 auth=(api_user, api_pass))
-        if not quiet:
+        if debug:
             print("Request url:", requrl.format(
                 api_url, cen_y, cen_x, start_date, end_date, band, chipsize))
             print("Geom:", geom)
@@ -178,17 +178,17 @@ def rcbl(parcel, start_date, end_date, bands, chipsize, filespath,
             outf = normpath(join(filespath, c.split('/')[-1]))
             if not isfile(outf):
                 res = requests.get(url, stream=True)
-                if not quiet:
+                if debug:
                     print(f"Downloading {c.split('/')[-1]}")
                 with open(outf, "wb") as handle:
                     for chunk in res.iter_content(chunk_size=512):
                         if chunk:  # filter out keep-alive new chunks
                             handle.write(chunk)
-        if not quiet:
+        if debug:
             print(
                 f"Images for band '{band}', for the selected dates are downloaded.")
 
-    if not quiet:
+    if debug:
         print("\n------Total time------")
         print(
             f"Total time required for {len(bands)} bands: {time.time() - start} seconds.")

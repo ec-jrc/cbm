@@ -66,7 +66,6 @@ def generator(user=None):
                 "weatherTimeSeries": f"{url}/query/weatherTimeSeries?aoi={aoi}&year={year}&pid={pid}{ptype_param}"
             }
             info_page["aois"][aoi] = {
-                "description": aoi.upper(),
                 "dataset_types": ptypes,
                 "years": years,
                 "ts_data": ["s2", "bs", "c6"],

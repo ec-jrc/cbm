@@ -22,7 +22,7 @@ from ipywidgets import (Text, Textarea, Label, HBox, VBox, Dropdown,
 
 from cbm.utils import config, data_options
 from cbm.ipycbm.ipy_get import get_maps
-from cbm.get import time_series, parcel_info, chip_images, background
+from cbm.get import time_series, parcel_info
 
 
 def get():
@@ -48,13 +48,11 @@ def get():
         if values['set']['data_source'] == 'api':
             api_values = config.read('api_options.json')
             for aoi in api_values['aois']:
-                desc = f"{api_values['aois'][aoi]['description']}"
-                options[(desc, aoi)] = api_values['aois'][aoi]['years']
+                options[(aoi.upper(), aoi)] = api_values['aois'][aoi]['years']
         elif values['set']['data_source'] == 'direct':
             values = config.read('api_options.json')
             for aoi in values['dataset']:
-                desc = f"{values['dataset'][aoi]['description']}"
-                options[(f"{desc} ({aoi})", aoi)] = [aoi.split('_')[-1]]
+                options[(f"{aoi.upper()} ({aoi})", aoi)] = [aoi.split('_')[-1]]
         return options
 
     def aois_years():

@@ -7,8 +7,7 @@
 # Copyright : 2021 European Commission, Joint Research Centre
 # License   : 3-Clause BSD
 import os
-import json
-from os.path import join, normpath, isfile
+from os.path import join, normpath
 
 from cbm.utils import config
 from cbm.get import parcel_info
