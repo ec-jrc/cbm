@@ -54,7 +54,7 @@ def generator(user=None):
             dataset = datasets[f"{aoi}_{year}"]
             pidcolumn = datasets[f"{aoi}_{year}"]["pcolumns"]["parcel_id"]
             pids_df = db_queries.pids(dataset, 3, ptype, False)
-            pids = pids_df[pidcolumn].values.tolist()
+            pids = pids_df['pids'].values.tolist()
             pid = random.choice(pids)
 
             data_request_examples = {

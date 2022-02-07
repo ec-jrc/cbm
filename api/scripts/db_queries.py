@@ -587,7 +587,7 @@ def pids(dataset, limit=1, ptype='', random=False):
         randomSql = ""
 
     getSql = f"""
-        SELECT {dataset['pcolumns']['parcel_id']}
+        SELECT {dataset['pcolumns']['parcel_id']}::text as pids
         FROM {dataset['tables']['parcels']}{ptype}
         {randomSql} LIMIT {limit};
     """
