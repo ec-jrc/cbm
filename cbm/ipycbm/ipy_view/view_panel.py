@@ -10,6 +10,7 @@
 
 import os
 import shutil
+from glob import glob
 from IPython.display import display
 from os.path import join, normpath, isdir
 from ipywidgets import (Label, VBox, HBox, Layout, Dropdown,
@@ -36,13 +37,18 @@ def view():
 
     paths_box = Box([Label(value="Select folder:"), paths])
 
-    tables_first = [f for f in os.listdir(
-        paths.value) if isdir(normpath(join(paths.value, f)))]
-
-    select_table = Dropdown(
-        options=[f for f in tables_first if not f.startswith('.')],
+    select_aoi = Dropdown(
+        options=[d.split('/')[-2] for d in glob(f"{paths.value}/*/")],
         value=None,
         description='Select tabe:',
+        disabled=False,
+    )
+
+    select_year = Dropdown(
+        options=[d.split('/')[-2]
+                 for d in glob(f"{paths.value}/{select_aoi.value}/*/")],
+        value=None,
+        description='Select year:',
         disabled=False,
     )
 
@@ -50,7 +56,7 @@ def view():
         layout=Layout(width='35px'),
         icon='fa-refresh')
 
-    select_option_box = HBox([select_table, button_refresh])
+    select_option_box = HBox([select_aoi, button_refresh])
 
     selection_single = Dropdown(
         options=[],
@@ -96,7 +102,7 @@ def view():
     view_source.observe(on_source_change, 'value')
 
     code_info = Label()
-    single_box = HBox([selection_single, rm_parcel])
+    single_box = HBox([select_year, selection_single, rm_parcel])
     select_box = Box([single_box])
 
     selection = VBox([Label("Select a data source."),
@@ -111,10 +117,11 @@ def view():
         view_box.clear_output()
         tables_first = [f for f in os.listdir(
             paths.value) if isdir(normpath(join(paths.value, f)))]
-        select_table.options = [
+        select_aoi.options = [
             f for f in tables_first if not f.startswith('.')]
-        if select_table.value is not None:
-            parcels = normpath(join(paths.value, select_table.value))
+        if select_aoi.value is not None:
+            parcels = normpath(join(paths.value, select_year.value,
+                                    select_aoi.value))
             parcels_list = [f for f in os.listdir(
                 parcels) if not f.startswith('.')]
             selection_single.options = parcels_list
@@ -125,7 +132,7 @@ def view():
     @rm_parcel.on_click
     def rm_parcel_on_click(b):
         try:
-            parcel_to_rm = normpath(join(paths.value, select_table.value,
+            parcel_to_rm = normpath(join(paths.value, select_aoi.value,
                                          selection_single.value))
             try:
                 shutil.rmtree(f'{parcel_to_rm}')
@@ -136,7 +143,7 @@ def view():
             except Exception:
                 pass
 #             print(f"The parce: '{selection_single.value}' is deleted.")
-            parcels = normpath(join(paths.value, select_table.value))
+            parcels = normpath(join(paths.value, select_aoi.value))
             parcels_list = [f for f in os.listdir(
                 parcels) if not f.startswith('.')]
             selection_single.options = parcels_list
@@ -148,13 +155,25 @@ def view():
         tables = [f for f in os.listdir(
             paths.value) if isdir(normpath(join(paths.value, f)))]
         tables = [f for f in tables if not f.startswith('.')]
-        select_table.options = tables
-
+        select_aoi.options = tables
     paths.observe(on_datapath_change, 'value')
 
-    def on_table_change(change):
-        if select_table.value is not None:
-            parcels = normpath(join(paths.value, select_table.value))
+    def on_aoi_change(change):
+        if select_aoi.value is not None:
+            years = normpath(join(paths.value, select_aoi.value))
+            years_list = [f for f in os.listdir(
+                years) if not f.startswith('.')]
+            select_year.options = years_list
+        else:
+            select_year.options = []
+            select_year.value = None
+            view_method.options = []
+    select_aoi.observe(on_aoi_change, 'value')
+
+    def on_year_change(change):
+        if select_aoi.value is not None:
+            parcels = normpath(
+                join(paths.value, select_aoi.value, select_year.value))
             parcels_list = [f for f in os.listdir(
                 parcels) if not f.startswith('.')]
             selection_single.options = parcels_list
@@ -162,15 +181,15 @@ def view():
             selection_single.options = []
             selection_single.value = None
             view_method.options = []
-
-    select_table.observe(on_table_change, 'value')
+    select_year.observe(on_year_change, 'value')
 
     def on_selection_change(obj):
         code_info.value = "Select how to view the dataset."
         options_list = [('Get example code', 1)]
         if obj['new'] is not None:
-            parceldata = normpath(join(paths.value, select_table.value,
-                                       selection_single.value))
+            parceldata = normpath(
+                join(paths.value, select_aoi.value,
+                     select_year.value, selection_single.value))
             data_list = [f for f in os.listdir(
                 parceldata) if not f.startswith('.')]
             if any("time_series" in s for s in data_list):
@@ -185,14 +204,15 @@ def view():
 
     def method_options(obj):
         view_box.clear_output()
-        data_path = normpath(join(paths.value, select_table.value,
-                                  selection_single.value))
+        data_path = normpath(join(paths.value, select_aoi.value,
+                                  select_year.value, selection_single.value))
         with view_box:
             if obj['new'] == 1:
                 display(view_code.code(data_path))
             elif obj['new'] == 2:
                 display(view_time_series.time_series_widget(
-                    select_table.value, selection_single.value))
+                    select_aoi.value, select_year.value,
+                    selection_single.value))
             elif obj['new'] == 3:
                 display(view_grid.imgs_grid(data_path))
             elif obj['new'] == 4:
@@ -216,8 +236,8 @@ def view():
     def notes_bt_on_click(b):
         if notes_box.children == ():
             notes_box.children = [view_notes.notes(
-                normpath(join(paths.value, select_table.value)),
-                select_table.value,
+                normpath(join(paths.value, select_aoi.value)),
+                select_aoi.value, select_year.value,
                 selection_single.value)]
         else:
             notes_box.children = []

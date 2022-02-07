@@ -151,7 +151,7 @@ def imgs_grid(path):
     with open(file_info, 'r') as f:
         info_data = json.loads(f.read())
     # print(info_data)
-    pid = info_data['ogc_fid'][0]
+    pid = info_data['pid'][0]
     crop_name = info_data['cropname'][0]
     area = info_data['area'][0]
     ci_path = normpath(join(path, 'chip_images'))

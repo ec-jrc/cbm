@@ -27,7 +27,7 @@ def widget_box(path):
     with open(file_info, 'r') as f:
         info_data = json.loads(f.read())
 
-    pid = info_data['ogc_fid'][0]
+    pid = info_data['pid'][0]
     crop_name = info_data['cropname'][0]
     area = info_data['area'][0]
 
@@ -58,16 +58,14 @@ def widget_box(path):
     def show_m():
 
         multipoly = []
-        multycent = []
         geom = spatial_utils.transform_geometry(info_data)
         poly = geom['geom'][0]['coordinates'][0]
     #     poly = spatial_utils.swap_xy(geom['coordinates'][0])[0]
         multipoly.append(poly)
-        centroid = spatial_utils.centroid(poly)
-        multycent.append(centroid)
+        centroid = tuple([round(info_data['clat'][0], 4),
+                          round(info_data['clon'][0], 4)])
 
-        centroid = spatial_utils.centroid(multycent)
-        m = Map(center=centroid, zoom=16,
+        m = Map(center=centroid, zoom=15,
                 basemap=basemaps.OpenStreetMap.Mapnik)
 
         polygon = Polygon(
@@ -91,6 +89,7 @@ def widget_box(path):
 
         # Popup with a given location on the map:
         poly_popup = Popup(
+            location=centroid,
             child=poly_text,
             close_button=False,
             auto_close=False,

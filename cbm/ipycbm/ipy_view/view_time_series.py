@@ -17,16 +17,17 @@ import json
 import glob
 
 
-def time_series_widget(aoi, pid):
+def time_series_widget(aoi, year, pid):
 
-    path = normpath(join(config.get_value(['paths', 'temp']), aoi, str(pid)))
+    path = normpath(join(config.get_value(['paths', 'temp']),
+                         aoi, year, str(pid)))
     # confvalues = config.read()
     # inst = confvalues['set']['institution']
     file_info = normpath(join(path, 'info.json'))
 
     with open(file_info, 'r') as f:
         info_data = json.loads(f.read())
-    pid = info_data['ogc_fid'][0]
+    pid = info_data['pid'][0]
 
     ts_cloud = Checkbox(
         value=True,
@@ -65,13 +66,13 @@ def time_series_widget(aoi, pid):
         with ts_out:
             ts_out.clear_output()
             if ts_type.value == 's2':
-                time_series.s2(aoi, pid, ['B4', 'B8'])
+                time_series.s2(aoi, year, pid, bands=['B4', 'B8'])
             elif ts_type.value == 'ndvi':
-                time_series.ndvi(aoi, pid)
+                time_series.ndvi(aoi, year, pid)
             elif ts_type.value == 'bs':
-                time_series.s1_bs(aoi, pid)
+                time_series.s1_bs(aoi, year, pid)
             elif ts_type.value == 'c6':
-                time_series.s1_c6(aoi, pid)
+                time_series.s1_c6(aoi, year, pid)
 
     def on_ts_type_change(change):
         if ts_type.value == 's2':

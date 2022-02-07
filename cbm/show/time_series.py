@@ -301,11 +301,12 @@ def s1_bs(aoi, year, pid, ptype=None, bands=['']):
     return plt.show()
 
 
-def s1_c6(aoi, pid):
-    path = normpath(join(config.get_value(['paths', 'temp']), aoi, str(pid)))
+def s1_c6(aoi, year, pid):
+    path = normpath(join(config.get_value(['paths', 'temp']),
+                         aoi, year, str(pid)))
     file_info = normpath(join(path, 'info.json'))
     if not isfile(file_info):
-        parcel_info.by_pid(aoi, pid)
+        parcel_info.by_pid(aoi, year, pid)
     with open(file_info, 'r') as f:
         info_data = json.loads(f.read())
 
@@ -314,7 +315,7 @@ def s1_c6(aoi, pid):
 
     file_ts = normpath(join(path, 'time_series_c6.csv'))
     if not isfile(file_ts):
-        time_series.by_pid(aoi, pid, 'c6')
+        time_series.by_pid(aoi, year, pid, 'c6')
     df = pd.read_csv(file_ts, index_col=0)
 
     df['date'] = pd.to_datetime(df['date_part'], unit='s')
