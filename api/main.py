@@ -30,7 +30,8 @@ from scripts import db_queries, image_requests, users, info_page, file_manager
 # Global variables
 UPLOAD_ENABLE = True  # Enable upload page (http://HOST/files/upload).
 DEBUG = False
-DEFAULT_AOI = ''
+aoi = ''  # DEFAULT AOI
+ptype = ''  # DEFAULT Parcel type
 STORAGE = 'files'
 
 app = Flask(__name__)
@@ -252,12 +253,12 @@ def backgroundByID_query():
     else:
         rip = request.environ['HTTP_X_FORWARDED_FOR']
 
-    aoi = request.args.get('aoi')
+    if 'aoi' in request.args.keys():
+        aoi = request.args.get('aoi')
     year = request.args.get('year')
     pid = request.args.get('pid')
     dataset = datasets[f'{aoi}_{year}']
     withGeometry = False
-    ptype = ''
 
     if 'ptype' in request.args.keys():
         if request.args.get('ptype') != '':
@@ -387,8 +388,6 @@ def chipsByParcelID_query():
     else:
         rip = request.environ['HTTP_X_FORWARDED_FOR']
 
-    aoi = DEFAULT_AOI
-    ptype = ''
     withGeometry = False
     wgs84 = False
     year = request.args.get('year')
@@ -516,8 +515,6 @@ def rawChipByParcelID_query():
     else:
         rip = request.environ['HTTP_X_FORWARDED_FOR']
 
-    aoi = DEFAULT_AOI
-    ptype = ''
     withGeometry = False
     wgs84 = False
     year = request.args.get('year')
@@ -674,10 +671,8 @@ def parcelPeers_query():
       200:
         description: The parcel “peers”.
     """
-    aoi = DEFAULT_AOI
     year = request.args.get('year')
     pid = request.args.get('pid')
-    ptype = ''
     distance = 1000.0
     maxPeers = 10
 
@@ -724,10 +719,8 @@ def parcelTimeSeries_query():
       200:
         description: Time series table.
     """
-    aoi = DEFAULT_AOI
     year = request.args.get('year')
     pid = request.args.get('pid')
-    ptype = ''
     tstype = 's2'
     band = ''
     scl = True
@@ -786,6 +779,45 @@ def parcelTimeSeries_query():
                               cls=CustomJsonEncoder)
 
 
+@app.route('/query/parcelWeatherTS', methods=['GET'])
+@auth_required
+def meteo():
+    year = request.args.get('year')
+    pid = request.args.get('pid')
+    ptype = ''
+    tsformat = False
+    if 'ptype' in request.args.keys():
+        if request.args.get('ptype') != '':
+            ptype = f"_{request.args.get('ptype')}"
+    if 'aoi' in request.args.keys():
+        aoi = request.args.get('aoi')
+    if 'tsformat' in request.args.keys():
+        tsformat = True if request.args.get('tsformat') == 'csv' else False
+
+    dataset = datasets[f'{aoi}_{year}']
+    data = db_queries.getParcelWeatherTS(dataset, pid, ptype)
+
+    if tsformat:
+        io_file = StringIO()
+        write = csv.writer(io_file, delimiter=',')
+        write.writerows(data)
+        csv_file = make_response(io_file.getvalue())
+        fname = f"filename=timeseries_{aoi}{year}{ptype}_{pid}_WeatherTS.csv"
+        csv_file.headers["Content-Disposition"] = f"attachment; {fname}"
+        csv_file.headers["Content-type"] = "text/csv"
+        return csv_file
+    else:
+        if not data:
+            return json.dumps({})
+        elif len(data) == 1:
+            return json.dumps(dict(zip(list(data[0]),
+                                       [[] for i in range(len(data[0]))])))
+        else:
+            return json.dumps(dict(zip(list(data[0]),
+                                       [list(i) for i in zip(*data[1:])])),
+                              cls=CustomJsonEncoder)
+
+
 # -------- Queries - Parcel information -------------------------------------- #
 
 @app.route('/query/parcelByLocation', methods=['GET'])
@@ -800,11 +832,9 @@ def parcelByLocation_query():
       200:
         description: Parcel information.
     """
-    aoi = DEFAULT_AOI
     year = request.args.get('year')
     lon = request.args.get('lon')
     lat = request.args.get('lat')
-    ptype = ''
     withGeometry = False
     wgs84 = False
 
@@ -847,10 +877,8 @@ def parcelByID_query():
       200:
         description: Parcel information.
     """
-    aoi = DEFAULT_AOI
     year = request.args.get('year')
     pid = request.args.get('pid')
-    ptype = ''
     withGeometry = False
     wgs84 = False
 
@@ -893,10 +921,8 @@ def parcelsByPolygon_query():
       200:
         description: List of parcels.
     """
-    aoi = DEFAULT_AOI
     year = request.args.get('year')
     polygon = request.args.get('polygon')
-    ptype = ''
     withGeometry = False
     only_ids = True
     wgs84 = False

@@ -286,6 +286,55 @@ def getParcelTimeSeries(dataset, pid, ptype='',
         return data.append('Ended with no data')
 
 
+def getParcelWeatherTS(dataset, pid, ptype):
+    """Get the time series for the given parcel"""
+
+    conn = db.conn(dataset['db'])
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    data = []
+
+    parcels_table = dataset['tables']['parcels']
+    env_table = dataset['tables']['env']
+    parcel_id = dataset['pcolumns']['parcel_id']
+
+    try:
+        getTableDataSql = f"""
+        SELECT
+            TO_CHAR(meteo_date, 'YYYY-MM-DD') meteo_date,
+            tmin,tmax,tmean,prec
+        FROM
+            {env_table} e,
+            {parcels_table}{ptype} p,
+            public.era5_data,
+            public.era5_grid
+        WHERE
+            p.{parcel_id} = '{pid}' AND
+            e.grid_id = era5_grid.grid_id AND
+            era5_grid.grid_id = era5_data.grid_id AND
+            e.pid = p.ogc_fid
+        ORDER BY
+            meteo_date;
+        """
+        #  Return a list of tuples
+        # print(getTableDataSql)
+        cur.execute(getTableDataSql)
+        rows = cur.fetchall()
+        data.append(tuple(etup.name for etup in cur.description))
+
+        if len(rows) > 0:
+            for r in rows:
+                data.append(tuple(r))
+        else:
+            print("No time series found for",
+                  f"{pid} in the selected table '{env_table}'")
+        return data
+
+    except Exception as err:
+        print("Did not find data, please select the right database and table: ",
+              err)
+        return data.append('Ended with no data')
+
+
 def getParcelPeers(dataset, pid, distance, maxPeers, ptype=''):
 
     conn = db.conn(dataset['db'])
