@@ -117,13 +117,19 @@ def get():
         year.disabled = years_disabled()
 
     def table_options_change(change):
+        api_values = config.read('api_options.json')
+        id_examples = api_values['aois'][change.new]['id_examples']
         try:
+            id_examples_label.value = ', '.join(str(x) for x in id_examples)
             year.options = aois_years()[change.new]
             year.disabled = years_disabled()
+            pid.value = str(id_examples[0])
         except Exception:
+            id_examples_label.value = ', '.join(str(x) for x in id_examples)
             aois.options = tuple(aois_options())
             year.options = aois_years()[aois.value]
             year.disabled = years_disabled()
+            pid.value = str(id_examples[0])
     aois.observe(table_options_change, 'value')
 
     info_method = Label("2. Select a method to download parcel data.")
@@ -145,11 +151,15 @@ def get():
     plat = Text(value='52.694', placeholder='Add lat', description='Lat:')
     wbox_lat_lot = VBox(children=[plat, plon])
 
-    info_pid = HTML("""Multiple parcel id codes can be added
-    (comma ',' separated, e.g.: 11111, 22222).""")
+    api_values = config.read('api_options.json')
+    id_examples = api_values['aois'][aois.value]['id_examples']
+
+    id_examples_label = Label(', '.join(str(x) for x in id_examples))
+    info_pid = HBox([Label("Multiple parcel ids can be added, e.g.: "),
+                     id_examples_label])
 
     pid = Textarea(
-        value='34296',
+        value=str(id_examples[0]),
         placeholder='12345, 67890',
         description='Parcel(s) ID:',
     )
@@ -171,7 +181,7 @@ def get():
     def bt_get_ids_on_click(b):
         with ppoly_out:
             try:
-                get_requests = data_source()
+                # get_requests = data_source()
                 ppoly_out.clear_output()
                 polygon = get_maps.polygon_map.feature_collection[
                     'features'][-1]['geometry']['coordinates'][0]
@@ -399,14 +409,14 @@ def get():
 
     def get_data(parcel):
         get_requests = data_source()
-        pid = parcel['pid'][0]
+        pid = str(parcel['pid'][0])
         source = config.get_value(['set', 'data_source'])
         if source == 'api':
             datapath = normpath(
-                join(paths.value, aois.value, year.value, str(pid)))
+                join(paths.value, aois.value, year.value, pid))
         elif source == 'direct':
             dataset = config.get_value(['set', 'dataset'])
-            datapath = normpath(join(paths.value, dataset, str(pid)))
+            datapath = normpath(join(paths.value, dataset, pid))
         file_pinf = normpath(join(datapath, 'info.json'))
         os.makedirs(dirname(file_pinf), exist_ok=True)
         with open(file_pinf, "w") as f:
@@ -450,7 +460,7 @@ def get():
         outlog(f"Finding parcel information for coordinates: {lon}, {lat}")
         parcel = parcel_info.by_location(aois.value, year.value, lon, lat,
                                          ptype.value, True, False, debug)
-        pid = parcel['pid'][0]
+        pid = str(parcel['pid'][0])
         outlog(f"The parcel '{pid}' was found at this location.")
         try:
             get_data(parcel)
