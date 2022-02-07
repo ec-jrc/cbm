@@ -23,7 +23,14 @@ def generator(user=None):
                                    for x in dict.keys(datasets)]))
     server = configs["server"]
     url = configs["server"]["host"]
-    info_page = {"server": {}, "aois": {}}
+
+    helpers = {
+        "information_page": f"{url}/query/info",
+        "downloadable material": f"{url}/files",
+        "swagger": f"{url}/apidocs"
+    }
+
+    info_page = {"server": server, "helpers": helpers, "aois": {}}
 
     def aois(aoi):
         if aoi in all_aois:
@@ -50,7 +57,7 @@ def generator(user=None):
             pids = pids_df[pidcolumn].values.tolist()
             pid = random.choice(pids)
 
-            request_examples = {
+            data_request_examples = {
                 "parcelByID": f"{url}/query/parcelByID?aoi={aoi}&year={year}&pid={pid}{ptype_param}&withGeometry=True",
                 "parcelTimeSeries_s2": f"{url}/query/parcelTimeSeries?aoi={aoi}&year={year}&pid={pid}{ptype_param}&tstype=s2&scl=True",
                 "parcelTimeSeries_bs": f"{url}/query/parcelTimeSeries?aoi={aoi}&year={year}&pid={pid}{ptype_param}&tstype=bs",
@@ -63,10 +70,9 @@ def generator(user=None):
                 "ts_data": ["s2", "bs", "c6"],
                 "id_table_column": pidcolumn,
                 "id_examples": pids,
-                "request_examples": request_examples
+                "data_request_examples": data_request_examples
             }
 
-    info_page["server"] = server
     if 'admin' in users_list[user]:
         for aoi in all_aois:
             try:
