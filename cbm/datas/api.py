@@ -81,15 +81,17 @@ def parcel_by_polygon(aoi, year, polygon, ptype=None, geom=False,
     return response.content
 
 
-def parcel_peers(aoi, year, pid, ptype=None, debug=False):
+def parcel_peers(aoi, year, pid, distance=1000.0,
+                 maxPeers=10, ptype=None, debug=False):
     api_url, api_user, api_pass = config.credentials('api')
-    requrl = """{}/query/parcelPeers?aoi={}&year={}&pid={}"""
+    requrl = """{}/query/parcelPeers?aoi={}&year={}&pid={}&distance={}&maxPeers={}"""
     if ptype not in [None, '']:
         requrl = f"{requrl}&ptype={ptype}"
-    response = requests.get(requrl.format(api_url, aoi, year, pid),
-                            auth=(api_user, api_pass))
+    response = requests.get(requrl.format(api_url, aoi, year, pid, distance,
+                                          maxPeers), auth=(api_user, api_pass))
     if debug:
-        print(requrl.format(api_url, aoi, year, pid), response)
+        print(requrl.format(api_url, aoi, year, pid, distance, maxPeers),
+              response)
     return response.content
 
 
