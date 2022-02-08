@@ -13,7 +13,8 @@ from os.path import join, normpath
 from cbm.utils import config
 
 
-def peers(aoi, year, pid, ptype=None, debug=False):
+def peers(aoi, year, pid, distance=1000.0, maxPeers=10,
+          ptype=None, debug=False):
     """Get the parcel peers for the selected parcel
 
     Examples:
@@ -24,18 +25,23 @@ def peers(aoi, year, pid, ptype=None, debug=False):
         aoi, the area of interest (str)
         year, the year of parcels table
         pid, the parcel id (str).
+        distance, distance from the given parcel
+        maxPeers, the max number of parcels to be returned
     """
     get_requests = data_source()
-    parcel = json.loads(get_requests.parcel_peers(aoi, year, pid, ptype,
-                                                  debug))
+    parcels = json.loads(get_requests.parcel_peers(aoi, year, pid, distance,
+                                                   maxPeers, ptype, debug))
 
     workdir = normpath(join(config.get_value(['paths', 'temp']),
                             aoi, str(year), str(pid)))
     json_file = normpath(join(workdir, f'parcel_peers.json'))
     os.makedirs(workdir, exist_ok=True)
     with open(json_file, "w") as f:
-        json.dump(parcel, f)
-    return parcel
+        json.dump(parcels, f)
+    return parcels
+
+
+
 
 
 def data_source():
