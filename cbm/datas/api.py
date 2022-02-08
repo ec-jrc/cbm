@@ -81,6 +81,18 @@ def parcel_by_polygon(aoi, year, polygon, ptype=None, geom=False,
     return response.content
 
 
+def parcel_peers(aoi, year, pid, ptype=None, debug=False):
+    api_url, api_user, api_pass = config.credentials('api')
+    requrl = """{}/query/parcelPeers?aoi={}&year={}&pid={}"""
+    if ptype not in [None, '']:
+        requrl = f"{requrl}&ptype={ptype}"
+    response = requests.get(requrl.format(api_url, aoi, year, pid),
+                            auth=(api_user, api_pass))
+    if debug:
+        print(requrl.format(api_url, aoi, year, pid), response)
+    return response.content
+
+
 def parcel_ts(aoi, year, pid, tstype='s2', ptype=None, band='', debug=False):
 
     api_url, api_user, api_pass = config.credentials('api')
@@ -192,59 +204,6 @@ def rcbl(parcel, start_date, end_date, bands, chipsize, filespath,
         print("\n------Total time------")
         print(
             f"Total time required for {len(bands)} bands: {time.time() - start} seconds.")
-
-
-def clouds(geom):
-    import glob
-    import json
-    import rasterio
-    from osgeo import osr
-    from rasterstats import zonal_stats
-    # Check whether our parcel is cloud free
-
-    # We should have a list of GeoTIFFs ending with .SCL.tif
-    tiflist = glob.glob('*.SCL.tif')
-
-    for t in tiflist:
-        with rasterio.open(t) as src:
-            affine = src.transform
-            CRS = src.crs
-            data = src.read(1)
-
-        # Reproject the parcel geometry in the image crs
-        imageCRS = int(str(CRS).split(':')[-1])
-
-        # Cross check with the projection of the geometry
-        # This needs to be done for each image, because the parcel could be in
-        # a straddle between (UTM) zones
-        geomCRS = int(geom.GetSpatialReference().GetAuthorityCode(None))
-
-        if geomCRS != imageCRS:
-            target = osr.SpatialReference()
-            target.ImportFromEPSG(imageCRS)
-            source = osr.SpatialReference()
-            source.ImportFromEPSG(geomCRS)
-            transform = osr.CoordinateTransformation(source, target)
-            geom.Transform(transform)
-
-        # Format as a feature collection (with only 1 feature)
-        # and extract the histogram
-        features = {"type": "FeatureCollection",
-                    "features": [{"type": "feature",
-                                  "geometry": json.loads(geom.ExportToJson()),
-                                  "properties": {"pid": pid}}]}
-        zs = zonal_stats(features, data, affine=affine, prefix="",
-                         nodata=0, categorical=True, geojson_out=True)
-
-        # This has only one record
-        properties = zs[0].get('properties')
-
-        # pid was used as a dummy key to make sure the histogram
-        # values are in 'properties'
-        del properties['pid']
-
-        histogram = {int(float(k)): v for k, v in properties.items()}
-        # print(t, histogram)
 
 
 def background(lon, lat, chipsize=512, extend=512, tms='Google',
