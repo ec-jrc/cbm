@@ -20,7 +20,7 @@ from cbm.get import parcel_info, time_series
 
 
 def ndvi(aoi, year, pid, ptype=None, cloud_free=True,
-         scl='3_8_9_10_11', debug=False):
+         scl='3_8_9_10_11', std=False, debug=False):
 
     path = normpath(join(config.get_value(['paths', 'temp']),
                          aoi, str(year), str(pid)))
@@ -62,6 +62,8 @@ def ndvi(aoi, year, pid, ptype=None, cloud_free=True,
 
     # Plot Cloud free NDVI.
     dfNDVI = (dfB8['mean'] - dfB4['mean']) / (dfB8['mean'] + dfB4['mean'])
+    if std:
+        dfstd = ((dfB8['p75'] - dfB4['p25']) / 50000)
 
     if 'hist' in df.columns:
         df['cf'] = pd.Series(dtype='str')
@@ -93,9 +95,13 @@ def ndvi(aoi, year, pid, ptype=None, cloud_free=True,
     if cloud_free:
         try:
             axb.plot(dfNDVI[cloudfree].index, dfNDVI[cloudfree],
-                     linestyle=' ', marker='P',
+                     linestyle='--', marker='P',
                      markersize=10, color='Red',
                      fillstyle='none', label='Cloud free NDVI')
+            if std:
+                cloufreestd = dfstd[dfstd.index.isin(dfNDVI[cloudfree].index)]
+                axb.errorbar(dfNDVI[cloudfree].index, dfNDVI[cloudfree],
+                             cloufreestd, fmt='o', linewidth=2, capsize=6)
         except Exception as err:
             message = f"Could not mark cloud free images: {err}"
 
@@ -110,7 +116,7 @@ def ndvi(aoi, year, pid, ptype=None, cloud_free=True,
     return plt.show()
 
 
-def s2(aoi, year, pid, ptype=None, bands=['B02'], cloud_free=True,
+def s2(aoi, year, pid, ptype=None, bands=['B08'], cloud_free=True,
        scl='3_8_9_10_11', debug=False):
     if type(bands) is str:
         bands = [bands]
@@ -218,7 +224,7 @@ def s2(aoi, year, pid, ptype=None, bands=['B02'], cloud_free=True,
         if cloud_free:
             try:
                 axb.plot(seriesB[b][cloudfree].index, seriesB[b][cloudfree],
-                         linestyle=' ', marker='x',
+                         linestyle='--', marker='x',
                          markersize=8, color=colors[b],
                          fillstyle='none', label=f'{b} Cloud free')
             except Exception as err:
@@ -235,12 +241,12 @@ def s2(aoi, year, pid, ptype=None, bands=['B02'], cloud_free=True,
     return plt.show()
 
 
-def s1_bs(aoi, year, pid, ptype=None, bands=['']):
+def s1_bs(aoi, year, pid, ptype=None, debug=False):
     path = normpath(join(config.get_value(['paths', 'temp']),
                          aoi, str(year), str(pid)))
     file_info = normpath(join(path, 'info.json'))
     if not isfile(file_info):
-        parcel_info.by_pid(aoi, pid)
+        parcel_info.by_pid(aoi, year, pid, ptype, True)
     with open(file_info, 'r') as f:
         info_data = json.loads(f.read())
 
@@ -249,7 +255,7 @@ def s1_bs(aoi, year, pid, ptype=None, bands=['']):
 
     file_ts = normpath(join(path, 'time_series_bs.csv'))
     if not isfile(file_ts):
-        time_series.by_pid(aoi, pid, 'bs')
+        time_series.by_pid(aoi, year, pid, 'bs', ptype, '', debug)
     df = pd.read_csv(file_ts, index_col=0)
 
     df['date'] = pd.to_datetime(df['date_part'], unit='s')
@@ -274,8 +280,8 @@ def s1_bs(aoi, year, pid, ptype=None, bands=['']):
     datesFmt = mdates.DateFormatter('%-d %b %Y')
     df = df[df['mean'] >= 0]  # to remove negative values
 
-    dfVV = df[df.band == 'VV'].copy()
-    dfVH = df[df.band == 'VH'].copy()
+    dfVV = df[df.band == 'VVb'].copy()
+    dfVH = df[df.band == 'VHb'].copy()
     fig = plt.figure(figsize=(16.0, 10.0))
     axb = fig.add_subplot(1, 1, 1)
 
@@ -301,12 +307,12 @@ def s1_bs(aoi, year, pid, ptype=None, bands=['']):
     return plt.show()
 
 
-def s1_c6(aoi, year, pid):
+def s1_c6(aoi, year, pid, ptype=None, debug=False):
     path = normpath(join(config.get_value(['paths', 'temp']),
                          aoi, year, str(pid)))
     file_info = normpath(join(path, 'info.json'))
     if not isfile(file_info):
-        parcel_info.by_pid(aoi, year, pid)
+        parcel_info.by_pid(aoi, year, pid, ptype, True)
     with open(file_info, 'r') as f:
         info_data = json.loads(f.read())
 
@@ -315,7 +321,7 @@ def s1_c6(aoi, year, pid):
 
     file_ts = normpath(join(path, 'time_series_c6.csv'))
     if not isfile(file_ts):
-        time_series.by_pid(aoi, year, pid, 'c6')
+        time_series.by_pid(aoi, year, pid, 'c6', ptype, '', debug)
     df = pd.read_csv(file_ts, index_col=0)
 
     df['date'] = pd.to_datetime(df['date_part'], unit='s')
@@ -338,8 +344,8 @@ def s1_c6(aoi, year, pid):
 
     # Plot Coherence
 
-    dfVV = df[df.band == 'VV'].copy()
-    dfVH = df[df.band == 'VH'].copy()
+    dfVV = df[df.band == 'VVc'].copy()
+    dfVH = df[df.band == 'VHc'].copy()
     fig = plt.figure(figsize=(16.0, 10.0))
     axb = fig.add_subplot(1, 1, 1)
 
