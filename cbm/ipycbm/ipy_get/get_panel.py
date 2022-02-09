@@ -244,7 +244,11 @@ def get():
     pts_bands = data_options.pts_bands()
 
     pts_tstype = SelectMultiple(
-        options=data_options.pts_tstype(),
+        options=[
+            ("Sentinel-2 Level 2A", 's2'),
+            ("S1 Backscattering Coefficients", 'bs'),
+            ("S1 6-day Coherence (20m)", 'c6')
+        ],
         value=['s2'],
         rows=3,
         description='TS type:',
@@ -286,12 +290,12 @@ def get():
     )
 
     pci_start_date = DatePicker(
-        value=datetime.date(2019, 6, 1),
+        value=datetime.date(2020, 6, 1),
         description='Start Date',
     )
 
     pci_end_date = DatePicker(
-        value=datetime.date(2019, 6, 30),
+        value=datetime.date(2020, 6, 30),
         description='End Date',
     )
 

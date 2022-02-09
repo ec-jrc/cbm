@@ -678,7 +678,7 @@ def parcelPeers_query():
     year = request.args.get('year')
     pid = request.args.get('pid')
     ptype = ''
-    distance = 1000.0
+    distance = 2000.0
     maxPeers = 10
 
     if 'ptype' in request.args.keys():
@@ -693,10 +693,10 @@ def parcelPeers_query():
     if 'max' in request.args.keys():
         maxPeers = int(request.args.get('max'))
 
-    if distance > 5000.0:
-        distance = 5000.0
-    if maxPeers > 100:
-        maxPeers = 100
+    # if distance > 5000.0:
+    #     distance = 5000.0
+    # if maxPeers > 1000:
+    #     maxPeers = 1000
 
     dataset = datasets[f'{aoi}_{year}']
     data = db_queries.getParcelPeers(dataset, pid, distance, maxPeers, ptype)

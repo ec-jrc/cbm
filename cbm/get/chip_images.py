@@ -69,8 +69,8 @@ def by_location(aoi, lon, lat, start_date, end_date, band, chipsize,
         print("No files where downloaded, please check your configurations")
 
 
-def by_pid(aoi, year, pid, ptype, start_date, end_date,
-           band, chipsize, debug=False):
+def by_pid(aoi, year, pid, start_date, end_date, band, chipsize,
+           ptype=None, debug=False):
     """Download the chip image by selected parcel id.
 
     Examples:
@@ -91,7 +91,7 @@ def by_pid(aoi, year, pid, ptype, start_date, end_date,
         chipsize, size of the chip in pixels (int).
     """
     workdir = normpath(join(config.get_value(['paths', 'temp']),
-                            aoi, str(pid)))
+                            aoi, year, str(pid)))
     get_requests = data_source()
     pfile = normpath(join(workdir, 'info.json'))
     if not isfile(pfile):
