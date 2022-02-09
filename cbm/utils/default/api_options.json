@@ -1,8 +1,13 @@
 {
     "aois": {
         "ms": {
-            "description": "API options example",
-            "year": ["2019","2018"]
+            "years": [
+                "2020"
+            ],
+            "id_examples": [
+                "1234",
+                "5678"
+            ]
         }
     }
 }

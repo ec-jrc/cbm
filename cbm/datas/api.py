@@ -84,7 +84,7 @@ def parcel_by_polygon(aoi, year, polygon, ptype=None, geom=False,
 def parcel_peers(aoi, year, pid, distance=1000.0,
                  maxPeers=10, ptype=None, debug=False):
     api_url, api_user, api_pass = config.credentials('api')
-    requrl = """{}/query/parcelPeers?aoi={}&year={}&pid={}&distance={}&maxPeers={}"""
+    requrl = """{}/query/parcelPeers?aoi={}&year={}&pid={}&distance={}&max={}"""
     if ptype not in [None, '']:
         requrl = f"{requrl}&ptype={ptype}"
     response = requests.get(requrl.format(api_url, aoi, year, pid, distance,

@@ -17,7 +17,7 @@ from descartes import PolygonPatch
 from rasterio.plot import show
 from mpl_toolkits.axes_grid1 import ImageGrid
 
-from cbm.get import chip_images as chip_imgs
+from cbm.get import chip_images
 from cbm.utils import config, spatial_utils, data_options
 
 
@@ -66,8 +66,8 @@ def by_location(aoi, year, lon, lat, dates, band,
 
     workdir = normpath(join(config.get_value(['paths', 'temp']),
                             aoi, str(pid)))
-    chip_imgs.by_pid(aoi, pid, start_date, end_date,
-                     band, chipsize, quiet)
+    chip_images.by_pid(aoi, pid, start_date, end_date,
+                       band, chipsize, quiet)
 
     chips_dir = normpath(join(workdir, 'chip_images'))
     if type(dates) is list:
@@ -115,12 +115,13 @@ def by_location(aoi, year, lon, lat, dates, band,
         print("! No images to show.")
 
 
-def by_pid(aoi, pid, dates, band, chipsize, columns=5, quiet=True):
+def by_pid(aoi, year, pid, start_date, end_date, band, chipsize,
+           columns=5, ptype=None, debug=False):
     """Plot chip image with parcel polygon overlay.
 
     Examples:
         import cbm
-        cbm.get.chip_images.by_pid(aoi, pid, start_date, end_date,
+        cbm.get.chip_images.by_pid(aoi, pid, [start_date, end_date],
                                     band, chipsize)
 
     Arguments:
@@ -136,24 +137,13 @@ def by_pid(aoi, pid, dates, band, chipsize, columns=5, quiet=True):
         chipsize, size of the chip in pixels (int).
         columns, (int)
     """
-
-    if type(dates) is list:
-        start_date, end_date = dates[0], dates[1]
-    else:
-        start_date, end_date = dates, dates
     workdir = normpath(join(config.get_value(['paths', 'temp']),
-                            aoi, str(pid)))
-    chip_imgs.by_pid(aoi, pid, start_date, end_date,
-                     band, chipsize, quiet)
+                            aoi, year, str(pid)))
+    chip_images.by_pid(aoi, year, pid, start_date, end_date,
+                       band, chipsize, ptype, debug)
 
-    chips_dir = normpath(join(workdir, 'chip_images'))
-    if type(dates) is list:
-        chips = normpath(join(chips_dir, f"*{band}.tif"))
-    else:
-        chips = normpath(
-            join(chips_dir, f"*{start_date.replace('-', '')}*{band}.tif"))
-
-    chips_list = glob.glob(chips)
+    chips_dir = normpath(join(workdir, 'chip_images', f"*{band}.tif"))
+    chips_list = glob.glob(chips_dir)
 
     if len(chips_list) > 0:
         if len(chips_list) < columns:
@@ -167,7 +157,7 @@ def by_pid(aoi, pid, dates, band, chipsize, columns=5, quiet=True):
             geom = spatial_utils.transform_geometry(json_data, img_epsg)
             patches = overlay_parcel(img, geom)
 
-        if not quiet:
+        if debug:
             for chip in chips_list:
                 print(chip)
 

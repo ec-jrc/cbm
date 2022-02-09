@@ -26,37 +26,49 @@ def all_equal(iterable):
     return next(g, True) and not next(g, False)
 
 
-def ndvi(aoi, year, pids, ptype=None, cloud_free=True,
-         scl='3_8_9_10_11', std=False, debug=False):
+def ndvi(aoi, year, pids, ptype=None, scl='3_8_9_10_11', std=True,
+         max_line_plots=10, errorbar=True, debug=False):
 
     if type(pids) is not list:
         pids = [pids]
+    if max_line_plots > 20:
+        max_line_plots = 20
+        print("Can not plot more then 20 lines.")
+    if len(pids) > 50:
+        del pids[50:]
+        print("Currently supporting max 50 shading plots.",
+              "Will plot first 50 parcels")
 
     crop_names = []
     for pid in pids:
+        pid = str(pid)
         path = normpath(join(config.get_value(['paths', 'temp']),
                              aoi, str(year), str(pid)))
-
         file_info = normpath(join(path, 'info.json'))
         if not isfile(file_info):
             parcel_info.by_pid(aoi, year, pid)
         with open(file_info, 'r') as f:
             info_data = json.loads(f.read())
-
         crop_names.append(info_data['cropname'][0])
 
-    if all_equal(crop_names):
-        plot_title = f"NDVI profiles for crop type: {crop_names[0]}"
-        parcel_peers = True
+    parcel_peers = True
+    if len(pids) == 1:
+        plot_title = f"NDVI profile for parcel '{pids[0]}', crop type: {crop_names[0]}."
+        cloudfreelabel = "Cloud free"
+    elif all_equal(crop_names):
+        plot_title = f"NDVI profiles for crop type: {crop_names[0]}."
+        cloudfreelabel = pid  # , area: {area:.1f}sqm"
     else:
-        plot_title = f"NDVI profiles"
+        plot_title = "NDVI profiles"
         parcel_peers = False
 
     fig = plt.figure(figsize=(16.0, 10.0))
     axb = fig.add_subplot(1, 1, 1)
-    cloudlabel = 1
+
+    pcount = 1
 
     for pid in pids:
+        pid = str(pid)
         path = normpath(join(config.get_value(['paths', 'temp']),
                              aoi, str(year), str(pid)))
 
@@ -95,52 +107,52 @@ def ndvi(aoi, year, pids, ptype=None, cloud_free=True,
 
         # Plot Cloud free NDVI.
         dfNDVI = (dfB8['mean'] - dfB4['mean']) / (dfB8['mean'] + dfB4['mean'])
-        if std:
-            dfstd = ((dfB8['p75'] - dfB4['p25']) / 50000)
 
         axb.set_xlabel("Date")
         axb.xaxis.set_major_formatter(datesFmt)
 
-        if cloudlabel == 1:
-            cloudlabel = 'Cloudy observations'
-        else:
-            cloudlabel = ''
-        axb.set_ylabel(r'NDVI')
-        axb.plot(dfNDVI.index, dfNDVI, linestyle=' ', marker='s',
-                 markersize=10, color='lightgray',
-                 fillstyle='none', label=cloudlabel)
+        if len(pids) == 1:
+            axb.set_ylabel(r'NDVI')
+            axb.plot(dfNDVI.index, dfNDVI, linestyle=' ', marker='s',
+                     markersize=10, color='lightgray',
+                     fillstyle='none', label='All observations')
 
-        if cloud_free:
-            if 'hist' in df.columns:
-                df['cf'] = pd.Series(dtype='str')
-                scls = scl.split('_')
-                for index, row in df.iterrows():
-                    if any(x in scls for x in [*json.loads(row['hist'].replace("\'", "\""))]):
-                        df.at[index, 'cf'] = 'False'
-                    else:
-                        df.at[index, 'cf'] = 'True'
-                cloudfree = (df['cf'] == 'True')
-                cloudfree = cloudfree[~cloudfree.index.duplicated()]
-            else:
-                dfSC = df[df.band == 'SC'].copy()
-                cloudfree = ((dfSC['mean'] >= 4) & (dfSC['mean'] < 6))
-            try:
-                if parcel_peers:
-                    cloudfreelabel = f"Parcel {pid}, area: {area:.1f}sqm"
+        if not parcel_peers:
+            cloudfreelabel = f"{pid}, {crop_name}"
+
+        if 'hist' in df.columns:
+            df['cf'] = pd.Series(dtype='str')
+            scls = scl.split('_')
+            for index, row in df.iterrows():
+                if any(x in scls for x in [*json.loads(row['hist'].replace("\'", "\""))]):
+                    df.at[index, 'cf'] = 'False'
                 else:
-                    cloudfreelabel = f"Parcel: {pid}, Area: {area:.1f}sqm, Crop type: {crop_name}"
+                    df.at[index, 'cf'] = 'True'
+            cloudfree = (df['cf'] == 'True')
+            cloudfree = cloudfree[~cloudfree.index.duplicated()]
+        else:
+            dfSC = df[df.band == 'SC'].copy()
+            cloudfree = ((dfSC['mean'] >= 4) & (dfSC['mean'] < 6))
+        if std or errorbar:
+            dfstd = ((dfB8['p75'] - dfB4['p25']) / 50000)
+            cloufreestd = dfstd[dfstd.index.isin(dfNDVI[cloudfree].index)]
+        try:
+            if pcount <= max_line_plots:
                 axb.plot(dfNDVI[cloudfree].index, dfNDVI[cloudfree],
-                         linestyle='--', marker='P',
-                         markersize=10,
+                         linestyle='--', marker='P', markersize=10,
                          fillstyle='none', label=cloudfreelabel)
-                if std:
-                    cloufreestd = dfstd[dfstd.index.isin(
-                        dfNDVI[cloudfree].index)]
+                pcount += 1
+                if errorbar:
                     axb.errorbar(dfNDVI[cloudfree].index, dfNDVI[cloudfree],
                                  cloufreestd, fmt=' ', color='Gray',
-                                 linewidth=1, capsize=4)
-            except Exception as err:
-                message = f"Could not mark cloud free images: {err}"
+                                 linewidth=2, capsize=4, alpha=0.5)
+            if std:
+                axb.fill_between(dfNDVI[cloudfree].index,
+                                 dfNDVI[cloudfree] - cloufreestd,
+                                 dfNDVI[cloudfree] + cloufreestd,
+                                 color='b', alpha=0.03)
+        except Exception as err:
+            message = f"Could not mark cloud free images: {err}"
 
         axb.set_xlim(start_date, end_date + timedelta(1))
         axb.set_ylim(0, 1.0)
@@ -148,13 +160,13 @@ def ndvi(aoi, year, pids, ptype=None, cloud_free=True,
         axb.legend(frameon=False)
     if 'message' in locals():
         print(message)
-    axb.set_title(f"NDVI -- Crop type: {crop_name}")
+    axb.set_title(plot_title)
 
     return plt.show()
 
 
-def s2(aoi, year, pid, ptype=None, bands=['B08'], cloud_free=True,
-       scl='3_8_9_10_11', debug=False):
+def s2(aoi, year, pid, ptype=None, bands=['B08'], scl='3_8_9_10_11',
+       debug=False):
     if type(bands) is str:
         bands = [bands]
     path = normpath(join(config.get_value(['paths', 'temp']),
@@ -223,7 +235,6 @@ def s2(aoi, year, pid, ptype=None, bands=['B08'], cloud_free=True,
     axb.set_title(f"Parcel {pid} (crop: {crop_name}, area: {area:.2f} ha)")
     axb.set_xlabel("Date")
     axb.xaxis.set_major_formatter(datesFmt)
-
     axb.set_ylabel(r'DN')
 
     colors = {"B01": "Grey",
@@ -233,7 +244,7 @@ def s2(aoi, year, pid, ptype=None, bands=['B08'], cloud_free=True,
               "B05": "Grey",
               "B06": "Grey",
               "B07": "Grey",
-              "B08": "magenta",
+              "B08": "darkviolet",
               "B8A": "Grey",
               "B09": "Grey",
               "B10": "Grey",
@@ -247,7 +258,7 @@ def s2(aoi, year, pid, ptype=None, bands=['B08'], cloud_free=True,
               "B5": "Grey",
               "B6": "Grey",
               "B7": "Grey",
-              "B8": "magenta",
+              "B8": "darkviolet",
               "B9": "Grey"
               }
 
@@ -255,25 +266,17 @@ def s2(aoi, year, pid, ptype=None, bands=['B08'], cloud_free=True,
     for b in bands:
         axb.plot(dfb[b].index, dfb[b]['mean'], linestyle=' ', marker='o',
                  markersize=8, color=colors[b],
-                 fillstyle='none', label=b)
+                 fillstyle='none', label=b, alpha=0.5)
 
         seriesB[b] = pd.Series(dfb[b]['mean'], index=dfb[b].index)
-        if cloud_free:
-            try:
-                axb.plot(seriesB[b][cloudfree].index, seriesB[b][cloudfree],
-                         linestyle='--', marker='x',
-                         markersize=8, color=colors[b],
-                         fillstyle='none', label=f'{b} Cloud free')
-            except Exception as err:
-                message = f"Could not mark cloud free images: {err}"
+        axb.plot(seriesB[b][cloudfree].index, seriesB[b][cloudfree],
+                 linestyle='--', marker='x',
+                 markersize=8, color=colors[b],
+                 fillstyle='none', label=f'{b} Cloud free')
 
     axb.set_xlim(start_date, end_date + timedelta(1))
     axb.set_ylim(0, 10000)
-
     axb.legend(frameon=False)
-
-    if 'message' in locals():
-        print(message)
 
     return plt.show()
 
