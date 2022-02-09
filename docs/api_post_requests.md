@@ -2,12 +2,12 @@
 
 **Taking the next step: Using POST with RESTful services to get tailor made selections**
 
-Please read up on the [generic characteristics of the RESTful service](https://jrc-cbm.readthedocs.io/en/latest/api_ts.html) AND [RESTful queries for chip selections](https://jrc-cbm.readthedocs.io/en/latest/api_imgs.html) **BEFORE** using the query described here.
+Please read up on the [generic characteristics of the RESTful service](https://jrc-cbm.readthedocs.io/en/latest/api_overview.html) AND [RESTful queries for chip selections](https://jrc-cbm.readthedocs.io/en/latest/api_sentinel_images.html) **BEFORE** using the query described here.
 
 
 ## rawChipsBatch
 
-This query extends *rawChipByLocation* by providing a faster parallel extraction. 
+This query extends *rawChipByLocation* by providing a faster parallel extraction.
 
 It requires the POST method, instead of the GET methods used in the previous pages, because the parameters are now lists of detailed references to individual chip selections. This also means that the query no longer works in a standard browser (unless you install special extensions like [postman](https://www.postman.com/) in your browser, though that is mostly useful as a debug tool).
 
@@ -15,7 +15,7 @@ Using POST has the additional advantage that it is much easier to provide reques
 
 The overall idea behind using rawChipBatch is that you already have made a selection of specific items that you want to collect from the server. The items are passed as a list, which is then extracted on parallel VMs on the server. A common scenario for Sentinel-2 selection would be to first screen the SCL information for a parcel (either using *parcelTimeSeries* or *rawChipByLocation*) and then POST the cloud-free selections to retrieve the bands of interest.
 
-The cartesian product of selected references and unique bands is returned (e.g. if 4 references and 3 bands are provided as parameters, 12 GeoTIFF chips are produced). 
+The cartesian product of selected references and unique bands is returned (e.g. if 4 references and 3 bands are provided as parameters, 12 GeoTIFF chips are produced).
 
 
 | Parameters  | Description   | Example call                  |
@@ -104,7 +104,7 @@ The scaled NDVI output of 2019-06-25 rendered as a PNG.
 
 ## rawS1ChipsBatch
 
-In analogue to the *rawChipBatch* query, this query retrieves Sentinel-1 chips. Since Sentinel-1 chips never have cloud issues, we don't need to cloud check first and make a specific selection. Instead, we can fall back to a date range selection. However, we prefer the convenience of POSTing JSON structures to pass on the request parameters. We further simplify by always returning both polarization (VV and VH for IW image mode over land). 
+In analogue to the *rawChipBatch* query, this query retrieves Sentinel-1 chips. Since Sentinel-1 chips never have cloud issues, we don't need to cloud check first and make a specific selection. Instead, we can fall back to a date range selection. However, we prefer the convenience of POSTing JSON structures to pass on the request parameters. We further simplify by always returning both polarization (VV and VH for IW image mode over land).
 
 **WARNING**
 
@@ -112,7 +112,7 @@ There are generally more Sentinel-1 observations then Sentinel-2 observations, w
 
 Sentinel-1 chips are ONLY available where the imagery is processed to CARD (Copernicus Analysis Ready Data). This is only the case for selected European areas (on CREODIAS).
 
-Sentinel-1 chips are selected from larger image sets and are always generated as float32 images. This (currently) takes more time than for Sentinel-2 and leads to larger file size (e.g. for transfer). 
+Sentinel-1 chips are selected from larger image sets and are always generated as float32 images. This (currently) takes more time than for Sentinel-2 and leads to larger file size (e.g. for transfer).
 
 
 Request parameters are as follows:
@@ -217,7 +217,7 @@ with rasterio.open(f"test.tif", 'w',**kwargs) as sink:
     sink.write(byteScale(vh, -20.0, -8.0),2) # R
     sink.write(byteScale(c6, 0.2, 0.9),3) # R
 
-    
+
 ```
 
 The result is compared to the NDVI image of 2019-06-25.
@@ -225,4 +225,3 @@ The result is compared to the NDVI image of 2019-06-25.
 At first sight, you will notice the speckly appearance of the S1 composite versus the crisp Sentinel-2 NDVI, which even shows fine inner-parcel details. But look closer, and you find more variation in the S1 composite. You can easily separate winter cereals from broadleaf crops, for instance, something that is nearly impossible in the S2 NDVI. Sparsely vegetated fields show some coherence (blue tints), etc.  
 
 ![scaled NDVI of 2019-06-17 rendered as a PNG](https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/s2b_ndvi_scaled.png)  ![scaled S1 composite for period 2019-06-14 to 2019-06-20 rendered as a PNG](https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/s1_composite.png)
-
