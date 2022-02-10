@@ -195,3 +195,43 @@ cbm.get.background.by_location(aoi, year, lat, lon, tstype, axis, ptype)
 
 The files will be saved by default in the ```temp/ms/year/parcel/...``` folder.
 
+## Sentinel chips
+
+Download chip images by selected parcel id.
+
+Example
+```python
+import cbm
+
+cbm.get.chip_images.by_pid(
+    aoi='dk',                # Area of interest (str)
+    year='2020',             # Year of the parcels dataset (int)
+    pid='92794229',          # Parcel id (int)
+    start_date='2020-06-01', # Start date '2019-06-01' (str)
+    end_date='2020-06-30',   # End date '2019-06-01' (str)
+    band='SCL',              # Selected band
+    chipsize=2560            # size of the chip in pixels (int)
+)
+```
+
+
+Preview chip images by selected parcel id.
+
+Example
+```python
+import cbm
+
+cbm.show.chip_images.by_pid(
+    aoi='dk',                # Area of interest (str)
+    year='2020',             # Year of the parcels dataset (int)
+    pid='92794229',          # Parcel id (int)
+    start_date='2020-06-01', # Start date '2019-06-01' (str)
+    end_date='2020-06-30',   # End date '2019-06-01' (str)
+    band='SCL',              # Selected band
+    chipsize=2560            # size of the chip in pixels (int)
+)
+```
+
+Arguments
+    band: 3 Sentinel-2 band names. One of [‘B02’, ‘B03’, ‘B04’, ‘B08’] (10 m bands) or
+        [‘B05’, ‘B06’, ‘B07’, ‘B8A’, ‘B11’, ‘B12’] (20 m bands). 10m and 20m bands can be combined.
