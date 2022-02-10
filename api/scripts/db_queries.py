@@ -360,7 +360,7 @@ def getParcelPeers(dataset, pid, distance, maxPeers, ptype=''):
                 ST_Transform(wkb_geometry,3035) as geom
                 FROM {parcels_table}{ptype}
                 WHERE {parcel_id} = '{pid}')
-            SELECT {parcel_id}::text as pid,
+            SELECT {parcel_id}::text as pids,
                 st_distance(ST_Transform(wkb_geometry,3035),
                 (SELECT geom FROM current_parcel)) As distance
             FROM {parcels_table}{ptype}

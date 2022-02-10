@@ -145,12 +145,12 @@ def ndvi(aoi, year, pids, ptype=None, scl='3_8_9_10_11', std=True,
                 if errorbar:
                     axb.errorbar(dfNDVI[cloudfree].index, dfNDVI[cloudfree],
                                  cloufreestd, fmt=' ', color='Gray',
-                                 linewidth=2, capsize=4, alpha=0.5)
+                                 linewidth=2, capsize=4, alpha=0.4)
             if std:
                 axb.fill_between(dfNDVI[cloudfree].index,
                                  dfNDVI[cloudfree] - cloufreestd,
                                  dfNDVI[cloudfree] + cloufreestd,
-                                 color='b', alpha=0.03)
+                                 color='b', alpha=0.05)
         except Exception as err:
             message = f"Could not mark cloud free images: {err}"
 
@@ -165,8 +165,8 @@ def ndvi(aoi, year, pids, ptype=None, scl='3_8_9_10_11', std=True,
     return plt.show()
 
 
-def s2(aoi, year, pid, ptype=None, bands=['B08'], scl='3_8_9_10_11',
-       debug=False):
+def s2(aoi, year, pid, ptype=None, bands=['B02', 'B03', 'B04', 'B08'],
+       scl='3_8_9_10_11', debug=False):
     if type(bands) is str:
         bands = [bands]
     path = normpath(join(config.get_value(['paths', 'temp']),
@@ -282,6 +282,14 @@ def s2(aoi, year, pid, ptype=None, bands=['B08'], scl='3_8_9_10_11',
 
 
 def s1_bs(aoi, year, pid, ptype=None, debug=False):
+    return s1(aoi, year, pid, ptype, 'bs', debug)
+
+
+def s1_c6(aoi, year, pid, ptype=None, debug=False):
+    return s1(aoi, year, pid, ptype, 'c6', debug)
+
+
+def s1(aoi, year, pid, ptype=None, tstype='bs', debug=False):
     path = normpath(join(config.get_value(['paths', 'temp']),
                          aoi, str(year), str(pid)))
     file_info = normpath(join(path, 'info.json'))
@@ -293,9 +301,9 @@ def s1_bs(aoi, year, pid, ptype=None, debug=False):
     crop_name = info_data['cropname'][0]
     area = info_data['area'][0]
 
-    file_ts = normpath(join(path, 'time_series_bs.csv'))
+    file_ts = normpath(join(path, f'time_series_{tstype}.csv'))
     if not isfile(file_ts):
-        time_series.by_pid(aoi, year, pid, 'bs', ptype, '', debug)
+        time_series.by_pid(aoi, year, pid, tstype, ptype, '', debug)
     df = pd.read_csv(file_ts, index_col=0)
 
     df['date'] = pd.to_datetime(df['date_part'], unit='s')
@@ -317,91 +325,34 @@ def s1_bs(aoi, year, pid, ptype=None, debug=False):
     datesFmt = mdates.DateFormatter('%-d %b %Y')
 
     # Plot Backscattering coefficient
-    datesFmt = mdates.DateFormatter('%-d %b %Y')
     df = df[df['mean'] >= 0]  # to remove negative values
 
-    dfVV = df[df.band == 'VVb'].copy()
-    dfVH = df[df.band == 'VHb'].copy()
+    dfVV = df[df.band == f'VV{tstype[0]}'].copy()
+    dfVH = df[df.band == f'VH{tstype[0]}'].copy()
     fig = plt.figure(figsize=(16.0, 10.0))
     axb = fig.add_subplot(1, 1, 1)
 
-    dfVV['mean'] = dfVV['mean'].map(lambda s: 10.0 * np.log10(s))
-    dfVH['mean'] = dfVH['mean'].map(lambda s: 10.0 * np.log10(s))
+    if tstype == 'bs':
+        dfVV['mean'] = dfVV['mean'].map(lambda s: 10.0 * np.log10(s))
+        dfVH['mean'] = dfVH['mean'].map(lambda s: 10.0 * np.log10(s))
+        axb.set_ylim(-25, 0)
+        ylabel = 'Sentinel-1 Backscattering coefficient, $\gamma\degree$ (dB)'
+    else:
+        axb.set_ylim(0, 1)
+        ylabel = 'Sentinel-1 6 day coherence'
 
     axb.set_title(
         f"Parcel {pid} (crop: {crop_name}, area: {area:.2f} sqm)")
     axb.set_xlabel("Date")
     axb.xaxis.set_major_formatter(datesFmt)
 
-    axb.set_ylabel(r'Backscattering coefficient, $\gamma\degree$ (dB)')
+    axb.set_ylabel(ylabel)
     axb.plot(dfVH.index, dfVH['mean'], linestyle=' ', marker='s',
              markersize=10, color='DarkBlue', fillstyle='none', label='VH')
     axb.plot(dfVV.index, dfVV['mean'], linestyle=' ', marker='o',
              markersize=10, color='Red', fillstyle='none', label='VV')
 
     axb.set_xlim(start_date, end_date + timedelta(1))
-    axb.set_ylim(-25, 0)
-
-    axb.legend(frameon=False)  # loc=2)
-
-    return plt.show()
-
-
-def s1_c6(aoi, year, pid, ptype=None, debug=False):
-    path = normpath(join(config.get_value(['paths', 'temp']),
-                         aoi, year, str(pid)))
-    file_info = normpath(join(path, 'info.json'))
-    if not isfile(file_info):
-        parcel_info.by_pid(aoi, year, pid, ptype, True)
-    with open(file_info, 'r') as f:
-        info_data = json.loads(f.read())
-
-    crop_name = info_data['cropname'][0]
-    area = info_data['area'][0]
-
-    file_ts = normpath(join(path, 'time_series_c6.csv'))
-    if not isfile(file_ts):
-        time_series.by_pid(aoi, year, pid, 'c6', ptype, '', debug)
-    df = pd.read_csv(file_ts, index_col=0)
-
-    df['date'] = pd.to_datetime(df['date_part'], unit='s')
-    start_date = df.iloc[0]['date'].date()
-    end_date = df.iloc[-1]['date'].date()
-    # print(f"From '{start_date}' to '{end_date}'.")
-
-    pd.set_option('max_colwidth', 200)
-    pd.set_option('display.max_columns', 20)
-    datesFmt = mdates.DateFormatter('%-d %b %Y')
-
-    # Plot settings are confirm IJRS graphics instructions
-    plt.rcParams['axes.titlesize'] = 16
-    plt.rcParams['axes.labelsize'] = 14
-    plt.rcParams['xtick.labelsize'] = 12
-    plt.rcParams['ytick.labelsize'] = 12
-    plt.rcParams['legend.fontsize'] = 14
-
-    df.set_index(['date'], inplace=True)
-
-    # Plot Coherence
-
-    dfVV = df[df.band == 'VVc'].copy()
-    dfVH = df[df.band == 'VHc'].copy()
-    fig = plt.figure(figsize=(16.0, 10.0))
-    axb = fig.add_subplot(1, 1, 1)
-
-    axb.set_title(
-        f"Parcel {pid} (crop: {crop_name}, area: {area:.2f} sqm)")
-    axb.set_xlabel("Date")
-    axb.xaxis.set_major_formatter(datesFmt)
-
-    axb.set_ylabel(r'Coherence')
-    axb.plot(dfVH.index, dfVH['mean'], linestyle=' ', marker='s',
-             markersize=10, color='DarkBlue', fillstyle='none', label='VH')
-    axb.plot(dfVV.index, dfVV['mean'], linestyle=' ', marker='o',
-             markersize=10, color='Red', fillstyle='none', label='VV')
-
-    axb.set_xlim(start_date, end_date + timedelta(1))
-    axb.set_ylim(0, 1)
 
     axb.legend(frameon=False)  # loc=2)
 
