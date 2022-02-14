@@ -13,7 +13,9 @@ import datetime
 import numpy as np
 import os
 import gc
+import json
 import psycopg2
+
 
 import get_time_series as gts
 
@@ -696,7 +698,12 @@ class db_s2_time_series_source(base_time_series_source) :
           3) no processing is needed once data are loaded from the db
           4) better overall performance (to be tested)
     """
-    def __init__(self, signal_type : str, host : str, port : str, dbname : str, user : str, password : str, db_schema : str, fid_col : str, parcels_table : str, sigs_table : str, hists_table : str, sentinel_metadata_table : str, start_time : datetime.datetime, end_time : datetime.datetime, sql_additional_conditions : str, cloud_free: str) :
+    def __init__(self, signal_type : str, host : str, port : str, dbname : str, \
+                 user : str, password : str, db_schema : str, fid_col : str, \
+                 parcels_table : str, sigs_table : str, hists_table : str, \
+                 sentinel_metadata_table : str, start_time : datetime.datetime, \
+                 end_time : datetime.datetime, sql_additional_conditions : str, cloud_free: str,\
+                 cloud_cat : list = [3,8,9,10,11]) :
         """
         Summary :
             Object constructor.
@@ -750,6 +757,8 @@ class db_s2_time_series_source(base_time_series_source) :
         self.ts_db = self.get_ts_db(host, port, dbname, user, password, self.sql_select)
         # Variable that stores the list of components retrieved from the dataframe imported from the db
         self.components = list(self.ts_db.columns)
+        
+        self.cloud_cat = cloud_cat
 
     def sql_statement(self, db_schema : str, fid_col : str, parcels_table : str, sigs_table : str, hists_table : str, sentinel_metadata_table : str, sql_additional_conditions : str, cloud_free : str) -> str :
         """
@@ -866,8 +875,16 @@ class db_s2_time_series_source(base_time_series_source) :
         if start_date is not None and end_date is not None:
             ts_final = self.ts_db.query('parcel_id == "' + str(fid) + '" and obstime >= "' + start_date + '" and obstime <= "' + end_date + '"')
         else:
-            ts_final = self.ts_db.query('parcel_id == "' + str(fid) + '"')
-
+            # ts_final = self.ts_db.query('parcel_id == "' + str(fid) + '"')
+            ts_final = self.ts_db[self.ts_db["parcel_id"] == fid]
+            
+        # Cast the dates and add the cloud percentage
+        # First convert the epoch timestamp to a datetime
+        ts_final = ts_final.reset_index() # reset the index
+        ts_final.set_index('obstime',inplace=True)
+        
+        ts_final['cloud_pct'] = ts_final['hist'].apply(lambda s: gts.get_cloudyness(json.loads(s), self.cloud_cat)[1])
+            
         # Force garbage collection
         gc.collect()
 
@@ -894,7 +911,10 @@ class db_c6_time_series_source(base_time_series_source) :
     Summary :
         See summary in db_s2_time_series_source
     """
-    def __init__(self, signal_type : str, host : str, port : str, dbname : str, user : str, password : str, db_schema : str, fid_col : str, parcels_table : str, sigs_table : str, sentinel_metadata_table : str, start_time : datetime.datetime, end_time : datetime.datetime, sql_additional_conditions : str) :
+    def __init__(self, signal_type : str, host : str, port : str, dbname : str, user : str, \
+                 password : str, db_schema : str, fid_col : str, parcels_table : str, \
+                 sigs_table : str, sentinel_metadata_table : str, start_time : datetime.datetime, \
+                 end_time : datetime.datetime, sql_additional_conditions : str) :
         """
         Summary :
             See summary in db_s2_time_series_source
@@ -997,8 +1017,13 @@ class db_c6_time_series_source(base_time_series_source) :
         if start_date is not None and end_date is not None:
             ts_final = self.ts_db.query('parcel_id == "' + str(fid) + '" and obstime >= "' + start_date + '" and obstime <= "' + end_date + '"')
         else:
-            ts_final = self.ts_db.query('parcel_id == "' + str(fid) + '"')
-
+            # ts_final = self.ts_db.query('parcel_id == "' + str(fid) + '"')
+            ts_final = self.ts_db[self.ts_db["parcel_id"] == fid]
+        
+        # First convert the epoch timestamp to a datetime
+        ts_final = ts_final.reset_index() # reset the index
+        ts_final.set_index('obstime',inplace=True)
+        
         # Force garbage collection
         gc.collect()
 
@@ -1136,8 +1161,13 @@ class db_bs_time_series_source(base_time_series_source) :
         if start_date is not None and end_date is not None:
             ts_final = self.ts_db.query('parcel_id == "' + str(fid) + '" and obstime >= "' + start_date + '" and obstime <= "' + end_date + '"')
         else:
-            ts_final = self.ts_db.query('parcel_id == "' + str(fid) + '"')
-
+            # ts_final = self.ts_db.query('parcel_id == "' + str(fid) + '"')
+            ts_final = self.ts_db[self.ts_db["parcel_id"] == fid]
+            
+        # First convert the epoch timestamp to a datetime
+        ts_final = ts_final.reset_index() # reset the index
+        ts_final.set_index('obstime',inplace=True)
+        
         # Force garbage collection
         gc.collect()
 
@@ -1282,8 +1312,17 @@ class time_serie_source_factory :
             end_time = option['end_time']
             sql_additional_conditions = option['sql_additional_conditions']
             cloud_free = option['cloud_free']
+            
+            if "cloud_categories" in option :
+                cloud_cat = option["cloud_categories"]
+            else :
+                cloud_cat = [3,8,9,10,11]
 
-            source = db_s2_time_series_source(signal_type, host, port, dbname, user, password, db_schema, fid_col, parcels_table, sigs_table, hists_table, sentinel_metadata_table, start_time, end_time, sql_additional_conditions, cloud_free)
+            source = db_s2_time_series_source(signal_type, host, port, dbname, user, password, \
+                                              db_schema, fid_col, parcels_table, sigs_table, \
+                                              hists_table, sentinel_metadata_table, start_time,\
+                                              end_time, sql_additional_conditions, cloud_free, \
+                                              cloud_cat)
 
         elif source_type == "db_c6" :
             host =option['db_host']

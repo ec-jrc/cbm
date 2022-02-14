@@ -375,7 +375,7 @@ class parcel_data_factory :
         source_options = options['parcelSource']
         parcel_source = None
 
-        if source_options['type'] in ['shape', 'geojson']  :
+        if source_options['type'] in ['shape', 'geojson', 'json']  :
             # get the name of the shape file
             filename = source_options['parcelFile']
             fid_col = source_options['fidAttribute']
