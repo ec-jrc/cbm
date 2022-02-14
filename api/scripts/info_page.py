@@ -62,7 +62,7 @@ def generator(user=None):
                 "parcelTimeSeries_s2": f"{url}/query/parcelTimeSeries?aoi={aoi}&year={year}&pid={pid}{ptype_param}&tstype=s2&scl=True",
                 "parcelTimeSeries_bs": f"{url}/query/parcelTimeSeries?aoi={aoi}&year={year}&pid={pid}{ptype_param}&tstype=bs",
                 "parcelTimeSeries_c6": f"{url}/query/parcelTimeSeries?aoi={aoi}&year={year}&pid={pid}{ptype_param}&tstype=c6",
-                "backgroundByParcelID": f"{url}/query/backgroundByParcelID?aoi={aoi}&year={year}&pid={pid}{ptype_param}&chipsize=256&extend=512&iformat=png",
+                "backgroundByParcelID": f"{url}/query/backgroundByParcelID?aoi={aoi}&year={year}&pid={pid}{ptype_param}&chipsize=256&extend=512&iformat=png&withGeometry=True",
                 "weatherTimeSeries": f"{url}/query/weatherTimeSeries?aoi={aoi}&year={year}&pid={pid}{ptype_param}",
                 "parcelPeers": f"{url}/query/parcelPeers?aoi={aoi}&year={year}&pid={pid}{ptype_param}"
             }

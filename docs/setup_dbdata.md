@@ -14,13 +14,13 @@ to install the GDAL binaries, which is highly recommended also for other geospat
 
     ogr2ogr -f "PostgreSQL" PG:"host=localhost port=5432 user=postgres dbname=postgres" \
     -nln "roi_YYYY" -nlt PROMOTE_TO_MULTI parcels_2018.shp
-    
+
 This will import the shape file into the table *roi_YYYY* (choose a recognisable roi name and replace YYYY with the year of interest). The option *-nlt PROMOTE_TO_MULTI* may not be needed if all shape features are single polygons. If (some) features fail to upload (e.g. due to corrupt geometries), add the option *-skipfailures*, but check the completeness of the uploaded table afterwards.
 
 See
 
     ogr2ogr --help
-    
+
 for more information.
 
 The table *roi_YYYY* will be spatially indexed after upload, which significantly speeds up spatial querying.
@@ -50,7 +50,7 @@ Batch processing is then simply scheduled to run overnight for a fixed increment
 
 ### Database catalog (SOBLOO)
 
-SOBLOO maintains a dedicated database for processed CARD data, on a project-by-project basis. While this is a second-best solution, it is relatively straightforward to use, as we only need to transfer records between databases. All metadata is stored in a single table __datas__, so all relevant CARD metadata records can be transferred, for the area of interest, with a single spatial query. 
+SOBLOO maintains a dedicated database for processed CARD data, on a project-by-project basis. While this is a second-best solution, it is relatively straightforward to use, as we only need to transfer records between databases. All metadata is stored in a single table __datas__, so all relevant CARD metadata records can be transferred, for the area of interest, with a single spatial query.
 
 The transfer is modified as follows:
 - Determine the database connection details for the SOBLOO __datas__ table (provided with the SOBLOO account)
@@ -90,7 +90,7 @@ Qualified solutions:
 
 - Tiled formats: the image is broken up in smaller tiles and either indexed by an explicit metadata format (e.g. VRT) or by an implicit tile file naming. Individual tiles are stored with a common format (e.g. GeoTIFF). Tiled formats may also store upsampled overviews, e.g. in a hierarchical file directory structure ordered according to overview (zoom) level.
 
-We limit ourselves to full resolution, so we will not deal with upsampled overviews (for now) 
+We limit ourselves to full resolution, so we will not deal with upsampled overviews (for now)
 
 Disqualified solutions:
 
