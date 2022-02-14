@@ -998,9 +998,13 @@ class red_nir_swir_processor(base_pre_processor) :
                 
         # Now build the output dictionary
         out_dict = {}
-            
-        out_dict[self.outnames[0]] = ts[self.signals[0]][self.components[3:]][ind].copy()
-    
+        
+        if 'Date' in ts[self.signals[0]] :
+            out_dict[self.outnames[0]] = ts[self.signals[0]][['Date', *self.components[3:]]][ind].copy()
+            out_dict[self.outnames[0]].set_index('Date',inplace=True)
+        else :
+            out_dict[self.outnames[0]] = ts[self.signals[0]][self.components[3:]][ind].copy()
+                
         if len(self.outnames) > 1 :
             # Convert band components it into a dataframe
             if 'Date' in df :

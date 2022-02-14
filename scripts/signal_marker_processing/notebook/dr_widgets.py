@@ -585,7 +585,7 @@ class connection_widget(VBox) :
         )
         
         self.wdd_ptype = Dropdown(
-            options = ['', 'm', 'g'],
+            options = ['', 'm', 'g', 'b'],
             placeholder='Type',
             description='Type:',
             disabled=False
