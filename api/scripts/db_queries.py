@@ -98,13 +98,6 @@ def getParcelByID(dataset, pid, ptype='', withGeometry=False,
 
     try:
         logging.debug("start queries")
-        getTableSrid = f"""
-            SELECT Find_SRID('', '{parcels_table}{ptype}',
-                'wkb_geometry');"""
-        logging.debug(getTableSrid)
-        cur.execute(getTableSrid)
-        srid = cur.fetchone()[0]
-        logging.debug(srid)
         cropname = dataset['pcolumns']['crop_name']
         cropcode = dataset['pcolumns']['crop_code']
         parcel_id = dataset['pcolumns']['parcel_id']
@@ -242,7 +235,7 @@ def getParcelTimeSeries(dataset, pid, ptype='',
     where_band = f"And s.band = '{band}' " if band else ''
 
     if tstype.lower() == 's2':
-        where_tstype = "And band IN ('B02', 'B03', 'B04', 'B05', 'B08', 'B11') "
+        where_tstype = "And band IN ('B02', 'B03', 'B04', 'B05', 'B08', 'B11', 'B2', 'B3', 'B4', 'B5', 'B8') "
     elif tstype.lower() == 'c6':
         where_tstype = "And band IN ('VVc', 'VHc') "
     elif tstype.lower() == 'bs':
