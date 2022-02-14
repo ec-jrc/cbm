@@ -8,3 +8,5 @@ pandas
 flasgger
 gdal==2.4.0
 rasterio
+matplotlib
+descartes
