@@ -41,26 +41,15 @@ def ndvi(aoi, year, pids, ptype=None, scl='3_8_9_10_11', std=True,
 
     crop_names = []
     for pid in pids:
-        pid = str(pid)
         path = normpath(join(config.get_value(['paths', 'temp']),
                              aoi, str(year), str(pid)))
         file_info = normpath(join(path, 'info.json'))
         if not isfile(file_info):
-            parcel_info.by_pid(aoi, year, pid)
+            parcel_info.by_pid(aoi, str(year), str(pid), ptype, True)
         with open(file_info, 'r') as f:
             info_data = json.loads(f.read())
         crop_names.append(info_data['cropname'][0])
-
-    parcel_peers = True
-    if len(pids) == 1:
-        plot_title = f"NDVI profile for parcel '{pids[0]}', crop type: {crop_names[0]}."
-        cloudfreelabel = "Cloud free"
-    elif all_equal(crop_names):
-        plot_title = f"NDVI profiles for crop type: {crop_names[0]}."
-        cloudfreelabel = pid  # , area: {area:.1f}sqm"
-    else:
-        plot_title = "NDVI profiles"
-        parcel_peers = False
+    parcel_peers = all_equal(crop_names)
 
     fig = plt.figure(figsize=(16.0, 10.0))
     axb = fig.add_subplot(1, 1, 1)
@@ -68,10 +57,8 @@ def ndvi(aoi, year, pids, ptype=None, scl='3_8_9_10_11', std=True,
     pcount = 1
 
     for pid in pids:
-        pid = str(pid)
         path = normpath(join(config.get_value(['paths', 'temp']),
                              aoi, str(year), str(pid)))
-
         file_info = normpath(join(path, 'info.json'))
         with open(file_info, 'r') as f:
             info_data = json.loads(f.read())
@@ -79,9 +66,19 @@ def ndvi(aoi, year, pids, ptype=None, scl='3_8_9_10_11', std=True,
         crop_name = info_data['cropname'][0]
         area = info_data['area'][0]
 
+        if len(pids) == 1:
+            plot_title = f"NDVI profile for parcel '{pid}', crop type: {crop_names[0]}."
+            cloudfreelabel = "Cloud free"
+        elif parcel_peers:
+            plot_title = f"NDVI profiles for crop type: {crop_names[0]}."
+            cloudfreelabel = pid  # , area: {area:.1f}sqm"
+        else:
+            plot_title = "NDVI profiles"
+            cloudfreelabel = f"{pid}, {crop_name}"
+
         file_ts = normpath(join(path, 'time_series_s2.csv'))
         if not isfile(file_ts):
-            time_series.by_pid(aoi, year, pid, 's2', ptype, '', debug)
+            time_series.by_pid(aoi, str(year), str(pid), 's2', ptype, '', debug)
         df = pd.read_csv(file_ts, index_col=0)
 
         df['date'] = pd.to_datetime(df['date_part'], unit='s')
@@ -116,9 +113,6 @@ def ndvi(aoi, year, pids, ptype=None, scl='3_8_9_10_11', std=True,
             axb.plot(dfNDVI.index, dfNDVI, linestyle=' ', marker='s',
                      markersize=10, color='lightgray',
                      fillstyle='none', label='All observations')
-
-        if not parcel_peers:
-            cloudfreelabel = f"{pid}, {crop_name}"
 
         if 'hist' in df.columns:
             df['cf'] = pd.Series(dtype='str')
@@ -174,7 +168,7 @@ def s2(aoi, year, pid, ptype=None, bands=['B02', 'B03', 'B04', 'B08'],
 
     parcel_file = normpath(join(path, 'info.json'))
     if not isfile(parcel_file):
-        parcel_info.by_pid(aoi, year, pid, ptype, True)
+        parcel_info.by_pid(aoi, str(year), str(pid), ptype, True)
     with open(parcel_file, 'r') as f:
         parcel = json.loads(f.read())
 
@@ -183,7 +177,7 @@ def s2(aoi, year, pid, ptype=None, bands=['B02', 'B03', 'B04', 'B08'],
 
     file_ts = normpath(join(path, 'time_series_s2.csv'))
     if not isfile(file_ts):
-        time_series.by_pid(aoi, year, pid, 's2', ptype, '', debug)
+        time_series.by_pid(aoi, str(year), str(pid), 's2', ptype, '', debug)
     df = pd.read_csv(file_ts, index_col=0)
 
     df['date'] = pd.to_datetime(df['date_part'], unit='s')
@@ -281,20 +275,12 @@ def s2(aoi, year, pid, ptype=None, bands=['B02', 'B03', 'B04', 'B08'],
     return plt.show()
 
 
-def s1_bs(aoi, year, pid, ptype=None, debug=False):
-    return s1(aoi, year, pid, ptype, 'bs', debug)
-
-
-def s1_c6(aoi, year, pid, ptype=None, debug=False):
-    return s1(aoi, year, pid, ptype, 'c6', debug)
-
-
-def s1(aoi, year, pid, ptype=None, tstype='bs', debug=False):
+def s1(aoi, year, pid, tstype='bs', ptype=None, debug=False):
     path = normpath(join(config.get_value(['paths', 'temp']),
                          aoi, str(year), str(pid)))
     file_info = normpath(join(path, 'info.json'))
     if not isfile(file_info):
-        parcel_info.by_pid(aoi, year, pid, ptype, True)
+        parcel_info.by_pid(aoi, str(year), str(pid), ptype, True)
     with open(file_info, 'r') as f:
         info_data = json.loads(f.read())
 
@@ -303,7 +289,7 @@ def s1(aoi, year, pid, ptype=None, tstype='bs', debug=False):
 
     file_ts = normpath(join(path, f'time_series_{tstype}.csv'))
     if not isfile(file_ts):
-        time_series.by_pid(aoi, year, pid, tstype, ptype, '', debug)
+        time_series.by_pid(aoi, str(year), str(pid), tstype, ptype, '', debug)
     df = pd.read_csv(file_ts, index_col=0)
 
     df['date'] = pd.to_datetime(df['date_part'], unit='s')

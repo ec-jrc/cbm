@@ -138,7 +138,7 @@ def by_pid(aoi, year, pid, start_date, end_date, band, chipsize,
         columns, (int)
     """
     workdir = normpath(join(config.get_value(['paths', 'temp']),
-                            aoi, year, str(pid)))
+                            aoi, str(year), str(pid)))
     chip_images.by_pid(aoi, year, pid, start_date, end_date,
                        band, chipsize, ptype, debug)
 
