@@ -16,8 +16,8 @@ api/files/*
 api/uploads/*
 api/logs/*
 api/tms/*
-!api/tms/google_tms.xml
-!api/tms/bing_tms.xml
+!api/tms/google.xml
+!api/tms/bing.xml
 
 api/core
 api/gunicorn
