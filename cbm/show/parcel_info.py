@@ -84,7 +84,7 @@ def by_pid(aoi, year, pid, ptype=None, debug=False):
         f"Crop type: {parcel['cropname'][0]}",
         f"Crop type code: {parcel['cropcode'][0]}",
         f"Area: {parcel['area'][0]} sqm",
-        f"Centroid (Lat/Lon): {parcel['clat'][0]:.1f}, {parcel['clon'][0]:.6f}",
+        f"Centroid (Lat/Lon): {parcel['clat'][0]:.6f}, {parcel['clon'][0]:.6f}",
         f"Geometry SRID: {parcel['srid'][0]}"
     ]
     first_line = 0.9
