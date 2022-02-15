@@ -249,7 +249,7 @@ class db_data_source(base_parcel_data_source) :
         A user with acess to the database must be incuded in the connection parameters.
     """
 
-    def __init__(self, db_schema : str, parcel_table : str, host : str, port : str, dbname : str, user : str, password : str, fid_col : str, geometry_col : str, sql_conditions : str) :
+    def __init__(self, db_schema : str, parcel_table : str, host : str, port : str, dbname : str, user : str, password : str, fid_col : str, geometry_col : str, sql_additional_conditions : str) :
 
         """
         Summary :
@@ -265,7 +265,7 @@ class db_data_source(base_parcel_data_source) :
             password - database password
             fid_col - column of the table where the unique identifier of the parcel is stored
             geometry_col - column of the table where the geometry of the parcel is stored
-            sql_conditions - string with sql code that specify the conditions that restrict the rows that will retrieved (it can be empty)
+            sql_additional_conditions - string with sql code that specify the conditions that restrict the rows that will retrieved (it can be empty, if not empty a WHERE is added by the code)
 
             The option fid_list_file is not implemented (we can add it, if needed)
 
@@ -281,7 +281,7 @@ class db_data_source(base_parcel_data_source) :
             		"db_password" : "HEREthePASSWORD",
             		"fidAttribute" : "id",
             		"geomAttribute" : "geom",
-            		"sql_conditions" : "WHERE st_area(geom) > 1000 ORDER BY id LIMIT 100"
+            		"sql_additional_conditions" : "st_area(geom) > 1000 ORDER BY id LIMIT 100"
             	},
 
         Returns :
@@ -307,7 +307,9 @@ class db_data_source(base_parcel_data_source) :
 
         # Retrive data fom the table and count the rows
         cur = conn.cursor()
-        self.df = gpd.GeoDataFrame.from_postgis("SELECT * FROM " + db_schema + "." + parcel_table + " " + sql_conditions + ";",  conn, geometry_col)
+        if sql_additional_conditions:
+            sql_additional_conditions = 'WHERE ' + sql_additional_conditions
+        self.df = gpd.GeoDataFrame.from_postgis("SELECT * FROM " + db_schema + "." + parcel_table + " " + sql_additional_conditions + ";",  conn, geometry_col)
         cur.close()
         conn.close()
         total_rows = len(self.df.index)
@@ -405,9 +407,9 @@ class parcel_data_factory :
             password = source_options['db_password']
             fid_col = source_options['fidAttribute']
             geometry_col = source_options['geomAttribute']
-            sql_conditions = source_options['sql_conditions']
+            sql_additional_conditions = source_options['sql_additional_conditions']
 
-            parcel_source = db_data_source(db_schema, parcel_table, host, port, dbname, user, password, fid_col, geometry_col, sql_conditions)
+            parcel_source = db_data_source(db_schema, parcel_table, host, port, dbname, user, password, fid_col, geometry_col, sql_additional_conditions)
 
         elif source_options['type'] == 'txt_rest' :
             filename = source_options['fid_list_file']
