@@ -7,179 +7,179 @@
 # Copyright : 2021 European Commission, Joint Research Centre
 # License   : 3-Clause BSD
 
+
 import json
-import glob
 import rasterio
+import numpy as np
 import matplotlib.pyplot as plt
-from copy import copy
-from os.path import join, normpath
-from descartes import PolygonPatch
+from skimage import exposure
 from rasterio.plot import show
-from mpl_toolkits.axes_grid1 import ImageGrid
+from descartes import PolygonPatch
+from cbm.get import parcel_info, chip_images
+from os.path import join, normpath, isfile, exists
 
-from cbm.get import chip_images
-from cbm.utils import config, spatial_utils, data_options
-
-
-def overlay_parcel(img, geom):
-    """Create parcel polygon overlay"""
-    patche = [PolygonPatch(feature, edgecolor="yellow",
-                           facecolor="none", linewidth=2
-                           ) for feature in geom['geom']]
-    return patche
+from cbm.utils import data_options, spatial_utils, raster_utils, config
 
 
-def by_location(aoi, year, lon, lat, dates, band,
-                chipsize, columns=5, quiet=True):
-    from cbm.datas import api
-    """Plot chip image with parcel polygon overlay.
+def grid(aoi, year, pid, start_date=None, end_date=None, imgtype=['B04', 'B08'],
+         chipsize=400, columns=4, show_parcel=True, cmap='RdYlGn_r',
+         percentile=[2, 98], ptype='g', debug=False):
 
-    Examples:
-        import cbm
-        cbm.get.chip_images.by_pid(aoi, pid, start_date, end_date,
-                                    band, chipsize)
-
-    Arguments:
-        aoi, the area of interest and year e.g.: es2020, cat2020 (str)
-        pid, the parcel id (int).
-        dates, the date of the image (str) or start_date and end_date (list)
-            '2019-06-01' or ['2019-06-01', '2019-06-30']
-        band, 3 Sentinel-2 band names. One of [‘B02’, ‘B03’, ‘B04’, ‘B08’]
-            (10 m bands) or [‘B05’, ‘B06’, ‘B07’, ‘B8A’, ‘B11’, ‘B12’]
-            (20 m bands). 10m and 20m bands can be combined.
-            The first band determines the resolution in the output
-            composite. Defaults to B08_B04_B03.
-        chipsize, size of the chip in pixels (int).
-        columns, (int)
-    """
-
-    if type(dates) is list:
-        start_date, end_date = dates[0], dates[1]
+    if type(imgtype) is str:
+        bands = [imgtype]  # bands
     else:
-        start_date, end_date = dates, dates
+        bands = imgtype
 
-    json_data = json.loads(api.parcel_by_loc(aoi, lon, lat, True))
-    if type(json_data['ogc_fid']) is list:
-        pid = json_data['ogc_fid'][0]
-    else:
-        pid = json_data['ogc_fid']
+    if bands[0].lower() == 'ndvi':
+        bands = ['B04', 'B08']
+    elif bands[0].lower().replace(' ', '_') == 'true_color':
+        bands = ['B04', 'B03', 'B02']
 
-    workdir = normpath(join(config.get_value(['paths', 'temp']),
-                            aoi, str(pid)))
-    chip_images.by_pid(aoi, pid, start_date, end_date,
-                       band, chipsize, quiet)
+    if start_date is None and end_date is None:
+        start_date, end_date = f'{year}-01-01', f'{year}-12-31'
 
-    chips_dir = normpath(join(workdir, 'chip_images'))
-    if type(dates) is list:
-        chips = normpath(join(chips_dir, f"*{band}.tif"))
-    else:
-        chips = normpath(
-            join(chips_dir, f"*{start_date.replace('-', '')}*{band}.tif"))
+    path = normpath(join(config.get_value(['paths', 'temp']),  # workdir
+                         aoi, str(year), str(pid)))
+    file_info = normpath(join(path, 'info.json'))
+    if not isfile(file_info):
+        parcel_info.by_pid(aoi, str(year), str(pid), ptype, True)
+    with open(file_info, 'r') as f:
+        info_data = json.loads(f.read())
 
-    chips_list = glob.glob(chips)
+    ci_path = normpath(join(path, 'chip_images'))
 
-    if len(chips_list) > 0:
-        if len(chips_list) < columns:
-            columns = len(chips_list)
-
-        with rasterio.open(chips_list[0]) as img:
-            img_epsg = img.crs.to_epsg()
-            geom = spatial_utils.transform_geometry(json_data, img_epsg)
-            patches = overlay_parcel(img, geom)
-
-        if not quiet:
-            for chip in chips_list:
-                print(chip)
-
-        rows = int(len(chips_list) // columns +
-                   (len(chips_list) % columns > 0))
-        fig = plt.figure(figsize=(30, 10 * rows))
-        grid = ImageGrid(fig, 111,  # similar to subplot(111)
-                         nrows_ncols=(rows, columns),  # creates grid of axes
-                         axes_pad=0.4,  # pad between axes in inch.
-                         )
-
-        for ax, t in zip(grid, chips_list):
-            with rasterio.open(t) as img:
-                for patch in patches:
-                    ax.add_patch(copy(patch))
-                show(img, ax=ax, cmap=data_options.cmaps(band))
-                ax.set_title(t.split('_')[-1].split('.')[0], fontsize=20)
-
-        if len(chips_list) > columns:
-            for ax in grid[-((columns * rows - len(chips_list))):]:
-                ax.remove()
-
-        plt.show()
-    else:
-        print("! No images to show.")
-
-
-def by_pid(aoi, year, pid, start_date, end_date, band, chipsize,
-           columns=5, ptype=None, debug=False):
-    """Plot chip image with parcel polygon overlay.
-
-    Examples:
-        import cbm
-        cbm.get.chip_images.by_pid(aoi, pid, [start_date, end_date],
-                                    band, chipsize)
-
-    Arguments:
-        aoi, the area of interest and year e.g.: es2020, cat2020 (str)
-        pid, the parcel id (int).
-        dates, the date of the image (str) or start_date and end_date (list)
-            '2019-06-01' or ['2019-06-01', '2019-06-30']
-        band, 3 Sentinel-2 band names. One of [‘B02’, ‘B03’, ‘B04’, ‘B08’]
-            (10 m bands) or [‘B05’, ‘B06’, ‘B07’, ‘B8A’, ‘B11’, ‘B12’]
-            (20 m bands). 10m and 20m bands can be combined.
-            The first band determines the resolution in the output
-            composite. Defaults to B08_B04_B03.
-        chipsize, size of the chip in pixels (int).
-        columns, (int)
-    """
-    workdir = normpath(join(config.get_value(['paths', 'temp']),
-                            aoi, str(year), str(pid)))
-    chip_images.by_pid(aoi, year, pid, start_date, end_date,
-                       band, chipsize, ptype, debug)
-
-    chips_dir = normpath(join(workdir, 'chip_images', f"*{band}.tif"))
-    chips_list = glob.glob(chips_dir)
-
-    if len(chips_list) > 0:
-        if len(chips_list) < columns:
-            columns = len(chips_list)
-
-        with open(normpath(join(workdir, 'info.json')), 'r') as f:
-            json_data = json.load(f)
-
-        with rasterio.open(chips_list[0]) as img:
-            img_epsg = img.crs.to_epsg()
-            geom = spatial_utils.transform_geometry(json_data, img_epsg)
-            patches = overlay_parcel(img, geom)
-
+    for b in bands:
+        csv_list_b = normpath(join(ci_path, f'images_list.{b}.csv'))
         if debug:
-            for chip in chips_list:
-                print(chip)
+            print(csv_list_b)
+        if not exists(csv_list_b):
+            chip_images.by_pid(aoi, year, pid, start_date, end_date,
+                               b, 512, ptype, debug)
 
-        rows = int(len(chips_list) // columns +
-                   (len(chips_list) % columns > 0))
-        fig = plt.figure(figsize=(30, 10 * rows))
-        grid = ImageGrid(fig, 111,  # similar to subplot(111)
-                         nrows_ncols=(rows, columns),  # creates grid of axes
-                         axes_pad=0.4,  # pad between axes in inch.
-                         )
+    crop_name = info_data['cropname'][0]
+    area = info_data['area'][0]
 
-        for ax, t in zip(grid, chips_list):
-            with rasterio.open(t) as img:
-                for patch in patches:
-                    ax.add_patch(copy(patch))
-                show(img, ax=ax, cmap=data_options.cmaps(band))
-                ax.set_title(t.split('_')[-1].split('.')[0], fontsize=20)
+    # available_options = raster_utils.available_options(path, pid)
 
-        if len(chips_list) > columns:
-            for ax in grid[-((columns * rows - len(chips_list))):]:
-                ax.remove()
+    print(f"Crop name: {crop_name},  Area: {area:.2f} sqm")
 
-        plt.show()
+    def multi_bands_imgs(bands, fname):
+        df = raster_utils.create_df(ci_path, pid, bands)
+        rows = round((df.shape[0] / columns) + 0.5)
+        fig = plt.figure(figsize=(16, 4 * rows))
+        for i, row in df.iterrows():
+            fig.add_subplot(rows, columns, i + 1)
+
+            str_date = str(row['date'].date()).replace('-', '')
+            img_png = normpath(join(ci_path, f'{fname}_{str_date}.png'))
+
+            # Create color image if it does not exist
+            # Merge bands (images path, export image path, bands list)
+            if not isfile(img_png):
+                imgs_path = normpath(join(ci_path, row['imgs']))
+                raster_utils.merge_bands(imgs_path, img_png,
+                                         bands)
+
+            with rasterio.open(img_png, format='PNG') as img:
+                overlay_date(img, row['date'].date())  # Add date overlay.
+                ax = plt.gca()
+                if show_parcel:
+                    ax.add_patch(overlay_parcel(img, info_data))
+
+                plt.axis('off')  # Turn of axis.
+                pA, pB = np.percentile(
+                    img.read(1), tuple(percentile))
+
+                # Strech image to A - B percentile.
+                stack = [exposure.rescale_intensity(
+                    img.read()[i, :, :], in_range=(
+                        pA, pB)) for i in range(len(bands))]
+                rgb_enhanced = np.dstack(stack)
+
+                show(np.uint16(rgb_enhanced.transpose(2, 0, 1) / 300),
+                     ax=ax, transform=img.transform)
+        return plt.show()
+
+    def ndvi_imgs(bands, fname):
+        df = raster_utils.create_df(ci_path, pid, bands)
+        rows = round((df.shape[0] / columns) + 0.5)
+        fig = plt.figure(figsize=(16, 4 * rows))
+        for i, row in df.iterrows():
+            fig.add_subplot(rows, columns, i + 1)
+
+            str_date = str(row['date'].date()).replace('-', '')
+            img_png = normpath(join(ci_path, f'{fname}_{str_date}.png'))
+
+            imgs_path = normpath(join(ci_path, row['imgs']))
+            b4f = f"{imgs_path}.B04.tif"
+            b4 = rasterio.open(b4f, format='GTiff')
+
+            ndvi = raster_utils.calc_ndvi(imgs_path, img_png, bands)
+            overlay_date(b4, row['date'].date())  # Add date overlay.
+            ax = plt.gca()
+            if show_parcel:
+                ax.add_patch(overlay_parcel(b4, info_data))
+
+            plt.axis('off')  # Turn of axis.
+            pA, pB = np.percentile(
+                ndvi, tuple(percentile))
+
+            show(ndvi, ax=ax, transform=b4.transform,
+                 cmap=cmap, vmin=pA, vmax=pB)
+
+            b4.close()
+        return plt.show()
+
+    def single_band(band):
+        df = raster_utils.create_df(ci_path, pid, bands)
+        rows = round((df.shape[0] / columns) + 0.5)
+        fig = plt.figure(figsize=(16, 4 * rows))
+        for i, row in df.iterrows():
+            img_gtif = normpath(
+                join(ci_path, f"{row['imgs']}.{bands[0]}.tif"))
+            with rasterio.open(img_gtif, format='GTiff') as img:
+                fig.add_subplot(rows, columns, i + 1)
+                overlay_date(img, row['date'].date())
+                plt.axis('off')
+                ax = plt.gca()
+                if show_parcel:
+                    ax.add_patch(overlay_parcel(img, info_data))
+
+                img_read = img.read(1)
+
+                pA, pB = np.percentile(
+                    img_read, tuple(percentile))
+                show(img.read(1), ax=ax, transform=img.transform,
+                     cmap=data_options.cmaps(bands[0]),
+                     vmin=pA, vmax=pB)
+
+        return plt.show()
+
+    def overlay_date(img, date):
+        date_text = plt.text(
+            img.bounds.left + ((img.bounds.right - img.bounds.left) / 6.5),
+            img.bounds.top - ((img.bounds.top - img.bounds.bottom) / 6.5),
+            date, color='yellow', weight='bold', size=12, bbox=dict(
+                boxstyle="round", ec='yellow', fc='black', alpha=0.2))
+
+        return date_text
+
+    def overlay_parcel(img, geom):
+        with open(file_info, 'r') as f:
+            info_data = json.loads(f.read())
+        img_epsg = img.crs.to_epsg()
+        geo_json = spatial_utils.transform_geometry(info_data, img_epsg)
+        patche = [PolygonPatch(feature, edgecolor="yellow",
+                               facecolor="none", linewidth=2
+                               ) for feature in [geo_json['geom'][0]]]
+        return patche[0]
+
+    if len(bands) == 1 and bands[0][0].lower() == 'b':
+        return single_band(bands[0])
+    elif bands == ['B04', 'B08']:
+        return ndvi_imgs(bands, 'NDVI')
+    elif bands == ['B04', 'B03', 'B02']:
+        return multi_bands_imgs(bands, ('').join(bands))  # True color
     else:
-        print("! No images to show.")
+        return f"""Not recognized images type {bands}.
+        (use: [B0x, B...], True color or NDVI)"""
