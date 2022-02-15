@@ -78,7 +78,8 @@ def ndvi(aoi, year, pids, ptype=None, scl='3_8_9_10_11', std=True,
 
         file_ts = normpath(join(path, 'time_series_s2.csv'))
         if not isfile(file_ts):
-            time_series.by_pid(aoi, str(year), str(pid), 's2', ptype, '', debug)
+            time_series.by_pid(aoi, str(year), str(pid),
+                               's2', ptype, '', debug)
         df = pd.read_csv(file_ts, index_col=0)
 
         df['date'] = pd.to_datetime(df['date_part'], unit='s')
@@ -135,16 +136,19 @@ def ndvi(aoi, year, pids, ptype=None, scl='3_8_9_10_11', std=True,
                 axb.plot(dfNDVI[cloudfree].index, dfNDVI[cloudfree],
                          linestyle='--', marker='P', markersize=10,
                          fillstyle='none', label=cloudfreelabel)
-                pcount += 1
                 if errorbar:
                     axb.errorbar(dfNDVI[cloudfree].index, dfNDVI[cloudfree],
                                  cloufreestd, fmt=' ', color='Gray',
                                  linewidth=2, capsize=4, alpha=0.4)
             if std:
+                if max_line_plots == 1 and pcount == 1:
+                    peers_lable = 'Parcel peers'
+                else:
+                    peers_lable = None
                 axb.fill_between(dfNDVI[cloudfree].index,
                                  dfNDVI[cloudfree] - cloufreestd,
                                  dfNDVI[cloudfree] + cloufreestd,
-                                 color='b', alpha=0.05)
+                                 color='b', alpha=0.05, label=peers_lable)
         except Exception as err:
             message = f"Could not mark cloud free images: {err}"
 
@@ -152,6 +156,7 @@ def ndvi(aoi, year, pids, ptype=None, scl='3_8_9_10_11', std=True,
         axb.set_ylim(0, 1.0)
 
         axb.legend(frameon=False)
+        pcount += 1
     if 'message' in locals():
         print(message)
     axb.set_title(plot_title)
@@ -295,7 +300,8 @@ def s1(aoi, year, pid, tstype='bs', ptype=None, debug=False):
     df['date'] = pd.to_datetime(df['date_part'], unit='s')
     start_date = df.iloc[0]['date'].date()
     end_date = df.iloc[-1]['date'].date()
-    # print(f"From '{start_date}' to '{end_date}'.")
+    if debug:
+        print(f"From '{start_date}' to '{end_date}'.")
 
     pd.set_option('max_colwidth', 200)
     pd.set_option('display.max_columns', 20)
@@ -316,30 +322,38 @@ def s1(aoi, year, pid, tstype='bs', ptype=None, debug=False):
     dfVV = df[df.band == f'VV{tstype[0]}'].copy()
     dfVH = df[df.band == f'VH{tstype[0]}'].copy()
     fig = plt.figure(figsize=(16.0, 10.0))
-    axb = fig.add_subplot(1, 1, 1)
+    ax = fig.add_subplot(1, 1, 1)
 
     if tstype == 'bs':
         dfVV['mean'] = dfVV['mean'].map(lambda s: 10.0 * np.log10(s))
         dfVH['mean'] = dfVH['mean'].map(lambda s: 10.0 * np.log10(s))
-        axb.set_ylim(-25, 0)
+        ax.set_ylim(-25, -5)
+        # dfVV['p25'] = dfVV['p25'].map(lambda s: 10.0 * np.log10(s))
+        # dfVV['p75'] = dfVV['p75'].map(lambda s: 10.0 * np.log10(s))
+        # dfVH['p25'] = dfVH['p25'].map(lambda s: 10.0 * np.log10(s))
+        # dfVH['p75'] = dfVH['p75'].map(lambda s: 10.0 * np.log10(s))
+        # ax.fill_between(dfVV.index, dfVV['p25'],
+        #                 dfVV['p75'], color='b', alpha=0.1)
+        # ax.fill_between(dfVH.index, dfVH['p25'],
+        #                 dfVH['p75'], color='b', alpha=0.1)
         ylabel = 'Sentinel-1 Backscattering coefficient, $\gamma\degree$ (dB)'
     else:
-        axb.set_ylim(0, 1)
+        ax.set_ylim(0, 1)
         ylabel = 'Sentinel-1 6 day coherence'
 
-    axb.set_title(
-        f"Parcel {pid} (crop: {crop_name}, area: {area:.2f} sqm)")
-    axb.set_xlabel("Date")
-    axb.xaxis.set_major_formatter(datesFmt)
+    ax.set_title(
+        f"Parcel {pid} (crop: {crop_name}, area: {area:.1f} sqm)")
+    ax.set_xlabel("Date")
+    ax.xaxis.set_major_formatter(datesFmt)
 
-    axb.set_ylabel(ylabel)
-    axb.plot(dfVH.index, dfVH['mean'], linestyle=' ', marker='s',
-             markersize=10, color='DarkBlue', fillstyle='none', label='VH')
-    axb.plot(dfVV.index, dfVV['mean'], linestyle=' ', marker='o',
-             markersize=10, color='Red', fillstyle='none', label='VV')
+    ax.set_ylabel(ylabel)
+    ax.plot(dfVH.index, dfVH['mean'], linestyle=' ', marker='.',
+            markersize=10, color='DarkBlue', label='VH')
+    ax.plot(dfVV.index, dfVV['mean'], linestyle=' ', marker='.',
+            markersize=10, color='Red', label='VV')
 
-    axb.set_xlim(start_date, end_date + timedelta(1))
+    ax.set_xlim(start_date, end_date + timedelta(1))
 
-    axb.legend(frameon=False)  # loc=2)
+    ax.legend(frameon=False)  # loc=2)
 
     return plt.show()

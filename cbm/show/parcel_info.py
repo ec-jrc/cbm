@@ -7,9 +7,7 @@
 # Copyright : 2021 European Commission, Joint Research Centre
 # License   : 3-Clause BSD
 
-import os
 import json
-import glob
 import rasterio
 from matplotlib import gridspec
 import matplotlib.pyplot as plt
@@ -17,7 +15,6 @@ from copy import copy
 from os.path import join, normpath, isfile
 from descartes import PolygonPatch
 from rasterio.plot import show
-from mpl_toolkits.axes_grid1 import ImageGrid
 
 from cbm.utils import config, spatial_utils
 from cbm.get import background as get_bg
@@ -33,7 +30,7 @@ def overlay_parcel(geom):
 
 
 def by_pid(aoi, year, pid, ptype=None, debug=False):
-    """Show parcel information with an image with the parcels polygon overlay by selected
+    """Show parcel information with an image with polygon overlay by selected
     parcel id. This function will get an image from the center of the polygon.
 
     Examples:
@@ -87,7 +84,7 @@ def by_pid(aoi, year, pid, ptype=None, debug=False):
         f"Crop type: {parcel['cropname'][0]}",
         f"Crop type code: {parcel['cropcode'][0]}",
         f"Area: {parcel['area'][0]} sqm",
-        f"Centroid, (Lat, Lon): {round(parcel['clat'][0], 6)}, {round(parcel['clon'][0], 6)}",
+        f"Centroid (Lat/Lon): {parcel['clat'][0]:.1f}, {parcel['clon'][0]:.6f}",
         f"Geometry SRID: {parcel['srid'][0]}"
     ]
     first_line = 0.9

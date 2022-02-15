@@ -20,7 +20,7 @@ import glob
 def time_series_widget(aoi, year, pid):
 
     path = normpath(join(config.get_value(['paths', 'temp']),
-                         aoi, year, str(pid)))
+                         aoi, str(year), str(pid)))
     # confvalues = config.read()
     # inst = confvalues['set']['institution']
     file_info = normpath(join(path, 'info.json'))
@@ -66,13 +66,13 @@ def time_series_widget(aoi, year, pid):
         with ts_out:
             ts_out.clear_output()
             if ts_type.value == 's2':
-                time_series.s2(aoi, year, pid, bands=['B4', 'B8'])
+                time_series.s2(aoi, str(year), str(pid), bands=['B4', 'B8'])
             elif ts_type.value == 'ndvi':
-                time_series.ndvi(aoi, year, pid)
+                time_series.ndvi(aoi, str(year), str(pid))
             elif ts_type.value == 'bs':
-                time_series.s1_bs(aoi, year, pid)
+                time_series.s1(aoi, str(year), str(pid), 'bs')
             elif ts_type.value == 'c6':
-                time_series.s1_c6(aoi, year, pid)
+                time_series.s1(aoi, str(year), str(pid), 'c6')
 
     def on_ts_type_change(change):
         if ts_type.value == 's2':

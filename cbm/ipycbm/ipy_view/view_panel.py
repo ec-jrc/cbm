@@ -120,8 +120,8 @@ def view():
         select_aoi.options = [
             f for f in tables_first if not f.startswith('.')]
         if select_aoi.value is not None:
-            parcels = normpath(join(paths.value, select_year.value,
-                                    select_aoi.value))
+            parcels = normpath(
+                join(paths.value, select_aoi.value, select_year.value))
             parcels_list = [f for f in os.listdir(
                 parcels) if not f.startswith('.')]
             selection_single.options = parcels_list
@@ -143,7 +143,8 @@ def view():
             except Exception:
                 pass
 #             print(f"The parce: '{selection_single.value}' is deleted.")
-            parcels = normpath(join(paths.value, select_aoi.value))
+            parcels = normpath(
+                join(paths.value, select_aoi.value, select_year.value))
             parcels_list = [f for f in os.listdir(
                 parcels) if not f.startswith('.')]
             selection_single.options = parcels_list
@@ -160,7 +161,8 @@ def view():
 
     def on_aoi_change(change):
         if select_aoi.value is not None:
-            years = normpath(join(paths.value, select_aoi.value))
+            years = normpath(
+                join(paths.value, select_aoi.value, select_year.value))
             years_list = [f for f in os.listdir(
                 years) if not f.startswith('.')]
             select_year.options = years_list
@@ -225,7 +227,7 @@ def view():
     notes_bt = Button(
         value=False,
         description='Add note',
-        disabled=False,
+        disabled=True,
         button_style='info',
         tooltip='Add a note.',
         icon='sticky-note'
