@@ -45,8 +45,7 @@ def view():
     )
 
     select_year = Dropdown(
-        options=[d.split('/')[-2]
-                 for d in glob(f"{paths.value}/{select_aoi.value}/*/")],
+        options=[],
         value=None,
         description='Select year:',
         disabled=False,
@@ -120,13 +119,18 @@ def view():
         select_aoi.options = [
             f for f in tables_first if not f.startswith('.')]
         if select_aoi.value is not None:
-            parcels = normpath(
-                join(paths.value, select_aoi.value, select_year.value))
-            parcels_list = [f for f in os.listdir(
-                parcels) if not f.startswith('.')]
-            selection_single.options = parcels_list
+            years_list = [d.split('/')[-2]
+                          for d in glob(f"{paths.value}/{select_aoi.value}/*/")]
+            select_year.options = years_list
+            if select_year.value is not None:
+                parcels = normpath(
+                    join(paths.value, select_aoi.value, select_year.value))
+                parcels_list = [f for f in os.listdir(
+                    parcels) if not f.startswith('.')]
+                selection_single.options = parcels_list
         else:
             selection_single.options = []
+            select_year.options = []
             selection_single.value = None
 
     @rm_parcel.on_click
@@ -162,7 +166,7 @@ def view():
     def on_aoi_change(change):
         if select_aoi.value is not None:
             years = normpath(
-                join(paths.value, select_aoi.value, select_year.value))
+                join(paths.value, select_aoi.value))
             years_list = [f for f in os.listdir(
                 years) if not f.startswith('.')]
             select_year.options = years_list
@@ -227,7 +231,7 @@ def view():
     notes_bt = Button(
         value=False,
         description='Add note',
-        disabled=True,
+        disabled=False,
         button_style='info',
         tooltip='Add a note.',
         icon='sticky-note'
