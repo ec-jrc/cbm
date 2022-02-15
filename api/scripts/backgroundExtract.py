@@ -77,8 +77,8 @@ def getBackgroundExtract(lon, lat, chipSize, chipExtend, unique_dir,
     south = point.GetY() - chipExtend / 2
     north = point.GetY() + chipExtend / 2
 
-    if os.path.isfile(f"tms/{tms.lower()}_tms.xml"):
-        with rio.open(f"tms/{tms.lower()}_tms.xml") as TMS_dataset:
+    if os.path.isfile(f"tms/{tms.lower()}.xml"):
+        with rio.open(f"tms/{tms.lower()}.xml") as TMS_dataset:
             bl = TMS_dataset.index(west, south, op=math.floor)
             tr = TMS_dataset.index(east, north, op=math.ceil)
 

@@ -14,7 +14,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='cbm',
-    version='0.0.9',
+    version='0.0.10',
     python_requires='>=3.6',
     description='Checks by Monitoring (CbM)',
     long_description=long_description,
