@@ -15,7 +15,7 @@ def code(path):
     from ipywidgets import HTML
     file_info = f"{path}info.json"
     file_ts = glob.glob(f"{path}time_series_*.csv")
-    folder_ci = f"{path}chip_images"
+    folder_ci = f"{path}/chip_images"
 
     code = f"""
         <H2>Get and display data for the selected parcel.</H2>
@@ -54,7 +54,7 @@ time_series(path)<br>
 import numpy as np<br>
 from osgeo import gdal<br>
 import matplotlib.pyplot as plt<br>
-folder_ci = f'{path}chip_images'<br>
+folder_ci = f'{path}/chip_images'<br>
 image_list = glob.glob(f'{folder_ci}/*.tif')<br>
 fig = plt.figure(figsize=(8, 8))<br>
 columns = 4<br>

@@ -431,8 +431,8 @@ def get():
             outlog(f"Getting time series for parcel: '{pid}',",
                    f"({pts_tstype.value} {pts_band.value}).")
             for pts in pts_tstype.value:
-                ts = time_series.by_pid(
-                    aois.value, year.value, pid, pts, pts_band.value)
+                ts = time_series.by_pid(aois.value, year.value, pid, pts,
+                                        ptype.value, pts_band.value)
                 band = ''
                 if pts_band.value != '':
                     band = f"_{pts_band.value}"
