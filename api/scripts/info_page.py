@@ -53,15 +53,15 @@ def generator(user=None):
             ptype, ptype_param = '', ''
 
         tfiles = [f.split('/')[1].split('.')[0] for f in glob.glob('tms/*')]
-        available_tms = ['google', 'bing', 'osm']
+        available_tms = ['google', 'bing', 'osm', 'ags']
         for f in tfiles:
             if "".join(itertools.takewhile(str.isalpha, f)) == aoi:
                 available_tms.append(f)
 
         dataset = datasets[f"{aoi}_{year}"]
         pidcolumn = datasets[f"{aoi}_{year}"]["pcolumns"]["parcel_id"]
-        pids_df = db_queries.pids(dataset, 5, ptype, False)
-        pids = pids_df['pids'].values.tolist()
+        pids_df = db_queries.pids(dataset, 100, ptype, False)
+        pids = random.sample(pids_df['pids'].values.tolist(), 5)
         pid = random.choice(pids)
         # tms = random.choice(available_tms)
 

@@ -27,8 +27,8 @@ from rasterio.transform import Affine
 from osgeo import osr, ogr
 
 
-def getBackgroundExtract(lon, lat, chipSize, chipExtend, unique_dir,
-                         tms="Google", iformat='tif', withGeometry=False):
+def getBackgroundExtract(lon, lat, chipSize=256, chipExtend=500, unique_dir='',
+                         tms="google", iformat='tif', withGeometry=False):
     """Generate an extract from either Google or Bing.
     It uses the WMTS standard to grab and compose,
     which makes it fast (does not depend on DIAS S3 store).
