@@ -128,8 +128,7 @@ def cbl(lon, lat, start_date, end_date, bands=None, lut=None, chipsize=None):
     return response
 
 
-def rcbl(parcel, start_date, end_date, bands, chipsize, filespath,
-         debug=False):
+def rcbl(parcel, start_date, end_date, bands, chipsize, filespath, debug=False):
     """Get parcel raw chip images from RESTful API by location"""
     import os
     import os.path
@@ -169,20 +168,23 @@ def rcbl(parcel, start_date, end_date, bands, chipsize, filespath,
         # Set up the rawChip request
         cen_x, cen_y = str(centroid.GetX()), str(centroid.GetY())
 
+        df_file = normpath(join(filespath, f'images_list.{band}.csv'))
+        if isfile(df_file):
+            df1 = pd.read_csv(df_file)
+
         response = requests.get(requrl.format(api_url, cen_y, cen_x, start_date,
                                               end_date, band, chipsize),
                                 auth=(api_user, api_pass))
         if debug:
             print("Request url:", requrl.format(
                 api_url, cen_y, cen_x, start_date, end_date, band, chipsize))
-            print("Geom:", geom)
-            print("Source:", source, ", Target:", target)
             print("Centroid", centroid)
             print("Response:", response)
         # Directly create a pandas DataFrame from the json response
         df = pd.read_json(response.content)
         os.makedirs(filespath, exist_ok=True)
-        df_file = normpath(join(filespath, f'images_list.{band}.csv'))
+        df = df.append(df1, ignore_index=True)
+        df = df.sort_values(by="b").drop_duplicates()
         df.to_csv(df_file, index=True, header=True)
         # print(f"The response table is saved to: {df_file}")
 
@@ -190,22 +192,20 @@ def rcbl(parcel, start_date, end_date, bands, chipsize, filespath,
         for c in df.chips:
             url = f"{api_url}{c}"
             outf = normpath(join(filespath, c.split('/')[-1]))
-            if not isfile(outf):
-                res = requests.get(url, stream=True)
-                if debug:
-                    print(f"Downloading {c.split('/')[-1]}")
-                with open(outf, "wb") as handle:
-                    for chunk in res.iter_content(chunk_size=512):
-                        if chunk:  # filter out keep-alive new chunks
-                            handle.write(chunk)
+            res = requests.get(url, stream=True)
+            if debug:
+                print(f"Downloading {c.split('/')[-1]}")
+            with open(outf, "wb") as handle:
+                for chunk in res.iter_content(chunk_size=512):
+                    if chunk:  # filter out keep-alive new chunks
+                        handle.write(chunk)
         if debug:
-            print(
-                f"Images for band '{band}', for the selected dates are downloaded.")
+            print(f"Downloaded Images for '{band}'.")
 
     if debug:
         print("\n------Total time------")
-        print(
-            f"Total time required for {len(bands)} bands: {time.time() - start} seconds.")
+        print(f"Total time required for {len(bands)}",
+              f"bands: {time.time() - start} seconds.")
 
 
 def background(lon, lat, chipsize=512, extend=512, tms='Google',
