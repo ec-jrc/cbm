@@ -13,7 +13,9 @@ import glob
 import rasterio
 import numpy as np
 import matplotlib.pyplot as plt
+from shutil import rmtree
 from skimage import exposure
+from datetime import datetime
 from rasterio.plot import show
 from descartes import PolygonPatch
 from cbm.get import parcel_info, chip_images
@@ -24,7 +26,7 @@ from cbm.utils import data_options, spatial_utils, raster_utils, config
 
 def grid(aoi, year, pid, start_date=None, end_date=None, imgtype=['B04', 'B08'],
          chipsize=400, columns=4, show_parcel=True, cmap='RdYlGn_r',
-         percentile=[2, 98], ptype='g', debug=False):
+         percentile=[2, 98], ptype='g', clean_history=False, debug=False):
 
     if type(imgtype) is str:
         bands = [imgtype]  # bands
@@ -41,6 +43,13 @@ def grid(aoi, year, pid, start_date=None, end_date=None, imgtype=['B04', 'B08'],
 
     path = normpath(join(config.get_value(['paths', 'temp']),  # workdir
                          aoi, str(year), str(pid)))
+    if clean_history:
+        if os.path.isdir(path):
+            try:
+                rmtree(path)
+            except Exception as err:
+                print("Could not delete directory:", path, err)
+
     file_info = normpath(join(path, 'info.json'))
     if not isfile(file_info):
         parcel_info.by_pid(aoi, str(year), str(pid), ptype, True)
@@ -48,18 +57,24 @@ def grid(aoi, year, pid, start_date=None, end_date=None, imgtype=['B04', 'B08'],
         info_data = json.loads(f.read())
 
     ci_path = normpath(join(path, 'chip_images'))
-    same_args = check_args(ci_path, chipsize)
+    same_chipsize = check_chipsize(ci_path, chipsize)
+    date_ranges = check_dates(ci_path, start_date, end_date)
     if debug:
-        print('same args: ', same_args)
+        print('same args: ', same_chipsize)
+        print('date_ranges', date_ranges)
         print(aoi, year, pid, start_date, end_date)
 
     for b in bands:
         csv_list_b = normpath(join(ci_path, f'images_list.{b}.csv'))
         if debug:
             print(csv_list_b)
-        if not exists(csv_list_b) or not same_args:
+        if not exists(csv_list_b) or not same_chipsize:
             chip_images.by_pid(aoi, year, pid, start_date, end_date,
                                b, chipsize, ptype, debug)
+        elif date_ranges:
+            for drange in date_ranges:
+                chip_images.by_pid(aoi, year, pid, drange[0], drange[1],
+                                   b, chipsize, ptype, debug)
 
     crop_name = info_data['cropname'][0]
     area = info_data['area'][0]
@@ -80,7 +95,7 @@ def grid(aoi, year, pid, start_date=None, end_date=None, imgtype=['B04', 'B08'],
 
             # Create color image if it does not exist
             # Merge bands (images path, export image path, bands list)
-            if not isfile(img_png) or not same_args:
+            if not isfile(img_png) or not same_chipsize:
                 imgs_path = normpath(join(ci_path, row['imgs']))
                 raster_utils.merge_bands(imgs_path, img_png,
                                          bands)
@@ -136,14 +151,17 @@ def grid(aoi, year, pid, start_date=None, end_date=None, imgtype=['B04', 'B08'],
         return plt.show()
 
     def single_band(band):
-        df = raster_utils.create_df(ci_path, pid, bands)
+        df = raster_utils.create_df(ci_path, pid, bands).sort_values(by='date')
+        print(df)
         rows = round((df.shape[0] / columns) + 0.5)
         fig = plt.figure(figsize=(16, 4 * rows))
         for i, row in df.iterrows():
+            print(row)
+            fig.add_subplot(rows, columns, i + 1)
             img_gtif = normpath(
                 join(ci_path, f"{row['imgs']}.{bands[0]}.tif"))
             with rasterio.open(img_gtif, format='GTiff') as img:
-                fig.add_subplot(rows, columns, i + 1)
+
                 overlay_date(img, row['date'].date())
                 plt.axis('off')
                 ax = plt.gca()
@@ -190,7 +208,7 @@ def grid(aoi, year, pid, start_date=None, end_date=None, imgtype=['B04', 'B08'],
         (use: [B0x, B...], True color or NDVI)"""
 
 
-def check_args(path, chipsize):
+def check_chipsize(path, chipsize):
     """
     Summary :
         Check if the chipsize is the same with the last requst.
@@ -203,11 +221,12 @@ def check_args(path, chipsize):
         True or False.
     """
     if os.path.isdir(path):
-        last_par = glob.glob(f"{path}/chipsize_*")
-        if len(last_par) > 0:
-            last_chipsize = int(last_par[0].split('_')[-1])
-            if last_chipsize != chipsize:
-                os.rename(rf'{last_par[0]}', rf'{path}/chipsize_{chipsize}')
+        old = glob.glob(f"{path}/chipsize_*")
+        if len(old) > 0:
+            old_chipsize = int(old[0].split('_')[-1])
+            if old_chipsize != chipsize:
+                os.rename(rf'{old_chipsize[0]}',
+                          rf'{path}/chipsize_{chipsize}')
                 return False
             else:
                 return True
@@ -216,4 +235,62 @@ def check_args(path, chipsize):
                 f.write('')
             return False
     else:
+        os.makedirs(path)
+        with open(f"{path}/chipsize_{chipsize}", "w") as f:
+            f.write('')
         return False
+
+
+def check_dates(path, new_start, new_end):
+    """
+    Summary :
+        Check if the renge of dates are the same with the last requst.
+
+    Arguments:
+        path, the path for the backroud images of the selected parcel
+        new_start, start date
+        new_end, end date
+
+    Returns:
+        False or list of date ranges
+    """
+    def store_dates(start, end):
+        os.rename(rf'{old_dates[0]}', rf'{path}/daterange_{start}_{end}')
+
+    if os.path.exists(path):
+        old_dates = glob.glob(f"{path}/daterange_*")
+        if len(old_dates) > 0:
+            old_start, old_end = old_dates[0].split('_')[-2:]
+            dt_old_start = datetime.strptime(old_start, '%Y-%m-%d').date()
+            dt_old_end = datetime.strptime(old_end, '%Y-%m-%d').date()
+            dt_new_start = datetime.strptime(new_start, '%Y-%m-%d').date()
+            dt_new_end = datetime.strptime(new_end, '%Y-%m-%d').date()
+
+            if dt_new_start >= dt_old_start:
+                if dt_new_end <= dt_old_end:
+                    return None
+                elif dt_new_end > dt_old_end:
+                    if dt_new_start <= dt_old_end:
+                        store_dates(old_start, new_end)
+                        return [[old_end, new_end]]
+                    elif dt_new_start > dt_old_end:
+                        store_dates(new_start, new_end)
+                        return [[new_start, new_end]]
+            elif dt_new_start < dt_old_start:
+                if dt_new_end <= dt_old_start:
+                    store_dates(new_start, new_end)
+                    return [[new_start, new_end]]
+                elif dt_new_end <= dt_old_end:
+                    store_dates(new_start, old_end)
+                    return [[new_start, old_start]]
+                elif dt_new_end > dt_old_start:
+                    store_dates(new_start, new_end)
+                    return [[new_start, old_start], [old_end, new_end]]
+        else:
+            new_dates = [[new_start, new_end]]
+    else:
+        os.makedirs(path)
+        new_dates = [[new_start, new_end]]
+    with open(f"{path}/daterange_{new_start}_{new_end}", "w") as f:
+        f.write('')
+    return new_dates
