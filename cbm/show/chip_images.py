@@ -7,8 +7,9 @@
 # Copyright : 2021 European Commission, Joint Research Centre
 # License   : 3-Clause BSD
 
-
+import os
 import json
+import glob
 import rasterio
 import numpy as np
 import matplotlib.pyplot as plt
@@ -47,14 +48,18 @@ def grid(aoi, year, pid, start_date=None, end_date=None, imgtype=['B04', 'B08'],
         info_data = json.loads(f.read())
 
     ci_path = normpath(join(path, 'chip_images'))
+    same_args = check_args(ci_path, chipsize)
+    if debug:
+        print('same args: ', same_args)
+        print(aoi, year, pid, start_date, end_date)
 
     for b in bands:
         csv_list_b = normpath(join(ci_path, f'images_list.{b}.csv'))
         if debug:
             print(csv_list_b)
-        if not exists(csv_list_b):
+        if not exists(csv_list_b) or not same_args:
             chip_images.by_pid(aoi, year, pid, start_date, end_date,
-                               b, 512, ptype, debug)
+                               b, chipsize, ptype, debug)
 
     crop_name = info_data['cropname'][0]
     area = info_data['area'][0]
@@ -75,7 +80,7 @@ def grid(aoi, year, pid, start_date=None, end_date=None, imgtype=['B04', 'B08'],
 
             # Create color image if it does not exist
             # Merge bands (images path, export image path, bands list)
-            if not isfile(img_png):
+            if not isfile(img_png) or not same_args:
                 imgs_path = normpath(join(ci_path, row['imgs']))
                 raster_utils.merge_bands(imgs_path, img_png,
                                          bands)
@@ -178,8 +183,37 @@ def grid(aoi, year, pid, start_date=None, end_date=None, imgtype=['B04', 'B08'],
         return single_band(bands[0])
     elif bands == ['B04', 'B08']:
         return ndvi_imgs(bands, 'NDVI')
-    elif bands == ['B04', 'B03', 'B02']:
+    elif len(bands) == 3:
         return multi_bands_imgs(bands, ('').join(bands))  # True color
     else:
         return f"""Not recognized images type {bands}.
         (use: [B0x, B...], True color or NDVI)"""
+
+
+def check_args(path, chipsize):
+    """
+    Summary :
+        Check if the chipsize is the same with the last requst.
+
+    Arguments:
+        path, the path for the backroud images of the selected parcel
+        chipsize, size of the chip in pixels (int).
+
+    Returns:
+        True or False.
+    """
+    if os.path.isdir(path):
+        last_par = glob.glob(f"{path}/chipsize_*")
+        if len(last_par) > 0:
+            last_chipsize = int(last_par[0].split('_')[-1])
+            if last_chipsize != chipsize:
+                os.rename(rf'{last_par[0]}', rf'{path}/chipsize_{chipsize}')
+                return False
+            else:
+                return True
+        else:
+            with open(f"{path}/chipsize_{chipsize}", "w") as f:
+                f.write('')
+            return False
+    else:
+        return False
