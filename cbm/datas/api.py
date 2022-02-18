@@ -168,10 +168,6 @@ def rcbl(parcel, start_date, end_date, bands, chipsize, filespath, debug=False):
         # Set up the rawChip request
         cen_x, cen_y = str(centroid.GetX()), str(centroid.GetY())
 
-        df_file = normpath(join(filespath, f'images_list.{band}.csv'))
-        if isfile(df_file):
-            df1 = pd.read_csv(df_file)
-
         response = requests.get(requrl.format(api_url, cen_y, cen_x, start_date,
                                               end_date, band, chipsize),
                                 auth=(api_user, api_pass))
@@ -180,13 +176,9 @@ def rcbl(parcel, start_date, end_date, bands, chipsize, filespath, debug=False):
                 api_url, cen_y, cen_x, start_date, end_date, band, chipsize))
             print("Centroid", centroid)
             print("Response:", response)
-        # Directly create a pandas DataFrame from the json response
+        # Create a pandas DataFrame from the json response
         df = pd.read_json(response.content)
         os.makedirs(filespath, exist_ok=True)
-        df = df.append(df1, ignore_index=True)
-        df = df.sort_values(by="b").drop_duplicates()
-        df.to_csv(df_file, index=True, header=True)
-        # print(f"The response table is saved to: {df_file}")
 
         # Download the GeoTIFFs that were just created in the user cache
         for c in df.chips:
@@ -199,8 +191,19 @@ def rcbl(parcel, start_date, end_date, bands, chipsize, filespath, debug=False):
                 for chunk in res.iter_content(chunk_size=512):
                     if chunk:  # filter out keep-alive new chunks
                         handle.write(chunk)
+
+        # Sore DataFrame to file
+        df_file = normpath(join(filespath, f'images_list.{band}.csv'))
+        if isfile(df_file):
+            df_old = pd.read_csv(df_file, index_col=[0])
+            df = df.append(df_old, ignore_index=True)
+            df = df.drop_duplicates(subset=['chips'])
+        df = df.sort_values(by="dates")
+        df = df.reset_index(drop=True)
+        df.to_csv(df_file, index=True, header=True)
         if debug:
             print(f"Downloaded Images for '{band}'.")
+            print(f"The response table is saved to: {df_file}")
 
     if debug:
         print("\n------Total time------")
