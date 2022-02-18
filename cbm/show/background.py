@@ -31,7 +31,7 @@ def overlay_parcel(img, geom):
     return patche
 
 
-def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['Google'],
+def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['google'],
                 ptype=None, columns=4, debug=False):
     """Show the background image with parcels polygon overlay by selected
     parcel id. This function will get an image from the center of the polygon.
@@ -77,7 +77,7 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['Google'],
 
     bg_path = normpath(join(workdir, 'backgrounds'))
 
-    same_args = check_args(bg_path, chipsize, extend)
+    same_args = check_args(bg_path, chipsize, extend, debug)
 
     if debug:
         print('path: ', bg_path)
@@ -87,7 +87,7 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['Google'],
               extend, tms, ptype, columns, debug)
 
     for t in tms:
-        if not isfile(normpath(join(bg_path, f'{t.lower()}.tif'))) or same_args is False:
+        if not isfile(normpath(join(bg_path, f'{t.lower()}.tif'))) or not same_args:
             if parcel_id:
                 get_bg.by_pid(aoi, year, pid, chipsize,
                               extend, t, ptype, True, debug)
@@ -112,13 +112,22 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['Google'],
                      axes_pad=0.4,  # pad between axes in inch.
                      )
 
+    def overlay_title(img, date):
+        date_text = ax.text(
+            img.bounds.left + ((img.bounds.right - img.bounds.left) / 9),
+            img.bounds.bottom + ((img.bounds.top - img.bounds.bottom) / 1.15),
+            date, color='yellow', weight='bold', size=32 - columns * 2,
+            bbox=dict(boxstyle="round", ec='yellow', fc='black', alpha=0.2))
+        return date_text
+
     for ax, t in zip(grid, tms):
         with rasterio.open(normpath(join(bg_path, f'{t.lower()}.tif'))) as img:
             if parcel_id:
                 for patch in patches:
                     ax.add_patch(copy(patch))
+            overlay_title(img, t)
             show(img, ax=ax)
-            ax.set_title(t, fontsize=20)
+#            ax.xaxis.set_major_locator(ticker.MultipleLocator(200))
 
     if len(tms) > columns and columns * rows > len(tms):
         for ax in grid[-((columns * rows - len(tms))):]:
@@ -127,7 +136,7 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['Google'],
     plt.show()
 
 
-def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['Google'],
+def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['google'],
            ptype=None, columns=4, debug=False):
     """Show the background image with parcels polygon overlay by selected
     parcel id. This function will get an image from the center of the polygon.
@@ -166,7 +175,7 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['Google'],
         print(aoi, year, pid, chipsize, extend, tms, columns, debug)
 
     for t in tms:
-        if not isfile(normpath(join(bg_path, f'{t.lower()}.tif'))) or same_args is False:
+        if not isfile(normpath(join(bg_path, f'{t.lower()}.tif'))) or not same_args:
             get_bg.by_pid(aoi, year, pid, chipsize,
                           extend, t, ptype, True, debug)
 
@@ -184,13 +193,21 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['Google'],
                      nrows_ncols=(rows, columns),  # creates grid of axes
                      axes_pad=0.4)  # pad between axes in inch.
 
+    def overlay_title(img, date):
+        date_text = ax.text(
+            img.bounds.left + ((img.bounds.right - img.bounds.left) / 9),
+            img.bounds.bottom + ((img.bounds.top - img.bounds.bottom) / 1.15),
+            date, color='yellow', weight='bold', size=32 - columns * 2,
+            bbox=dict(boxstyle="round", ec='yellow', fc='black', alpha=0.2))
+        return date_text
+
     for ax, t in zip(grid, tms):
         with rasterio.open(normpath(join(bg_path, f'{t.lower()}.tif'))) as img:
             for patch in patches:
                 ax.add_patch(copy(patch))
-#             ax.xaxis.set_major_locator(ticker.MultipleLocator(200))
+            overlay_title(img, t)
             show(img, ax=ax)
-            ax.set_title(t, fontsize=20)
+#            ax.xaxis.set_major_locator(ticker.MultipleLocator(200))
 
     if len(tms) > columns and columns * rows > len(tms):
         for ax in grid[-((columns * rows - len(tms))):]:
@@ -199,33 +216,36 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['Google'],
     plt.show()
 
 
-def check_args(bg_path, chipsize, extend):
+def check_args(path, chipsize, extend, debug=False):
     """
     Summary :
         Check if the chipsize and extend are the same with the last requst.
 
     Arguments:
-        bg_path, the path for the backroud images of the selected parcel
+        path, the path for the backroud images of the selected parcel
         chipsize, size of the chip in pixels (int).
         extend, size of the chip in meters  (float).
 
     Returns:
         True or False.
     """
-    if os.path.isdir(bg_path):
-        last_par = glob.glob(f"{bg_path}/chipsize_extend_*")
+    if os.path.isdir(path):
+        last_par = glob.glob(f"{path}/chipsize_extend_*")
         if last_par != []:
-            last_chipsize = last_par[0].split('_')[-2]
-            last_extend = last_par[0].split('_')[-1]
-            if int(last_chipsize) != int(chipsize) or int(last_extend) != int(extend):
+            last_chipsize = int(last_par[0].split('_')[-2])
+            last_extend = float(last_par[0].split('_')[-1])
+            if debug:
+                print('last_chipsize:', last_chipsize,
+                      ', last_extend:', last_extend)
+            if last_chipsize != chipsize or last_extend != extend:
                 os.rename(rf'{last_par[0]}',
-                          rf'{bg_path}/chipsize_extend_{chipsize}_{extend}')
+                          rf'{path}/chipsize_extend_{chipsize}_{extend}')
                 return False
             else:
                 return True
         else:
-            with open(f"{bg_path}/chipsize_extend_{chipsize}_{extend}", "w") as f:
+            with open(f"{path}/chipsize_extend_{chipsize}_{extend}", "w") as f:
                 f.write('')
-            return True
+            return False
     else:
-        return True
+        return False

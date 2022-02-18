@@ -327,7 +327,7 @@ def s1(aoi, year, pid, tstype='bs', ptype=None, debug=False):
     if tstype == 'bs':
         dfVV['mean'] = dfVV['mean'].map(lambda s: 10.0 * np.log10(s))
         dfVH['mean'] = dfVH['mean'].map(lambda s: 10.0 * np.log10(s))
-        ax.set_ylim(-25, -5)
+        ax.set_ylim(-25, -1)
         # dfVV['p25'] = dfVV['p25'].map(lambda s: 10.0 * np.log10(s))
         # dfVV['p75'] = dfVV['p75'].map(lambda s: 10.0 * np.log10(s))
         # dfVH['p25'] = dfVH['p25'].map(lambda s: 10.0 * np.log10(s))

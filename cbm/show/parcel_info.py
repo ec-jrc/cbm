@@ -12,7 +12,7 @@ import rasterio
 from matplotlib import gridspec
 import matplotlib.pyplot as plt
 from copy import copy
-from os.path import join, normpath, isfile
+from os.path import join, normpath, isfile, getsize
 from descartes import PolygonPatch
 from rasterio.plot import show
 
@@ -29,7 +29,7 @@ def overlay_parcel(geom):
     return patche
 
 
-def by_pid(aoi, year, pid, ptype=None, debug=False):
+def by_pid(aoi, year, pid, ptype=None, tms='osm', debug=False):
     """Show parcel information with an image with polygon overlay by selected
     parcel id. This function will get an image from the center of the polygon.
 
@@ -54,9 +54,6 @@ def by_pid(aoi, year, pid, ptype=None, debug=False):
         print('aoi, year, pid, debug')
         print(aoi, year, pid, debug)
 
-    if not isfile(normpath(join(bg_path, f'osm.tif'))):
-        get_bg.by_pid(aoi, year, pid, 1024, 1024, 'osm', ptype, True, debug)
-
     file_info = normpath(join(workdir, 'info.json'))
     if not isfile(file_info):
         parcel_info.by_pid(aoi, str(year), str(pid), ptype, True)
@@ -69,13 +66,20 @@ def by_pid(aoi, year, pid, ptype=None, debug=False):
     ax1 = plt.subplot(gs[0, 0])
     ax2 = plt.subplot(gs[0, 1])
 
-    with rasterio.open(normpath(join(bg_path, 'osm.tif'))) as img:
-        img_epsg = img.crs.to_epsg()
-        geom = spatial_utils.transform_geometry(parcel, img_epsg)
-        patches = overlay_parcel(geom)
-        for patch in patches:
-            ax2.add_patch(copy(patch))
-        show(img, ax=ax2)
+    try:
+        if not isfile(normpath(join(bg_path, f'{tms}.tif'))):
+            get_bg.by_pid(aoi, year, pid, 256, 1024, tms, ptype, True, debug)
+        elif getsize(normpath(join(bg_path, f'osm.tif'))) < 1000:
+            get_bg.by_pid(aoi, year, pid, 256, 1024, tms, ptype, True, debug)
+        with rasterio.open(normpath(join(bg_path, f'{tms}.tif'))) as img:
+            img_epsg = img.crs.to_epsg()
+            geom = spatial_utils.transform_geometry(parcel, img_epsg)
+            patches = overlay_parcel(geom)
+            for patch in patches:
+                ax2.add_patch(copy(patch))
+            show(img, ax=ax2)
+    except Exception as err:
+        print("Could not get image. ", err)
 
     text = [
         f"AOI: {aoi}",
