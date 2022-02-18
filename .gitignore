@@ -18,6 +18,8 @@ api/logs/*
 api/tms/*
 !api/tms/google.xml
 !api/tms/bing.xml
+!api/tms/osm.xml
+!api/tms/ags.xml
 
 api/core
 api/gunicorn
