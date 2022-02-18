@@ -43,12 +43,6 @@ def grid(aoi, year, pid, start_date=None, end_date=None, imgtype=['B04', 'B08'],
 
     path = normpath(join(config.get_value(['paths', 'temp']),  # workdir
                          aoi, str(year), str(pid)))
-    if clean_history:
-        if os.path.isdir(path):
-            try:
-                rmtree(path)
-            except Exception as err:
-                print("Could not delete directory:", path, err)
 
     file_info = normpath(join(path, 'info.json'))
     if not isfile(file_info):
@@ -57,6 +51,13 @@ def grid(aoi, year, pid, start_date=None, end_date=None, imgtype=['B04', 'B08'],
         info_data = json.loads(f.read())
 
     ci_path = normpath(join(path, 'chip_images'))
+    if clean_history:
+        if os.path.isdir(ci_path):
+            try:
+                rmtree(ci_path)
+            except Exception as err:
+                print("Could not delete directory:", ci_path, err)
+
     same_chipsize = check_chipsize(ci_path, chipsize)
     date_ranges = check_dates(ci_path, start_date, end_date)
     if debug:
