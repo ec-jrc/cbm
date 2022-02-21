@@ -23,6 +23,9 @@ from pp_widgets import processing_tab
 from md_widgets import marker_detector_tab
 from dd_widgets import data_displayer_tab
 
+from ma_widgets import action_line
+from se_widgets import scenario_evidence_widget
+
 import config
 
 class w_initializer(VBox) :
@@ -33,7 +36,8 @@ class w_initializer(VBox) :
     """
     def __init__(self, ps : parcel_data_source_widget, drt : DataReaderTab, \
                  pt : processing_tab, mdt : marker_detector_tab, \
-                 ddt : data_displayer_tab, option_file_path : str) :
+                 ddt : data_displayer_tab, al : action_line, \
+                 sew : scenario_evidence_widget, option_file_path : str) :
         
         self.wb_initialize = Button(
             description='Initialize All',
@@ -94,6 +98,23 @@ class w_initializer(VBox) :
             value = _dict[key]
             config.set_value(key, value)            
             
+            # Initialize the marker aggregation tab
+            al.signals = list(sc_dict.keys())
+            al.initialize(options)
+            _dict = al.dump()
+            key = list(_dict.keys())[0]
+            value = _dict[key]
+            config.set_value(key, value)  
+            
+            # Initialize the scenario evidence widget
+            action_list = al.dump()["marker-aggregator"]
+            marker_list = mdt.dump()["marker-detectors"]
+            sew.available_markers = scenario_evidence_widget.get_markers_names( \
+                                    action_list, marker_list )
+            sew.initialize(options["scenario-evidence"])
+            _dict = sew.dump()
+            
+            config.set_value("scenario-evidence", _dict)
             
             # Finally the data displayer
             ddt.signal_components = sc_dict
@@ -101,7 +122,9 @@ class w_initializer(VBox) :
             _dict = ddt.dump()
             key = list(_dict.keys())[0]
             value = _dict[key]
-            config.set_value(key, value)            
+            config.set_value(key, value)        
+            
+            print("Initialization Completed!")
             
             
         # Now call the base constructor

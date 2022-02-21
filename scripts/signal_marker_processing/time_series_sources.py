@@ -13,6 +13,7 @@ import datetime
 import numpy as np
 import os
 import gc
+import json
 
 import get_time_series as gts
 
@@ -695,7 +696,12 @@ class db_s2_time_series_source(base_time_series_source) :
           3) no processing is needed once data are loaded from the db
           4) better overall performance (to be tested)
     """
-    def __init__(self, signal_type : str, host : str, port : str, dbname : str, user : str, password : str, db_schema : str, fid_col : str, parcels_table : str, sigs_table : str, hists_table : str, sentinel_metadata_table : str, start_time : datetime.datetime, end_time : datetime.datetime, sql_additional_conditions : str, cloud_free: str) :
+    def __init__(self, signal_type : str, host : str, port : str, dbname : str, \
+                 user : str, password : str, db_schema : str, fid_col : str, \
+                 parcels_table : str, sigs_table : str, hists_table : str, \
+                 sentinel_metadata_table : str, start_time : datetime.datetime, \
+                 end_time : datetime.datetime, sql_additional_conditions : str, cloud_free: str,\
+                 cloud_cat : list = [3,8,9,10,11]) :
         """
         Summary :
             Object constructor.
@@ -747,6 +753,10 @@ class db_s2_time_series_source(base_time_series_source) :
         self.sql_select = self.sql_statement(db_schema, fid_col, parcels_table, sigs_table, hists_table , sentinel_metadata_table, sql_additional_conditions, cloud_free)
         # Variable that stores the complete ts retrieved from the DB and that is initialize when the object is created
         self.ts_db = self.get_ts_db(host, port, dbname, user, password, self.sql_select)
+        # Variable that stores the list of components retrieved from the dataframe imported from the db
+        self.components = list(self.ts_db.columns)
+        
+        self.cloud_cat = cloud_cat
 
     def sql_statement(self, db_schema : str, fid_col : str, parcels_table : str, sigs_table : str, hists_table : str, sentinel_metadata_table : str, sql_additional_conditions : str, cloud_free : str) -> str :
         """
@@ -856,20 +866,24 @@ class db_s2_time_series_source(base_time_series_source) :
         Returns:
             A pandas data frame
         """
-        # Two lines of code removed because it works even without an explicit formatting of the date
-        # start_date = pd.to_datetime(start_date).to_pydatetime()
-        # end_date = pd.to_datetime(end_date).to_pydatetime()
 
-        # In case of criteria on dates, as they are part of the multi-index, we reset the index
-        # then run the query on multiple criteria, then re-establish index (on parcel and date)
-        # In a previous version "query" was used but had an issue on comparing object type with integer/string
-        if start_date is not None and end_date is not None:
-            ts_final = self.ts_db.reset_index()
-            ts_final = ts_final[(ts_final.parcel_id == fid) & (ts_final.obstime >= start_date) & (ts_final.obstime <= end_date)]
-            ts_final= ts_final.set_index(['db_id', 'obstime'])
-        else:
-            ts_final = self.ts_db[self.ts_db.parcel_id == fid]
+        # First keep only the database values corresponding to the right FOI ID
+        ts_final = self.ts_db[self.ts_db["parcel_id"] == fid].copy()
+        
+        	# Now reset the date index
+        ts_final = ts_final.reset_index()
+        
+        if start_date is not None :
+            ts_final = ts_final[ts_final['obstime'] >= start_date]
+        
+        if end_date is not None :
+            ts_final = ts_final[ts_final['obstime'] <= end_date]
+        
+        ts_final.set_index('obstime',inplace=True)
 
+        # Add the cloud percentage
+        ts_final['cloud_pct'] = ts_final['hist'].apply(lambda s: gts.get_cloudyness(json.loads(s), self.cloud_cat)[1])
+            
         # Force garbage collection
         gc.collect()
 
@@ -896,7 +910,10 @@ class db_c6_time_series_source(base_time_series_source) :
     Summary :
         See summary in db_s2_time_series_source
     """
-    def __init__(self, signal_type : str, host : str, port : str, dbname : str, user : str, password : str, db_schema : str, fid_col : str, parcels_table : str, sigs_table : str, sentinel_metadata_table : str, start_time : datetime.datetime, end_time : datetime.datetime, sql_additional_conditions : str) :
+    def __init__(self, signal_type : str, host : str, port : str, dbname : str, user : str, \
+                 password : str, db_schema : str, fid_col : str, parcels_table : str, \
+                 sigs_table : str, sentinel_metadata_table : str, start_time : datetime.datetime, \
+                 end_time : datetime.datetime, sql_additional_conditions : str) :
         """
         Summary :
             See summary in db_s2_time_series_source
@@ -909,10 +926,12 @@ class db_c6_time_series_source(base_time_series_source) :
         """
         super().__init__(signal_type)
 
+        # Variable that stores the SQL to be executed on the DB and that is initialize when the object is created
         self.sql_select = self.sql_statement(db_schema, fid_col, parcels_table, sigs_table, sentinel_metadata_table, sql_additional_conditions)
-
+        # Variable that stores the complete ts retrieved from the DB and that is initialize when the object is created
         self.ts_db = self.get_ts_db(host, port, dbname, user, password, self.sql_select)
-
+        # Variable that stores the list of components retrieved from the dataframe imported from the db
+        self.components = list(self.ts_db.columns)
         #self.connection_opt = connection_opt
 
     def sql_statement(self, db_schema : str, fid_col : str, parcels_table : str, sigs_table : str, sentinel_metadata_table : str, sql_additional_conditions : str) -> str :
@@ -927,6 +946,9 @@ class db_c6_time_series_source(base_time_series_source) :
         # The GROUP BY and FILTER transform the structure of the table with bands in columns instead of rows
         # DISTINC ON is used to pick one row for the same parcel/obstime [here date instead of daytime] (to avoid duplication for parcels in two UTM zones)
         # The first one is taken but other criteria could be used
+        # NDVI mean and stdev are calculated with standard formula
+        # Hist is transformed from json to text to be included in the GROUP BY clause (but content is the same)
+        # Inclusion of Hist data slow down the query a lot: to improve performance, a materialized view can be used
 
         sql_select = """
         SELECT
@@ -991,16 +1013,20 @@ class db_c6_time_series_source(base_time_series_source) :
         # Here selection on dates makes little sense as i already selected it when i imported from the database
         # Maybe I should remove the condition on the query and keep it here?
 
-        # In case of criteria on dates, as they are part of the multi-index, we reset the index
-        # then run the query on multiple criteria, then re-establish index (on parcel and date)
-        # In a previous version "query" was used but had an issue on comparing object type with integer/string
-        if start_date is not None and end_date is not None:
-            ts_final = self.ts_db.reset_index()
-            ts_final = ts_final[(ts_final.parcel_id == fid) & (ts_final.obstime >= start_date) & (ts_final.obstime <= end_date)]
-            ts_final= ts_final.set_index(['db_id', 'obstime'])
-        else:
-            ts_final = self.ts_db[self.ts_db.parcel_id == fid]
-
+        # First keep only the database values corresponding to the right FOI ID
+        ts_final = self.ts_db[self.ts_db["parcel_id"] == fid].copy()
+        
+        	# Now reset the date index
+        ts_final = ts_final.reset_index()
+        
+        if start_date is not None :
+            ts_final = ts_final[ts_final['obstime'] >= start_date]
+        
+        if end_date is not None :
+            ts_final = ts_final[ts_final['obstime'] <= end_date]
+        
+        ts_final.set_index('obstime',inplace=True)
+        
         # Force garbage collection
         gc.collect()
 
@@ -1040,10 +1066,12 @@ class db_bs_time_series_source(base_time_series_source) :
         """
         super().__init__(signal_type)
 
+        # Variable that stores the SQL to be executed on the DB and that is initialize when the object is created
         self.sql_select = self.sql_statement(db_schema, fid_col, parcels_table, sigs_table, sentinel_metadata_table, sql_additional_conditions)
-
+        # Variable that stores the complete ts retrieved from the DB and that is initialize when the object is created
         self.ts_db = self.get_ts_db(host, port, dbname, user, password, self.sql_select)
-
+        # Variable that stores the list of components retrieved from the dataframe imported from the db
+        self.components = list(self.ts_db.columns)
         #self.connection_opt = connection_opt
 
     def sql_statement(self, db_schema : str, fid_col : str, parcels_table : str, sigs_table : str, sentinel_metadata_table : str, sql_additional_conditions : str) -> str :
@@ -1057,6 +1085,10 @@ class db_bs_time_series_source(base_time_series_source) :
         # The query use FILTER() to group by using only records with a specific value in the band column
         # The GROUP BY and FILTER transform the structure of the table with bands in columns instead of rows
         # DISTINC ON is used to pick one row for the same parcel/obstime [here date instead of daytime] (to avoid duplication for parcels in two UTM zones)
+        # The first one is taken but other criteria could be used
+        # NDVI mean and stdev are calculated with standard formula
+        # Hist is transformed from json to text to be included in the GROUP BY clause (but content is the same)
+        # Inclusion of Hist data slow down the query a lot: to improve performance, a materialized view can be used
         # Log transformation is applied to VHb and VVb
 
         sql_select = """
@@ -1129,17 +1161,21 @@ class db_bs_time_series_source(base_time_series_source) :
 
         #start_date = pd.to_datetime(start_date).to_pydatetime()
         #end_date = pd.to_datetime(end_date).to_pydatetime()
-
-        # In case of criteria on dates, as they are part of the multi-index, we reset the index
-        # then run the query on multiple criteria, then re-establish index (on parcel and date)
-        # In a previous version "query" was used but had an issue on comparing object type with integer/string
-        if start_date is not None and end_date is not None:
-            ts_final = self.ts_db.reset_index()
-            ts_final = ts_final[(ts_final.parcel_id == fid) & (ts_final.obstime >= start_date) & (ts_final.obstime <= end_date)]
-            ts_final= ts_final.set_index(['db_id', 'obstime'])
-        else:
-            ts_final = self.ts_db[self.ts_db.parcel_id == fid]
-
+	
+        # First keep only the database values corresponding to the right FOI ID
+        ts_final = self.ts_db[self.ts_db["parcel_id"] == fid].copy()
+        
+        	# Now reset the date index
+        ts_final = ts_final.reset_index()
+        
+        if start_date is not None :
+            ts_final = ts_final[ts_final['obstime'] >= start_date]
+        
+        if end_date is not None :
+            ts_final = ts_final[ts_final['obstime'] <= end_date]
+        
+        ts_final.set_index('obstime',inplace=True)
+        
         # Force garbage collection
         gc.collect()
 
@@ -1284,8 +1320,17 @@ class time_serie_source_factory :
             end_time = option['end_time']
             sql_additional_conditions = option['sql_additional_conditions']
             cloud_free = option['cloud_free']
+            
+            if "cloud_categories" in option :
+                cloud_cat = option["cloud_categories"]
+            else :
+                cloud_cat = [3,8,9,10,11]
 
-            source = db_s2_time_series_source(signal_type, host, port, dbname, user, password, db_schema, fid_col, parcels_table, sigs_table, hists_table, sentinel_metadata_table, start_time, end_time, sql_additional_conditions, cloud_free)
+            source = db_s2_time_series_source(signal_type, host, port, dbname, user, password, \
+                                              db_schema, fid_col, parcels_table, sigs_table, \
+                                              hists_table, sentinel_metadata_table, start_time,\
+                                              end_time, sql_additional_conditions, cloud_free, \
+                                              cloud_cat)
 
         elif source_type == "db_c6" :
             host =option['db_host']
