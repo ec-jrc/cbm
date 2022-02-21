@@ -556,25 +556,30 @@ class interpolator(base_pre_processor) :
                 out_data.append(its)
                 compo_names.append( signal + '_' + component)
                 
-                if start_date is None :
-                    start_date = its.index[0]
-                else :
-                    if start_date < its.index[0] :
+                # Check if we have data
+                if len(its) > 0 :                
+                    if start_date is None :
                         start_date = its.index[0]
-                    
-                if stop_date is None :
-                    stop_date = its.index[-1]
-                else :
-                    if stop_date > its.index[-1] :
+                    else :
+                        if start_date < its.index[0] :
+                            start_date = its.index[0]
+                        
+                    if stop_date is None :
                         stop_date = its.index[-1]
+                    else :
+                        if stop_date > its.index[-1] :
+                            stop_date = its.index[-1]
         
         # If only 1 signal is considered, keep the names
         if len(self.signals) == 1 :
             compo_names = self.components
         
         # Now generates the final data frame
-        out_ts = pd.DataFrame({compo_names[-1] : its[(its.index >= start_date) & (its.index <= stop_date)]}, 
-                               index = its.index[(its.index >= start_date) & (its.index <= stop_date)])
+        if (start_date is None) or (stop_date is None) :
+            out_ts = pd.DataFrame({compo_names[-1] : its}, index = its.index)
+        else :
+            out_ts = pd.DataFrame({compo_names[-1] : its[(its.index >= start_date) & (its.index <= stop_date)]}, 
+                                   index = its.index[(its.index >= start_date) & (its.index <= stop_date)])
         
         for ii in range(len(compo_names) - 1) :
             out_ts[compo_names[ii]] = out_data[ii]

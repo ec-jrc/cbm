@@ -139,13 +139,15 @@ for fid in tqdm(fid_list[:parcel_num]) :
     # A similar approach can be adopted to check signal properties
     
     # Pre-process the data
-    for pre_pro in pre_processors :
-        parcel_data = {**parcel_data, **(pre_pro.process(parcel_data))}
-
-    # # Extract the markers
     markers = {}
-    for marker_det in marker_detectors :
-        markers = {**markers, **(marker_det.get_markers(parcel_data))}
+    if len(parcel_data) > 0 :
+        for pre_pro in pre_processors :
+            parcel_data = {**parcel_data, **(pre_pro.process(parcel_data))}
+            
+        # # Extract the markers
+
+        for marker_det in marker_detectors :
+            markers = {**markers, **(marker_det.get_markers(parcel_data))}
 
     if mk_sink is not None :
         # Output the marker information
