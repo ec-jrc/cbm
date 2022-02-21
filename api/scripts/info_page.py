@@ -27,6 +27,8 @@ def generator(user=None):
     url = configs["server"]["host"]
 
     helpers = {
+        "documentation": "https://jrc-cbm.readthedocs.io",
+        "git_repository": "https://github.com/ec-jrc/cbm",
         "information_page": f"{url}/query/info",
         "downloadable material": f"{url}/files",
         "swagger": f"{url}/apidocs"
