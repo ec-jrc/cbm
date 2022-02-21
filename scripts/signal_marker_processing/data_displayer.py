@@ -125,9 +125,11 @@ class data_displayer :
                 for component in self.bottom_components :
                     bottom_bar[0,:,ii] = df[component].values.astype(np.uint8)
                     ii += 1
-
-                xextent = mdates.date2num([df.index[0], df.index[-1]])
-                ax[1].imshow( bottom_bar, extent = [xextent[0], xextent[1],  0, 1], aspect = 'auto' )
+                
+                if len(df) > 0 :
+                    xextent = mdates.date2num([df.index[0], df.index[-1]])
+                    ax[1].imshow( bottom_bar, extent = [xextent[0], xextent[1],  0, 1], aspect = 'auto' )
+                
                 ax[1].xaxis_date()
                 ax[1].tick_params(labelsize=12)
                 ax[1].set_xlim([self.start_date, self.stop_date])
