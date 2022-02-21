@@ -12,12 +12,12 @@ from ipyfilechooser import FileChooser
 
 from ipywidgets import (VBox, Label, Dropdown,
                         Button, Layout, HBox,
-                        RadioButtons, Box)
+                        RadioButtons, Box, Text)
 import config
 import json
 import os
 from dr_widgets import connection_widget
-
+from dr_widgets import db_connection_widget
 
 class parcel_data_source_widget(VBox) :
     
@@ -30,7 +30,8 @@ class parcel_data_source_widget(VBox) :
                 ("Text File", 'txt'),
                 ("Text File and RESTful API", 'txt_rest'),
                 ("From SHAPE File", 'shape'),
-                ("From GeoJSON File", 'json')
+                ("From GeoJSON File", 'json'),
+                ("From DataBase", 'db')
             ],
             value='txt',
             layout={'width': 'max-content'}
@@ -46,6 +47,7 @@ class parcel_data_source_widget(VBox) :
         info_txt_rest = Label("From Text File and RESTFul")
         info_shape = Label("From Shape File")
         info_json = Label("From GeoJSON File")
+        info_db = Label("From DataBase")
 
         # default option
         view_options = VBox([info_txt, source_from_txt()])
@@ -60,7 +62,9 @@ class parcel_data_source_widget(VBox) :
                 view_options.children = [info_shape, source_from_shape()]
             elif self.sources.value == 'json':
                 view_options.children = [info_json, source_from_shape('json')]
-    
+            elif self.sources.value == 'db':
+                view_options.children = [info_db, source_from_db()]
+                
         self.sources.observe(on_source_change, 'value')
         
         self.wb_save = Button(
@@ -135,6 +139,7 @@ class parcel_data_source_widget(VBox) :
             info_txt_rest = Label("From Text File and RESTFul")
             info_shape = Label("From Shape File")
             info_json = Label("From GeoJSON File")
+            info_db = Label("From DataBase")
             
             if self.sources.value == 'txt':
                 source = source_from_txt()
@@ -152,7 +157,11 @@ class parcel_data_source_widget(VBox) :
                 source = source_from_shape('json')
                 source.initialize(ps_opt)
                 view_options.children = [info_json, source]
-            
+            elif self.sources.value == 'db':
+                source = source_from_db()
+                source.initialize(ps_opt)
+                view_options.children = [info_db, source]
+                
             self.children = [self.sources_box, view_options, self.wb_save, self.whb_load]
         
         def on_source_change(change):
@@ -165,6 +174,8 @@ class parcel_data_source_widget(VBox) :
                 view_options.children = [info_shape, source_from_shape()]
             elif self.sources.value == 'json':
                 view_options.children = [info_json, source_from_shape('json')]
+            elif self.sources.value == 'db':
+                view_options.children = [info_db, source_from_db()]    
     
         self.sources.observe(on_source_change, 'value')
 
@@ -343,3 +354,54 @@ class source_from_shape(VBox) :
            (options["fidAttribute"] in self.wdd_fid_attrib.options) :
                
             self.wdd_fid_attrib.value = options["fidAttribute"]
+
+class source_from_db(VBox) :
+    """
+    Class implementing the widget for generating the options
+    related to a database parcel data source.
+    """
+    
+    def __init__(self) :
+        """
+        Summary:
+            Object Constructor.
+        
+        Arguments:
+            None.
+            
+        Return:
+            Nothing (well the object initialized)
+        """
+        # Connection widget
+        self.w_connection = db_connection_widget()
+        
+        # Additional geometry field
+        self.wt_geometry = Text(
+            placeholder='Geometry Attribute',
+            description='Geometry Attribute:',
+            disabled=False
+        )
+                            
+        super().__init__([self.w_connection, self.wt_geometry])
+        
+    def dump(self) -> dict :
+        out_dict = {}
+        
+        out_dict["type"] = "db"
+        
+        conn_dict = self.w_connection.dump()
+        
+        out_dict = {**out_dict, **conn_dict}
+        
+        if self.wt_geometry.value != "" :
+            out_dict["geomAttribute"] = self.wt_geometry.value
+        
+        return out_dict
+        
+    def initialize(self, options : dict) :
+        
+        self.w_connection.initialize(options)
+        
+        if "geomAttribute" in options :
+            self.wt_geometry.value = options["geomAttribute"]    
+        
