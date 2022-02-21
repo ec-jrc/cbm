@@ -576,14 +576,22 @@ class marker_detector_tab(VBox) :
             
             # Add an empty key for the marker-aggregator (to be dealt with
             # in a second phase)
-            config.set_value("marker-aggregator", [{}])
+            if config.get_value("marker-aggregator") is None :
+                config.set_value("marker-aggregator", [{}])
             
-            # Add an empty marker-sink (to be dealt with
-            # in a second phase)
-            config.set_value("marker-sink", [
-                {"output_file": "./marker_output.csv",
-                 "include_header": True}])
-            
+                # Add a default marker-sink (to be dealt with
+                # in a second phase)
+                config.set_value("marker-sink", [
+                    {"output_file": "./marker_output.csv",
+                     "include_header": True}])
+            else :
+                config.set_value("marker-sink", [
+                    {"output_file": "./marker_output.csv",
+                     "include_header": True},
+                    {"output_file": "./agg_marker_output.csv",
+                     "include_header": True}
+                    ])
+                
         self.wb_load = Button(
              description='Load',
              disabled=False,

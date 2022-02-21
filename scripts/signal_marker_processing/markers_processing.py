@@ -771,6 +771,10 @@ class state_change_detector(base_marker_detector) :
                 # consider data only in the specified time range
                 time_series = df[(df.index >= self.start_date) & (df.index <= self.stop_date)]
                 
+                # Check if there are data, otherwise continue
+                if len(time_series) == 0 :
+                    continue
+                
                 # find indeces with values equal to state of interest and coming 
                 # from a different state
                 start_ind = np.argwhere((time_series.values.flatten()[:-1] != self.target_state) & \
