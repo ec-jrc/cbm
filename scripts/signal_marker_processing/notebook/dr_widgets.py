@@ -9,7 +9,8 @@
 # Created on Sun Oct 31 10:41:24 2021
 
 from ipywidgets import (Text, VBox, Dropdown, Password, Checkbox,
-                        Button, HBox, HTML, Tab, Layout )
+                        Button, HBox, HTML, Tab, Layout, IntText,
+                        Textarea, RadioButtons, DatePicker)
 
 
 import config
@@ -18,6 +19,7 @@ import pandas as pd
 from ipyfilechooser import FileChooser
 import json
 import os
+import datetime
 
 
 class BaseDataReaderWidget(VBox):
@@ -197,6 +199,34 @@ class BaseDataReaderWidget(VBox):
                          self.wt_signal, 
                          HTML(value = "<B>Options :</B>"),
                          *self.options]
+        
+    @classmethod
+    def get_subclasses(cls, level = 0):
+        """
+        Method to recover all the subclasses of any level
+        
+        From
+        https://stackoverflow.com/questions/3862310/how-to-find-all-the-subclasses-of-a-class-given-its-name
+        """
+        all_subclasses = []
+        
+        # level 0 - just get the direct subclass
+        level_sub = cls.__subclasses__()
+        
+        ii = 0
+        while ii < level :
+            # get the next level classes
+            next_sub = []
+            for subclass in level_sub :
+                next_sub.extend(subclass.__subclasses__())
+            
+            all_subclasses.extend(level_sub)
+            level_sub = next_sub
+            ii += 1
+            
+        all_subclasses.extend(level_sub)
+        
+        return all_subclasses
         
 class CsvDataReaderWidget(BaseDataReaderWidget):
     _type = "csv"
@@ -549,6 +579,240 @@ class cloud_classification_widget(VBox) :
             
             for ii in cloud_cat_list :
                 self.children[ii].value = True
+
+class db_connection_widget(VBox) :
+    
+    def __init__(self) :
+        # Add the required widgets
+        self.wt_url = Text(
+            placeholder='Add Database Host',
+            description='Host:',
+            disabled=False
+        )
+        
+        self.wt_port = IntText(
+            value = 5432,
+            description='Port:',
+            disabled=False
+        )
+        
+        self.wt_name = Text(
+            placeholder='Add Database Name',
+            description='DB Name:',
+            disabled=False
+        )
+        
+        self.wt_user = Text(
+            placeholder='Username',
+            description='DB User:',
+            disabled=False
+        )
+        
+        self.wt_pass = Password(
+            placeholder='******',
+            description='DB Password:',
+            disabled=False
+        )
+        
+        self.wt_schema = Text(
+            placeholder='Schema',
+            description='DB Schema:',
+            disabled=False
+        )
+        
+        self.wt_table = Text(
+            placeholder='Table',
+            description='Parcel Table:',
+            disabled=False
+        )
+        
+        self.wt_foiid = Text(
+            placeholder='Attribute',
+            description='FOI Attribute:',
+            disabled=False
+        )
+        
+        self.wa_sql = Textarea(
+            placeholder='SQL Additional Conditions',
+            description='SQL Additional Conditions:',
+            disabled=False
+        )
+        
+        super().__init__([self.wt_url, self.wt_port, self.wt_name, self.wt_user,\
+                          self.wt_pass, self.wt_schema, self.wt_table, self.wt_foiid,\
+                          self.wa_sql])
+    
+    def dump(self) -> dict :
+        
+        out_dict = {}
+        # db host
+        if self.wt_url.value != "" :
+            out_dict["db_host"] = self.wt_url.value
+        
+        # db port
+        out_dict["db_port"] = str(self.wt_port.value)
+        
+        # db name
+        if self.wt_name != "" :
+            out_dict["db_name"] = self.wt_name.value
+        
+        if self.wt_user.value != "" :
+            out_dict["db_user"] = self.wt_user.value
+            
+        if self.wt_pass.value != "" :
+            out_dict["db_password"] = self.wt_pass.value
+            
+        if self.wt_schema.value != "" :
+            out_dict["db_schema"] = self.wt_schema.value
+            
+        if self.wt_table.value != "" :
+            out_dict["parcels_table"] = self.wt_table.value
+
+        if self.wt_foiid.value != "" :
+            out_dict["fidAttribute"] = self.wt_foiid.value
+            
+        if self.wa_sql.value != "" :
+            out_dict["sql_additional_conditions"] = self.wa_sql.value
+        
+        return out_dict
+
+    def initialize(self, options : dict) :
+    
+        if "db_host" in options :
+            self.wt_url.value = options["db_host"]
+        
+        if "db_port" in options :
+           self.wt_port.value = int(options["db_port"])
+        
+        if "db_name" in options :
+            self.wt_name.value = options["db_name"]
+            
+        if "db_password" in options :
+            self.wt_pass.value = options["db_password"]
+        
+        if "db_user" in options :
+            self.wt_user.value = options["db_user"]
+        
+        if "db_schema" in options :
+            self.wt_schema.value = options["db_schema"]
+        
+        if  "parcels_table" in options :
+            self.wt_table.value = options["parcels_table"]
+
+        if "fidAttribute" in options :
+            self.wt_foiid.value = options["fidAttribute"]
+            
+        if "sql_additional_conditions" in options :
+            self.wa_sql.value = options["sql_additional_conditions"]
+            
+class db_full_connection_widget(db_connection_widget) :
+    # Connection options including additonal fields for 
+    # data readers
+    def __init__(self) :
+        # initialize the base class
+        super().__init__()
+        
+        # Add additional elements
+        self.wt_signals = Text(
+            placeholder='Signal Table',
+            description='Signal Table:',
+            disabled=False
+            )
+        
+        self.wt_histtable = Text(
+            placeholder='Hist. Table',
+            description='Hist. Table:',
+            disabled=False
+            )
+
+        self.wt_sm_table = Text(
+            placeholder='Sen. Table',
+            description='Sen. Table:',
+            disabled=False
+            )
+        
+        self.wrb_cloud = RadioButtons(
+            options=['True', 'False'],
+            value='True', # Defaults to 'pineapple'
+            description='Cloud Free:',
+            disabled=False
+            )
+
+        self.wdp_start_date = DatePicker(
+                description='Start date:',
+                disabled=False
+            )
+        
+        self.wdp_end_date = DatePicker(
+                description='Stop date:',
+                disabled=False
+            )        
+        
+        children = [*super().children, self.wt_signals, self.wt_histtable, \
+                    self.wt_sm_table, self.wrb_cloud, self.wdp_start_date, \
+                    self.wdp_end_date]
+        
+        self.children = children
+    
+    def dump(self) -> dict :
+        
+        # call the base class
+        out_dict = super().dump()
+        
+        if self.wt_signals.value != "" :
+            out_dict["sigs_table"] = self.wt_signals.value
+            
+        if self.wt_histtable.value != "":
+            out_dict["hists_table"] = self.wt_histtable.value
+            
+        if self.wt_sm_table.value != "":
+            out_dict["sentinel_metadata_table"] = self.wt_sm_table.value
+            
+        if self.wrb_cloud.value == "True" :
+            out_dict["cloud_free"] = "True"
+        else :
+            out_dict["cloud_free"] = "False"
+            
+        if self.wdp_start_date.value is not None :
+            out_dict["start_time"] = self.wdp_start_date.value.strftime("%Y-%m-%d")
+            
+        if self.wdp_end_date.value is not None :
+            out_dict["end_time"] = self.wdp_end_date.value.strftime("%Y-%m-%d")    
+        
+        return out_dict
+
+    def initialize(self, options : dict) :
+        
+        # Initialize the base class
+        super().initialize(options)
+        
+        # Initialize the remaining elements
+        if "sigs_table" in options :
+            self.wt_signals.value = options["sigs_table"]
+            
+        if "hists_table" in options :
+            self.wt_histtable.value = options["hists_table"]
+            
+        if "sentinel_metadata_table" in options :
+            self.wt_sm_table.value = options["sentinel_metadata_table"]
+            
+        if ("cloud_free" in options) and (options["cloud_free"] == "True") :
+            self.wrb_cloud.value = "True"
+        else :
+            self.wrb_cloud.value = "False"
+        
+        # Start and stop dates
+        if "start_time" in options :
+           self.wdp_start_date.value = datetime.datetime.strptime(options["start_time"],
+                                                                         "%Y-%m-%d")
+        else :
+            self.wdp_start_date.value = None
+           
+        if "end_time" in options :
+           self.wdp_end_date.value = datetime.datetime.strptime(options["end_time"],
+                                                                         "%Y-%m-%d")
+        else :			
+            self.wdp_end_date.value = None    
                 
 class connection_widget(VBox) :
     
@@ -845,6 +1109,77 @@ class BsRestfulDataReaderWidget(BaseDataReaderWidget) :
         
         if "connection_options" in options :
             self.connection_opt.initialize(options["connection_options"])
+            
+            
+class DbBsDataReaderWidget(BaseDataReaderWidget) :
+    _type = 'db_bs'
+    
+    """
+    Summary:
+        Widget containing DB back scattering data reader widget.
+    """
+    
+    def __init__(self, parent = None):
+        """
+        Summary:
+            Object constructor.
+        
+        Arguments:
+            None
+            
+        Returns:
+            Nothing.
+        """
+        super().__init__(self.__class__._type, parent)
+        
+        # Add options
+        self.connection_opt = db_full_connection_widget()
+        
+        self.add_options([self.connection_opt])
+        
+    def dump(self) -> dict :
+        """
+        Summary:
+            Build and return a dictiory descibing the reader and its
+            options.
+        
+        Arguments:
+            None.
+
+        Returns:
+            Dictionary describing the reader.            
+        """
+        out_dict = self.dump_header()
+        
+        # add the connection options
+        out_dict = {**out_dict, **self.connection_opt.dump()}
+        
+        return out_dict
+        
+    def initialize(self, options : dict ) :
+        """
+        Summary:
+            Initialize the data reader widget using a dictionary, which needs to 
+            have the same format as that produced by the dump function.
+        
+        Arguments:
+            options - dictionary with the options to initialize the data reader
+            widget
+
+        Returns:
+            Nothing.  
+        """
+        # Add the signal
+        if ("signal" in options) :
+            self.wt_signal.value = options["signal"]
+        
+        self.connection_opt.initialize( options )
+
+class DbC6DataReaderWidget(DbBsDataReaderWidget) :
+     _type = "db_c6"
+          
+class DbS2DataReaderWidget(DbBsDataReaderWidget) :
+     _type = "db_s2"
 
 class DataReaderTab(VBox) :
     
@@ -852,7 +1187,10 @@ class DataReaderTab(VBox) :
                       'dir_csv' : 'Directory with CSV files',
                       'rest_s2' : 'S2 from RESTFul server', 
                       'rest_c6' : 'S1 coherence from RESTFul server',
-                      'rest_bs' : 'S1 backscatter from RESTFul server'} 
+                      'rest_bs' : 'S1 backscatter from RESTFul server',
+                      'db_s2' : 'S2 from DB server',
+                      'db_bs' : 'S1 backscatter from DB server',
+                      'db_c6' : 'S1 coherence from DB server'} 
     
     """
     Summary:
@@ -883,7 +1221,7 @@ class DataReaderTab(VBox) :
             icon='Add'
         )
 
-        supported_types = [x._type for x in BaseDataReaderWidget.__subclasses__()]
+        supported_types = [x._type for x in BaseDataReaderWidget.get_subclasses(1)]
         type_descr = [DataReaderTab.dt_types_descr[x] for x in supported_types]
         
         self.wdd_types = Dropdown(
@@ -904,12 +1242,13 @@ class DataReaderTab(VBox) :
             new_w = None
             ind = type_descr.index(self.wdd_types.value)
 
-            new_w = BaseDataReaderWidget.__subclasses__()[ind](self)
+            new_w = BaseDataReaderWidget.get_subclasses(1)[ind](self)
                                                 
             if new_w is not None :
                 self.data_readers.append(new_w)
                 self.wt_data_readers.children = self.data_readers
                 self.wt_data_readers.set_title(self.count, new_w.type)
+                print(new_w.type)
                 self.count += 1            
             
         @self.wb_remove.on_click
@@ -1013,12 +1352,12 @@ class DataReaderTab(VBox) :
         self.count = 0
         
         # supported types 
-        supported_types = [x._type for x in BaseDataReaderWidget.__subclasses__()]
+        supported_types = [x._type for x in BaseDataReaderWidget.get_subclasses(1)]
         
         for tab in tab_list :
             if ("type" in tab) and (tab["type"] in supported_types) : 
                 ind = supported_types.index(tab["type"])
-                data_reader = BaseDataReaderWidget.__subclasses__()[ind](self)
+                data_reader = BaseDataReaderWidget.get_subclasses(1)[ind](self)
                 data_reader.initialize(tab)
                 self.data_readers.append(data_reader)
             

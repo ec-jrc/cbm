@@ -399,7 +399,12 @@ class parcel_data_factory :
             # load parcel data from the database
             # get the connection parameters, table information and selection criteria
             db_schema = source_options['db_schema']
-            parcel_table = source_options['parcel_table']
+            if 'parcel_table' in source_options :
+                parcel_table = source_options['parcel_table']
+            
+            if 'parcels_table' in source_options :
+                parcel_table = source_options['parcels_table']
+                
             host =source_options['db_host']
             port = source_options['db_port']
             dbname = source_options['db_name']
@@ -407,7 +412,12 @@ class parcel_data_factory :
             password = source_options['db_password']
             fid_col = source_options['fidAttribute']
             geometry_col = source_options['geomAttribute']
-            sql_additional_conditions = source_options['sql_additional_conditions']
+            
+            if "sql_additional_conditions" in source_options :
+                sql_additional_conditions = source_options["sql_additional_conditions"]
+                
+            if 'sql_conditions' in source_options :
+                sql_additional_conditions = source_options['sql_conditions']
 
             parcel_source = db_data_source(db_schema, parcel_table, host, port, dbname, user, password, fid_col, geometry_col, sql_additional_conditions)
 
