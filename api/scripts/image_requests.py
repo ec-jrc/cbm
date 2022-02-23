@@ -15,13 +15,6 @@ from scripts import rawChipExtractor as rce
 from scripts import rawS1ChipBatchExtract as rces1
 
 
-# logging.basicConfig(filename='logs/queryHandler.log', filemode='w',
-#                     format='%(name)s - %(levelname)s - %(message)s',
-#                     level=logging.ERROR)
-
-
-# Parcel Images
-
 def getBackgroundByLocation(lon, lat, chipsize, chipextend, tms,
                             unique_id, iformat, withGeometry):
     try:

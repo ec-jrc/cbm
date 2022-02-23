@@ -69,7 +69,7 @@ def generator(user=None):
 
         data_request_examples = {
             "parcelByID": f"{url}/query/parcelByID?aoi={aoi}&year={year}&pid={pid}{ptype_param}&withGeometry=True",
-            "parcelTimeSeries_s2": f"{url}/query/parcelTimeSeries?aoi={aoi}&year={year}&pid={pid}{ptype_param}&tstype=s2&scl=True",
+            "parcelTimeSeries_s2": f"{url}/query/parcelTimeSeries?aoi={aoi}&year={year}&pid={pid}{ptype_param}&tstype=s2",
             "parcelTimeSeries_bs": f"{url}/query/parcelTimeSeries?aoi={aoi}&year={year}&pid={pid}{ptype_param}&tstype=bs",
             "parcelTimeSeries_c6": f"{url}/query/parcelTimeSeries?aoi={aoi}&year={year}&pid={pid}{ptype_param}&tstype=c6",
             "backgroundByParcelID": f"{url}/query/backgroundByParcelID?aoi={aoi}&year={year}&pid={pid}{ptype_param}&chipsize=256&extend=512&iformat=png&withGeometry=True",
