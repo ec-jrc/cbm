@@ -15,14 +15,15 @@ from scripts import users, db, db_queries
 
 
 def generator(user=None):
-    users_list = users.get_list(only_names=False, aois=True)
+    user_aois = users.get_list(only_names=False, aois=True)[user]
     with open('config/datasets.json', 'r') as f:
-        datasets = json.load(f)
+        all_datasets = json.load(f)
     with open('config/main.json') as f:
         configs = json.load(f)
 
+    dslist = list(dict.fromkeys([x for x in dict.keys(all_datasets)]))
     all_aois = list(dict.fromkeys([x.split('_')[0]
-                                   for x in dict.keys(datasets)]))
+                                   for x in dict.keys(all_datasets)]))
     server = configs["server"]
     url = configs["server"]["host"]
 
@@ -36,16 +37,11 @@ def generator(user=None):
 
     info_page = {"server": server, "helpers": helpers, "aois": {}}
 
-    def aois(aoi):
-        dbtables = db.tables('main', aoi)  # Needs fix to get the db
-        tables = [x for x in dbtables if x.startswith('parcels_')]
-        ptables = [x for x in tables if not x.endswith('rast')]
-        years = list(dict.fromkeys([x.split('_')[1] for x in ptables]))
-        year = random.choice(years)
+    def aois(aoi, years, year):
+        dbtables = db.tables(all_datasets[f'{aoi}_{year}']['db'], aoi)
 
-        types = [x.split('_')[2]
-                 for x in ptables if len(x.split('_')) == 3]
-        ptypes = list(dict.fromkeys(types))
+        ptypes = list(dict.fromkeys(
+            [x.split('_')[-1] for x in dbtables if len(x.split('_')[-1]) == 1]))
 
         if len(ptypes) > 0:
             pt = random.choice(ptypes)
@@ -60,8 +56,8 @@ def generator(user=None):
             if "".join(itertools.takewhile(str.isalpha, f)) == aoi:
                 available_tms.append(f)
 
-        dataset = datasets[f"{aoi}_{year}"]
-        pidcolumn = datasets[f"{aoi}_{year}"]["pcolumns"]["parcel_id"]
+        dataset = all_datasets[f"{aoi}_{year}"]
+        pidcolumn = all_datasets[f"{aoi}_{year}"]["pcolumns"]["parcel_id"]
         pids_df = db_queries.pids(dataset, 100, ptype, False)
         pids = random.sample(pids_df['pids'].values.tolist(), 5)
         pid = random.choice(pids)
@@ -86,17 +82,23 @@ def generator(user=None):
             "data_request_examples": data_request_examples
         }
 
-    if 'admin' in users_list[user]:
+    if 'admin' in user_aois:
         for aoi in all_aois:
             try:
-                aois(aoi)
+                years = [y.split('_')[1]
+                         for y in dslist if y.split('_')[0] == aoi]
+                year = random.choice(years)
+                aois(aoi, years, year)
             except Exception as err:
                 print(aoi, err)
     else:
-        for aoi in users_list[user]:
+        for aoi in user_aois:
             if aoi in all_aois:
                 try:
-                    aois(aoi)
+                    years = [y.split('_')[1]
+                             for y in dslist if y.split('_')[0] == aoi]
+                    year = random.choice(years)
+                    aois(aoi, years, year)
                 except Exception as err:
                     print(aoi, err)
 

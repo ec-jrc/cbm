@@ -222,7 +222,7 @@ def getParcelTimeSeries(dataset, pid, ptype='',
     where_band = f"And s.band = '{band}' " if band else ''
 
     if tstype.lower() == 's2':
-        where_tstype = "And band IN ('B02', 'B03', 'B04', 'B05', 'B08', 'B11', 'B2', 'B3', 'B4', 'B5', 'B8') "
+        where_tstype = "And band IN ('B02', 'B03', 'B04', 'B05', 'B08', 'B11', 'B2', 'B3', 'B4', 'B5', 'B8', 'SC') "
     elif tstype.lower() == 'c6':
         where_tstype = "And band IN ('VVc', 'VHc') "
     elif tstype.lower() == 'bs':
