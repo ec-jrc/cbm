@@ -63,9 +63,10 @@ import imgLib
 
 username = 'YOURUSERNAME'
 password = 'YOURPASSWORD'
+host = '0.0.0.0'
 
 # Authenticate directly in URL
-tifUrlBase = f"http://{username}:{password}@185.178.85.226"
+tifUrlBase = f"http://{username}:{password}@{host}"
 url = tifUrlBase + "/query/rawChipsBatch"
 
 payloadDict = {
@@ -159,7 +160,9 @@ def byteScale(img, min, max):
 
 username = 'YOURUSERNAME'
 password = 'YOURPASSWORD'
-tifUrlBase = f"http://{username}:{password}@185.178.85.226"
+host = '0.0.0.0'
+
+tifUrlBase = f"http://{username}:{password}@{host}"
 url = tifUrlBase + "/query/rawS1ChipsBatch"
 payloadDict = {
   "lon": 5.66425,
@@ -216,7 +219,6 @@ with rasterio.open(f"test.tif", 'w',**kwargs) as sink:
     sink.write(byteScale(vv, -15.0, -3.0),1) # R
     sink.write(byteScale(vh, -20.0, -8.0),2) # R
     sink.write(byteScale(c6, 0.2, 0.9),3) # R
-
 
 ```
 
