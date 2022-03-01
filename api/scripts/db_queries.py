@@ -38,16 +38,16 @@ def getParcelByLocation(dataset, lon, lat, ptype='',
 
         if withGeometry:
             if wgs84:
-                geometrySql = ", st_asgeojson(st_transform(wkb_geometry, 4326)) as geom"
+                geomSql = ", st_asgeojson(st_transform(wkb_geometry, 4326)) as geom"
             else:
-                geometrySql = ", st_asgeojson(wkb_geometry) as geom"
+                geomSql = ", st_asgeojson(wkb_geometry) as geom"
         else:
-            geometrySql = ""
+            geomSql = ""
 
         getTableDataSql = f"""
             SELECT {parcel_id}::text as pid, {cropname} as cropname,
                 {cropcode} as cropcode,
-                st_srid(wkb_geometry) as srid{geometrySql},
+                st_srid(wkb_geometry) as srid{geomSql},
                 st_area(st_transform(wkb_geometry, 3035))::integer as area,
                 st_X(st_transform(st_centroid(wkb_geometry), 4326)) as clon,
                 st_Y(st_transform(st_centroid(wkb_geometry), 4326)) as clat
@@ -95,16 +95,16 @@ def getParcelByID(dataset, pid, ptype='', withGeometry=False,
 
         if withGeometry:
             if wgs84:
-                geometrySql = ", st_asgeojson(st_transform(wkb_geometry, 4326)) as geom"
+                geomSql = ", st_asgeojson(st_transform(wkb_geometry, 4326)) as geom"
             else:
-                geometrySql = ", st_asgeojson(wkb_geometry) as geom"
+                geomSql = ", st_asgeojson(wkb_geometry) as geom"
         else:
-            geometrySql = ""
+            geomSql = ""
 
         getTableDataSql = f"""
             SELECT {parcel_id}::text as pid, {cropname} as cropname,
                 {cropcode}::text as cropcode,
-                st_srid(wkb_geometry) as srid{geometrySql},
+                st_srid(wkb_geometry) as srid{geomSql},
                 st_area(st_transform(wkb_geometry, 3035))::integer as area,
                 st_X(st_transform(st_centroid(wkb_geometry), 4326)) as clon,
                 st_Y(st_transform(st_centroid(wkb_geometry), 4326)) as clat
@@ -157,19 +157,19 @@ def getParcelsByPolygon(dataset, polygon, ptype='', withGeometry=False,
 
         if withGeometry:
             if wgs84:
-                geometrySql = ", st_asgeojson(st_transform(wkb_geometry, 4326)) as geom"
+                geomSql = ", st_asgeojson(st_transform(wkb_geometry, 4326)) as geom"
             else:
-                geometrySql = ", st_asgeojson(wkb_geometry) as geom"
+                geomSql = ", st_asgeojson(wkb_geometry) as geom"
         else:
-            geometrySql = ""
+            geomSql = ""
 
         if only_ids:
-            selectSql = f"{parcel_id} as pid{geometrySql}"
+            selectSql = f"{parcel_id} as pid{geomSql}"
         else:
             selectSql = f"""
                 {parcel_id} as pid, {cropname} As cropname,
                 {cropcode} As cropcode,
-                st_srid(wkb_geometry) As srid{geometrySql},
+                st_srid(wkb_geometry) As srid{geomSql},
                 st_area(st_transform(wkb_geometry, 3035))::integer As area,
                 st_X(st_transform(st_centroid(wkb_geometry), 4326)) As clon,
                 st_Y(st_transform(st_centroid(wkb_geometry), 4326)) As clat"""
@@ -213,6 +213,18 @@ def getParcelTimeSeries(dataset, pid, ptype='',
     dias_catalog = dataset['tables']['dias_catalog']
     parcels_table = dataset['tables']['parcels']
     parcel_id = dataset['pcolumns']['parcel_id']
+    if sigs_table != dataset['tables']['csl']:
+        scl = False
+
+    if tstype.lower() == 's2':
+        where_tstype = """And band IN ('B02', 'B03', 'B04', 'B05', 'B08',
+                            'B11', 'B2', 'B3', 'B4', 'B5', 'B8', 'SC') """
+    elif tstype.lower() == 'c6':
+        where_tstype = "And band IN ('VVc', 'VHc') "
+    elif tstype.lower() == 'bs':
+        where_tstype = "And band IN ('VVb', 'VHb') "
+    else:
+        where_tstype = ""
 
     from_hists = f", {dataset['tables']['scl']} h" if scl else ''
     select_scl = ', h.hist' if scl else ''
@@ -220,15 +232,6 @@ def getParcelTimeSeries(dataset, pid, ptype='',
 
     where_shid = 'And s.pid = h.pid And s.obsid = h.obsid' if scl else ''
     where_band = f"And s.band = '{band}' " if band else ''
-
-    if tstype.lower() == 's2':
-        where_tstype = "And band IN ('B02', 'B03', 'B04', 'B05', 'B08', 'B11', 'B2', 'B3', 'B4', 'B5', 'B8', 'SC') "
-    elif tstype.lower() == 'c6':
-        where_tstype = "And band IN ('VVc', 'VHc') "
-    elif tstype.lower() == 'bs':
-        where_tstype = "And band IN ('VVb', 'VHb') "
-    else:
-        where_tstype = ""
 
     try:
         getTableDataSql = f"""
