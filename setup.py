@@ -32,6 +32,7 @@ setup(
         'rasterio>=1.1.5',
         'requests>=2.24.0',
         'descartes>=1.1.0',
+        'scikit-image>=0.19.0',
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
