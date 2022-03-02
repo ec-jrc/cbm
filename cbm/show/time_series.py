@@ -85,7 +85,9 @@ def ndvi(aoi, year, pids, ptype=None, scl='3_8_9_10_11', std=True,
         df['date'] = pd.to_datetime(df['date_part'], unit='s')
         start_date = df.iloc[0]['date'].date()
         end_date = df.iloc[-1]['date'].date()
-        # print(f"From '{start_date}' to '{end_date}'.")
+        if debug:
+            print('Time series file:', file_ts)
+            print(f"From '{start_date}' to '{end_date}'.")
 
         pd.set_option('max_colwidth', 200)
         pd.set_option('display.max_columns', 20)
@@ -188,7 +190,9 @@ def s2(aoi, year, pid, ptype=None, bands=['B02', 'B03', 'B04', 'B08'],
     df['date'] = pd.to_datetime(df['date_part'], unit='s')
     start_date = df.iloc[0]['date'].date()
     end_date = df.iloc[-1]['date'].date()
-    # print(f"From '{start_date}' to '{end_date}'.")
+    if debug:
+        print('Time series file:', file_ts)
+        print(f"From '{start_date}' to '{end_date}'.")
 
     pd.set_option('max_colwidth', 200)
     pd.set_option('display.max_columns', 20)
@@ -359,7 +363,7 @@ def s1(aoi, year, pid, tstype='bs', ptype=None, debug=False):
     return plt.show()
 
 
-def weather(aoi, year, pid, ptype=None, debug=False):
+def weather(aoi, year, pid, tstype='tp', ptype=None, debug=False):
     path = normpath(join(config.get_value(['paths', 'temp']),
                          aoi, str(year), str(pid)))
 
@@ -380,7 +384,9 @@ def weather(aoi, year, pid, ptype=None, debug=False):
     df['date'] = pd.to_datetime(df['meteo_date'])
     start_date = df.iloc[0]['date'].date()
     end_date = df.iloc[-1]['date'].date()
-    # print(f"From '{start_date}' to '{end_date}'.")
+    if debug:
+        print('Time series file:', file_ts)
+        print(f"From '{start_date}' to '{end_date}'.")
 
     pd.set_option('max_colwidth', 10)
     pd.set_option('display.max_columns', 20)
@@ -393,31 +399,30 @@ def weather(aoi, year, pid, ptype=None, debug=False):
     plt.rcParams['legend.fontsize'] = 14
 
     df.set_index(['date'], inplace=True)
-
     datesFmt = mdates.DateFormatter('%-d %b %Y')
 
-    # Plot Band
+    # Plot temperature and precipitation
     fig = plt.figure(figsize=(16.0, 10.0))
     axw = fig.add_subplot(1, 1, 1)
-    axp = axw.twinx()
-
     axw.set_title(f"Parcel {pid} (crop: {crop_name}, area: {area:.2f} ha)")
     axw.set_xlabel("Date")
     axw.xaxis.set_major_formatter(datesFmt)
-    axw.set_ylabel(r'DN')
+    if 't' in tstype[:3]:
+        axw.set_ylabel(r'Daily mean temperature', color='r')
+        axw.plot(df.index, df['tmean'], linestyle=' ', marker='o',
+                 markersize=3, color='red',
+                 fillstyle='none', label='Temperature', alpha=0.8)
+        axw.fill_between(df.index, df['tmin'], df['tmax'],
+                         color='b', alpha=0.08)
+        axw.legend(loc='upper left')
 
-    axw.plot(df.index, df['tmean'], linestyle=' ', marker='o',
-             markersize=3, color='red',
-             fillstyle='none', label='tmean', alpha=0.5)
+    if 'p' in tstype[:3]:
+        axp = axw.twinx()
+        axp.set_ylabel('Daily precipitation', color='b')
+        axp.plot(df.index, df['prec'], linestyle=' ', marker='o',
+                 markersize=3, color='blue',
+                 fillstyle='none', label='Precipitation', alpha=0.8)
+        axp.legend(loc='upper right')
 
-    axp.plot(df.index, df['prec'], linestyle=' ', marker='o',
-             markersize=3, color='blue',
-             fillstyle='none', label='prec', alpha=0.5)
-
-    axw.fill_between(df.index, df['tmin'], df['tmax'],
-                     color='b', alpha=0.05)
-
-    axw.set_xlim(start_date, end_date + timedelta(1))
-    axw.legend(frameon=False)
-
+    axw.set_xlim(start_date - timedelta(1), end_date + timedelta(1))
     return plt.show()
