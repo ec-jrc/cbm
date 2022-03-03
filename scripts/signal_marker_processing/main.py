@@ -50,11 +50,16 @@ else :
 
 if ("notebook" in kwargs) and (kwargs["notebook"]=="True"):
     from tqdm.notebook import tqdm
+    
+    ##################### Option File #############################################
+    optionFilePath = "./config/main.json"
 else:
     from tqdm import tqdm    
 
-##################### Option File #############################################
-optionFilePath = "./config/main.json"
+    ##################### Option File #############################################
+    optionFilePath = "./notebook/config/main.json"
+
+
 optionFile = open(optionFilePath)
 options = json.load(optionFile)
 
