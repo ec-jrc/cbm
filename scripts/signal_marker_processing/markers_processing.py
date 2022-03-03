@@ -475,6 +475,36 @@ class base_marker_detector(metaclass = abc.ABCMeta) :
         
         return out_markers
 
+    def get_markers_from_start_stop(self, start_dates, stop_dates, start_values, stop_values) :
+        """
+        Summary :
+            Build the list of (gap) markers from the start and stop dates
+            
+        Arguments:
+            start_dates - array of start dates.
+            stop_dates - array of stop dates.
+            start_values - array of values corresponding to the start dates 
+            stop_values - array of values corresponding to the stop dates
+            
+        Returns:
+            List of markers.
+        """
+        out_markers = []
+        
+        if (len(start_dates) == 0) or (len(stop_dates) == 0) :
+            return out_markers
+            
+        for ii, start_date in enumerate(start_dates) :
+            main_date  = start_date + (stop_dates[ii] - start_date) / 2
+            marker = base_marker(start_date, stop_dates[ii], \
+                                 main_date, self.marker_type)
+                
+            marker.values[0] = start_values[ii]
+            marker.values[2] = stop_values[ii]
+            out_markers.append(marker)
+        
+        return out_markers
+
 class drop_detector(base_marker_detector) :
     """
     Summary:
@@ -838,6 +868,130 @@ class state_change_detector(base_marker_detector) :
         
         return out_dict
     
+class threshold_detector(base_marker_detector) :
+    """
+    Summary:
+        Detector used to identify time intervals when a signal is above (below)
+        a pre-defined threshold.
+    """
+    def __init__(self, start_date : datetime.datetime, stop_date : datetime.datetime, \
+                 signal_type : list, threshold : float, above : False ) :
+        
+        """
+        Summary:
+            Object constructor.
+            
+        Arguments:
+            start_date - start date for the processing of the time series.
+            stop_date - last date to consider for the processing of the time series.
+            signal_type - list of strings indicating the time series to process
+            threshold - threshold used for the signal comparison
+            above - tells if the signal should be above or below the threshold.
+            
+        Returns:
+            Nothing.
+        """
+        super().__init__(start_date, stop_date, signal_type)
+        
+        self.threshold = threshold
+                
+        self.above = above
+        
+        self.marker_type = "threshold"
+        
+    def get_markers(self, ts : dict) -> dict :
+        """
+        Summary :
+            Process the dictionary with the different time series and return
+            a sequence of markers.
+            
+        Arguments:
+            ts - dictionary of time series.
+            
+        Returns:
+            Dictionary with sequences of markers. The keys of the dictionary
+            are the different signals processed.
+        """
+        # output dictionary
+        out_dict = {}
+        
+        # loop on the different signals to process
+        for signal in self.signal_type : 
+            
+            if signal not in ts :
+                continue
+            
+            # Extract the data frame
+            full_df = ts[signal]
+            
+            # filter it with respect to the start and stop date
+            if 'Date' in full_df :
+                df = full_df[(full_df['Date'].values >= self.start_date) & \
+                             (full_df['Date'].values <= self.stop_date)]
+                dates = df['Date']
+                
+            else :
+                df = full_df[(full_df.index >= self.start_date) & \
+                             (full_df.index <= self.stop_date)]
+                dates = df.index    
+    
+            # Process all components
+            components = list(df.columns)
+            
+            for component in components :
+                # find dates when threshold crossing occurs
+                values = df[components].values
+                
+                if self.above :
+                    th_values = (values > self.threshold)
+                else :
+                    th_values = (values < self.threshold)
+                
+                start_dates = []
+                stop_dates = []
+                start_values = []
+                stop_values = []
+                
+                start_date = self.start_date
+                stop_date = None
+                start_val = 0
+                stop_val =0
+                
+                previous_valid = False
+                
+                for ii, val in enumerate(th_values) :
+                    if val == True :
+                        if previous_valid == False :
+                            previous_valid = True
+                    else :
+                        if previous_valid == False :
+                            # advance the start date
+                            start_date = dates[ii]
+                            start_val = values[ii]
+                        else :
+                            stop_date = dates[max([ii - 1, 0])]
+                            stop_val = values[max([ii - 1, 0])]
+                            previous_valid = False
+                            
+                            # Add values for the creation of the marker
+                            start_dates.append(start_date)
+                            stop_dates.append(stop_date)
+                            start_values.append(start_val)
+                            stop_values.append(stop_val)
+                            
+                # create the markers
+                markers = self.get_markers_from_start_stop(start_dates, stop_dates, start_values, stop_values)
+                
+                if len(components) > 1 :
+                    marker_name = signal + '_' + components
+                else :
+                    marker_name = signal
+                
+                out_dict[marker_name] = markers
+            # end loop on components
+        # end loop on signal
+        return out_dict
+                
 class gap_detector(base_marker_detector) :
     """
     Summary:
@@ -913,38 +1067,13 @@ class gap_detector(base_marker_detector) :
             stop_values = df.values[1:][ind]
             
             # get the gap markers
-            markers = self.get_markers_from_dates(start_dates, stop_dates, start_values, stop_values)
+            markers = self.get_markers_from_start_stop(start_dates, stop_dates, start_values, stop_values)
             
             out_dict[signal] = markers
             
         return out_dict
     
-    def get_markers_from_dates(self, start_dates, stop_dates, start_values, stop_values) :
-        """
-        Summary :
-            Build the list of (gap) markers from the start and stop dates
-            
-        Arguments:
-            start_dates - array of start dates.
-            stop_dates - array of stop dates.
-            start_values - array of values corresponding to the start dates 
-            stop_values - array of values corresponding to the stop dates
-            
-        Returns:
-            List of markers.
-        """
-        out_markers = []
-        mid_dates = start_dates + (stop_dates - start_dates) / 2
-        
-        
-        for ii in range(len(start_dates)) :
-            marker = base_marker(start_dates[ii], stop_dates[ii], \
-                                 mid_dates[ii], "gap")
-            marker.values[0] = start_values[ii]
-            marker.values[2] = stop_values[ii]
-            out_markers.append(marker)
-        
-        return out_markers
+
 
 class marker_detector_factory :
     """
@@ -1090,6 +1219,16 @@ class marker_detector_factory :
             
             detector = state_change_detector(start_date, stop_date, signals, \
                                              max_number, to_state, min_duration )            
+        elif mdtype == "threshold" :
+            above = False
+            if "above" in option :
+                above = option["above"]
+                
+            threshold = 0
+            if "threshold" in option :
+                threshold = option["threshold"]
+                
+            detector = threshold_detector(start_date, stop_date, signals, threshold, above)
         else :
             raise Exception("marker_detector_factory.get_detector() - type not supported")
         
