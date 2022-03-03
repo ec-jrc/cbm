@@ -9,6 +9,7 @@
 
 import abc
 import pandas as pd
+import datetime
 import numpy as np
 from scipy import signal as sig
 
@@ -590,6 +591,160 @@ class interpolator(base_pre_processor) :
             out_key = "lininterp"
             
         return { out_key : out_ts}
+
+class differentiator(base_pre_processor) :
+    """
+    Summary :
+        Performs differentiation using first order differences.
+    """
+    
+    def __init__(self, signals, components, outnames, time_norm = False) :
+        """
+        Summary :
+            Object constructor.
+        
+        Arguments:
+            signals - list of signals identifying the data frame to be used as
+                      input
+            components - names of the attributes in the data frame to be used for
+                         the processing
+            time_norm - tell if differences should be time normalized.             
+        
+        Returns:
+            Nothing.
+        """
+        super().__init__(signals, components, outnames)
+
+        # Tell if differences should be time normalized
+        self.time_norm = time_norm 
+
+    def process(self, ts : dict ) -> dict :        
+        """
+        Summary :
+            Process the data provided as input. Perform time differentiation.
+        
+        Arguments :
+            ts - time series stored in a dictionary.
+        
+        Returns :
+            processed time series as a dictionary
+        """
+        
+        if len(self.signals) == 0 :
+            self.signals = list(ts.keys())
+
+        # create the output dictionary
+        out_dict = {}
+        
+        empty_components = False
+        if len(self.components) == 0 :
+            empty_components = True
+
+        ii = 0
+        for signal in self.signals :
+            df = ts[signal].copy()
+            
+            if self.time_norm == True :
+                if 'Date' in df :
+                    dates = df['Date'].values
+                else :
+                    dates = df.index
+                
+                delta_time = (dates[1:] - dates[:-1]).datetime.days
+            
+            if empty_components :
+                components = df.keys()
+            else : 
+                components = self.components
+            
+            for component in components :
+                time_diff = np.diff(df[component].values)
+                
+                if self.time_norm == True : 
+                    time_diff = time_diff / delta_time
+                                      
+                df[component] = np.insert(time_diff, 0, 0)
+            
+            if len(self.outnames) > ii :
+                out_dict[self.outnames[ii]] = df
+            else :
+                out_dict[signal] = df
+            
+            ii += 1
+            
+        return out_dict
+
+class lti_processor(base_pre_processor) :
+    """
+    Summary :
+        Performs standard filtering using a Linear Time Invariant (LTI) 
+        system.
+    """
+    
+    def __init__(self, signals, components, outnames, B, A) :
+        """
+        Summary :
+            Object constructor.
+        
+        Arguments:
+            signals - list of signals identifying the data frame to be used as
+                      input
+            components - names of the attributes in the data frame to be used for
+                         the processing
+            B - coefficients of the moving average (MA) part of the filter
+            A - coefficients of the autoregressive (AR) part of the filter
+        
+        Returns:
+            Nothing.
+        """
+        super().__init__(signals, components, outnames)
+
+        # Filter parameters
+        self.B = B 
+        self.A = A
+
+    def process(self, ts : dict ) -> dict :        
+        """
+        Summary :
+            Process the data provided as input. Perform lti filtering.
+        
+        Arguments :
+            ts - time series stored in a dictionary.
+        
+        Returns :
+            processed time series as a dictionary
+        """
+        
+        if len(self.signals) == 0 :
+            self.signals = list(ts.keys())
+
+        # create the output dictionary
+        out_dict = {}
+        
+        empty_components = False
+        if len(self.components) == 0 :
+            empty_components = True
+
+        ii = 0
+        for signal in self.signals :
+            df = ts[signal].copy()
+            
+            if empty_components :
+                components = df.keys()
+            else : 
+                components = self.components
+            
+            for component in components :
+                df[component] = sig.lfilter(self.B, self.A, df[component].values)
+            
+            if len(self.outnames) > ii :
+                out_dict[self.outnames[ii]] = df
+            else :
+                out_dict[signal] = df
+            
+            ii += 1
+            
+        return out_dict
 
 class butterworth_smoother(base_pre_processor) :
     """
@@ -1185,6 +1340,25 @@ class processor_factory :
                       
             processor = interpolator(signals, components,  outnames, Ts, method)
                 
+        elif pp_type == "lti_system" :
+            B = [1]
+            if "B" in pro_opt :
+                B = pro_opt["B"]
+            
+            A = [1]
+            if "A" in pro_opt :
+                A = pro_opt["A"]
+            
+            processor = lti_processor(signals, components, outnames, B, A)
+        
+        elif pp_type == "differentiator" :
+            if "time_norm" in pro_opt :
+                time_norm = pro_opt["time_norm"]
+            else :
+                time_norm = False
+            
+            processor = differentiator(signals, components, outnames, time_norm)
+            
         elif pp_type == "butter_smoother" :
             fc = 0.05
             if "fc" in pro_opt :

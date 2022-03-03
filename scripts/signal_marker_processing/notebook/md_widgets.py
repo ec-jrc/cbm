@@ -9,7 +9,7 @@
 
 from ipywidgets import (DatePicker, HBox, BoundedIntText, HTML, VBox, Tab,
                         Layout, SelectMultiple, Text, Checkbox, BoundedFloatText,
-                        Button, Dropdown)
+                        Button, Dropdown, FloatText)
 from ipyfilechooser import FileChooser
 
 import datetime
@@ -227,6 +227,43 @@ class base_marker_detector_widget(VBox) :
                          self.wsm_signals, self.whb_dates,
                          HTML(value = "<B>Options :</B>"),
                          *self.options]
+
+class threshold_detector_widget(base_marker_detector_widget) :
+    """
+    Summary:
+        Class defining the widget for the threshold detector.        
+    """
+    
+    _type = "threshold"
+    
+    def __init__(self, signal_components : dict, parent = None) :
+        """
+        Summary:
+            Object constructor.
+        
+        Arguments :
+            signal_components - dictionary with the signal/components names
+        """    
+        super().__init__(signal_components, threshold_detector_widget._type, parent)
+        
+        # Element for setting the threshold
+        wft_theshold = FloatText(
+            value = 0,
+            description='threshold:',
+            disabled=False
+        )
+        
+        # Element for the above/below condition
+        wcb_above = Checkbox(
+             value=False,
+             description = "above:",
+             disabled = False
+         )
+        
+        self.add_options([wft_theshold, wcb_above])
+        
+
+
         
 class gap_detector_widget(base_marker_detector_widget) :
     """
@@ -576,7 +613,7 @@ class marker_detector_tab(VBox) :
             
             # Add an empty key for the marker-aggregator (to be dealt with
             # in a second phase)
-            if config.get_value("marker-aggregator") is None :
+            if config.get_value(["marker-aggregator"]) is None :
                 config.set_value("marker-aggregator", [{}])
             
                 # Add a default marker-sink (to be dealt with

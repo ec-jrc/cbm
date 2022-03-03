@@ -855,7 +855,155 @@ class interpolator_widget(base_processor_widget) :
         
        return out_dict
        
-       
+class differentiator_widget(base_processor_widget) :
+    """
+    Summary :
+        Widget for the differentiator widget.
+    """
+    def __init__(self, signal_components : dict ) :
+        """
+        Summary :
+            Constructor for the differentiator widget.
+        """ 
+        super().__init__(signal_components, "differentiator")
+        
+        wcb_normalize = Checkbox(
+             value=False,
+             description = "norm. by time:",
+             disabled = False
+         )
+         
+        self.add_options([wcb_normalize])
+           
+class lti_widget(base_processor_widget) :
+    """
+    Summary :
+        Widget for the lti_system widget.
+    """
+    def __init__(self, signal_components : dict ) :
+        """
+        Summary :
+            Constructor for the lti_system widget.
+        """ 
+        super().__init__(signal_components, "lti_system")
+        
+        wt_A_val = Text(
+            description="A coeff:",
+            value = "1",
+			disabled = False)
+        
+        wt_B_val = Text(
+            description="B coeff:",
+            value = "1",
+			disabled = False)
+            
+        self.add_options([wt_A_val, wt_B_val])
+    
+        
+    def dump(self) -> dict :
+        """
+        Summary:
+            Build and return a dictiory descibing the preprocessor and its
+            options.
+        
+        Arguments:
+            None.
+
+        Returns:
+            Dictionary describing the preprocessor.            
+        """
+        out_dict = {"type" : self.type}
+        
+        # Add the signal
+        signals = list(self.children[1].children[0].value)
+        
+        # Check if there is at list one signal
+        if (len(signals) == 1) and (signals[0] != "") :
+            out_dict["signals"] = signals
+            
+        # Add the components
+        components = list(self.children[1].children[1].ordered_value)
+        
+        # Check if there is at list one component
+        if (len(components) >= 1) and (components[0] != "") :
+            out_dict["components"] = components
+            
+        # Now add the options, if present
+        for wd in self.options :
+            key = wd.description
+            
+            # Eventually remove the last colon
+            if key == "A coeff:" :
+                
+                # value should be string
+                value = wd.value.split(",")
+        
+                # strip white spaces
+                value = [float(name.strip()) for name in value]
+                            
+                out_dict["A"] = value
+            
+            elif key == "B coeff:" :
+                
+                # value should be string
+                value = wd.value.split(",")
+        
+                # strip white spaces
+                value = [float(name.strip()) for name in value]
+                            
+                out_dict["B"] = value
+        
+        return out_dict
+    
+    def initialize(self, options) :
+        """
+        Summary:
+            Initialize the processor using a dictionary, which needs to 
+            have the same format has that produced by the dump function.
+        
+        Arguments:
+            options - dictionary with the options to initialize the processor
+
+        Returns:
+            Nothing.  
+        """        
+        # Add the signal
+        if "signals" in options :
+            self.wsm_signals.value = options["signals"]
+        else :
+            self.wsm_signals.value = tuple([""])
+            
+        # Add the components
+        if "components" in options :
+            self.wsm_components.value = list(set(options["components"]) & \
+                                             set(self.wsm_components.options))
+        else :
+            self.wsm_components.value = tuple([""])
+                    
+        # Now add specific options, if present
+        for wd in self.options :
+            key = wd.description
+            
+            # Eventually remove the last colon
+            if key == "A coeff:" :
+                key_name = "A"
+            elif key == "B coeff:" :
+                key_name = "B"
+            else :
+                key_name = key
+                
+            if key_name in options :
+                if isinstance(wd, Text) and isinstance(options[key_name], list) :
+                    wd.value = ", ".join([str(a) for a in options[key_name]]) 
+                else :
+                    wd.value = options[key_name]
+                    
+        # Set the children of the widget
+        self.children = [HTML(value = f"<B>Processor type: {self.type}</B>"),
+                         HBox([self.wsm_signals, self.wsm_components]),
+                         HTML(value = "<B>Options :</B>"),
+                         *self.options]
+    
 class butterworth_widget(base_processor_widget) :
     """
     Summary:
@@ -987,7 +1135,8 @@ class processing_line(VBox) :
     """
     
     # List of processors currently supported
-    pro_supported = ["all_pass", "band_filter", "butter_smoother", "filter", "lut_strect", \
+    pro_supported = ["all_pass", "band_filter", "butter_smoother", "differentiator",\
+                     "filter", "lti_system", "lut_strect", \
                      "index_adder", "interp", "math_function", "merge", "norm",\
                      "split"]
     
@@ -1079,6 +1228,12 @@ class processing_line(VBox) :
             
             elif self.wdd_types.value == "lut_strect" :
                 new_w = lut_strector_widget(input_signals)
+                
+            elif self.wdd_types.value == "differentiator" :
+                new_w = differentiator_widget(input_signals)
+              
+            elif self.wdd_types.value == "lti_system" :
+                new_w = lti_widget(input_signals)
                 
             elif self.wdd_types.value == "band_filter" :
                 new_w = red_nir_swir_processor_widget(input_signals)
@@ -1198,6 +1353,12 @@ class processing_line(VBox) :
                 
             elif prepro["type"] == "band_filter" :
                 new_w = red_nir_swir_processor_widget(input_signals)
+            
+            elif prepro["type"] == "differentiator" :
+                new_w = differentiator_widget(input_signals)
+              
+            elif prepro["type"] == "lti_system" :
+                new_w = lti_widget(input_signals)
                 
             if new_w is not None :
                 new_w.initialize(prepro)
