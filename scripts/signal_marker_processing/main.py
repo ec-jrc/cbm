@@ -62,6 +62,7 @@ else:
 
 optionFile = open(optionFilePath)
 options = json.load(optionFile)
+optionFile.close()
 
 ##################### Get the parcel files ####################################
 # Create the parcel data factory and the parcel data
