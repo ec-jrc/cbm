@@ -152,12 +152,10 @@ def grid(aoi, year, pid, start_date=None, end_date=None, imgtype=['B04', 'B08'],
         return plt.show()
 
     def single_band(band):
-        df = raster_utils.create_df(ci_path, pid, bands).sort_values(by='date')
-        print(df)
+        df = raster_utils.create_df(ci_path, pid, bands)
         rows = round((df.shape[0] / columns) + 0.5)
         fig = plt.figure(figsize=(16, 4 * rows))
         for i, row in df.iterrows():
-            print(row)
             fig.add_subplot(rows, columns, i + 1)
             img_gtif = normpath(
                 join(ci_path, f"{row['imgs']}.{bands[0]}.tif"))

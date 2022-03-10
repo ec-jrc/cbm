@@ -357,3 +357,67 @@ def s1(aoi, year, pid, tstype='bs', ptype=None, debug=False):
     ax.legend(frameon=False)  # loc=2)
 
     return plt.show()
+
+
+def weather(aoi, year, pid, ptype=None, debug=False):
+    path = normpath(join(config.get_value(['paths', 'temp']),
+                         aoi, str(year), str(pid)))
+
+    parcel_file = normpath(join(path, 'info.json'))
+    if not isfile(parcel_file):
+        parcel_info.by_pid(aoi, str(year), str(pid), ptype, True)
+    with open(parcel_file, 'r') as f:
+        parcel = json.loads(f.read())
+
+    crop_name = parcel['cropname'][0]
+    area = parcel['area'][0]
+
+    file_ts = normpath(join(path, 'time_series_weather.csv'))
+    if not isfile(file_ts):
+        time_series.by_pid(aoi, str(year), str(pid), ptype, debug)
+    df = pd.read_csv(file_ts, index_col=0)
+
+    df['date'] = pd.to_datetime(df['meteo_date'])
+    start_date = df.iloc[0]['date'].date()
+    end_date = df.iloc[-1]['date'].date()
+    # print(f"From '{start_date}' to '{end_date}'.")
+
+    pd.set_option('max_colwidth', 10)
+    pd.set_option('display.max_columns', 20)
+
+    # Plot settings are confirm IJRS graphics instructions
+    plt.rcParams['axes.titlesize'] = 16
+    plt.rcParams['axes.labelsize'] = 14
+    plt.rcParams['xtick.labelsize'] = 12
+    plt.rcParams['ytick.labelsize'] = 12
+    plt.rcParams['legend.fontsize'] = 14
+
+    df.set_index(['date'], inplace=True)
+
+    datesFmt = mdates.DateFormatter('%-d %b %Y')
+
+    # Plot Band
+    fig = plt.figure(figsize=(16.0, 10.0))
+    axw = fig.add_subplot(1, 1, 1)
+    axp = axw.twinx()
+
+    axw.set_title(f"Parcel {pid} (crop: {crop_name}, area: {area:.2f} ha)")
+    axw.set_xlabel("Date")
+    axw.xaxis.set_major_formatter(datesFmt)
+    axw.set_ylabel(r'DN')
+
+    axw.plot(df.index, df['tmean'], linestyle=' ', marker='o',
+             markersize=3, color='red',
+             fillstyle='none', label='tmean', alpha=0.5)
+
+    axp.plot(df.index, df['prec'], linestyle=' ', marker='o',
+             markersize=3, color='blue',
+             fillstyle='none', label='prec', alpha=0.5)
+
+    axw.fill_between(df.index, df['tmin'], df['tmax'],
+                     color='b', alpha=0.05)
+
+    axw.set_xlim(start_date, end_date + timedelta(1))
+    axw.legend(frameon=False)
+
+    return plt.show()

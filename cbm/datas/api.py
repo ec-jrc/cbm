@@ -111,6 +111,19 @@ def parcel_ts(aoi, year, pid, tstype='s2', ptype=None, band='', debug=False):
     return response.content
 
 
+def parcel_wts(aoi, year, pid, ptype=None, debug=False):
+
+    api_url, api_user, api_pass = config.credentials('api')
+    requrl = """{}/query/weatherTimeSeries?aoi={}&year={}&pid={}"""
+    if ptype not in [None, '']:
+        requrl = f"{requrl}&ptype={ptype}"
+    response = requests.get(requrl.format(api_url, aoi, year, pid),
+                            auth=(api_user, api_pass))
+    if debug:
+        print(requrl.format(api_url, aoi, year, pid), response)
+    return response.content
+
+
 def cbl(lon, lat, start_date, end_date, bands=None, lut=None, chipsize=None):
     api_url, api_user, api_pass = config.credentials('api')
     requrl = """{}/query/chipsByLocation?lon={}&lat={}&start_date={}&end_date={}"""
