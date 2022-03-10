@@ -16,14 +16,6 @@ import pandas as pd
 from scripts import db
 
 
-# logging.basicConfig(filename='logs/db_queries.log', filemode='w',
-#                     format='%(name)s - %(levelname)s - %(message)s',
-#                     level=logging.ERROR)
-
-
-# Requests
-# Parcel information
-
 def getParcelByLocation(dataset, lon, lat, ptype='',
                         withGeometry=False, wgs84=False):
     conn = db.conn(dataset['db'])
@@ -46,16 +38,16 @@ def getParcelByLocation(dataset, lon, lat, ptype='',
 
         if withGeometry:
             if wgs84:
-                geometrySql = ", st_asgeojson(st_transform(wkb_geometry, 4326)) as geom"
+                geomSql = ", st_asgeojson(st_transform(wkb_geometry, 4326)) as geom"
             else:
-                geometrySql = ", st_asgeojson(wkb_geometry) as geom"
+                geomSql = ", st_asgeojson(wkb_geometry) as geom"
         else:
-            geometrySql = ""
+            geomSql = ""
 
         getTableDataSql = f"""
             SELECT {parcel_id}::text as pid, {cropname} as cropname,
                 {cropcode} as cropcode,
-                st_srid(wkb_geometry) as srid{geometrySql},
+                st_srid(wkb_geometry) as srid{geomSql},
                 st_area(st_transform(wkb_geometry, 3035))::integer as area,
                 st_X(st_transform(st_centroid(wkb_geometry), 4326)) as clon,
                 st_Y(st_transform(st_centroid(wkb_geometry), 4326)) as clat
@@ -93,7 +85,6 @@ def getParcelByID(dataset, pid, ptype='', withGeometry=False,
     conn = db.conn(dataset['db'])
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
-
     parcels_table = dataset['tables']['parcels']
 
     try:
@@ -104,16 +95,16 @@ def getParcelByID(dataset, pid, ptype='', withGeometry=False,
 
         if withGeometry:
             if wgs84:
-                geometrySql = ", st_asgeojson(st_transform(wkb_geometry, 4326)) as geom"
+                geomSql = ", st_asgeojson(st_transform(wkb_geometry, 4326)) as geom"
             else:
-                geometrySql = ", st_asgeojson(wkb_geometry) as geom"
+                geomSql = ", st_asgeojson(wkb_geometry) as geom"
         else:
-            geometrySql = ""
+            geomSql = ""
 
         getTableDataSql = f"""
             SELECT {parcel_id}::text as pid, {cropname} as cropname,
                 {cropcode}::text as cropcode,
-                st_srid(wkb_geometry) as srid{geometrySql},
+                st_srid(wkb_geometry) as srid{geomSql},
                 st_area(st_transform(wkb_geometry, 3035))::integer as area,
                 st_X(st_transform(st_centroid(wkb_geometry), 4326)) as clon,
                 st_Y(st_transform(st_centroid(wkb_geometry), 4326)) as clat
@@ -146,11 +137,9 @@ def getParcelsByPolygon(dataset, polygon, ptype='', withGeometry=False,
                         only_ids=True, wgs84=False):
 
     polygon = polygon.replace('_', ' ').replace('-', ',')
-
     conn = db.conn(dataset['db'])
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
-
     parcels_table = dataset['tables']['parcels']
 
     try:
@@ -168,19 +157,19 @@ def getParcelsByPolygon(dataset, polygon, ptype='', withGeometry=False,
 
         if withGeometry:
             if wgs84:
-                geometrySql = ", st_asgeojson(st_transform(wkb_geometry, 4326)) as geom"
+                geomSql = ", st_asgeojson(st_transform(wkb_geometry, 4326)) as geom"
             else:
-                geometrySql = ", st_asgeojson(wkb_geometry) as geom"
+                geomSql = ", st_asgeojson(wkb_geometry) as geom"
         else:
-            geometrySql = ""
+            geomSql = ""
 
         if only_ids:
-            selectSql = f"{parcel_id} as pid{geometrySql}"
+            selectSql = f"{parcel_id} as pid{geomSql}"
         else:
             selectSql = f"""
                 {parcel_id} as pid, {cropname} As cropname,
                 {cropcode} As cropcode,
-                st_srid(wkb_geometry) As srid{geometrySql},
+                st_srid(wkb_geometry) As srid{geomSql},
                 st_area(st_transform(wkb_geometry, 3035))::integer As area,
                 st_X(st_transform(st_centroid(wkb_geometry), 4326)) As clon,
                 st_Y(st_transform(st_centroid(wkb_geometry), 4326)) As clat"""
@@ -212,8 +201,6 @@ def getParcelsByPolygon(dataset, polygon, ptype='', withGeometry=False,
         return data.append('Ended with no data')
 
 
-# Parcel Time Series
-
 def getParcelTimeSeries(dataset, pid, ptype='',
                         tstype='s2', band=None, scl=True, ref=False):
     """Get the time series for the given parcel"""
@@ -226,6 +213,18 @@ def getParcelTimeSeries(dataset, pid, ptype='',
     dias_catalog = dataset['tables']['dias_catalog']
     parcels_table = dataset['tables']['parcels']
     parcel_id = dataset['pcolumns']['parcel_id']
+    if sigs_table != dataset['tables']['csl']:
+        scl = False
+
+    if tstype.lower() == 's2':
+        where_tstype = """And band IN ('B02', 'B03', 'B04', 'B05', 'B08',
+                            'B11', 'B2', 'B3', 'B4', 'B5', 'B8', 'SC') """
+    elif tstype.lower() == 'c6':
+        where_tstype = "And band IN ('VVc', 'VHc') "
+    elif tstype.lower() == 'bs':
+        where_tstype = "And band IN ('VVb', 'VHb') "
+    else:
+        where_tstype = ""
 
     from_hists = f", {dataset['tables']['scl']} h" if scl else ''
     select_scl = ', h.hist' if scl else ''
@@ -233,15 +232,6 @@ def getParcelTimeSeries(dataset, pid, ptype='',
 
     where_shid = 'And s.pid = h.pid And s.obsid = h.obsid' if scl else ''
     where_band = f"And s.band = '{band}' " if band else ''
-
-    if tstype.lower() == 's2':
-        where_tstype = "And band IN ('B02', 'B03', 'B04', 'B05', 'B08', 'B11', 'B2', 'B3', 'B4', 'B5', 'B8') "
-    elif tstype.lower() == 'c6':
-        where_tstype = "And band IN ('VVc', 'VHc') "
-    elif tstype.lower() == 'bs':
-        where_tstype = "And band IN ('VVb', 'VHb') "
-    else:
-        where_tstype = ""
 
     try:
         getTableDataSql = f"""
@@ -285,29 +275,49 @@ def getParcelWeatherTS(dataset, pid, ptype):
     conn = db.conn(dataset['db'])
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
-
     parcels_table = dataset['tables']['parcels']
-    env_table = dataset['tables']['env']
     parcel_id = dataset['pcolumns']['parcel_id']
+    try:
+        env_table = dataset['tables']['env']
+    except Exception:
+        env_table = None
 
     try:
-        getTableDataSql = f"""
-        SELECT
-            TO_CHAR(meteo_date, 'YYYY-MM-DD') meteo_date,
-            tmin,tmax,tmean,prec
-        FROM
-            {env_table} e,
-            {parcels_table}{ptype} p,
-            public.era5_data,
-            public.era5_grid
-        WHERE
-            p.{parcel_id} = '{pid}' AND
-            e.grid_id = era5_grid.grid_id AND
-            era5_grid.grid_id = era5_data.grid_id AND
-            e.pid = p.ogc_fid
-        ORDER BY
-            meteo_date;
-        """
+        if env_table:
+            getTableDataSql = f"""
+                SELECT
+                    TO_CHAR(meteo_date, 'YYYY-MM-DD') meteo_date,
+                    tmin, tmax, tmean, prec
+                FROM
+                    {env_table} e,
+                    {parcels_table}{ptype} p,
+                    public.era5_data,
+                    public.era5_grid
+                WHERE
+                    p.{parcel_id} = '{pid}' AND
+                    e.grid_id = era5_grid.grid_id AND
+                    era5_grid.grid_id = era5_data.grid_id AND
+                    e.pid = p.ogc_fid
+                ORDER BY
+                    meteo_date;
+                """
+        else:
+            getTableDataSql = f"""
+                SELECT
+                    TO_CHAR(meteo_date, 'YYYY-MM-DD') meteo_date,
+                    tmin, tmax, tmean, prec
+                FROM
+                    {parcels_table}{ptype} p,
+                    public.era5_grid,
+                    public.era5_data
+                WHERE
+                    p.{parcel_id} = '{pid}' AND
+                    era5_grid.grid_id = era5_data.grid_id AND
+                    ST_INTERSECTS(geom_cell,
+                        ST_TRANSFORM(ST_CENTROID(p.wkb_geometry), 4326))
+                ORDER BY
+                    meteo_date;
+                """
         #  Return a list of tuples
         # print(getTableDataSql)
         cur.execute(getTableDataSql)
@@ -333,7 +343,6 @@ def getParcelPeers(dataset, pid, distance, maxPeers, ptype=''):
     conn = db.conn(dataset['db'])
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data = []
-
     parcels_table = dataset['tables']['parcels']
 
     try:
@@ -524,7 +533,6 @@ def getTableCentroid(dataset, ptype=''):
         FROM {dataset['tables']['parcels']}{ptype}
         LIMIT 100) AS t(geom);
     """
-
     # Read result set into a pandas dataframe
     df_tcent = pd.read_sql_query(getTablePolygonSql, conn)
 
@@ -573,7 +581,6 @@ def get_datasets():
 
 def pids(dataset, limit=1, ptype='', random=False):
     conn = db.conn(dataset['db'])
-
     if random:
         randomSql = "TABLESAMPLE SYSTEM(0.1)"
     else:
@@ -588,3 +595,42 @@ def pids(dataset, limit=1, ptype='', random=False):
     df = pd.read_sql_query(getSql, conn)
 
     return df
+
+
+def markers(dataset, aoi, year, pid, ptype=''):
+
+    conn = db.conn(dataset['db'])
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    data = []
+
+    try:
+        logging.debug("start queries")
+        parcel_id = dataset['pcolumns']['parcel_id']
+
+        getTableDataSql = f"""
+            SELECT foi_id, marker, marker_type, date_start::text,
+                date_main::text, date_end::text, duration_days,
+                value_1, value_2, value_3, pid, practice
+            FROM {aoi}.markers_2020
+            WHERE {parcel_id} = '{pid}';
+        """
+
+        #  Return a list of tuples
+        # print(getTableDataSql)
+        cur.execute(getTableDataSql)
+        rows = cur.fetchall()
+
+        data.append(tuple(etup.name for etup in cur.description))
+        if len(rows) > 0:
+            for r in rows:
+                data.append(tuple(r))
+        else:
+            logging.debug(
+                f"No parcel found in the selected table with id ({pid}).")
+        return data
+
+    except Exception as err:
+        print(err)
+        logging.debug("Did not find data, please select the right database",
+                      "and table: ", err)
+        return data.append('Ended with no data')
