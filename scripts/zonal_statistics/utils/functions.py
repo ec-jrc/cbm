@@ -51,7 +51,7 @@ def geotFromOffsets(row_offset, col_offset, geot):
 
 def setFeatureStats(fid, **kwargs):
     """this functions populates a dictionary with the feature statistics"""
-    feature_stats = {'pid':fid}
+    feature_stats = {'pid': fid}
 
     for key, value in kwargs.items():
         feature_stats[key] = value
@@ -69,6 +69,8 @@ def getCircularMean(angles):
 
 def dsmListParser(x_range, y_range):
     dsmList = []
+    path = '/eodata/auxdata/CopDEM/COP-DEM_GLO-30-DTED/DEM1_SAR_DTE_30_20{}_20{}_ADS_000000_{}.DEM/Copernicus_DSM_10_{}_00_{}_00'
+
     with open('utils/Cop_DSM_content.txt', 'r') as file:
         lines = file.readlines()
         for x in x_range:
@@ -76,8 +78,9 @@ def dsmListParser(x_range, y_range):
                 substring = f"Copernicus_DSM_10_N{y}_00_E0{x}_00"
                 dsm_file = f"/DEM/Copernicus_DSM_10_N{y}_00_E0{x}_00_DEM.dt2"
                 for line in lines:
-                    if substring in line:
-                        CopernicusString = line.strip() + dsm_file
+                    filepath = path.format(*line.strip().split('-'))
+                    if substring in filepath:
+                        CopernicusString = filepath + dsm_file
                         dsmList.append(CopernicusString)
     return dsmList
 
