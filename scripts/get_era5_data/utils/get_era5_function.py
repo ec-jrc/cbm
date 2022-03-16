@@ -104,7 +104,6 @@ def get_era5(dataset_name='reanalysis-era5-single-levels',
 
     import cdsapi
     import xarray as xr
-    from urllib.request import urlopen
 
     # start the cdsapi client
     c = cdsapi.Client()

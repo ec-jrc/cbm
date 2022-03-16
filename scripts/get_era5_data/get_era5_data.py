@@ -10,12 +10,9 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 # COLLECTING DATA FROM POSTGRESQL
-
-db = connect('outreach')
+db = connect('postgres')
 cur = db.cursor()
-
-query_result, test_data = q.get_data_query(cur)
-
+query_result = q.get_data_query(cur)
 cur.close()
 db.close()
 
@@ -57,19 +54,23 @@ for aoi in aois:
             print(f"Downloading {filename} - {aoi['area']}")
 
             get_era5(
-                dataset_name='reanalysis-era5-land',
+                dataset_name='reanalysis-era5-single-levels',
                 var=['2m_temperature', 'total_precipitation'],
-                year=[year],
-                month=[months[month]],
+                year=year,
+                month=month,
                 grid=[0.25, 0.25],
                 area=aoi['area'],
                 download_file=f"download/{filename}.nc"
             )
 
-            # READ DATA
+            # READ DATA WITH XARRAY AND REMOVE EXPVER DIMENSION IF PRESENT
+            # some cds data comes with an expver values, if they're from different sources, for more info see:
+            # https://confluence.ecmwf.int/display/CUSF/ERA5+CDS+requests+which+return+a+mixture+of+ERA5+and+ERA5T+data
+            # expver==5 is the one we need (expver==1 is Null)
             print(f"Reading and resampling data for {filename}")
             ds = xr.open_dataset(f"{download_dir}{filename}.nc")
-            data = nc.Dataset(f"{download_dir}{filename}.nc", "r")
+            if 'expver' in ds.dims:
+                ds = ds.drop_sel(expver=[1])
 
             # RESAMPLING TO DAILY DATA AND CONVERT UNITS (from K to °C and from m to mm)
             t2m = ds['t2m']
@@ -129,7 +130,7 @@ for aoi in aois:
         df['tmean'] = tmean
         df['prec'] = rain
 
-        # SAVING DF TO .CSV FILE
+        # # SAVING DF TO .CSV FILE
         # ts_dir = 'Time_Series/'
         # if not os.path.exists(ts_dir):
         #     os.makedirs(ts_dir)
@@ -138,44 +139,34 @@ for aoi in aois:
         # print('Saving complete')
 
         # GATHER ERA5_GRID DATA TO JOIN
-        db = connect('outreach')
+        db = connect('postgres')
         cur = db.cursor()
-
         grid_era5 = q.era5_grid_query(cur, aoi)
-
         cur.close()
         db.close()
 
         df2 = pd.merge(grid_era5, df, on=['longs', 'lats']).drop('longs', axis=1).drop('lats', axis=1)
 
-        # IMPORTING DF TO POSTGRESQL
+        # SAVING DF TO POSTGRESQL
         print("Saving to POSTGRESQL")
 
         tpls = [tuple(x) for x in df2.to_numpy()]
         cols = ','.join(list(df2.columns))
         conn = None
 
-        db = connect('outreach')
+        db = connect('postgres')
         db.autocommit = True
-        sql = "INSERT INTO %s(%s) VALUES %%s" % ('public.era5_data', cols)
-        sql = sql + "ON CONFLICT ON CONSTRAINT era5_data_pkey " \
-                    "DO UPDATE SET tmin = excluded.tmin," \
-                    "tmax=excluded.tmax," \
-                    "tmean=excluded.tmean," \
-                    "prec=excluded.prec;"
+        sql = """INSERT INTO %s(%s) VALUES %%s 
+                ON CONFLICT ON CONSTRAINT era5_data_pkey 
+                DO UPDATE SET 
+                tmin = excluded.tmin,
+                tmax = excluded.tmax,
+                tmean = excluded.tmean,
+                prec = excluded.prec;""" % ('public.era5_data', cols)
         cur = db.cursor()
         psycopg2.extras.execute_values(cur, sql, tpls)
         cur.close()
-        conn.close()
+        db.close()
         print("Saving complete")
 
-# CLEANING DOWNLOAD AND TEMP FOLDER
-# for f in os.listdir(download_dir):
-#     if not f.endswith(".nc"):
-#         continue
-#     os.remove(os.path.join(download_dir, f))
-# os.remove(download_dir)
-# os.remove('temp/daily.nc')
-# os.remove('temp')
-
-print("\n === PROCESS COMPLETE === \n")
+print("====== PROCESS COMPLETE ======")
