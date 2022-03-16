@@ -1,7 +1,7 @@
 # Required software
 
-## Docker (Ubuntu 18.04)
-Note these instructions are for Ubuntu 18.04 and may not work for other platforms.
+## Docker (Ubuntu 20.04)
+Note these instructions are for Ubuntu 20.04 and may not work for other platforms.
 Installation instructions for other platforms can be found at [docs.docker.com](https://docs.docker.com/engine/install).
 
 The open virtualization software Docker was used to deploy all the applications
@@ -10,27 +10,25 @@ products that use OS-level virtualization to deliver software in packages called
 containers.
 To run the extraction routines it is recommended to install the latest version
 of docker with the below steps:
+
 ```sh
 sudo snap remove docker
 rm -R /var/lib/docker
 sudo apt-get remove docker docker-engine docker.io
 sudo apt-get update
-sudo apt-get install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo apt-key fingerprint 0EBFCD88
-sudo add-apt-repository    "deb [arch=amd64] https://download.docker.com/linux/ubuntu
-     $(lsb_release -cs) \
-     stable"
+sudo apt-get install ca-certificates curl gnupg lsb-release
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 sudo apt-get update
 sudo apt-get install docker-ce docker-ce-cli containerd.io
-sudo groupadd docker
+```
+To add the user to the docker group (the user will be able to run docker commands without sudo). Restart may be required.
+```sh
 sudo usermod -aG docker $USER
 ```
-exit the VM and re-connect, now run
-```sh
-docker run hello-world
-sudo systemctl enable docker
-```
+
 
 ## PostGIS
 
@@ -253,4 +251,3 @@ Copy the token from the command line and add it to the web interface.
 ### Build Jupyter image from source
 
 To build cbm_jupyter docker image from source see the [Jupyter for cbm README.md file.](https://github.com/ec-jrc/cbm/tree/main/docker/cbm_jupyter#readme)
-
