@@ -26,16 +26,24 @@ for row in query_result:
     }
     aois.append(aoi)
 
+print(aoi['end_date'])
 
 # CREATE DOWNLOAD DIRECTORY
 download_dir = "download/"
 if not os.path.exists(download_dir):
     os.makedirs(download_dir)
 
+
+def last_day_of_month(day):
+    """this function calculates the last day of a month in a given datetime format"""
+    next_month = day.replace(day=28) + timedelta(days=4)
+    return next_month - timedelta(days=next_month.day)
+
+
 # DOWNLOADING DATA FROM CDS
 for aoi in aois:
     print("=========================================================")
-    date_range = pd.date_range(start=aoi['start_date'], end=aoi['end_date'], freq='M')
+    date_range = pd.date_range(start=aoi['start_date'], end=last_day_of_month(aoi['end_date']), freq='M')
     dates = {str(d): [('' if m.month >= 10 else '0') + str(m.month) for m in date_range if m.year == d]
              for d in date_range.year}
 
@@ -57,7 +65,7 @@ for aoi in aois:
                 dataset_name='reanalysis-era5-single-levels',
                 var=['2m_temperature', 'total_precipitation'],
                 year=year,
-                month=month,
+                month=months[month],
                 grid=[0.25, 0.25],
                 area=aoi['area'],
                 download_file=f"download/{filename}.nc"
