@@ -128,12 +128,12 @@ aspect_array = aspect.read(1)
 affine = elev.transform
 
 # READING PARCELS FROM POSTGRES WITH GEOPANDAS
-db_url = "postgresql://lbstuser:0Nb#18-Feb]@185.52.195.114:11039/postgres"
+db_url = f"postgresql://{config.user}:{config.password}@{config.host}:{config.port}/{config.dbname}"
 sql = """SELECT ogc_fid, wkb_geometry 
             FROM public.dk2021 
             INNER JOIN public.env 
             ON ogc_fid = pid 
-            WHERE aspectcount = 0"""
+            WHERE elevmean IS null"""
 
 engine = create_engine(db_url)
 conn = engine.connect().execution_options(stream_results=True)
