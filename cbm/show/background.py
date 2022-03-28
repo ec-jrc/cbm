@@ -53,6 +53,8 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['google'],
     """
     if type(tms) is str:
         tms = [tms]
+    if len(tms) < columns:
+        columns = len(tms)
 
     try:
         parcel = parcel_info.by_location(aoi, year, lon, lat, ptype,
@@ -71,9 +73,6 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['google'],
         parcel_id = False
         if debug:
             print("No parcel information found.", err)
-
-    if len(tms) < columns:
-        columns = len(tms)
 
     bg_path = normpath(join(workdir, 'backgrounds'))
 
@@ -156,17 +155,20 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['google'],
         columns, the number of columns of the grid
         debug, print or not procedure information (Boolean).
     """
+    workdir = normpath(join(config.get_value(['paths', 'temp']),
+                            aoi, str(year), str(pid)))
+    file_info = normpath(join(workdir, 'info.json'))
+    if not isfile(file_info):
+        if not parcel_info.by_pid(aoi, str(year), str(pid), ptype, True):
+            return "No parcel found, please check the parcel ID"
 
     if type(tms) is str:
         tms = [tms]
     if len(tms) < columns:
         columns = len(tms)
 
-    workdir = normpath(join(config.get_value(['paths', 'temp']),
-                            aoi, str(year), str(pid)))
     bg_path = normpath(join(workdir, 'backgrounds'))
-
-    same_args = check_args(bg_path, chipsize, extend)
+    same_args = check_args(bg_path, chipsize, extend, debug)
 
     if debug:
         print('path: ', bg_path)
@@ -179,7 +181,7 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['google'],
             get_bg.by_pid(aoi, year, pid, chipsize,
                           extend, t, ptype, True, debug)
 
-    with open(normpath(join(workdir, 'info.json')), 'r') as f:
+    with open(file_info, 'r') as f:
         parcel = json.load(f)
 
     with rasterio.open(normpath(join(bg_path, f'{tms[0].lower()}.tif'))) as img:

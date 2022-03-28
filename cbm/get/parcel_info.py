@@ -29,18 +29,20 @@ def by_location(aoi, year, lon, lat, ptype=None, geom=False,
     get_requests = data_source()
     parcel = json.loads(get_requests.parcel_by_loc(aoi, year, lon, lat, ptype,
                                                    geom, wgs84, debug))
-    if type(parcel['pid']) is list:
-        pid = parcel['pid'][0]
-    else:
-        pid = parcel['pid']
+    if validate_parcel(parcel, debug):
+        if type(parcel['pid']) is list:
+            pid = parcel['pid'][0]
+        else:
+            pid = parcel['pid']
 
-    workdir = normpath(join(config.get_value(['paths', 'temp']),
-                            aoi, str(year), str(pid)))
-    json_file = normpath(join(workdir, 'info.json'))
-    os.makedirs(workdir, exist_ok=True)
-    with open(json_file, "w") as f:
-        json.dump(parcel, f)
-    return parcel
+        json_file = normpath(join(config.get_value(['paths', 'temp']),
+                                  aoi, str(year), str(pid), 'info.json'))
+        os.makedirs(dirname(json_file), exist_ok=True)
+        with open(json_file, "w") as f:
+            json.dump(parcel, f)
+        return parcel
+    else:
+        return None
 
 
 def by_pid(aoi, year, pid, ptype=None, geom=False,
@@ -57,14 +59,25 @@ def by_pid(aoi, year, pid, ptype=None, geom=False,
         pid, the parcel id (int).
     """
     get_requests = data_source()
-    workdir = config.get_value(['paths', 'temp'])
-    file_pinf = normpath(join(workdir, aoi, str(year), str(pid), 'info.json'))
     parcel = json.loads(get_requests.parcel_by_id(aoi, year, pid, ptype,
                                                   geom, wgs84, debug))
-    os.makedirs(dirname(file_pinf), exist_ok=True)
-    with open(file_pinf, "w") as f:
-        json.dump(parcel, f)
-    return parcel
+    if validate_parcel(parcel, debug):
+        json_file = normpath(join(config.get_value(['paths', 'temp']),
+                                  aoi, str(year), str(pid), 'info.json'))
+        os.makedirs(dirname(json_file), exist_ok=True)
+        with open(json_file, "w") as f:
+            json.dump(parcel, f)
+        return parcel
+    else:
+        return None
+
+
+def validate_parcel(parcel, debug=False):
+    if type(parcel) is dict:
+        if parcel != {}:
+            if parcel['pid'] != []:
+                return parcel
+    return None
 
 
 def by_polygon(aoi, year, polygon, ptype='', geom=False,

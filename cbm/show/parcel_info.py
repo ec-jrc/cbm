@@ -56,7 +56,9 @@ def by_pid(aoi, year, pid, ptype=None, tms='osm', debug=False):
 
     file_info = normpath(join(workdir, 'info.json'))
     if not isfile(file_info):
-        parcel_info.by_pid(aoi, str(year), str(pid), ptype, True)
+        if not parcel_info.by_pid(aoi, str(year), str(pid), ptype,
+                                  True, debug=debug):
+            return "No parcel found, please check the parcel ID"
     with open(normpath(join(workdir, 'info.json')), 'r') as f:
         parcel = json.load(f)
 
