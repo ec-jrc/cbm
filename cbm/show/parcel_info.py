@@ -49,15 +49,10 @@ def by_pid(aoi, year, pid, ptype=None, tms='osm', debug=False):
                             aoi, str(year), str(pid)))
     bg_path = normpath(join(workdir, 'backgrounds'))
 
-    if debug:
-        print('path: ', bg_path)
-        print('aoi, year, pid, debug')
-        print(aoi, year, pid, debug)
-
     file_info = normpath(join(workdir, 'info.json'))
     if not isfile(file_info):
         if not parcel_info.by_pid(aoi, str(year), str(pid), ptype,
-                                  True, debug=debug):
+                                  True, False, debug):
             return "No parcel found, please check the parcel ID"
     with open(normpath(join(workdir, 'info.json')), 'r') as f:
         parcel = json.load(f)

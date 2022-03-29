@@ -40,8 +40,12 @@ def by_location(aoi, year, lon, lat, ptype=None, geom=False,
         os.makedirs(dirname(json_file), exist_ok=True)
         with open(json_file, "w") as f:
             json.dump(parcel, f)
+        if debug:
+            print("Parcel information saved at: ", json_file)
         return parcel
     else:
+        if debug:
+            print("Err: No parcel information found")
         return None
 
 
@@ -67,8 +71,12 @@ def by_pid(aoi, year, pid, ptype=None, geom=False,
         os.makedirs(dirname(json_file), exist_ok=True)
         with open(json_file, "w") as f:
             json.dump(parcel, f)
+        if debug:
+            print("Parcel information saved at: ", json_file)
         return parcel
     else:
+        if debug:
+            print("Err: No parcel information found")
         return None
 
 

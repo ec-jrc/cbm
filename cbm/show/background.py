@@ -79,7 +79,6 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['google'],
     same_args = check_args(bg_path, chipsize, extend, debug)
 
     if debug:
-        print('path: ', bg_path)
         print('same args: ', same_args)
         print('aoi-year-lon-lat-chipsize-extend-tms-ptype-columns-debug')
         print(aoi, year, lon, lat, chipsize,
@@ -142,8 +141,7 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['google'],
 
     Examples:
         from cbm.view import background
-        background.by_location(aoi, year, lon, lat, 512, 512, 'Google',
-                                True, True)
+        background.by_pid(aoi, year, pid, 512, 512, 'Google', True, True)
 
     Arguments:
         aoi, the area of interest (str)
@@ -159,7 +157,7 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['google'],
                             aoi, str(year), str(pid)))
     file_info = normpath(join(workdir, 'info.json'))
     if not isfile(file_info):
-        if not parcel_info.by_pid(aoi, str(year), str(pid), ptype, True):
+        if not parcel_info.by_pid(aoi, year, pid, ptype, True, False, debug):
             return "No parcel found, please check the parcel ID"
 
     if type(tms) is str:
@@ -171,7 +169,6 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['google'],
     same_args = check_args(bg_path, chipsize, extend, debug)
 
     if debug:
-        print('path: ', bg_path)
         print('same args: ', same_args)
         print('aoi, year, pid, chipsize, extend, tms, columns, debug')
         print(aoi, year, pid, chipsize, extend, tms, columns, debug)

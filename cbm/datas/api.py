@@ -7,8 +7,6 @@
 # Copyright : 2021 European Commission, Joint Research Centre
 # License   : 3-Clause BSD
 
-import os
-import os.path
 import requests
 from os.path import join, normpath, isfile
 
@@ -226,7 +224,6 @@ def rcbl(parcel, start_date, end_date, bands, chipsize, filespath, debug=False):
 
 def background(lon, lat, chipsize=512, extend=512, tms='Google',
                bg_path='', debug=False):
-    # aoi='undefined', year='', pid='0000', quiet=True):
     """Download the background image.
 
     Examples:
@@ -237,34 +234,25 @@ def background(lon, lat, chipsize=512, extend=512, tms='Google',
         chipsize, size of the chip in pixels (int).
         extend, size of the chip in meters  (float).
         tms, tile map server Google or Bing (str).
-        bk_file, the name of the output file (str).
+        bg_path, the path of the output file (str).
     """
-
-    # Get the api credentials
+    # Make the request
     api_url, api_user, api_pass = config.credentials('api')
+    params = f"&chipsize={chipsize}&extend={extend}&tms={tms}&iformat=tif"
+    requrl = f"{api_url}/query/backgroundByLocation?lon={lon}&lat={lat}{params}"
+    response = requests.get(requrl, auth=(api_user, api_pass))
 
-    # The url to get the background image
-    requrl = f"lon={lon}&lat={lat}&chipsize={chipsize}&extend={extend}"
-    # print(f"{api_url}/query/backgroundByLocation?{requrl}&tms={tms}&iformat=tif")
-    response = requests.get(
-        f"{api_url}/query/backgroundByLocation?{requrl}&tms={tms}&iformat=tif",
-        auth=(api_user, api_pass))
-    # print(response)
-
-    # Try to get the image link from the html response
+    # Try to download the image
     try:
         img_url = response.content.decode("utf-8")
-        # print(type(img_url), img_url)
         if img_url == '{}':
             if debug:
                 print("Image not found...")
-                print(
-                    f"{api_url}/query/backgroundByLocation?{requrl}&tms={tms}&iformat=tif", response)
+                print(requrl, response)
             return response
         else:
             if debug:
-                print(
-                    f"{api_url}/query/backgroundByLocation?{requrl}&tms={tms}&iformat=tif", response)
+                print(requrl, response)
             res = requests.get(img_url, stream=True)
             image_name = img_url.split('/')[-1].lower()
             bg_file = normpath(join(bg_path, image_name))
@@ -273,7 +261,6 @@ def background(lon, lat, chipsize=512, extend=512, tms='Google',
                 for chunk in res.iter_content(chunk_size=1024):
                     if chunk:  # filter out keep-alive new chunks
                         handle.write(chunk)
-
             return bg_file
     except AttributeError as err:
         return err

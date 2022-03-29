@@ -64,9 +64,6 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512,
         print('bg_path: ', bg_path)
         print('lon, lat:', lon, lat)
     for t in tms:
-        if debug:
-            print('lon, lat, chipsize, extend, t, bg_path, debug')
-            print(lon, lat, chipsize, extend, t, bg_path, debug)
         get_requests.background(lon, lat, chipsize, extend, t, bg_path, debug)
 
 
@@ -96,8 +93,6 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512,
                             aoi, str(year), str(pid)))
 
     parcel = parcel_info.by_pid(aoi, year, pid, ptype, True, False, debug)
-    if debug:
-        print('workdir: ', workdir)
     lon = parcel['clon'][0]
     lat = parcel['clat'][0]
 
@@ -107,13 +102,10 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512,
         f.write('')
 
     if debug:
-        print('bg_path: ', bg_path)
+        print('background images path: ', bg_path)
         print('lon, lat:', lon, lat)
 
     for t in tms:
-        if debug:
-            print('lon', 'lat', 'chipsize', 'extend', 't', 'bg_path', 'debug')
-            print(lon, lat, chipsize, extend, t, bg_path, debug)
         get_requests.background(lon, lat, chipsize, extend, t, bg_path, debug)
 
 
