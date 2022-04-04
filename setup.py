@@ -14,8 +14,8 @@ with open("README.md", "r") as fh:
 
 setup(
     name='cbm',
-    version='0.0.12',
-    python_requires='>=3.7',
+    version='0.0.13',
+    python_requires='>=3.6',
     description='Checks by Monitoring (CbM)',
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -39,6 +39,6 @@ setup(
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
         'Operating System :: POSIX :: Linux',
-        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.6',
     ],
 )

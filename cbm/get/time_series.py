@@ -61,8 +61,7 @@ def weather(aoi, year, pid, ptype=None, debug=False):
     workdir = config.get_value(['paths', 'temp'])
     file_ts = normpath(join(workdir, aoi, year, str(pid),
                             f'time_series_weather.csv'))
-    ts = json.loads(get_requests.parcel_wts(
-        aoi, year, pid, ptype, debug))
+    ts = json.loads(get_requests.parcel_wts(aoi, year, pid, ptype, debug))
     if isinstance(ts, pd.DataFrame):
         ts.to_csv(file_ts, index=True, header=True)
     elif isinstance(ts, dict):

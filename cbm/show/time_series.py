@@ -45,7 +45,8 @@ def ndvi(aoi, year, pids, ptype=None, scl='3_8_9_10_11', std=True,
                              aoi, str(year), str(pid)))
         file_info = normpath(join(path, 'info.json'))
         if not isfile(file_info):
-            parcel_info.by_pid(aoi, str(year), str(pid), ptype, True)
+            if not parcel_info.by_pid(aoi, year, pid, ptype, True, False, debug):
+                return f"No parcel found, please check the parcel ID({pid})"
         with open(file_info, 'r') as f:
             info_data = json.loads(f.read())
         crop_names.append(info_data['cropname'][0])
@@ -173,10 +174,11 @@ def s2(aoi, year, pid, ptype=None, bands=['B02', 'B03', 'B04', 'B08'],
     path = normpath(join(config.get_value(['paths', 'temp']),
                          aoi, str(year), str(pid)))
 
-    parcel_file = normpath(join(path, 'info.json'))
-    if not isfile(parcel_file):
-        parcel_info.by_pid(aoi, str(year), str(pid), ptype, True)
-    with open(parcel_file, 'r') as f:
+    file_info = normpath(join(path, 'info.json'))
+    if not isfile(file_info):
+        if not parcel_info.by_pid(aoi, year, pid, ptype, True, False, debug):
+            return f"No parcel found, please check the parcel ID({pid})"
+    with open(file_info, 'r') as f:
         parcel = json.loads(f.read())
 
     crop_name = parcel['cropname'][0]
@@ -289,7 +291,8 @@ def s1(aoi, year, pid, tstype='bs', ptype=None, debug=False):
                          aoi, str(year), str(pid)))
     file_info = normpath(join(path, 'info.json'))
     if not isfile(file_info):
-        parcel_info.by_pid(aoi, str(year), str(pid), ptype, True)
+        if not parcel_info.by_pid(aoi, year, pid, ptype, True, False, debug):
+            return f"No parcel found, please check the parcel ID({pid})"
     with open(file_info, 'r') as f:
         info_data = json.loads(f.read())
 
@@ -298,7 +301,7 @@ def s1(aoi, year, pid, tstype='bs', ptype=None, debug=False):
 
     file_ts = normpath(join(path, f'time_series_{tstype}.csv'))
     if not isfile(file_ts):
-        time_series.by_pid(aoi, str(year), str(pid), tstype, ptype, '', debug)
+        time_series.by_pid(aoi, year, pid, tstype, ptype, '', debug)
     df = pd.read_csv(file_ts, index_col=0)
 
     df['date'] = pd.to_datetime(df['date_part'], unit='s')
@@ -367,10 +370,11 @@ def weather(aoi, year, pid, tstype='tp', ptype=None, debug=False):
     path = normpath(join(config.get_value(['paths', 'temp']),
                          aoi, str(year), str(pid)))
 
-    parcel_file = normpath(join(path, 'info.json'))
-    if not isfile(parcel_file):
-        parcel_info.by_pid(aoi, str(year), str(pid), ptype, True)
-    with open(parcel_file, 'r') as f:
+    file_info = normpath(join(path, 'info.json'))
+    if not isfile(file_info):
+        if not parcel_info.by_pid(aoi, year, pid, ptype, True, False, debug):
+            return f"No parcel found, please check the parcel ID({pid})"
+    with open(file_info, 'r') as f:
         parcel = json.loads(f.read())
 
     crop_name = parcel['cropname'][0]
@@ -378,7 +382,7 @@ def weather(aoi, year, pid, tstype='tp', ptype=None, debug=False):
 
     file_ts = normpath(join(path, 'time_series_weather.csv'))
     if not isfile(file_ts):
-        time_series.by_pid(aoi, str(year), str(pid), ptype, debug)
+        time_series.weather(aoi, year, pid, ptype, debug)
     df = pd.read_csv(file_ts, index_col=0)
 
     df['date'] = pd.to_datetime(df['meteo_date'])
