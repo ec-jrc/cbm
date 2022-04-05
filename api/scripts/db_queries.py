@@ -79,8 +79,7 @@ def getParcelByLocation(dataset, lon, lat, ptype='',
         return data.append('Ended with no data')
 
 
-def getParcelByID(dataset, pid, ptype='', withGeometry=False,
-                  wgs84=False):
+def getParcelByID(dataset, pid, ptype='', withGeometry=False, wgs84=False):
 
     conn = db.conn(dataset['db'])
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)

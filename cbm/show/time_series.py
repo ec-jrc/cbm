@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+from random import uniform
 from itertools import groupby
 from os.path import join, normpath, isfile
 from datetime import timedelta
@@ -53,7 +54,7 @@ def ndvi(aoi, year, pids, ptype=None, scl='3_8_9_10_11', std=True,
     parcel_peers = all_equal(crop_names)
 
     fig = plt.figure(figsize=(16.0, 10.0))
-    axb = fig.add_subplot(1, 1, 1)
+    axn = fig.add_subplot(1, 1, 1)
 
     pcount = 1
 
@@ -68,14 +69,14 @@ def ndvi(aoi, year, pids, ptype=None, scl='3_8_9_10_11', std=True,
         area = info_data['area'][0]
 
         if len(pids) == 1:
-            plot_title = f"NDVI profile for parcel '{pid}', crop type: {crop_names[0]}."
+            plot_title = f"NDVI profile, parcel: '{pid}', crop type: {crop_names[0]}, year: {year}, area: {area:.1f}sqm."
             cloudfreelabel = "Cloud free"
         elif parcel_peers:
-            plot_title = f"NDVI profiles for crop type: {crop_names[0]}."
-            cloudfreelabel = pid  # , area: {area:.1f}sqm"
+            plot_title = f"NDVI profiles for crop type: {crop_names[0]} of the year: {year}."
+            cloudfreelabel = f"Parcel: {pid}"
         else:
-            plot_title = "NDVI profiles"
-            cloudfreelabel = f"{pid}, {crop_name}"
+            plot_title = f"NDVI profiles, year: {year}"
+            cloudfreelabel = f"Parcel: {pid}, {crop_name}"
 
         file_ts = normpath(join(path, 'time_series_s2.csv'))
         if not isfile(file_ts):
@@ -109,12 +110,12 @@ def ndvi(aoi, year, pids, ptype=None, scl='3_8_9_10_11', std=True,
         # Plot Cloud free NDVI.
         dfNDVI = (dfB8['mean'] - dfB4['mean']) / (dfB8['mean'] + dfB4['mean'])
 
-        axb.set_xlabel("Date")
-        axb.xaxis.set_major_formatter(datesFmt)
+        axn.set_xlabel("Date")
+        axn.xaxis.set_major_formatter(datesFmt)
 
         if len(pids) == 1:
-            axb.set_ylabel(r'NDVI')
-            axb.plot(dfNDVI.index, dfNDVI, linestyle=' ', marker='s',
+            axn.set_ylabel(r'NDVI')
+            axn.plot(dfNDVI.index, dfNDVI, linestyle=' ', marker='s',
                      markersize=10, color='lightgray',
                      fillstyle='none', label='All observations')
 
@@ -136,11 +137,11 @@ def ndvi(aoi, year, pids, ptype=None, scl='3_8_9_10_11', std=True,
             cloufreestd = dfstd[dfstd.index.isin(dfNDVI[cloudfree].index)]
         try:
             if pcount <= max_line_plots:
-                axb.plot(dfNDVI[cloudfree].index, dfNDVI[cloudfree],
+                axn.plot(dfNDVI[cloudfree].index, dfNDVI[cloudfree],
                          linestyle='--', marker='P', markersize=10,
                          fillstyle='none', label=cloudfreelabel)
                 if errorbar:
-                    axb.errorbar(dfNDVI[cloudfree].index, dfNDVI[cloudfree],
+                    axn.errorbar(dfNDVI[cloudfree].index, dfNDVI[cloudfree],
                                  cloufreestd, fmt=' ', color='Gray',
                                  linewidth=2, capsize=4, alpha=0.4)
             if std:
@@ -148,21 +149,21 @@ def ndvi(aoi, year, pids, ptype=None, scl='3_8_9_10_11', std=True,
                     peers_lable = 'Parcel peers'
                 else:
                     peers_lable = None
-                axb.fill_between(dfNDVI[cloudfree].index,
+                axn.fill_between(dfNDVI[cloudfree].index,
                                  dfNDVI[cloudfree] - cloufreestd,
                                  dfNDVI[cloudfree] + cloufreestd,
-                                 color='b', alpha=0.05, label=peers_lable)
+                                 color='b', alpha=(2 * ((len(pids) + 2) / (3 * len(pids)))) / 10, label=peers_lable)
         except Exception as err:
             message = f"Could not mark cloud free images: {err}"
 
-        axb.set_xlim(start_date, end_date + timedelta(1))
-        axb.set_ylim(0, 1.0)
+        axn.set_xlim(start_date, end_date + timedelta(1))
+        axn.set_ylim(0, 1.0)
 
-        axb.legend(frameon=False)
+        axn.legend(frameon=False)
         pcount += 1
     if 'message' in locals():
         print(message)
-    axb.set_title(plot_title)
+    axn.set_title(plot_title)
 
     return plt.show()
 
@@ -286,83 +287,155 @@ def s2(aoi, year, pid, ptype=None, bands=['B02', 'B03', 'B04', 'B08'],
     return plt.show()
 
 
-def s1(aoi, year, pid, tstype='bs', ptype=None, debug=False):
-    path = normpath(join(config.get_value(['paths', 'temp']),
-                         aoi, str(year), str(pid)))
-    file_info = normpath(join(path, 'info.json'))
-    if not isfile(file_info):
-        if not parcel_info.by_pid(aoi, year, pid, ptype, True, False, debug):
-            return f"No parcel found, please check the parcel ID({pid})"
-    with open(file_info, 'r') as f:
-        info_data = json.loads(f.read())
+def s1(aoi, year, pids, tstype='bs', ptype=None, std=True,
+       max_line_plots=10, errorbar=True, debug=False):
+    if type(pids) is not list:
+        pids = [pids]
+    if max_line_plots > 20:
+        max_line_plots = 20
+        print("Can not plot more then 20 lines.")
+    if len(pids) > 50:
+        del pids[50:]
+        print("Currently supporting max 50 shading plots.",
+              "Will plot first 50 parcels")
 
-    crop_name = info_data['cropname'][0]
-    area = info_data['area'][0]
+    crop_names = []
+    for pid in pids:
+        path = normpath(join(config.get_value(['paths', 'temp']),
+                             aoi, str(year), str(pid)))
+        file_info = normpath(join(path, 'info.json'))
+        if not isfile(file_info):
+            if not parcel_info.by_pid(aoi, year, pid, ptype, True, False, debug):
+                return f"No parcel found, please check the parcel ID({pid})"
+        with open(file_info, 'r') as f:
+            info_data = json.loads(f.read())
+        crop_names.append(info_data['cropname'][0])
+    parcel_peers = all_equal(crop_names)
 
-    file_ts = normpath(join(path, f'time_series_{tstype}.csv'))
-    if not isfile(file_ts):
-        time_series.by_pid(aoi, year, pid, tstype, ptype, '', debug)
-    df = pd.read_csv(file_ts, index_col=0)
+    if tstype == 'bs':
+        profile_type = 'Backscattering coefficient'
+    else:
+        profile_type = '6 day coherence'
 
-    df['date'] = pd.to_datetime(df['date_part'], unit='s')
-    start_date = df.iloc[0]['date'].date()
-    end_date = df.iloc[-1]['date'].date()
-    if debug:
-        print(f"From '{start_date}' to '{end_date}'.")
-
-    pd.set_option('max_colwidth', 200)
-    pd.set_option('display.max_columns', 20)
-
-    # Plot settings are confirm IJRS graphics instructions
-    plt.rcParams['axes.titlesize'] = 16
-    plt.rcParams['axes.labelsize'] = 14
-    plt.rcParams['xtick.labelsize'] = 12
-    plt.rcParams['ytick.labelsize'] = 12
-    plt.rcParams['legend.fontsize'] = 14
-
-    df.set_index(['date'], inplace=True)
-    datesFmt = mdates.DateFormatter('%-d %b %Y')
-
-    # Plot Backscattering coefficient
-    df = df[df['mean'] >= 0]  # to remove negative values
-
-    dfVV = df[df.band == f'VV{tstype[0]}'].copy()
-    dfVH = df[df.band == f'VH{tstype[0]}'].copy()
     fig = plt.figure(figsize=(16.0, 10.0))
     ax = fig.add_subplot(1, 1, 1)
 
-    if tstype == 'bs':
-        dfVV['mean'] = dfVV['mean'].map(lambda s: 10.0 * np.log10(s))
-        dfVH['mean'] = dfVH['mean'].map(lambda s: 10.0 * np.log10(s))
-        ax.set_ylim(-25, -1)
-        # dfVV['p25'] = dfVV['p25'].map(lambda s: 10.0 * np.log10(s))
-        # dfVV['p75'] = dfVV['p75'].map(lambda s: 10.0 * np.log10(s))
-        # dfVH['p25'] = dfVH['p25'].map(lambda s: 10.0 * np.log10(s))
-        # dfVH['p75'] = dfVH['p75'].map(lambda s: 10.0 * np.log10(s))
-        # ax.fill_between(dfVV.index, dfVV['p25'],
-        #                 dfVV['p75'], color='b', alpha=0.1)
-        # ax.fill_between(dfVH.index, dfVH['p25'],
-        #                 dfVH['p75'], color='b', alpha=0.1)
-        ylabel = 'Sentinel-1 Backscattering coefficient, $\gamma\degree$ (dB)'
-    else:
-        ax.set_ylim(0, 1)
-        ylabel = 'Sentinel-1 6 day coherence'
+    pcount = 1
+    for pid in pids:
+        path = normpath(join(config.get_value(['paths', 'temp']),
+                             aoi, str(year), str(pid)))
+        file_info = normpath(join(path, 'info.json'))
+        with open(file_info, 'r') as f:
+            info_data = json.loads(f.read())
 
-    ax.set_title(
-        f"Parcel {pid} (crop: {crop_name}, area: {area:.1f} sqm)")
-    ax.set_xlabel("Date")
-    ax.xaxis.set_major_formatter(datesFmt)
+        crop_name = info_data['cropname'][0]
+        area = info_data['area'][0]
 
-    ax.set_ylabel(ylabel)
-    ax.plot(dfVH.index, dfVH['mean'], linestyle=' ', marker='.',
-            markersize=10, color='DarkBlue', label='VH')
-    ax.plot(dfVV.index, dfVV['mean'], linestyle=' ', marker='.',
-            markersize=10, color='Red', label='VV')
+        if len(pids) == 1:
+            plot_title = f"S1 {profile_type}, parcel: '{pid}', crop type: {crop_names[0]}, year: {year}, area: {area:.1f}sqm."
+            plabel = '{} Moving average'
+        elif parcel_peers:
+            plot_title = f"Moving average of S1 {profile_type}, crop type: {crop_names[0]}, year: {year}."
+            plabel = f'{pid} {{}}'
+        else:
+            plot_title = f"NDVI profiles, year: {year}"
+            plabel = f"Parcel: {pid}, {{}} {crop_name}"
 
-    ax.set_xlim(start_date, end_date + timedelta(1))
+        file_ts = normpath(join(path, f'time_series_{tstype}.csv'))
+        if not isfile(file_ts):
+            time_series.by_pid(aoi, year, pid, tstype, ptype, '', debug)
+        df = pd.read_csv(file_ts, index_col=0)
 
-    ax.legend(frameon=False)  # loc=2)
+        df['date'] = pd.to_datetime(df['date_part'], unit='s')
+        start_date = df.iloc[0]['date'].date()
+        end_date = df.iloc[-1]['date'].date()
+        if debug and pcount == 1:
+            print(f"From '{start_date}' to '{end_date}'.")
 
+        pd.set_option('max_colwidth', 200)
+        pd.set_option('display.max_columns', 20)
+
+        # Plot settings are confirm IJRS graphics instructions
+        plt.rcParams['axes.titlesize'] = 16
+        plt.rcParams['axes.labelsize'] = 14
+        plt.rcParams['xtick.labelsize'] = 12
+        plt.rcParams['ytick.labelsize'] = 12
+        plt.rcParams['legend.fontsize'] = 14
+
+        df.set_index(['date'], inplace=True)
+        datesFmt = mdates.DateFormatter('%-d %b %Y')
+
+        def moving_average(a, n=3):
+            ret = np.cumsum(a, dtype=float)
+            ret[n:] = ret[n:] - ret[:-n]
+            return ret[n - 1:] / n
+
+        # Plot Backscattering coefficient
+        df = df[df['mean'] >= 0]  # to remove negative values
+
+        dfVV = df[df.band == f'VV{tstype[0]}'].copy()
+        dfVH = df[df.band == f'VH{tstype[0]}'].copy()
+
+        if tstype == 'bs':
+            dfVH['mean'] = dfVH['mean'].map(lambda s: 10.0 * np.log10(s))
+            dfVH['p25'] = dfVH['p25'].map(lambda s: 10.0 * np.log10(s))
+            dfVH['p75'] = dfVH['p75'].map(lambda s: 10.0 * np.log10(s))
+            dfVV['mean'] = dfVV['mean'].map(lambda s: 10.0 * np.log10(s))
+            dfVV['p25'] = dfVV['p25'].map(lambda s: 10.0 * np.log10(s))
+            dfVV['p75'] = dfVV['p75'].map(lambda s: 10.0 * np.log10(s))
+            ax.set_ylim(-25, -1)
+            ylabel = 'Sentinel-1 Backscattering coefficient, $\gamma\degree$ (dB)'
+        else:
+            ax.set_ylim(0, 1)
+            ylabel = 'Sentinel-1 6 day coherence'
+
+        ax.set_xlabel("Date")
+        ax.xaxis.set_major_formatter(datesFmt)
+        ax.set_ylabel(ylabel)
+        ax.set_xlim(start_date + timedelta(5), end_date - timedelta(5))
+
+        if len(pids) == 1:
+            ax.plot(dfVH.index, dfVH['mean'], linestyle=' ', marker='.',
+                    markersize=5, color='DarkBlue', label='VH mean', alpha=0.5)
+            ax.plot(dfVV.index, dfVV['mean'], linestyle=' ', marker='.',
+                    markersize=5, color='Red', label='VV mean', alpha=0.5)
+
+        if pcount <= max_line_plots:
+            if pcount == 1:
+                colorVH = 'DarkBlue'
+                colorVV = 'Red'
+            else:
+                colorVH = (uniform(0.0, 0.7), uniform(
+                    0.0, 0.9), uniform(0.7, 1.0))
+                colorVV = (uniform(0.7, 1.0), uniform(
+                    0.0, 0.9), uniform(0.0, 0.7))
+            dfVHmean = moving_average(np.concatenate(
+                ([-10], dfVH['mean'].to_numpy(), [-10])))
+            dfVVmean = moving_average(np.concatenate(
+                ([-10], dfVV['mean'].to_numpy(), [-10])))
+            ax.plot(dfVV.index, dfVHmean, linestyle='-',
+                    color=colorVH, label=plabel.format('VH'))
+            ax.plot(dfVV.index, dfVVmean, linestyle='-',
+                    color=colorVV, label=plabel.format('VV'))
+
+        if std:
+            dfVH25 = moving_average(np.concatenate(
+                ([-10], dfVH['p25'].to_numpy(), [-10])))
+            dfVH75 = moving_average(np.concatenate(
+                ([-10], dfVH['p75'].to_numpy(), [-10])))
+            dfVV25 = moving_average(np.concatenate(
+                ([-10], dfVV['p25'].to_numpy(), [-10])))
+            dfVV75 = moving_average(np.concatenate(
+                ([-10], dfVV['p75'].to_numpy(), [-10])))
+            ax.fill_between(dfVV.index, dfVV25, dfVV75, color='r',
+                            alpha=(2 * ((len(pids) + 2) / (3 * len(pids)))) / 10)
+            ax.fill_between(dfVV.index, dfVH25, dfVH75, color='b',
+                            alpha=(2 * ((len(pids) + 2) / (3 * len(pids)))) / 10)
+
+        pcount += 1
+        ax.legend(frameon=False)
+    ax.set_title(plot_title)
+    ax.legend(frameon=False)
     return plt.show()
 
 

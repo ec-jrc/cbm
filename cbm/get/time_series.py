@@ -31,7 +31,7 @@ def sentinel(aoi, year, pid, tstype='s2', ptype=None, band='', debug=False):
     """
     get_requests = data_source()
     workdir = config.get_value(['paths', 'temp'])
-    file_ts = normpath(join(workdir, aoi, year, str(pid),
+    file_ts = normpath(join(workdir, aoi, str(year), str(pid),
                             f'time_series_{tstype}{band}.csv'))
     ts = json.loads(get_requests.parcel_ts(
         aoi, year, pid, tstype, ptype, band, debug))
