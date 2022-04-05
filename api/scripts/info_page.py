@@ -77,7 +77,7 @@ def generator(user=None):
             "years": years,
             "ts_data": ["s2", "bs", "c6"],
             "id_table_column": pidcolumn,
-            "id_examples": pids,
+            f"id_examples_{year}{ptype}": pids,
             "available_tms": available_tms,
             "data_request_examples": data_request_examples
         }
