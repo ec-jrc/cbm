@@ -842,7 +842,7 @@ class connection_widget(VBox) :
         )
         
         self.wdd_year = Dropdown(
-            options = ['2020', '2019', '2018'],
+            options = ['2022', '2021', '2020', '2019', '2018'],
             placeholder='Year',
             description='Year:',
             disabled=False
