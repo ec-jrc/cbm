@@ -21,6 +21,7 @@ Query parameters are either required or optional. The order of parameters is not
     * parcelByID
 * Parcel signatures time series
     * parcelTimeSeries
+    * weatherTimeSeries
 * Parcel sentinel images
     * chipByLocation
     * rawChipByLocation

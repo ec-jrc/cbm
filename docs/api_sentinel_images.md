@@ -12,7 +12,7 @@ Please read up on the [generic characteristics of the RESTful service](https://j
 
 * The service applies a simple rule to exclude duplicate chips for the same date (e.g. in tile overlaps). However, a location may be in a multiple orbit overlap, which will generate denser time series than the usual 5 day repeat cycle of the A and B sensors. Thus, you may need to shorten the time window in order not to exceed the 24 chip limit.
 
-* The server has a simple caching mechanism. If you run the query again, with a larger time window, it will only generate the new chips, taking the rest from cache. This should be used to create longer time series.
+* The server has a simple caching mechanism. If you run the query again, for the same location, with a different time window, it will only generate the new chips and return the rest from cache. This can be used to create longer time series faster. In case you do not want the cashed chips, you can request only the new chips by changing slightly the location.
 
 * The cache is flushed regularly, typically at midnight (CET).
 

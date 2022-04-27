@@ -1,4 +1,6 @@
-# parcelTimeSeries
+# Parcel Time Series
+
+## parcelTimeSeries
 
 **Using RESTful services to get parcel time series**
 
@@ -42,6 +44,31 @@ returns
 | p25       | a list of p25s   | 25% histogram percentile etc. |
 | p50       | a list of p50s   | 50% histogram percentile etc. |
 | p75       | a list of p75s   | 75% histogram percentile etc. |
+
+
+## weatherTimeSeries
+
+| Parameters  | Description   | Values | Default value |
+| ----------- | ----------- | ----------- | ----------- |
+| **aoi** | Area of Interest (Member state or region code) | e.g.: at, pt, ie, etc. |   |
+| **year** | year of parcels dataset   | e.g.: 2018, 2019   |   |
+| **pid** | parcel ID |   |   |
+| ptype | parcels type | b, g, m, atc. |   |
+
+Example: **Change the parameters aoi, year and pid based on your provided parcels data.**
+- Example 1, returns the weather time series of the parcel,
+https://cap.users.creodias.eu/query/weatherTimeSeries?aoi=ms&year=2020&pid=123
+
+
+returns
+
+| Key        | Description |
+| ---------- | ----------- |
+| meteo_date | a list of timestamps as seconds since 'Unix epoch' (1970-01-01 00:00:00 UTC)  |
+| tmean      | a list of means |
+| tmin       | a list of mins  |
+| tmax       | a list of maxs  |
+| prec       | precipitation   |
 
 
 ## Simple python client to plot parcel Time Series

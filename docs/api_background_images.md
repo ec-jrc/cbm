@@ -33,6 +33,7 @@ Table: **backgroundByParcelID** Parameters
 | extend  | size of the chip in meters | - | 256 |
 | tms  | tile map server | Google, Bing, OSM or MS Orthophotos | Google |
 | iformat  | image format | tif or png | png |
+| withGeometry  | show parcel polygon overlay on if iformat=png | True or False | False |
 
 Examples:
 - Example 1, returns a background google earth image of a selected location,
