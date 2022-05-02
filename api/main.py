@@ -137,7 +137,11 @@ except Exception:
 @app.route('/query/info', methods=['GET'])
 @auth_required
 def info():
-    info_dict = info_page.generator(user)
+    if 'aoi' in request.args.keys():
+        aoi = request.args.get('aoi').lower()
+    else:
+        aoi = ''
+    info_dict = info_page.generator(user, aoi)
     return current_app.response_class(json.dumps(info_dict, indent=4),
                                       mimetype="application/json")
 
