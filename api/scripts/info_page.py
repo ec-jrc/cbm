@@ -38,17 +38,12 @@ def generator(user=None, selected_aoi=None):
     info_page = {"server": server, "helpers": helpers, "aois": {}}
 
     def aoi_data(aoi, years, year):
-        print(1)
         schema = all_datasets[
             f'{aoi}_{year}']['tables']['parcels'].split('.')[0]
         dbtables = db.tables(all_datasets[f'{aoi}_{year}']['db'], schema)
-        print(dbtables)
-        print(2)
 
         def validPt(dbt):
-            print(234)
             p = dbt.split('_')[-1]
-            print('sdsdsd', dbt, p, len(p))
             if p.isnumeric() or p == 'rast':
                 return False
             elif dbt.startswith(aoi) or dbt.startswith("parcels"):
@@ -59,7 +54,6 @@ def generator(user=None, selected_aoi=None):
 
         ptypes = list(dict.fromkeys(
             [dbt.split('_')[-1] for dbt in dbtables if validPt(dbt)]))
-        print('ptypes', ptypes)
 
         if len(ptypes) > 0:
             pt = random.choice(ptypes)
