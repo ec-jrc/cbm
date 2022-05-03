@@ -1,4 +1,4 @@
-# Image chips
+# Sentinel image chips
 
 **Using RESTful services to get parcel time series as image chips**
 
@@ -97,9 +97,18 @@ https://cap.users.creodias.eu/query/rawChipByParcelID?aoi=MS&year=2020&pid=1234&
 
 returns
 
-A JSON dictionary with date labels and relative URLs to cached GeoTIFFs.
+A JSON dictionary with date labels and relative URLs to cached GeoTIFFs e.g.:
 
-You need a client script to transfer the GeoTIFFs and run analysis on it.
+```json
+{"dates": ["20200101T105441", "..."], "chips": ["/dump/..._20200101T121106.SCL.tif", "..."]}
+```
+
+You will need to add the host to download the image e.g.:
+```
+https://cap.users.creodias.eu/dump/..._20200129T130207.SCL.tif
+```
+
+The preferred way is to use a client script to transfer the GeoTIFFs and run analysis on it.
 
 
 ## Example client code.
