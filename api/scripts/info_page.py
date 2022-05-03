@@ -86,10 +86,21 @@ def generator(user=None, selected_aoi=None):
             "weatherTimeSeries": f"{url}/query/weatherTimeSeries?aoi={aoi}&year={year}&pid={pid}{ptype_param}",
             "parcelPeers": f"{url}/query/parcelPeers?aoi={aoi}&year={year}&pid={pid}{ptype_param}"
         }
+
+        def ts_data():
+            ts_data = []
+            ts_data_types = ["s2", "bs", "c6"]
+            for tst in ts_data_types:
+                if all_datasets[f'{aoi}_{year}']['tables'][tst] != '':
+                    ts_data.append(tst)
+                else:
+                    del data_request_examples[f"parcelTimeSeries_{tst}"]
+            return ts_data
+
         info_page["aois"][aoi] = {
             "dataset_types": ptypes,
             "years": years,
-            "ts_data": ["s2", "bs", "c6"],
+            "ts_data": ts_data(),
             "id_table_column": pidcolumn,
             f"id_examples_{year}{ptype}": pids,
             "available_tms": available_tms,
