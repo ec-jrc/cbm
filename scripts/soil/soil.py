@@ -1,3 +1,5 @@
+import os
+import shutil
 import pandas as pd
 import geopandas as gpd
 import numpy as np
@@ -5,15 +7,26 @@ import rasterio
 import rasterstats
 import psycopg2
 import psycopg2.extras as extras
+import pyproj
+from shapely.ops import transform
+from shapely import geometry
 from sqlalchemy import create_engine
 from osgeo import gdal
 from utils import config
 from utils.connector import connect
 
+
 ref_link = "https://www.isric.org/explore/world-soil-distribution"
 
-# TODO add creation of download folder
+# creation of download folder
+path = './download/'
+if not os.path.exists(path):
+    os.makedirs(path)
 
+# connection string for sqlalchemy
+db_url = f"postgresql://{config.user}:{config.password}@{config.host}:{config.port}/{config.dbname}"
+
+# extract srid from postgres through psycopg2 (connector function)
 db = connect(config.dbname)
 cur = db.cursor()
 cur.execute("""SELECT st_srid(wkb_geometry) FROM public.dk2021 LIMIT 1;""")
@@ -23,7 +36,7 @@ db.close()
 
 st_srid = query_result[0][0]
 
-# TODO extract bounding box from postgres
+# Extract Bounding Box in wgs84 from postgres and projecting in Interrupted Homolosine with srid:152160
 db = connect(config.dbname)
 cur = db.cursor()
 cur.execute("""SELECT name,
@@ -44,17 +57,22 @@ cur.close()
 db.close()
 
 aoi = data[data['name'] == 'dk2021']
-x_min, x_max = int(aoi.iloc[0]['xmin']), int(aoi.iloc[0]['xmax'])
-y_min, y_max = int(aoi.iloc[0]['ymin']), int(aoi.iloc[0]['ymax'])
+x_coords = (int(aoi.iloc[0]['xmin']), int(aoi.iloc[0]['xmax']))
+y_coords = (int(aoi.iloc[0]['ymin']), int(aoi.iloc[0]['ymax']))
 
-bb = (x_min, y_max, x_max, y_min)
-print(bb)
-exit()
-bb = (7.0, 58.0, 16.0, 54.0) # WNES
+pointList = [geometry.Point(x, y) for x in x_coords for y in y_coords]
 
+poly = geometry.Polygon([[p.x, p.y] for p in pointList])
 
-igh = "+proj=longlat +datum=WGS84 +no_defs"
-res = 250
+igh = "+proj=igh +lat_0=0 +lon_0=0 +datum=WGS84 +units=m +no_defs"  # proj string for Homolosine projection
+project = pyproj.Transformer.from_proj('EPSG:4326', igh, always_xy=True)
+
+bb_proj_152160 = transform(project.transform, poly)
+bounds = bb_proj_152160.bounds
+
+# formatting bounding box in order to fit with soilgrids requirements
+bb_proj_152160 = (bounds[0], bounds[3], bounds[2], bounds[1])
+
 folders_filenames = {
     "clay": {"https://files.isric.org/soilgrids/latest/data/clay/": "clay_0-5cm_mean.vrt"},  # clay -> g/Kg
     "sand": {"https://files.isric.org/soilgrids/latest/data/sand/": "sand_0-5cm_mean.vrt"},  # sand -> g/Kg
@@ -63,11 +81,13 @@ folders_filenames = {
     "c_exc_cap": {"https://files.isric.org/soilgrids/latest/data/cec/": "cec_0-5cm_mean.vrt"},  # cec -> mmol(c)/kg
     "oc_stock": {"https://files.isric.org/soilgrids/latest/data/ocs/": "ocs_0-30cm_mean.vrt"},  # ocs -> dg/kg
     "oc_dens": {"https://files.isric.org/soilgrids/latest/data/ocd/": "ocd_0-5cm_mean.vrt"},  # ocd -> g/dm3
-    "bulk_dens": {"https://files.isric.org/soilgrids/latest/data/bdod/": "bdod_0-5cm_mean.vrt"},  # bulk_dens -> cg/cm3
+    "bulk_dens_0_5": {"https://files.isric.org/soilgrids/latest/data/bdod/": "bdod_0-5cm_mean.vrt"},  # bulk_dens -> cg/cm3
+    "bulk_dens_5_15": {"https://files.isric.org/soilgrids/latest/data/bdod/": "bdod_5-15cm_mean.vrt"},  # bulk_dens -> cg/cm3
+    "bulk_dens_15_30": {"https://files.isric.org/soilgrids/latest/data/bdod/": "bdod_15-30cm_mean.vrt"},  # bulk_dens -> cg/cm3
+    "bulk_dens_30_60": {"https://files.isric.org/soilgrids/latest/data/bdod/": "bdod_30-60cm_mean.vrt"},  # bulk_dens -> cg/cm3
+    "bulk_dens_60_100": {"https://files.isric.org/soilgrids/latest/data/bdod/": "bdod_60-100cm_mean.vrt"},  # bulk_dens -> cg/cm3
     "soil_class": {"https://files.isric.org/soilgrids/latest/data/wrb/": "MostProbable_152160.vrt"},
     }
-
-db_url = f"postgresql://{config.user}:{config.password}@{config.host}:{config.port}/{config.dbname}"
 
 for k, v in folders_filenames.items():
     prop = k
@@ -78,7 +98,7 @@ for k, v in folders_filenames.items():
     print(f'{prop} - {location}{filename}')
 
     sg_url = f"/vsicurl?max_retry=3&retry_delay=1&list_dir=no&url={location}{filename}"
-    kwargs = {'format': 'GTiff', 'projWin': bb, 'projWinSRS': igh, 'xRes': res, 'yRes': res}
+    kwargs = {'format': 'GTiff', 'projWin': bb_proj_152160, 'projWinSRS': igh, 'xRes': 250, 'yRes': 250}
 
     ds = gdal.Translate(f'download/{filename}',
                         f'{sg_url}',
@@ -243,5 +263,8 @@ for k, v in folders_filenames.items():
             chunk += 5000
 
         conn.close()
+
+# UNCOMMENT IF YOU WANT TO DELETE DOWNLOADED FILES
+# shutil.rmtree('./download/')
 
 print('process complete!')
