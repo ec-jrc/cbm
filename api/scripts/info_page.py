@@ -77,7 +77,7 @@ def generator(user=None, selected_aoi=None):
         pid = random.choice(pids)
         # tms = random.choice(available_tms)
 
-        data_request_examples = {
+        request_examples = {
             "parcelByID": f"{url}/query/parcelByID?aoi={aoi}&year={year}&pid={pid}{ptype_param}&withGeometry=True",
             "parcelTimeSeries_s2": f"{url}/query/parcelTimeSeries?aoi={aoi}&year={year}&pid={pid}{ptype_param}&tstype=s2&scl=True",
             "parcelTimeSeries_bs": f"{url}/query/parcelTimeSeries?aoi={aoi}&year={year}&pid={pid}{ptype_param}&tstype=bs",
@@ -94,17 +94,17 @@ def generator(user=None, selected_aoi=None):
                 if all_datasets[f'{aoi}_{year}']['tables'][tst] != '':
                     ts_data.append(tst)
                 else:
-                    del data_request_examples[f"parcelTimeSeries_{tst}"]
+                    del request_examples[f"parcelTimeSeries_{tst}"]
             return ts_data
 
         info_page["aois"][aoi] = {
-            "dataset_types": ptypes,
             "years": years,
-            "ts_data": ts_data(),
+            "datasets": ptypes,
+            "time_series": ts_data(),
+            "tms": available_tms,
             "id_table_column": pidcolumn,
             f"id_examples_{year}{ptype}": pids,
-            "available_tms": available_tms,
-            "data_request_examples": data_request_examples
+            "request_examples": request_examples
         }
 
     def get_ds(for_aoi):
