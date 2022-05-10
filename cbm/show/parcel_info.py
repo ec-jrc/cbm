@@ -56,6 +56,8 @@ def by_pid(aoi, year, pid, ptype=None, tms='osm', debug=False):
             return "No parcel found, please check the parcel ID"
     with open(normpath(join(workdir, 'info.json')), 'r') as f:
         parcel = json.load(f)
+        # if type(parcel['geom'][0]) is str:
+        #     parcel['geom'] = [json.loads(g) for g in parcel['geom']]
 
     plt.rcParams['font.size'] = 14
     plt.figure(figsize=(10, 3))
@@ -70,7 +72,8 @@ def by_pid(aoi, year, pid, ptype=None, tms='osm', debug=False):
             get_bg.by_pid(aoi, year, pid, 256, 1024, tms, ptype, True, debug)
         with rasterio.open(normpath(join(bg_path, f'{tms}.tif'))) as img:
             img_epsg = img.crs.to_epsg()
-            geom = spatial_utils.transform_geometry(parcel, img_epsg)
+            geom = spatial_utils.transform_geometry(
+                parcel, img_epsg, debug=debug)
             patches = overlay_parcel(geom)
             for patch in patches:
                 ax2.add_patch(copy(patch))
@@ -94,5 +97,4 @@ def by_pid(aoi, year, pid, ptype=None, tms='osm', debug=False):
         first_line -= 0.12
 
     ax1.axis('off')
-    ax2.axis('off')
     plt.show()

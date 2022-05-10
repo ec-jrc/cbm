@@ -19,8 +19,7 @@ from rasterio.plot import show
 from mpl_toolkits.axes_grid1 import ImageGrid
 
 from cbm.utils import config, spatial_utils
-from cbm.get import background as get_bg
-from cbm.get import parcel_info
+from cbm.get import parcel_info, background
 
 
 def overlay_parcel(img, geom):
@@ -85,13 +84,16 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['google'],
               extend, tms, ptype, columns, debug)
 
     for t in tms:
-        if not isfile(normpath(join(bg_path, f'{t.lower()}.tif'))) or not same_args:
-            if parcel_id:
-                get_bg.by_pid(aoi, year, pid, chipsize,
-                              extend, t, ptype, True, debug)
-            else:
-                get_bg.by_location(aoi, year, lon, lat, chipsize,
-                                   extend, t, ptype, True, debug)
+        try:
+            if not isfile(normpath(join(bg_path, f'{t.lower()}.tif'))) or not same_args:
+                if parcel_id:
+                    background.by_pid(aoi, year, pid, chipsize,
+                                      extend, t, ptype, True, debug)
+                else:
+                    background.by_location(aoi, year, lon, lat, chipsize,
+                                           extend, t, ptype, True, debug)
+        except Exception as err:
+            print("Could not get image from '{t}', ", err)
 
     if parcel_id:
         with open(normpath(join(workdir, 'info.json')), 'r') as f:
@@ -100,7 +102,8 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['google'],
         with rasterio.open(normpath(join(bg_path,
                                          f'{tms[0].lower()}.tif'))) as img:
             img_epsg = img.crs.to_epsg()
-            geom = spatial_utils.transform_geometry(parcel, img_epsg)
+            geom = spatial_utils.transform_geometry(
+                parcel, img_epsg, debug=debug)
             patches = overlay_parcel(img, geom)
 
     rows = int(len(tms) // columns + (len(tms) % columns > 0))
@@ -174,16 +177,22 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['google'],
         print(aoi, year, pid, chipsize, extend, tms, columns, debug)
 
     for t in tms:
-        if not isfile(normpath(join(bg_path, f'{t.lower()}.tif'))) or not same_args:
-            get_bg.by_pid(aoi, year, pid, chipsize,
-                          extend, t, ptype, True, debug)
+        try:
+            if not isfile(normpath(join(bg_path, f'{t.lower()}.tif'))) or not same_args:
+                background.by_pid(aoi, year, pid, chipsize,
+                                  extend, t, ptype, True, debug)
+        except Exception as err:
+            print(f"Could not get image from '{t}', ", err)
 
     with open(file_info, 'r') as f:
         parcel = json.load(f)
+        # if type(parcel['geom'][0]) is str:
+        #     parcel['geom'] = [json.loads(g) for g in parcel['geom']]
 
     with rasterio.open(normpath(join(bg_path, f'{tms[0].lower()}.tif'))) as img:
         img_epsg = img.crs.to_epsg()
-        geom = spatial_utils.transform_geometry(parcel, img_epsg)
+        geom = spatial_utils.transform_geometry(
+            parcel, img_epsg, 5514, debug=debug)
         patches = overlay_parcel(img, geom)
 
     rows = int(len(tms) // columns + (len(tms) % columns > 0))
@@ -201,12 +210,15 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['google'],
         return date_text
 
     for ax, t in zip(grid, tms):
-        with rasterio.open(normpath(join(bg_path, f'{t.lower()}.tif'))) as img:
-            for patch in patches:
-                ax.add_patch(copy(patch))
-            overlay_title(img, t)
-            show(img, ax=ax)
-#            ax.xaxis.set_major_locator(ticker.MultipleLocator(200))
+        try:
+            with rasterio.open(normpath(join(bg_path, f'{t.lower()}.tif'))) as img:
+                for patch in patches:
+                    ax.add_patch(copy(patch))
+                overlay_title(img, t)
+                show(img, ax=ax)
+    #            ax.xaxis.set_major_locator(ticker.MultipleLocator(200))
+        except Exception as err:
+            print("Could not get image from '{t}', ", err)
 
     if len(tms) > columns and columns * rows > len(tms):
         for ax in grid[-((columns * rows - len(tms))):]:
