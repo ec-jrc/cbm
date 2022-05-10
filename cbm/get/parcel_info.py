@@ -88,7 +88,7 @@ def validate_parcel(parcel, debug=False):
     return None
 
 
-def by_polygon(aoi, year, polygon, ptype='', geom=False,
+def by_polygon(aoi, year, polygon, ptype=None, geom=False,
                wgs84=False, only_ids=True, debug=False):
     get_requests = data_source()
     return get_requests.parcel_by_polygon(aoi, year, polygon, ptype, geom,

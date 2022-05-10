@@ -120,6 +120,7 @@ def getBackgroundExtract(lon, lat, chipSize=256, chipExtend=500, unique_dir='',
                 return False
             chipset.write(output_dataset)
             chipset.close()
+
             if withGeometry and iformat == 'png':
                 from copy import copy
                 from rasterio.plot import show
@@ -129,7 +130,7 @@ def getBackgroundExtract(lon, lat, chipSize=256, chipExtend=500, unique_dir='',
                 from scripts import spatial_utils
                 from scripts import db_queries
 
-                def overlay_parcel(img, geom):
+                def overlay_parcel(geom):
                     """Create parcel polygon overlay"""
                     patche = [PolygonPatch(feature, edgecolor="yellow",
                                            facecolor="none", linewidth=2
@@ -149,7 +150,7 @@ def getBackgroundExtract(lon, lat, chipSize=256, chipExtend=500, unique_dir='',
 
                 with rio.open(f"{unique_dir}/{tms.lower()}.png") as img:
                     geom = spatial_utils.transform_geometry(parcel, 3857)
-                    patches = overlay_parcel(img, geom)
+                    patches = overlay_parcel(geom)
                     for patch in patches:
                         fig = plt.figure()
                         ax = fig.gca()
