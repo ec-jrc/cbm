@@ -10,6 +10,8 @@
 import os
 import json
 import os.path
+import rasterio
+from rasterio.crs import CRS
 from os.path import join, normpath, isfile
 from IPython.display import display
 from ipywidgets import (HBox, VBox, Dropdown, Play, Layout, Label,
@@ -17,7 +19,7 @@ from ipywidgets import (HBox, VBox, Dropdown, Play, Layout, Label,
 from ipyleaflet import (Map, ImageOverlay, Popup, basemap_to_tiles,
                         Polygon, WidgetControl, basemaps)
 
-from cbm.utils import config, spatial_utils, raster_utils
+from cbm.utils import config, raster_utils
 
 
 def widget_box(path):
@@ -58,8 +60,13 @@ def widget_box(path):
     def show_m():
 
         multipoly = []
-        geom = spatial_utils.transform_geometry(info_data)
-        poly = geom['geom'][0]['coordinates'][0]
+        # geom = spatial_utils.transform_geometry(info_data)
+        info_data['geom'] = [rasterio.warp.transform_geom(
+            CRS.from_epsg(info_data['srid'][0]),
+            CRS.from_epsg(4326),
+            feature,  precision=6
+        ) for feature in info_data['geom']]
+        poly = info_data['geom'][0]['coordinates'][0]
     #     poly = spatial_utils.swap_xy(geom['coordinates'][0])[0]
         multipoly.append(poly)
         centroid = tuple([round(info_data['clat'][0], 4),

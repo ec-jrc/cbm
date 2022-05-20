@@ -12,13 +12,14 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 import rasterio
+from rasterio.crs import CRS
 from rasterio.plot import show
 from os.path import join, normpath, isfile
 from descartes import PolygonPatch
 from ipywidgets import (HBox, VBox, Dropdown, Button, Output,
                         Checkbox, Layout, IntRangeSlider)
 
-from cbm.utils import data_options, spatial_utils, raster_utils
+from cbm.utils import data_options, raster_utils
 
 from skimage import exposure
 
@@ -49,7 +50,7 @@ def imgs_grid(path):
                     overlay_date(img, row['date'].date())  # Add date overlay.
                     ax = plt.gca()
                     if show_parcel.value:
-                        ax.add_patch(overlay_parcel(img, info_data))
+                        ax.add_patch(overlay_parcel(img, parcel))
 
                     plt.axis('off')  # Turn of axis.
                     pA, pB = np.percentile(
@@ -83,7 +84,7 @@ def imgs_grid(path):
                 overlay_date(b4, row['date'].date())  # Add date overlay.
                 ax = plt.gca()
                 if show_parcel.value:
-                    ax.add_patch(overlay_parcel(b4, info_data))
+                    ax.add_patch(overlay_parcel(b4, parcel))
 
                 plt.axis('off')  # Turn of axis.
                 pA, pB = np.percentile(
@@ -108,7 +109,7 @@ def imgs_grid(path):
                     plt.axis('off')
                     ax = plt.gca()
                     if show_parcel.value:
-                        ax.add_patch(overlay_parcel(img, info_data))
+                        ax.add_patch(overlay_parcel(img, parcel))
 
                     img_read = img.read(1)
 
@@ -136,24 +137,30 @@ def imgs_grid(path):
 
         return date_text
 
-    def overlay_parcel(img, geom):
+    def overlay_parcel(img, parcel):
         with open(file_info, 'r') as f:
-            info_data = json.loads(f.read())
+            parcel = json.load(f)
+        if type(parcel['geom'][0]) is str:
+            parcel['geom'] = [json.loads(g) for g in parcel['geom']]
         img_epsg = img.crs.to_epsg()
-        geo_json = spatial_utils.transform_geometry(info_data, img_epsg)
+        parcel['geom'] = [rasterio.warp.transform_geom(
+                CRS.from_epsg(parcel['srid'][0]),
+                CRS.from_epsg(img_epsg),
+                g,  precision=6
+            ) for g in parcel['geom']]
         patche = [PolygonPatch(feature, edgecolor="yellow",
                                facecolor="none", linewidth=2
-                               ) for feature in [geo_json['geom'][0]]]
+                               ) for feature in [parcel['geom'][0]]]
         return patche[0]
 
     # Images options.
     file_info = normpath(join(path, 'info.json'))
     with open(file_info, 'r') as f:
-        info_data = json.loads(f.read())
+        parcel = json.loads(f.read())
     # print(info_data)
-    pid = info_data['pid'][0]
-    crop_name = info_data['cropname'][0]
-    area = info_data['area'][0]
+    pid = parcel['pid'][0]
+    crop_name = parcel['cropname'][0]
+    area = parcel['area'][0]
     ci_path = normpath(join(path, 'chip_images'))
     columns = 4
 

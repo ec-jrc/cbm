@@ -5,17 +5,18 @@ from ipywidgets import Output, VBox, SelectionSlider
 from mpl_toolkits.axes_grid1 import ImageGrid
 
 import rasterio
+from rasterio.crs import CRS
 from rasterio.plot import show
 from descartes import PolygonPatch
 from copy import copy
 # import matplotlib.ticker as ticker
 # import numpy as np
 
-from cbm.utils import config, spatial_utils
+from cbm.utils import config
 from cbm.get import background as bg
 
 
-def slider(aoi, pid, chipsize=512, extend=512, tms=['Google']):
+def slider(aoi, pid, chipsize=512, extend=512, tms=['Google'], debug=False):
 
     workdir = config.get_value(['paths', 'temp'])
     path = f'{workdir}/{aoi}/{pid}/'
@@ -26,7 +27,9 @@ def slider(aoi, pid, chipsize=512, extend=512, tms=['Google']):
             bg.by_pid(aoi, pid, chipsize, extend, t, True)
 
     with open(f'{path}info.json', "r") as f:
-        json_data = json.load(f)
+        parcel = json.load(f)
+        if type(parcel['geom'][0]) is str:
+            parcel['geom'] = [json.loads(g) for g in parcel['geom']]
 
     def overlay_parcel(img, geom):
         patche = [PolygonPatch(feature, edgecolor="yellow",
@@ -36,8 +39,14 @@ def slider(aoi, pid, chipsize=512, extend=512, tms=['Google']):
 
     with rasterio.open(f'{bg_path}{tms[0].lower()}.tif') as img:
         img_epsg = img.crs.to_epsg()
-        geom = spatial_utils.transform_geometry(json_data, img_epsg)
-        patches = overlay_parcel(img, geom)
+        if debug:
+            print('img_epsg: ', img_epsg)
+        parcel['geom'] = [rasterio.warp.transform_geom(
+                CRS.from_epsg(parcel['srid'][0]),
+                CRS.from_epsg(img_epsg),
+                g,  precision=6
+            ) for g in parcel['geom']]
+        patches = overlay_parcel(img, parcel)
 
     selection = SelectionSlider(
         options=tms,

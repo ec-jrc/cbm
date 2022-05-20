@@ -449,7 +449,8 @@ def get():
             files_pci = normpath(join(datapath, 'chip_images'))
             outlog(f"Getting '{pci_band.value}' chip images for parcel: {pid}")
             with progress:
-                get_requests.rcbl(parcel, pci_start_date.value,
+                get_requests.rcbl(parcel.get('clon')[0], parcel.get('clat')[0],
+                                  pci_start_date.value,
                                   pci_end_date.value, pci_band.value,
                                   pci_chipsize.value, files_pci)
             filet = normpath(join(datapath, 'chip_images',
