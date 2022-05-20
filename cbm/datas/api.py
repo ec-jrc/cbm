@@ -7,6 +7,7 @@
 # Copyright : 2021 European Commission, Joint Research Centre
 # License   : 3-Clause BSD
 
+import io
 import requests
 from os.path import join, normpath, isfile
 
@@ -158,13 +159,13 @@ def rcbl(clon, clat, start_date, end_date,
 
         response = requests.get(requrl.format(api_url, clon, clat, start_date,
                                               end_date, band, chipsize),
-                                auth=(api_user, api_pass))
+                                auth=(api_user, api_pass)).content
         if debug:
             print("Request url:", requrl.format(
                 api_url, clon, clat, start_date, end_date, band, chipsize))
             print("Response:", response)
         # Create a pandas DataFrame from the json response
-        df = pd.read_json(response.content)
+        df = pd.read_json(io.StringIO(response.decode('utf-8')))
         os.makedirs(filespath, exist_ok=True)
 
         # Download the GeoTIFFs that were just created in the user cache
