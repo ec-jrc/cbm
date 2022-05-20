@@ -11,8 +11,10 @@ import os
 import json
 import glob
 import rasterio
+from rasterio.crs import CRS
 import numpy as np
 import matplotlib.pyplot as plt
+from copy import copy
 from shutil import rmtree
 from skimage import exposure
 from datetime import datetime
@@ -21,7 +23,23 @@ from descartes import PolygonPatch
 from cbm.get import parcel_info, chip_images
 from os.path import join, normpath, isfile, exists
 
-from cbm.utils import data_options, spatial_utils, raster_utils, config
+from cbm.utils import data_options, raster_utils, config
+
+
+def overlay_parcel(img, parcel, debug=False):
+    """Create parcel polygon overlay"""
+    img_epsg = img.crs.to_epsg()
+    if debug:
+        print('img_epsg: ', img_epsg)
+    parcel['geom'] = [rasterio.warp.transform_geom(
+        CRS.from_epsg(parcel['srid'][0]),
+        CRS.from_epsg(img_epsg),
+        feature,  precision=6
+    ) for feature in parcel['geom']]
+    patches = [PolygonPatch(feature, edgecolor="yellow",
+                            facecolor="none", linewidth=2
+                            ) for feature in parcel['geom']]
+    return patches
 
 
 def grid(aoi, year, pid, start_date=None, end_date=None, imgtype=['B04', 'B08'],
@@ -48,7 +66,9 @@ def grid(aoi, year, pid, start_date=None, end_date=None, imgtype=['B04', 'B08'],
     if not isfile(file_info):
         parcel_info.by_pid(aoi, str(year), str(pid), ptype, True)
     with open(file_info, 'r') as f:
-        info_data = json.loads(f.read())
+        parcel = json.load(f)
+        if type(parcel['geom'][0]) is str:
+            parcel['geom'] = [json.loads(g) for g in parcel['geom']]
 
     ci_path = normpath(join(path, 'chip_images'))
     if clean_history:
@@ -77,8 +97,8 @@ def grid(aoi, year, pid, start_date=None, end_date=None, imgtype=['B04', 'B08'],
                 chip_images.by_pid(aoi, year, pid, drange[0], drange[1],
                                    b, chipsize, ptype, debug)
 
-    crop_name = info_data['cropname'][0]
-    area = info_data['area'][0]
+    crop_name = parcel['cropname'][0]
+    area = parcel['area'][0]
 
     # available_options = raster_utils.available_options(path, pid)
 
@@ -104,8 +124,15 @@ def grid(aoi, year, pid, start_date=None, end_date=None, imgtype=['B04', 'B08'],
             with rasterio.open(img_png, format='PNG') as img:
                 overlay_date(img, row['date'].date())  # Add date overlay.
                 ax = plt.gca()
+                if i == 0:
+                    patches = overlay_parcel(img, parcel, debug)
                 if show_parcel:
-                    ax.add_patch(overlay_parcel(img, info_data))
+                    try:
+                        for patch in patches:
+                            ax.add_patch(copy(patch))
+                    except Exception as err:
+                        if debug:
+                            print("Could not show parcel polygon", err)
 
                 plt.axis('off')  # Turn of axis.
                 pA, pB = np.percentile(
@@ -133,22 +160,28 @@ def grid(aoi, year, pid, start_date=None, end_date=None, imgtype=['B04', 'B08'],
 
             imgs_path = normpath(join(ci_path, row['imgs']))
             b4f = f"{imgs_path}.B04.tif"
-            b4 = rasterio.open(b4f, format='GTiff')
-
-            ndvi = raster_utils.calc_ndvi(imgs_path, img_png, bands)
-            overlay_date(b4, row['date'].date())  # Add date overlay.
-            ax = plt.gca()
-            if show_parcel:
-                ax.add_patch(overlay_parcel(b4, info_data))
+            with rasterio.open(b4f, format='GTiff') as img:
+                overlay_date(img, row['date'].date())  # Add date overlay.
+                ax = plt.gca()
+                if i == 0:
+                    patches = overlay_parcel(img, parcel, debug)
+                if show_parcel:
+                    try:
+                        for patch in patches:
+                            ax.add_patch(copy(patch))
+                    except Exception as err:
+                        if debug:
+                            print("Could not show parcel polygon", err)
 
             plt.axis('off')  # Turn of axis.
+            ndvi = raster_utils.calc_ndvi(imgs_path, img_png, bands)
             pA, pB = np.percentile(
                 ndvi, tuple(percentile))
 
-            show(ndvi, ax=ax, transform=b4.transform,
+            show(ndvi, ax=ax, transform=img.transform,
                  cmap=cmap, vmin=pA, vmax=pB)
 
-            b4.close()
+            img.close()
         return plt.show()
 
     def single_band(band):
@@ -160,12 +193,18 @@ def grid(aoi, year, pid, start_date=None, end_date=None, imgtype=['B04', 'B08'],
             img_gtif = normpath(
                 join(ci_path, f"{row['imgs']}.{bands[0]}.tif"))
             with rasterio.open(img_gtif, format='GTiff') as img:
-
                 overlay_date(img, row['date'].date())
                 plt.axis('off')
                 ax = plt.gca()
+                if i == 0:
+                    patches = overlay_parcel(img, parcel, debug)
                 if show_parcel:
-                    ax.add_patch(overlay_parcel(img, info_data))
+                    try:
+                        for patch in patches:
+                            ax.add_patch(copy(patch))
+                    except Exception as err:
+                        if debug:
+                            print("Could not show parcel polygon", err)
 
                 img_read = img.read(1)
 
@@ -183,18 +222,7 @@ def grid(aoi, year, pid, start_date=None, end_date=None, imgtype=['B04', 'B08'],
             img.bounds.top - ((img.bounds.top - img.bounds.bottom) / 6.5),
             date, color='yellow', weight='bold', size=12, bbox=dict(
                 boxstyle="round", ec='yellow', fc='black', alpha=0.2))
-
         return date_text
-
-    def overlay_parcel(img, geom):
-        with open(file_info, 'r') as f:
-            info_data = json.loads(f.read())
-        img_epsg = img.crs.to_epsg()
-        geo_json = spatial_utils.transform_geometry(info_data, img_epsg)
-        patche = [PolygonPatch(feature, edgecolor="yellow",
-                               facecolor="none", linewidth=2
-                               ) for feature in [geo_json['geom'][0]]]
-        return patche[0]
 
     if len(bands) == 1 and bands[0][0].lower() == 'b':
         return single_band(bands[0])
@@ -222,10 +250,9 @@ def check_chipsize(path, chipsize):
     if os.path.isdir(path):
         old = glob.glob(f"{path}/chipsize_*")
         if len(old) > 0:
-            old_chipsize = int(old[0].split('_')[-1])
-            if old_chipsize != chipsize:
-                os.rename(rf'{old_chipsize[0]}',
-                          rf'{path}/chipsize_{chipsize}')
+            old_chipsize = old[0].split('_')[-1]
+            if old_chipsize != str(chipsize):
+                os.rename(old[0], f'{path}/chipsize_{chipsize}')
                 return False
             else:
                 return True

@@ -11,6 +11,7 @@ import os
 import json
 import glob
 import rasterio
+from rasterio.crs import CRS
 import matplotlib.pyplot as plt
 from copy import copy
 from os.path import join, normpath, isfile
@@ -18,16 +19,24 @@ from descartes import PolygonPatch
 from rasterio.plot import show
 from mpl_toolkits.axes_grid1 import ImageGrid
 
-from cbm.utils import config, spatial_utils
+from cbm.utils import config
 from cbm.get import parcel_info, background
 
 
-def overlay_parcel(img, geom):
+def overlay_parcel(img, parcel, debug=False):
     """Create parcel polygon overlay"""
-    patche = [PolygonPatch(feature, edgecolor="yellow",
-                           facecolor="none", linewidth=2
-                           ) for feature in geom['geom']]
-    return patche
+    img_epsg = img.crs.to_epsg()
+    if debug:
+        print('img_epsg: ', img_epsg)
+    parcel['geom'] = [rasterio.warp.transform_geom(
+        CRS.from_epsg(parcel['srid'][0]),
+        CRS.from_epsg(img_epsg),
+        feature,  precision=6
+    ) for feature in parcel['geom']]
+    patches = [PolygonPatch(feature, edgecolor="yellow",
+                            facecolor="none", linewidth=2
+                            ) for feature in parcel['geom']]
+    return patches
 
 
 def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['google'],
@@ -62,6 +71,8 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['google'],
             pid = parcel['pid'][0]
         else:
             pid = parcel['pid']
+        if type(parcel['geom'][0]) is str:
+            parcel['geom'] = [json.loads(g) for g in parcel['geom']]
 
         workdir = normpath(join(config.get_value(['paths', 'temp']),
                                 aoi, str(year), str(pid)))
@@ -98,13 +109,8 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['google'],
     if parcel_id:
         with open(normpath(join(workdir, 'info.json')), 'r') as f:
             parcel = json.load(f)
-
-        with rasterio.open(normpath(join(bg_path,
-                                         f'{tms[0].lower()}.tif'))) as img:
-            img_epsg = img.crs.to_epsg()
-            geom = spatial_utils.transform_geometry(
-                parcel, img_epsg, debug=debug)
-            patches = overlay_parcel(img, geom)
+            if type(parcel['geom'][0]) is str:
+                parcel['geom'] = [json.loads(g) for g in parcel['geom']]
 
     rows = int(len(tms) // columns + (len(tms) % columns > 0))
     fig = plt.figure(figsize=(30, 10 * rows))
@@ -121,9 +127,13 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['google'],
             bbox=dict(boxstyle="round", ec='yellow', fc='black', alpha=0.2))
         return date_text
 
+    with rasterio.open(normpath(join(bg_path, f'{tms[0].lower()}.tif'))) as img:
+        patches = overlay_parcel(img, parcel, debug)
+
     for ax, t in zip(grid, tms):
         with rasterio.open(normpath(join(bg_path, f'{t.lower()}.tif'))) as img:
             if parcel_id:
+                # patches = overlay_parcel(img, parcel, debug)
                 for patch in patches:
                     ax.add_patch(copy(patch))
             overlay_title(img, t)
@@ -186,14 +196,8 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['google'],
 
     with open(file_info, 'r') as f:
         parcel = json.load(f)
-        # if type(parcel['geom'][0]) is str:
-        #     parcel['geom'] = [json.loads(g) for g in parcel['geom']]
-
-    with rasterio.open(normpath(join(bg_path, f'{tms[0].lower()}.tif'))) as img:
-        img_epsg = img.crs.to_epsg()
-        geom = spatial_utils.transform_geometry(
-            parcel, img_epsg, 5514, debug=debug)
-        patches = overlay_parcel(img, geom)
+        if type(parcel['geom'][0]) is str:
+            parcel['geom'] = [json.loads(g) for g in parcel['geom']]
 
     rows = int(len(tms) // columns + (len(tms) % columns > 0))
     fig = plt.figure(figsize=(30, 10 * rows))
@@ -209,16 +213,20 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['google'],
             bbox=dict(boxstyle="round", ec='yellow', fc='black', alpha=0.2))
         return date_text
 
+    with rasterio.open(normpath(join(bg_path, f'{tms[0].lower()}.tif'))) as img:
+        patches = overlay_parcel(img, parcel, debug)
+
     for ax, t in zip(grid, tms):
         try:
             with rasterio.open(normpath(join(bg_path, f'{t.lower()}.tif'))) as img:
+                # patches = overlay_parcel(img, parcel, debug)
                 for patch in patches:
                     ax.add_patch(copy(patch))
                 overlay_title(img, t)
                 show(img, ax=ax)
     #            ax.xaxis.set_major_locator(ticker.MultipleLocator(200))
         except Exception as err:
-            print("Could not get image from '{t}', ", err)
+            print("Could not add overlay", err)
 
     if len(tms) > columns and columns * rows > len(tms):
         for ax in grid[-((columns * rows - len(tms))):]:

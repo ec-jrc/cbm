@@ -9,6 +9,7 @@
 
 import json
 import rasterio
+from rasterio.crs import CRS
 from matplotlib import gridspec
 import matplotlib.pyplot as plt
 from copy import copy
@@ -16,17 +17,25 @@ from os.path import join, normpath, isfile, getsize
 from descartes import PolygonPatch
 from rasterio.plot import show
 
-from cbm.utils import config, spatial_utils
+from cbm.utils import config
 from cbm.get import background as get_bg
 from cbm.get import parcel_info
 
 
-def overlay_parcel(geom):
+def overlay_parcel(img, parcel, debug=False):
     """Create parcel polygon overlay"""
-    patche = [PolygonPatch(feature, edgecolor="yellow",
-                           facecolor="none", linewidth=2
-                           ) for feature in geom['geom']]
-    return patche
+    img_epsg = img.crs.to_epsg()
+    if debug:
+        print('img_epsg: ', img_epsg)
+    parcel['geom'] = [rasterio.warp.transform_geom(
+        CRS.from_epsg(parcel['srid'][0]),
+        CRS.from_epsg(img_epsg),
+        feature,  precision=6
+    ) for feature in parcel['geom']]
+    patches = [PolygonPatch(feature, edgecolor="yellow",
+                            facecolor="none", linewidth=2
+                            ) for feature in parcel['geom']]
+    return patches
 
 
 def by_pid(aoi, year, pid, ptype=None, tms='osm', debug=False):
@@ -56,8 +65,8 @@ def by_pid(aoi, year, pid, ptype=None, tms='osm', debug=False):
             return "No parcel found, please check the parcel ID"
     with open(normpath(join(workdir, 'info.json')), 'r') as f:
         parcel = json.load(f)
-        # if type(parcel['geom'][0]) is str:
-        #     parcel['geom'] = [json.loads(g) for g in parcel['geom']]
+        if type(parcel['geom'][0]) is str:
+            parcel['geom'] = [json.loads(g) for g in parcel['geom']]
 
     plt.rcParams['font.size'] = 14
     plt.figure(figsize=(10, 3))
@@ -70,11 +79,10 @@ def by_pid(aoi, year, pid, ptype=None, tms='osm', debug=False):
             get_bg.by_pid(aoi, year, pid, 256, 1024, tms, ptype, True, debug)
         elif getsize(normpath(join(bg_path, f'osm.tif'))) < 1000:
             get_bg.by_pid(aoi, year, pid, 256, 1024, tms, ptype, True, debug)
-        with rasterio.open(normpath(join(bg_path, f'{tms}.tif'))) as img:
-            img_epsg = img.crs.to_epsg()
-            geom = spatial_utils.transform_geometry(
-                parcel, img_epsg, debug=debug)
-            patches = overlay_parcel(geom)
+        # with rasterio.open(normpath(join(bg_path, f'{tms.lower()}.tif'))) as img:
+        #     patches = overlay_parcel(img, parcel, debug)
+        with rasterio.open(normpath(join(bg_path, f'{tms.lower()}.tif'))) as img:
+            patches = overlay_parcel(img, parcel, debug)
             for patch in patches:
                 ax2.add_patch(copy(patch))
             show(img, ax=ax2)
