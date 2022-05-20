@@ -22,7 +22,7 @@ from logging.handlers import TimedRotatingFileHandler
 from flask import (Flask, request, send_from_directory, make_response,
                    render_template, abort, url_for, current_app)
 
-from scripts import db_queries, image_requests, users, info_page, file_manager
+from scripts import db_queries, image_chips, users, info_page, file_manager
 
 # Global variables
 UPLOAD_ENABLE = True  # Enable upload page (http://HOST/files/upload).
@@ -195,7 +195,7 @@ def backgroundByLocation_query():
 
     unique_id = f"static/dump/{rip}E{lon}N{lat}_{chipsize}_{chipextend}_{tms}".replace(
         '.', '_')
-    data = image_requests.getBackgroundByLocation(
+    data = image_chips.getBackgroundByLocation(
         lon, lat, chipsize, chipextend, tms, unique_id, iformat, False)
     if data:
         if 'raw' in request.args.keys() or iformat == 'tif':
@@ -266,7 +266,7 @@ def backgroundByID_query():
     lon, lat = db_queries.getParcelCentroid(dataset, pid, ptype)
     unique_id = f"static/dump/{rip}E{lon}N{lat}_{chipsize}_{chipextend}_{tms}".replace(
         '.', '_')
-    data = image_requests.getBackgroundByLocation(
+    data = image_chips.getBackgroundByLocation(
         lon, lat, chipsize, chipextend, tms, unique_id, iformat, withGeometry)
     if data:
         if 'raw' in request.args.keys() or iformat == 'tif':
@@ -319,7 +319,7 @@ def chipsByLocation_query():
 
     unique_id = f"dump/{rip}E{lon}N{lat}L{lut}_{plevel}_{bands}".replace(
         '.', '_')
-    data = image_requests.getChipsByLocation(
+    data = image_chips.getChipsByLocation(
         lon, lat, start_date, end_date, unique_id, lut, bands, plevel)
     if data:
         return send_from_directory(f"chip_extract/{unique_id}", 'dump.html')
@@ -383,7 +383,7 @@ def chipsByParcelID_query():
     lat = str(json.loads(parcel)['clat'][0])
     unique_id = f"dump/{rip}E{lon}N{lat}_{plevel}_{chipsize}_{band}".replace(
         '.', '_')
-    data = image_requests.getRawChipByLocation(
+    data = image_chips.getRawChipByLocation(
         lon, lat, start_date, end_date, unique_id, band, chipsize, plevel)
     if data:
         return send_from_directory(f"chip_extract/{unique_id}", 'dump.json')
@@ -425,7 +425,7 @@ def rawChipByLocation_query():
 
     unique_id = f"dump/{rip}E{lon}N{lat}_{plevel}_{chipsize}_{band}".replace(
         '.', '_')
-    data = image_requests.getRawChipByLocation(
+    data = image_chips.getRawChipByLocation(
         lon, lat, start_date, end_date, unique_id, band, chipsize, plevel)
     if data:
         return send_from_directory(f"chip_extract/{unique_id}", 'dump.json')
@@ -491,7 +491,7 @@ def rawChipByParcelID_query():
     lat = str(json.loads(parcel)['clat'][0])
     unique_id = f"dump/{rip}E{lon}N{lat}_{plevel}_{chipsize}_{band}".replace(
         '.', '_')
-    data = image_requests.getRawChipByLocation(
+    data = image_chips.getRawChipByLocation(
         lon, lat, start_date, end_date, unique_id, band, chipsize, plevel)
     if data:
         return send_from_directory(f"chip_extract/{unique_id}", 'dump.json')
@@ -539,7 +539,7 @@ def rawChipsBatch_query():
         logger.info("Dumping params")
         sink.write(json.dumps(params))
 
-    data = image_requests.getRawChipsBatch(unique_id)
+    data = image_chips.getRawChipsBatch(unique_id)
     if data:
         return send_from_directory(f"chip_extract/{unique_id}", 'dump.json')
     else:
@@ -583,7 +583,7 @@ def rawS1ChipsBatch_query():
         logger.info("Dumping params")
         sink.write(json.dumps(params))
 
-    data = image_requests.getRawS1ChipsBatch(unique_id)
+    data = image_chips.getRawS1ChipsBatch(unique_id)
     if data:
         return send_from_directory(f"chip_extract/{unique_id}", 'dump.json')
     else:

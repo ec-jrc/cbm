@@ -22,13 +22,12 @@
 import os
 import glob
 import time
-import sys
 import logging
 from datetime import datetime
 # from concurrent.futures import ProcessPoolExecutor, as_completed
 
-from scripts.dias import creodiasCARDchips as ccc
-from scripts import chipRipper2
+from scripts.image_chips.dias import creodiasCARDchips as ccc
+from scripts.image_chips import chipRipper2
 
 # logging.basicConfig(filename=os.path.basename(sys.argv[0]).replace(
 #     '.py', '.log'), filemode='w',

@@ -8,15 +8,18 @@
 # License   : 3-Clause BSD
 
 import logging
-from scripts import backgroundExtract as bgext
-from scripts import chipS2Extractor2 as ces2
-from scripts import rawChipBatchExtract as rceb
-from scripts import rawChipExtractor as rce
-from scripts import rawS1ChipBatchExtract as rces1
+import docker
+from scripts.image_chips import backgroundExtract as bgext
+from scripts.image_chips import chipS2Extractor2 as ces2
+from scripts.image_chips import rawChipBatchExtract as rceb
+from scripts.image_chips import rawChipExtractor as rce
+from scripts.image_chips import rawS1ChipBatchExtract as rces1
 
 
 def getBackgroundByLocation(lon, lat, chipsize, chipextend, tms,
                             unique_id, iformat, withGeometry):
+
+    client = docker.from_env()
     try:
         logging.debug(unique_id)
         logging.debug(f"{unique_id} {iformat}")

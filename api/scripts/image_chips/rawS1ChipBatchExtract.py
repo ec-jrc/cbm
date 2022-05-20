@@ -17,13 +17,11 @@
 import os
 import glob
 import time
-import sys
-
 import json
 import logging
 
 
-from scripts.dias import creodiasCARDchips as ccc
+from scripts.image_chips.dias import creodiasCARDchips as ccc
 
 # import jobLauncher as jl
 

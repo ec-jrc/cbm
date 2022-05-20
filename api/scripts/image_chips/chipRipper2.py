@@ -38,7 +38,7 @@ from rasterio.session import AWSSession
 
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
-from scripts import download_with_boto3 as dwb
+from scripts.image_chips import download_with_boto3 as dwb
 
 # logging.basicConfig(filename=os.path.basename(sys.argv[0]).replace(
 #     '.py', '.log'), filemode='w', format='%(name)s - %(levelname)s - %(message)s', level=logging.DEBUG)
