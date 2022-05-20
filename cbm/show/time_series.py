@@ -238,7 +238,7 @@ def s2(aoi, year, pid, ptype=None, bands=['B02', 'B03', 'B04', 'B08'],
     fig = plt.figure(figsize=(16.0, 10.0))
     axb = fig.add_subplot(1, 1, 1)
 
-    axb.set_title(f"Parcel {pid} (crop: {crop_name}, area: {area:.2f} ha)")
+    axb.set_title(f"Parcel {pid} (crop: {crop_name}, area: {area:.1f} sqm)")
     axb.set_xlabel("Date")
     axb.xaxis.set_major_formatter(datesFmt)
     axb.set_ylabel(r'DN')
@@ -481,7 +481,7 @@ def weather(aoi, year, pid, tstype='tp', ptype=None, debug=False):
     # Plot temperature and precipitation
     fig = plt.figure(figsize=(16.0, 10.0))
     axw = fig.add_subplot(1, 1, 1)
-    axw.set_title(f"Parcel {pid} (crop: {crop_name}, area: {area:.2f} ha)")
+    axw.set_title(f"Parcel {pid} (crop: {crop_name}, area: {area:.1f} sqm)")
     axw.set_xlabel("Date")
     axw.xaxis.set_major_formatter(datesFmt)
     if 't' in tstype[:3]:
