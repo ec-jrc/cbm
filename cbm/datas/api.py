@@ -139,12 +139,12 @@ def cbl(lon, lat, start_date, end_date, bands=None, lut=None, chipsize=None):
     return response
 
 
-def rcbl(parcel, start_date, end_date, bands, chipsize, filespath, debug=False):
+def rcbl(clon, clat, start_date, end_date,
+         bands, chipsize, filespath, debug=False):
     """Get parcel raw chip images from RESTful API by location"""
     import os
     import os.path
     import pandas as pd
-    from osgeo import osr, ogr
     import time
     start = time.time()
     api_url, api_user, api_pass = config.credentials('api')
@@ -156,36 +156,12 @@ def rcbl(parcel, start_date, end_date, bands, chipsize, filespath, debug=False):
         if chipsize is not None:
             requrl = f"{requrl}&chipsize={chipsize}"
 
-        # Create a valid geometry from the returned JSON withGeometry
-        geom = ogr.CreateGeometryFromJson(parcel.get('geom')[0])
-        source = osr.SpatialReference()
-        source.ImportFromEPSG(parcel.get('srid')[0])
-
-        # Assign this projection to the geometry
-        geom.AssignSpatialReference(source)
-        target = osr.SpatialReference()
-        target.ImportFromEPSG(4326)
-        transform = osr.CoordinateTransformation(source, target)
-
-        # And get the lon, lat for its centroid, so that we can center the chips
-        # on the parcel
-        centroid = geom.Centroid()
-        centroid.Transform(transform)
-
-        # Use pid for next request
-        # pid = parcel['pid'][0]
-        # cropname = parcel['cropname'][0]
-
-        # Set up the rawChip request
-        cen_x, cen_y = str(centroid.GetX()), str(centroid.GetY())
-
-        response = requests.get(requrl.format(api_url, cen_y, cen_x, start_date,
+        response = requests.get(requrl.format(api_url, clon, clat, start_date,
                                               end_date, band, chipsize),
                                 auth=(api_user, api_pass))
         if debug:
             print("Request url:", requrl.format(
-                api_url, cen_y, cen_x, start_date, end_date, band, chipsize))
-            print("Centroid", centroid)
+                api_url, clon, clat, start_date, end_date, band, chipsize))
             print("Response:", response)
         # Create a pandas DataFrame from the json response
         df = pd.read_json(response.content)

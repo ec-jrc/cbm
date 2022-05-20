@@ -56,8 +56,8 @@ def by_location(aoi, lon, lat, start_date, end_date, band, chipsize,
         print(f"Getting '{band}' chip images for parcel: {pid}")
 
     images_dir = normpath(join(workdir, 'chip_images'))
-    get_requests.rcbl(parcel, start_date, end_date, [band],
-                      chipsize, images_dir, debug)
+    get_requests.rcbl(parcel.get('clon')[0], parcel.get('clat')[0],
+                      start_date, end_date, [band], chipsize, images_dir, debug)
 
     images_list = normpath(join(workdir, 'chip_images',
                                 f'images_list.{band}.csv'))
@@ -110,8 +110,8 @@ def by_pid(aoi, year, pid, start_date, end_date, band, chipsize,
     if debug:
         print(f"Getting '{band}' chip images for parcel: {pid}")
 
-    get_requests.rcbl(parcel, start_date, end_date, [band],
-                      chipsize, images_dir, debug)
+    get_requests.rcbl(parcel.get('clon')[0], parcel.get('clat')[0],
+                      start_date, end_date, [band], chipsize, images_dir, debug)
 
     images_list = normpath(join(workdir, 'chip_images',
                                 f'images_list.{band}.csv'))
