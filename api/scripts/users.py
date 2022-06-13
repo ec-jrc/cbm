@@ -114,7 +114,9 @@ def add(username, password='', aoi=''):
     with open(users_file, 'w') as u:
         json.dump(users, u, indent=2)
 
-    print(f"The user '{username}' was created.")
+    if aoi == 'admin':
+        aoi = "all"
+    print(f"The user '{username}' was created with access to {aoi} data.")
 
 
 def get_list(file=users_file, only_names=True, aois=False):
