@@ -20,7 +20,7 @@ from os.path import join, normcase, normpath
 from cbm.utils import update
 from pkg_resources import get_distribution, DistributionNotFound
 
-from cbm import show, get, extract, foi, card2db
+from cbm import show, get, extract, foi, card2db, reports
 
 if sys.version_info < (3, 6):
     print("Not supoted python version, cbm needs python version > 3.6")
