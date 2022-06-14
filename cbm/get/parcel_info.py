@@ -13,7 +13,7 @@ from os.path import join, normpath, dirname
 from cbm.utils import config
 
 
-def by_location(aoi, year, lon, lat, ptype=None, geom=False,
+def by_location(aoi, year, lon, lat, ptype=None, geom=True,
                 wgs84=False, debug=False):
     """Download the time series for the selected year
 
@@ -30,6 +30,7 @@ def by_location(aoi, year, lon, lat, ptype=None, geom=False,
     parcel = get_requests.parcel_by_loc(
         aoi, year, lon, lat, ptype, geom, wgs84, debug)
     if validate_parcel(parcel, debug):
+        parcel = json.loads(parcel)
         if type(parcel['pid']) is list:
             pid = parcel['pid'][0]
         else:
@@ -41,14 +42,12 @@ def by_location(aoi, year, lon, lat, ptype=None, geom=False,
             json.dump(parcel, f)
         if debug:
             print("Parcel information saved at: ", json_file)
-        return json.loads(parcel)
+        return parcel
     else:
-        if debug:
-            print("[Err]: No parcel information found")
         return None
 
 
-def by_pid(aoi, year, pid, ptype=None, geom=False,
+def by_pid(aoi, year, pid, ptype=None, geom=True,
            wgs84=False, debug=False):
     """Download the time series for the selected year
 
@@ -65,6 +64,7 @@ def by_pid(aoi, year, pid, ptype=None, geom=False,
     parcel = get_requests.parcel_by_id(
         aoi, year, pid, ptype, geom, wgs84, debug)
     if validate_parcel(parcel, debug):
+        parcel = json.loads(parcel)
         json_file = normpath(join(config.get_value(
             ['paths', 'temp']), aoi, str(year), str(pid), 'info.json'))
         os.makedirs(dirname(json_file), exist_ok=True)
@@ -72,19 +72,23 @@ def by_pid(aoi, year, pid, ptype=None, geom=False,
             json.dump(parcel, f)
         if debug:
             print("Parcel information saved at: ", json_file)
-        return json.loads(parcel)
+        return parcel
     else:
-        if debug:
-            print("[Err]: No parcel information found")
         return None
 
 
 def validate_parcel(parcel, debug=False):
-    if type(parcel) is dict:
-        if parcel != {}:
-            if parcel['pid'] != []:
-                return parcel
-    return None
+    try:
+        parcel = json.loads(parcel)
+        if type(parcel) is dict:
+            if parcel != {}:
+                if parcel['pid'] != []:
+                    return True
+        return False
+    except Exception:
+        if debug:
+            print("[Err]: No parcel information found")
+        return False
 
 
 def by_polygon(aoi, year, polygon, ptype=None, geom=False,
