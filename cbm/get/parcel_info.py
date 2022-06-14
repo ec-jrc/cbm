@@ -27,25 +27,24 @@ def by_location(aoi, year, lon, lat, ptype=None, geom=False,
         lon, lat, the the coords of the parcel (float).
     """
     get_requests = data_source()
-    parcel = json.loads(get_requests.parcel_by_loc(aoi, year, lon, lat, ptype,
-                                                   geom, wgs84, debug))
+    parcel = get_requests.parcel_by_loc(
+        aoi, year, lon, lat, ptype, geom, wgs84, debug)
     if validate_parcel(parcel, debug):
         if type(parcel['pid']) is list:
             pid = parcel['pid'][0]
         else:
             pid = parcel['pid']
-
-        json_file = normpath(join(config.get_value(['paths', 'temp']),
-                                  aoi, str(year), str(pid), 'info.json'))
+        json_file = normpath(join(config.get_value(
+            ['paths', 'temp']), aoi, str(year), str(pid), 'info.json'))
         os.makedirs(dirname(json_file), exist_ok=True)
         with open(json_file, "w") as f:
             json.dump(parcel, f)
         if debug:
             print("Parcel information saved at: ", json_file)
-        return parcel
+        return json.loads(parcel)
     else:
         if debug:
-            print("Err: No parcel information found")
+            print("[Err]: No parcel information found")
         return None
 
 
@@ -63,20 +62,20 @@ def by_pid(aoi, year, pid, ptype=None, geom=False,
         pid, the parcel id (int).
     """
     get_requests = data_source()
-    parcel = json.loads(get_requests.parcel_by_id(aoi, year, pid, ptype,
-                                                  geom, wgs84, debug))
+    parcel = get_requests.parcel_by_id(
+        aoi, year, pid, ptype, geom, wgs84, debug)
     if validate_parcel(parcel, debug):
-        json_file = normpath(join(config.get_value(['paths', 'temp']),
-                                  aoi, str(year), str(pid), 'info.json'))
+        json_file = normpath(join(config.get_value(
+            ['paths', 'temp']), aoi, str(year), str(pid), 'info.json'))
         os.makedirs(dirname(json_file), exist_ok=True)
         with open(json_file, "w") as f:
             json.dump(parcel, f)
         if debug:
             print("Parcel information saved at: ", json_file)
-        return parcel
+        return json.loads(parcel)
     else:
         if debug:
-            print("Err: No parcel information found")
+            print("[Err]: No parcel information found")
         return None
 
 
@@ -91,8 +90,8 @@ def validate_parcel(parcel, debug=False):
 def by_polygon(aoi, year, polygon, ptype=None, geom=False,
                wgs84=False, only_ids=True, debug=False):
     get_requests = data_source()
-    return get_requests.parcel_by_polygon(aoi, year, polygon, ptype, geom,
-                                          wgs84, only_ids, debug)
+    return get_requests.parcel_by_polygon(
+        aoi, year, polygon, ptype, geom, wgs84, only_ids, debug)
 
 
 def data_source():

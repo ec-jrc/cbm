@@ -62,7 +62,7 @@ def by_pid(aoi, year, pid, ptype=None, tms='osm', debug=False):
     if not isfile(file_info):
         if not parcel_info.by_pid(aoi, str(year), str(pid), ptype,
                                   True, False, debug):
-            return "No parcel found, please check the parcel ID"
+            return "[Err]: No parcel found, please check the parameters"
     with open(normpath(join(workdir, 'info.json')), 'r') as f:
         parcel = json.load(f)
         if type(parcel['geom'][0]) is str:

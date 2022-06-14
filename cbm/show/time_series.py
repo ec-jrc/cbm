@@ -47,7 +47,7 @@ def ndvi(aoi, year, pids, ptype=None, scl='3_8_9_10_11', std=True,
         file_info = normpath(join(path, 'info.json'))
         if not isfile(file_info):
             if not parcel_info.by_pid(aoi, year, pid, ptype, True, False, debug):
-                return f"No parcel found, please check the parcel ID({pid})"
+                return "[Err]: No parcel found, please check the parameters"
         with open(file_info, 'r') as f:
             info_data = json.loads(f.read())
         crop_names.append(info_data['cropname'][0])
@@ -178,7 +178,7 @@ def s2(aoi, year, pid, ptype=None, bands=['B02', 'B03', 'B04', 'B08'],
     file_info = normpath(join(path, 'info.json'))
     if not isfile(file_info):
         if not parcel_info.by_pid(aoi, year, pid, ptype, True, False, debug):
-            return f"No parcel found, please check the parcel ID({pid})"
+            return "[Err]: No parcel found, please check the parameters"
     with open(file_info, 'r') as f:
         parcel = json.loads(f.read())
 
@@ -306,7 +306,7 @@ def s1(aoi, year, pids, tstype='bs', ptype=None, std=True,
         file_info = normpath(join(path, 'info.json'))
         if not isfile(file_info):
             if not parcel_info.by_pid(aoi, year, pid, ptype, True, False, debug):
-                return f"No parcel found, please check the parcel ID({pid})"
+                return "[Err]: No parcel found, please check the parameters"
         with open(file_info, 'r') as f:
             info_data = json.loads(f.read())
         crop_names.append(info_data['cropname'][0])
@@ -446,7 +446,7 @@ def weather(aoi, year, pid, tstype='tp', ptype=None, debug=False):
     file_info = normpath(join(path, 'info.json'))
     if not isfile(file_info):
         if not parcel_info.by_pid(aoi, year, pid, ptype, True, False, debug):
-            return f"No parcel found, please check the parcel ID({pid})"
+            return "[Err]: No parcel found, please check the parameters"
     with open(file_info, 'r') as f:
         parcel = json.loads(f.read())
 
