@@ -28,7 +28,7 @@ def all_equal(iterable):
 
 
 def ndvi(aoi, year, pids, ptype=None, scl='3_8_9_10_11', std=True,
-         max_line_plots=10, errorbar=True, debug=False):
+         max_line_plots=10, errorbar=True, view=True, debug=False):
 
     if type(pids) is not list:
         pids = [pids]
@@ -53,6 +53,7 @@ def ndvi(aoi, year, pids, ptype=None, scl='3_8_9_10_11', std=True,
         crop_names.append(info_data['cropname'][0])
     parcel_peers = all_equal(crop_names)
 
+    plt.rcParams['figure.facecolor'] = 'white'
     fig = plt.figure(figsize=(16.0, 10.0))
     axn = fig.add_subplot(1, 1, 1)
 
@@ -165,11 +166,14 @@ def ndvi(aoi, year, pids, ptype=None, scl='3_8_9_10_11', std=True,
         print(message)
     axn.set_title(plot_title)
 
-    return plt.show()
+    if not view:
+        plt.close(fig)
+        return fig
+    return plt.show(fig)
 
 
 def s2(aoi, year, pid, ptype=None, bands=['B02', 'B03', 'B04', 'B08'],
-       scl='3_8_9_10_11', debug=False):
+       scl='3_8_9_10_11', view=True, debug=False):
     if type(bands) is str:
         bands = [bands]
     path = normpath(join(config.get_value(['paths', 'temp']),
@@ -235,6 +239,7 @@ def s2(aoi, year, pid, ptype=None, bands=['B02', 'B03', 'B04', 'B08'],
     datesFmt = mdates.DateFormatter('%-d %b %Y')
 
     # Plot Band
+    plt.rcParams['figure.facecolor'] = 'white'
     fig = plt.figure(figsize=(16.0, 10.0))
     axb = fig.add_subplot(1, 1, 1)
 
@@ -284,11 +289,14 @@ def s2(aoi, year, pid, ptype=None, bands=['B02', 'B03', 'B04', 'B08'],
     axb.set_ylim(0, 10000)
     axb.legend(frameon=False)
 
-    return plt.show()
+    if not view:
+        plt.close(fig)
+        return fig
+    return plt.show(fig)
 
 
 def s1(aoi, year, pids, tstype='bs', ptype=None, std=True,
-       max_line_plots=10, errorbar=True, debug=False):
+       max_line_plots=10, errorbar=True, view=True, debug=False):
     if type(pids) is not list:
         pids = [pids]
     if max_line_plots > 20:
@@ -317,6 +325,7 @@ def s1(aoi, year, pids, tstype='bs', ptype=None, std=True,
     else:
         profile_type = '6 day coherence'
 
+    plt.rcParams['figure.facecolor'] = 'white'
     fig = plt.figure(figsize=(16.0, 10.0))
     ax = fig.add_subplot(1, 1, 1)
 
@@ -436,10 +445,14 @@ def s1(aoi, year, pids, tstype='bs', ptype=None, std=True,
         ax.legend(frameon=False)
     ax.set_title(plot_title)
     ax.legend(frameon=False)
-    return plt.show()
+
+    if not view:
+        plt.close(fig)
+        return fig
+    return plt.show(fig)
 
 
-def weather(aoi, year, pid, tstype='tp', ptype=None, debug=False):
+def weather(aoi, year, pid, tstype='tp', ptype=None, view=True, debug=False):
     path = normpath(join(config.get_value(['paths', 'temp']),
                          aoi, str(year), str(pid)))
 
@@ -479,6 +492,7 @@ def weather(aoi, year, pid, tstype='tp', ptype=None, debug=False):
     datesFmt = mdates.DateFormatter('%-d %b %Y')
 
     # Plot temperature and precipitation
+    plt.rcParams['figure.facecolor'] = 'white'
     fig = plt.figure(figsize=(16.0, 10.0))
     axw = fig.add_subplot(1, 1, 1)
     axw.set_title(f"Parcel {pid} (crop: {crop_name}, area: {area:.1f} sqm)")
@@ -502,4 +516,8 @@ def weather(aoi, year, pid, tstype='tp', ptype=None, debug=False):
         axp.legend(loc='upper right')
 
     axw.set_xlim(start_date - timedelta(1), end_date + timedelta(1))
-    return plt.show()
+
+    if not view:
+        plt.close(fig)
+        return fig
+    return plt.show(fig)
