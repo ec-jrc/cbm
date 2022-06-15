@@ -38,7 +38,7 @@ def overlay_parcel(img, parcel, debug=False):
     return patches
 
 
-def by_pid(aoi, year, pid, ptype=None, tms='osm', debug=False):
+def by_pid(aoi, year, pid, ptype=None, tms='osm', view=True, debug=False):
     """Show parcel information with an image with polygon overlay by selected
     parcel id. This function will get an image from the center of the polygon.
 
@@ -69,7 +69,8 @@ def by_pid(aoi, year, pid, ptype=None, tms='osm', debug=False):
             parcel['geom'] = [json.loads(g) for g in parcel['geom']]
 
     plt.rcParams['font.size'] = 14
-    plt.figure(figsize=(10, 3))
+    plt.rcParams['figure.facecolor'] = 'white'
+    fig = plt.figure(figsize=(10, 3))
     gs = gridspec.GridSpec(1, 2)
     ax1 = plt.subplot(gs[0, 0])
     ax2 = plt.subplot(gs[0, 1])
@@ -87,7 +88,7 @@ def by_pid(aoi, year, pid, ptype=None, tms='osm', debug=False):
                 ax2.add_patch(copy(patch))
             show(img, ax=ax2)
     except Exception as err:
-        print("Could not get image. ", err)
+        print("[Err]: Could not get image. ", err)
 
     text = [
         f"AOI: {aoi}",
@@ -105,4 +106,8 @@ def by_pid(aoi, year, pid, ptype=None, tms='osm', debug=False):
         first_line -= 0.12
 
     ax1.axis('off')
-    plt.show()
+
+    if not view:
+        plt.close(fig)
+        return fig
+    return plt.show(fig)

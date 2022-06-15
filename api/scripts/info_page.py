@@ -14,7 +14,7 @@ import itertools
 from scripts import users, db, db_queries
 
 
-def generator(user=None, selected_aoi=None):
+def generator(user=None, selected_aoi=None, selected_year=None):
     user_aois = users.get_list(only_names=False, aois=True)[user]
     with open('config/datasets.json', 'r') as f:
         all_datasets = json.load(f)
@@ -64,7 +64,7 @@ def generator(user=None, selected_aoi=None):
 
         # Get available tms
         tfiles = [f.split('/')[1].split('.')[0] for f in glob.glob('tms/*')]
-        available_tms = ['google', 'bing', 'osm', 'ags']
+        available_tms = ['google', 'bing', 'osm', 'esri']
         for f in tfiles:
             if "".join(itertools.takewhile(str.isalpha, f)) == aoi:
                 available_tms.append(f)
