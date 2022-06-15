@@ -14,9 +14,10 @@ import matplotlib.pyplot as plt
 import cbm
 
 
-def with_pdfme(aoi, year, pid, ptype='', notes="", folder='', fname=None):
+def with_pdfme(aoi, year, pid, ptype='', notes={}, params={}, folder='',
+               fname=None):
     """
-    Example parcel report generator
+    Example parcel report generator requares pdfme library
     """
     try:
         from pdfme import build_pdf
@@ -125,7 +126,7 @@ def with_pdfme(aoi, year, pid, ptype='', notes="", folder='', fname=None):
                                 {"colspan": 2,
                                  "style": {
                                      "text_align": "l",
-                                 }, "content": [[notes]]}, None
+                                 }, "content": [[notes['general']]]}, None
                             ],
                         ]
                     },
@@ -166,17 +167,33 @@ def from_notebook(with_code=False, nb_fname=None):
     """
     Create pdf report for a given notebook, if this runs in a notebook cell
         will generate a pdf report for the runninig notebook.
-    nb_fname: notebook name (optional)
     with_code: show code cels or not
+    nb_fname: notebook name (optional)
     """
+
+    def isnotebook():
+        try:
+            shell = get_ipython().__class__.__name__
+            if shell == 'ZMQInteractiveShell':
+                return True   # Jupyter notebook or qtconsole
+            elif shell == 'TerminalInteractiveShell':
+                return False  # Terminal running IPython
+            else:
+                return False  # Other type (?)
+        except NameError:
+            return False
+
     if not nb_fname:
+        if not isnotebook():
+            return "Not running in a Notebook, please provide notebook name"
         try:
             import ipynbname
             nb_fname = ipynbname.name()
         except Exception:
-            return ("Module 'ipynbname' is not instaled please install with",
-                    "'pip instal ipynbname' or provide the notebook name, ",
-                    "eg: cbm.reports.export_to_pdf.from_notebook('MyNB.ipynb')")
+            print("Module 'ipynbname' is not instaled please install with",
+                  "'pip install ipynbname' or provide the notebook name, ",
+                  "eg: cbm.reports.export_to_pdf.from_notebook(nb_fname='MyNB.ipynb')")
+            return None
     no_input = "" if with_code else "--no-input"
     subprocess.run(["jupyter", "nbconvert", "--to", "pdf", no_input, nb_fname])
     return f"Report generated, '{nb_fname}.pdf'"
