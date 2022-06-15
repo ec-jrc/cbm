@@ -13,12 +13,12 @@ import shutil
 from glob import glob
 from IPython.display import display
 from os.path import join, normpath, isdir
-from ipywidgets import (Label, VBox, HBox, Layout, Dropdown,
+from ipywidgets import (Label, VBox, HBox, Layout, Dropdown, Checkbox,
                         ToggleButtons, Output, Box, RadioButtons, Button)
 
 from cbm.utils import config
 from cbm.ipycbm.ipy_view import (view_map, view_grid, view_time_series,
-                                 view_code, view_notes)
+                                 view_info, view_notes)
 
 from cbm.ipycbm.ipy_get import get_panel
 
@@ -90,6 +90,14 @@ def view():
         icon='trash',
         layout=Layout(width='35px')
     )
+
+    swap_coords = Checkbox(
+        value=False,
+        disabled=False,
+        description='Swap coords',
+        indent=False
+    )
+
     source_box = VBox([])
 
     def on_source_change(obj):
@@ -101,7 +109,8 @@ def view():
     view_source.observe(on_source_change, 'value')
 
     code_info = Label()
-    single_box = HBox([select_year, selection_single, rm_parcel])
+    single_box = HBox([select_year, selection_single, rm_parcel, swap_coords],
+                      layout=Layout(width='100%'))
     select_box = Box([single_box])
 
     selection = VBox([Label("Select a data source."),
@@ -191,7 +200,7 @@ def view():
 
     def on_selection_change(obj):
         code_info.value = "Select how to view the dataset."
-        options_list = [('Get example code', 1)]
+        options_list = [('General information', 1)]
         if obj['new'] is not None:
             parceldata = normpath(
                 join(paths.value, select_aoi.value,
@@ -214,7 +223,7 @@ def view():
                                   select_year.value, selection_single.value))
         with view_box:
             if obj['new'] == 1:
-                display(view_code.code(data_path))
+                display(view_info.info(data_path))
             elif obj['new'] == 2:
                 display(view_time_series.time_series_widget(
                     select_aoi.value, select_year.value,
@@ -222,7 +231,7 @@ def view():
             elif obj['new'] == 3:
                 display(view_grid.imgs_grid(data_path))
             elif obj['new'] == 4:
-                display(view_map.widget_box(data_path))
+                display(view_map.widget_box(data_path, swap_coords.value))
 
     selection_single.observe(method_options, 'value')
     view_method.observe(method_options, 'value')

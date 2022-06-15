@@ -22,7 +22,7 @@ from ipyleaflet import (Map, ImageOverlay, Popup, basemap_to_tiles,
 from cbm.utils import config, raster_utils
 
 
-def widget_box(path):
+def widget_box(path, swap_coords=False):
     map_view_box = Output()
     file_info = normpath(join(path, 'info.json'))
 
@@ -55,20 +55,52 @@ def widget_box(path):
 
     display(HBox([parcel_info, ci_band]))
 
-#     if os.path.exists(ci_path):
-
     def show_m():
+        for i, g in enumerate(info_data['geom']):
+            if type(g) is str:
+                info_data['geom'][i] = json.loads(g)
+            else:
+                info_data['geom'][i] = g
 
-        multipoly = []
-        # geom = spatial_utils.transform_geometry(info_data)
         info_data['geom'] = [rasterio.warp.transform_geom(
             CRS.from_epsg(info_data['srid'][0]),
             CRS.from_epsg(4326),
             feature,  precision=6
         ) for feature in info_data['geom']]
-        poly = info_data['geom'][0]['coordinates'][0]
-    #     poly = spatial_utils.swap_xy(geom['coordinates'][0])[0]
-        multipoly.append(poly)
+
+        if swap_coords:
+            info_data['geom'] = swap_xy(info_data['geom'])
+
+#         swap_coords = Checkbox(
+#             value=False,
+#             description='Swap coords',
+#             indent=False
+#         )
+#         def swap_coord_changed(b):
+#             try:
+#                 if swap_coords.value is True:
+#                     m.remove_layer(polygon)
+#                     info_data['geom'] = swap_xy(info_data['geom'])
+#                     smultipoly = []
+#                     for p in info_data['geom'][0]['coordinates']:
+#                         smultipoly.append(p)
+#                     spolygon = Polygon(
+#                         locations=smultipoly,
+#                         name='Parcel polygon',
+#                         color="yellow",
+#                         fill_color=None
+#                     )
+#                     m.add_layer(spolygon)
+# #                     swap_coords.disabled = True
+#                 else:
+#                     m.remove_layer(spolygon)
+#             except Exception:
+#                 pass
+#         swap_coords.observe(swap_coord_changed)
+
+        multipoly = []
+        for p in info_data['geom'][0]['coordinates']:
+            multipoly.append(p)
         centroid = tuple([round(info_data['clat'][0], 4),
                           round(info_data['clon'][0], 4)])
 
@@ -248,3 +280,20 @@ def widget_box(path):
         display(show_m())
 
     return map_view_box
+
+
+def swap_xy(geom):
+    def swap_xy_coords(coords):
+        if len(coords) == 2:
+            x, y = coords
+            return [y, x]
+        elif len(coords) == 3:
+            x, y, z = coords
+            return [y, x, z]
+
+    for gi, g in enumerate(geom):
+        for fi, f in enumerate(g['coordinates']):
+            for pi, p in enumerate(f):
+                for ni, n in enumerate(p):
+                    geom[gi]['coordinates'][fi][pi][ni] = swap_xy_coords(n)
+    return geom

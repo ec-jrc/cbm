@@ -118,7 +118,10 @@ def get():
 
     def table_options_change(change):
         api_values = config.read('api_options.json')
-        id_examples = api_values['aois'][change.new]['id_examples']
+        id_examples_year = next(
+            v for v in api_values['aois'][change.new] if v.startswith('id_examples'))
+        id_examples = api_values['aois'][change.new][id_examples_year]
+
         try:
             id_examples_label.value = ', '.join(str(x) for x in id_examples)
             year.options = aois_years()[change.new]
@@ -152,14 +155,14 @@ def get():
     wbox_lat_lot = VBox(children=[plat, plon])
 
     api_values = config.read('api_options.json')
-    id_examples = api_values['aois'][aois.value]['id_examples']
+    id_examples = []
 
     id_examples_label = Label(', '.join(str(x) for x in id_examples))
     info_pid = HBox([Label("Multiple parcel ids can be added, e.g.: "),
                      id_examples_label])
 
     pid = Textarea(
-        value=str(id_examples[0]),
+        value=None,
         placeholder='12345, 67890',
         description='Parcel(s) ID:',
     )
