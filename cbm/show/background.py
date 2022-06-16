@@ -39,8 +39,8 @@ def overlay_parcel(img, parcel, debug=False):
     return patches
 
 
-def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['google'],
-                ptype=None, columns=4, debug=False):
+def by_location(aoi='', year='', lon=0, lat=0, chipsize=512, extend=512,
+                tms=['google'], ptype='', columns=4, view=True, debug=False):
     """Show the background image with parcels polygon overlay by selected
     parcel id. This function will get an image from the center of the polygon.
 
@@ -127,28 +127,36 @@ def by_location(aoi, year, lon, lat, chipsize=512, extend=512, tms=['google'],
             bbox=dict(boxstyle="round", ec='yellow', fc='black', alpha=0.2))
         return date_text
 
-    with rasterio.open(normpath(join(bg_path, f'{tms[0].lower()}.tif'))) as img:
-        patches = overlay_parcel(img, parcel, debug)
+    if parcel_id:
+        with rasterio.open(normpath(join(bg_path, f'{tms[0].lower()}.tif'))) as img:
+            patches = overlay_parcel(img, parcel, debug)
 
     for ax, t in zip(grid, tms):
-        with rasterio.open(normpath(join(bg_path, f'{t.lower()}.tif'))) as img:
-            if parcel_id:
-                # patches = overlay_parcel(img, parcel, debug)
-                for patch in patches:
-                    ax.add_patch(copy(patch))
-            overlay_title(img, t)
-            show(img, ax=ax)
-#            ax.xaxis.set_major_locator(ticker.MultipleLocator(200))
+        try:
+            with rasterio.open(normpath(join(bg_path, f'{t.lower()}.tif'))) as img:
+                if parcel_id:
+                    # patches = overlay_parcel(img, parcel, debug)
+                    for patch in patches:
+                        ax.add_patch(copy(patch))
+                overlay_title(img, t)
+                show(img, ax=ax)
+        except Exception as err:
+            if debug:
+                print(f"Could not show '{t}'.", err)
+    #            ax.xaxis.set_major_locator(ticker.MultipleLocator(200))
 
     if len(tms) > columns and columns * rows > len(tms):
         for ax in grid[-((columns * rows - len(tms))):]:
             ax.remove()
 
-    plt.show()
+    if not view:
+        plt.close(fig)
+        return fig
+    return plt.show(fig)
 
 
-def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['google'],
-           ptype=None, columns=4, debug=False):
+def by_pid(aoi, year, pid, chipsize=512, extend=None, tms=['google'],
+           ptype=None, columns=4, view=True, debug=False):
     """Show the background image with parcels polygon overlay by selected
     parcel id. This function will get an image from the center of the polygon.
 
@@ -171,7 +179,17 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['google'],
     file_info = normpath(join(workdir, 'info.json'))
     if not isfile(file_info):
         if not parcel_info.by_pid(aoi, year, pid, ptype, True, False, debug):
-            return "No parcel found, please check the parcel ID"
+            return "[Err]: No parcel found, please check the parameters"
+
+    with open(file_info, 'r') as f:
+        parcel = json.load(f)
+        if type(parcel['geom'][0]) is str:
+            parcel['geom'] = [json.loads(g) for g in parcel['geom']]
+
+    if not extend:
+        extend = int(parcel['area'][0] / 40)
+        if debug:
+            print('area: ', parcel['area'][0], ', extend: ', extend)
 
     if type(tms) is str:
         tms = [tms]
@@ -193,11 +211,6 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['google'],
                                   extend, t, ptype, True, debug)
         except Exception as err:
             print(f"Could not get image from '{t}', ", err)
-
-    with open(file_info, 'r') as f:
-        parcel = json.load(f)
-        if type(parcel['geom'][0]) is str:
-            parcel['geom'] = [json.loads(g) for g in parcel['geom']]
 
     rows = int(len(tms) // columns + (len(tms) % columns > 0))
     fig = plt.figure(figsize=(30, 10 * rows))
@@ -226,13 +239,17 @@ def by_pid(aoi, year, pid, chipsize=512, extend=512, tms=['google'],
                 show(img, ax=ax)
     #            ax.xaxis.set_major_locator(ticker.MultipleLocator(200))
         except Exception as err:
-            print("Could not add overlay", err)
+            if debug:
+                print(f"Could not show '{t}'.", err)
 
     if len(tms) > columns and columns * rows > len(tms):
         for ax in grid[-((columns * rows - len(tms))):]:
             ax.remove()
 
-    plt.show()
+    if not view:
+        plt.close(fig)
+        return fig
+    return plt.show(fig)
 
 
 def check_args(path, chipsize, extend, debug=False):

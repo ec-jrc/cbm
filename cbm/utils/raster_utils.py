@@ -189,6 +189,7 @@ def calc_ndvi(imgs_path, dst_file, bands, percent=(5, 95)):
     vis = b4_read[:, :].astype(float)
     nir = b8_read[:, :].astype(float)
 
+    np.seterr(invalid='ignore')
     ndvi = np.divide((nir - vis), (nir + vis))
     ndvi[np.isnan(ndvi)] = 0
 

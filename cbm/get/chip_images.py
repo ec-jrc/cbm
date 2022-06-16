@@ -13,8 +13,7 @@ from os.path import join, normpath, isfile, dirname
 from cbm.utils import config
 
 
-def by_location(aoi, lon, lat, start_date, end_date, band, chipsize,
-                debug=False):
+def by_location(lon, lat, start_date, end_date, band, chipsize, debug=False):
     """Download the chip image by selected location.
 
     Examples:
@@ -35,28 +34,19 @@ def by_location(aoi, lon, lat, start_date, end_date, band, chipsize,
         chipsize, size of the chip in pixels (int).
     """
     get_requests = data_source()
-    year = start_date.split('-')[0]
-    parcel = json.loads(get_requests.parcel_by_loc(aoi, year,
-                                                   lon, lat, True))
-    if type(parcel['pid']) is list:
-        pid = parcel['pid'][0]
-    else:
-        pid = parcel['pid']
 
     workdir = normpath(join(config.get_value(['paths', 'temp']),
-                            aoi, str(pid)))
+                            f"{lon}_{lat}".replace('.', '_')))
     os.makedirs(dirname(workdir), exist_ok=True)
 
     pfile = normpath(join(workdir, 'info.json'))
-    with open(pfile, "w") as f:
-        json.dump(parcel, f)
 
     if debug:
         print(f"File saved at: {pfile}")
-        print(f"Getting '{band}' chip images for parcel: {pid}")
+        print(f"Getting '{band}' chip images.")
 
     images_dir = normpath(join(workdir, 'chip_images'))
-    get_requests.rcbl(parcel.get('clon')[0], parcel.get('clat')[0],
+    get_requests.rcbl(lon, lat,
                       start_date, end_date, [band], chipsize, images_dir, debug)
 
     images_list = normpath(join(workdir, 'chip_images',
