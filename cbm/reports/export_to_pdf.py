@@ -9,6 +9,7 @@
 
 
 import io
+import glob
 import subprocess
 import matplotlib.pyplot as plt
 import cbm
@@ -163,13 +164,21 @@ def with_pdfme(aoi, year, pid, ptype='', notes={}, params={}, folder='',
     return f"Report generated, '{fname}'"
 
 
-def from_notebook(with_code=False, nb_fname=None):
+def from_notebook(with_code=False, nb_fname=None, debug=False):
     """
     Create pdf report for a given notebook, if this runs in a notebook cell
         will generate a pdf report for the runninig notebook.
     with_code: show code cels or not
     nb_fname: notebook name (optional)
     """
+
+    def save():
+        from IPython.display import Javascript, display
+        return display(Javascript(
+            "document.body.dispatchEvent("
+            "new KeyboardEvent('keydown', {key:'s', keyCode: 83, ctrlKey: true}"
+            "))"
+        ))
 
     def isnotebook():
         try:
@@ -183,20 +192,72 @@ def from_notebook(with_code=False, nb_fname=None):
         except NameError:
             return False
 
+    def run_convert(with_code, nb_fname, debug):
+        no_input = "" if with_code else "--no-input"
+        try:
+            if debug:
+                print(f"Creating pdf from the notebook '{nb_fname}.ipynb' ...")
+            subprocess.run(
+                ["jupyter", "nbconvert", "--to", "pdf", no_input,
+                 "--RegexRemovePreprocessor.patterns", "remove_output", nb_fname])
+            pdfs = glob.glob('*.pdf')
+            if (f'{nb_fname}.pdf' in pdfs):
+                print(
+                    f"Document generated from the notebook '{nb_fname}.ipynb'")
+                return
+            else:
+                print("[Err]: Clould not create pdf. Check notebook content.")
+                print("[Note]: Some special character combinations are not allowed e.g.: links for external images '![Image](https://...image.png)'")
+                return
+        except Exception as err:
+            if debug:
+                return ("[Err] Could not create pdf report ", err)
+
+    def with_widgets(debug):
+        import ipywidgets as widgets
+        from IPython.display import display
+
+        ipynbs = [nb.split('.')[0] for nb in glob.glob('*.ipynb')]
+        label = widgets.Label(
+            "Select a notebook from the list and run the conversion to PDF.")
+        dropdown = widgets.Dropdown(options=ipynbs)
+        button = widgets.Button(
+            description='Run', tooltip='Convert to PDF', icon='play')
+        checkbox = widgets.Checkbox(
+            description='With code cells', indent=False)
+        output = widgets.Output()
+
+        box = widgets.VBox(
+            [label, widgets.HBox([dropdown, button, checkbox]), output])
+
+        def on_button_clicked(b):
+            output.clear_output()
+            with output:
+                save()
+                run_convert(checkbox.value, dropdown.value, debug)
+
+        button.on_click(on_button_clicked)
+
+        return display(box)
+
     if not nb_fname:
         if not isnotebook():
             return "Not running in a Notebook, please provide notebook name"
-        try:
-            import ipynbname
-            nb_fname = ipynbname.name()
-        except Exception:
-            print("Module 'ipynbname' is not instaled please install with",
-                  "'pip install ipynbname' or provide the notebook name, ",
-                  "eg: cbm.reports.export_to_pdf.from_notebook(nb_fname='MyNB.ipynb')")
-            return None
-    no_input = "" if with_code else "--no-input"
-    subprocess.run(["jupyter", "nbconvert", "--to", "pdf", no_input, nb_fname])
-    return f"Report generated, '{nb_fname}.pdf'"
+        else:
+            save()
+            try:
+                import ipynbname_
+                nb_fname = ipynbname.name()
+                run_convert(with_code, nb_fname, debug)
+            except Exception as err:
+                if debug:
+                    print("Could not get the notebook name,", err)
+                try:
+                    with_widgets(True)
+                except Exception as err:
+                    return err
+    else:
+        return run_convert(with_code, nb_fname, debug)
 
 
 if __name__ == "__main__":
