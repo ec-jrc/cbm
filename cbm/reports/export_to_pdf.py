@@ -198,8 +198,8 @@ def from_notebook(with_code=False, nb_fname=None, debug=False):
             if debug:
                 print(f"Creating pdf from the notebook '{nb_fname}.ipynb' ...")
             subprocess.run(
-                ["jupyter", "nbconvert", "--to", "pdf", no_input,
-                 "--RegexRemovePreprocessor.patterns", "remove_output", nb_fname])
+                ["jupyter", "nbconvert", "--to", "pdf",
+                 "--RegexRemovePreprocessor.patterns", "remove_cell", no_input, nb_fname])
             pdfs = glob.glob('*.pdf')
             if (f'{nb_fname}.pdf' in pdfs):
                 print(
@@ -218,11 +218,11 @@ def from_notebook(with_code=False, nb_fname=None, debug=False):
         from IPython.display import display
 
         ipynbs = [nb.split('.')[0] for nb in glob.glob('*.ipynb')]
-        label = widgets.Label(
-            "Select a notebook from the list and run the conversion to PDF.")
+        label = widgets.HTML("""Select a notebook from the list and run the conversion to PDF.
+        <br> Add 'remove_cell = True' at the first line of the each cell you do not want to include in the exported file.""")
         dropdown = widgets.Dropdown(options=ipynbs)
         button = widgets.Button(
-            description='Run', tooltip='Convert to PDF', icon='play')
+            description='Export to PDF', tooltip='Export to PDF', icon='play')
         checkbox = widgets.Checkbox(
             description='With code cells', indent=False)
         output = widgets.Output()
@@ -246,7 +246,7 @@ def from_notebook(with_code=False, nb_fname=None, debug=False):
         else:
             save()
             try:
-                import ipynbname_
+                import ipynbname
                 nb_fname = ipynbname.name()
                 run_convert(with_code, nb_fname, debug)
             except Exception as err:
