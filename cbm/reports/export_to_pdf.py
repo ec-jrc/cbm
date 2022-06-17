@@ -10,6 +10,7 @@
 
 import io
 import glob
+import os.path
 import subprocess
 import matplotlib.pyplot as plt
 import cbm
@@ -199,7 +200,8 @@ def from_notebook(with_code=False, nb_fname=None, debug=False):
                 print(f"Creating pdf from the notebook '{nb_fname}.ipynb' ...")
             subprocess.run(
                 ["jupyter", "nbconvert", "--to", "pdf",
-                 "--RegexRemovePreprocessor.patterns", "remove_cell", no_input, nb_fname])
+                 "--RegexRemovePreprocessor.patterns", "remove_cell",
+                 no_input, nb_fname])
             pdfs = glob.glob('*.pdf')
             if (f'{nb_fname}.pdf' in pdfs):
                 print(
@@ -207,7 +209,8 @@ def from_notebook(with_code=False, nb_fname=None, debug=False):
                 return
             else:
                 print("[Err]: Clould not create pdf. Check notebook content.")
-                print("[Note]: Some special character combinations are not allowed e.g.: links for external images '![Image](https://...image.png)'")
+                print("[Note]: links for external images e.g: '![Image](https://...image.png)'",
+                      "and some special character combinations are not allowed.")
                 return
         except Exception as err:
             if debug:
@@ -218,8 +221,9 @@ def from_notebook(with_code=False, nb_fname=None, debug=False):
         from IPython.display import display
 
         ipynbs = [nb.split('.')[0] for nb in glob.glob('*.ipynb')]
-        label = widgets.HTML("""Select a notebook from the list and run the conversion to PDF.
-        <br> Add 'remove_cell = True' at the first line of the each cell you do not want to include in the exported file.""")
+        label = widgets.HTML("""Select a notebook from the list and run the
+        conversion to PDF. <br> Add 'remove_cell = True' at the first line of
+        each cell you do not want to include in the exported file.""")
         dropdown = widgets.Dropdown(options=ipynbs)
         button = widgets.Button(
             description='Export to PDF', tooltip='Export to PDF', icon='play')
@@ -240,7 +244,7 @@ def from_notebook(with_code=False, nb_fname=None, debug=False):
 
         return display(box)
 
-    if not nb_fname:
+    if not nb_fname or not os.path.isfile(nb_fname):
         if not isnotebook():
             return "Not running in a Notebook, please provide notebook name"
         else:
@@ -257,7 +261,10 @@ def from_notebook(with_code=False, nb_fname=None, debug=False):
                 except Exception as err:
                     return err
     else:
-        return run_convert(with_code, nb_fname, debug)
+        if os.path.isfile(nb_fname):
+            return run_convert(with_code, nb_fname, debug)
+        else:
+            return "Please provide a valid notebook name"
 
 
 if __name__ == "__main__":
