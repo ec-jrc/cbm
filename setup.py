@@ -14,7 +14,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='cbm',
-    version='0.0.15',
+    version='0.0.18',
     python_requires='>=3.6',
     description='Checks by Monitoring (CbM)',
     long_description=long_description,
@@ -33,6 +33,7 @@ setup(
         'requests>=2.24.0',
         'descartes>=1.1.0',
         'scikit-image>=0.19.0',
+        'psycopg2-binary'
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
