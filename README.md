@@ -77,4 +77,4 @@ This project is licensed under the [3-Clause BSD](https://opensource.org/license
 
 ---
 
-Copyright (c) 2021, [European Commission](https://ec.europa.eu/), Joint Research Centre. All rights reserved.  
+Copyright (c) 2022, [European Commission](https://ec.europa.eu/), Joint Research Centre. All rights reserved.  
