@@ -1,3 +1,4 @@
+rasterio==1.3a3
 cbm
 tflearn
 lxml
