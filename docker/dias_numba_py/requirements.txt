@@ -1,0 +1,13 @@
+lxml
+requests
+psycopg2-binary
+numpy
+pandas
+gdal>=2.2.4
+geojson
+rasterio
+rasterstats
+boto3
+ssh2-python
+numba
+rasterio
