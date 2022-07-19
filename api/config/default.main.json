@@ -10,10 +10,9 @@
             "desc": "Main db",
             "host": "172.17.0.1",
             "port": "5432",
-            "sche": "public",
-            "name": "postgres",
+            "dbname": "postgres",
             "user": "postgres",
-            "pass": ""
+            "password": ""
         }
     },
     "s3": {

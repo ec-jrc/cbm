@@ -32,7 +32,7 @@ import pandas as pd
 db_conf_file = 'config/main.json'
 
 
-def conn_str(db='main'):
+def conn_dict(db='main'):
     """Get the database connection string to connect to the database.
     The database credentials is needed for this (database server address,
     port, databese name, username and password)."""
@@ -41,20 +41,13 @@ def conn_str(db='main'):
             configs = json.load(json_file)
     except Exception:
         configs = create_db_config(db_conf_file)
-    DB_HOST = configs['db'][db]['host']
-    DB_NAME = configs['db'][db]['name']
-    DB_USER = configs['db'][db]['user']
-    DB_PORT = configs['db'][db]['port']
-    DB_PASS = configs['db'][db]['pass']
-    postgres = ("host={} dbname={} user={} port={} password={}"
-                .format(DB_HOST, DB_NAME, DB_USER, DB_PORT, DB_PASS))
-    return postgres
+    return configs['db'][db]
 
 
 def conn(db='main'):
     """Create a new database session and return a new connection object."""
     try:
-        conn = psycopg2.connect(conn_str(db))
+        conn = psycopg2.connect(conn_dict(db))
         return conn
     except (Exception, psycopg2.Error) as err:
         print(f"! Unable to connect to the '{db}' database. !: {err}")
@@ -64,7 +57,7 @@ def conn(db='main'):
 def conn_cur(db='main'):
     """Create a cursor to execute PostgreSQL command in a database session"""
     try:
-        conn = psycopg2.connect(conn_str(db))
+        conn = psycopg2.connect(conn_dict(db))
         cur = conn.cursor()
         return cur
     except Exception:
@@ -73,7 +66,7 @@ def conn_cur(db='main'):
 
 def db_version(db='main'):
     try:
-        conn = psycopg2.connect(conn_str(db))
+        conn = psycopg2.connect(conn_dict(db))
         cur = conn.cursor()
         # db_par = conn.get_dsn_parameters()
         ver = cur.execute("SELECT version();")
@@ -109,7 +102,7 @@ def create_db_config():
 
 def check(db='main'):
     try:
-        conn = psycopg2.connect(conn_str(db))
+        conn = psycopg2.connect(conn_dict(db))
         conn.close()
         return True
     except Exception:
@@ -121,7 +114,7 @@ def check(db='main'):
 def info(db='main'):
     """Get postgres database connection information."""
     try:
-        conn = psycopg2.connect(conn_str(db))
+        conn = psycopg2.connect(conn_dict(db))
         cur = conn.cursor()
         print("\n--> PostgreSQL Connection properties for database: ", db)
         print(conn.get_dsn_parameters(), "\n")
@@ -138,7 +131,7 @@ def tables(db='main', schema='public'):
     """Get the database tables as a python list"""
     list_ = []
     try:
-        conn = psycopg2.connect(conn_str(db))
+        conn = psycopg2.connect(conn_dict(db))
         cur = conn.cursor()
         allTablesSql = f"""
           SELECT table_name
@@ -158,7 +151,7 @@ def tables(db='main', schema='public'):
 
 def table_data(table, where, db='main'):
     """Get the rows from a table with a limit 1000"""
-    conn = psycopg2.connect(conn_str(db))
+    conn = psycopg2.connect(conn_dict(db))
     try:
         getTableDataSql = f"""
           SELECT * FROM {table}
@@ -174,7 +167,7 @@ def table_data(table, where, db='main'):
 
 def table_columns(table, db='main'):
     """Get a list of the columns from a table."""
-    conn = psycopg2.connect(conn_str(db))
+    conn = psycopg2.connect(conn_dict(db))
     try:
         getTableColumns = f"""
             SELECT column_name
@@ -208,7 +201,7 @@ def insert_function(func, db='main'):
     """
     import psycopg2.extras
     import psycopg2.extensions
-    conn = psycopg2.connect(conn_str(db))
+    conn = psycopg2.connect(conn_dict(db))
     conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
@@ -218,7 +211,7 @@ def insert_function(func, db='main'):
 
 def exact_count(table, db='main'):
     """Return the exact count of rown of the given table"""
-    conn = psycopg2.connect(conn_str(db))
+    conn = psycopg2.connect(conn_dict(db))
     cur = conn.cursor()
     getExactCount = f"""
         SELECT count(*) AS exact_count
@@ -230,7 +223,7 @@ def exact_count(table, db='main'):
 
 def execute_query(query, db='main'):
     """Return query"""
-    conn = psycopg2.connect(conn_str(db))
+    conn = psycopg2.connect(conn_dict(db))
     cur = conn.cursor()
     cur.execute(query)
     data = cur.fetchall()
@@ -242,7 +235,7 @@ def execute_query(query, db='main'):
 def execute_sql(sql, db='main'):
     """Execute sql"""
     try:
-        conn = psycopg2.connect(conn_str(db))
+        conn = psycopg2.connect(conn_dict(db))
         cur = conn.cursor()
         cur.execute(sql)
         conn.commit()  # <--- makes sure the change is shown in the database
@@ -257,7 +250,7 @@ def tb_extent(table, db='main'):
     """Get the extent of the table"""
     data = []
     try:
-        conn = psycopg2.connect(conn_str(db))
+        conn = psycopg2.connect(conn_dict(db))
         cur = conn.cursor()
         sql = f"""
         SELECT ST_AsText(ST_SetSRID(ST_Extent(st_transform(wkb_geometry, 4326)),
@@ -281,7 +274,7 @@ def tb_exist(table, db='main'):
         SELECT * FROM information_schema.tables
         WHERE table_name = '{table}';
     """
-    conn = psycopg2.connect(conn_str(db))
+    conn = psycopg2.connect(conn_dict(db))
     cur = conn.cursor()
     cur.execute(tbExistSql)
     exist = bool(cur.rowcount)
@@ -292,7 +285,7 @@ def tb_exist(table, db='main'):
 
 def get_schemas(table, where, db='main'):
     """Get the rows from a table with a limit 1000"""
-    conn = psycopg2.connect(conn_str(db))
+    conn = psycopg2.connect(conn_dict(db))
     getSchemasSql = f"""
         SELECT schema_name
         FROM information_schema.schemata;
