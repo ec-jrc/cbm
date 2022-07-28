@@ -467,11 +467,13 @@ class DirCsvDataReaderWidget(BaseDataReaderWidget):
         #                 wt_suffixes, wt_same_date, wt_suffix_sep]
         if self.options[0].selected is not None :
             out_dict["path"] = self.options[0].selected
+        elif self.options[0].default_path != "":
+            out_dict["path"] = self.options[0].default_path
         
         out_dict["fidAttribute"] = self.options[1].value
         
         if self.options[2].value != "" :
-            out_dict["date_column"] = self.options[1].value
+            out_dict["date_column"] = self.options[2].value
         
         # wt_suffixes
         if self.options[3].value != "" :
@@ -509,6 +511,7 @@ class DirCsvDataReaderWidget(BaseDataReaderWidget):
             Nothing.  
         """
         # Add the signal
+        
         if ("signal" in options) :
             self.wt_signal.value = options["signal"]
             
@@ -517,14 +520,31 @@ class DirCsvDataReaderWidget(BaseDataReaderWidget):
                 full_path = options["path"].replace("\\","/")
                 if os.path.isdir(full_path) :
                     self.options[0].reset(path=full_path)
+                    
+                    # list all csv file in dir 
+                    csv_files = [f for f in os.listdir(full_path) if f.endswith('.csv')]
+                    
+                    # load the dataframe from the first csv file and get the columns values
+                    if len(csv_files) == 0 :
+                        return 
+                    
+                    df = pd.read_csv(full_path + "/" + csv_files[0])
+                
+                    # get a list of columns in the geodataframe
+                    cols = list(df.columns)
+
+                    self.options[1].options = cols
+                    self.options[2].options = ["", *cols]                
+                    
             except :
                 print("Invalid path")
+                
                 
         if ("fidAttribute" in options) and (options["fidAttribute"] in self.options[1].options) :
             self.options[1].value = options["fidAttribute"]
             
         if ("date_column" in options) and (options["date_column"] in self.options[2].options) :
-            self.options[2].value = options["fidAttribute"]    
+            self.options[2].value = options["date_column"]    
     
     	# wt_suffixes
         if "suffixes_to_col" in options :

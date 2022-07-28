@@ -264,7 +264,7 @@ class source_from_shape(VBox) :
         if _type == 'shape' :
             accept = '*.shp'
         elif _type == 'json' :
-            accept = '*.json'
+            accept = '*.geojson'
             
         self.wfu_text_file = FileChooser( 
             filter_pattern = accept,

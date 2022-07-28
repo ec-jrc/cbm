@@ -446,8 +446,13 @@ class lut_strector_widget(base_processor_widget) :
             
         # Add the components
         if "components" in options :
-            self.wsm_components.value = list(set(options["components"]) & \
-                                             set(self.wsm_components.options))
+            # when we initialize the pre-processor from the loaded dictionary we want to maintain band order
+            # present in the options file loaded
+            # self.wsm_components.value = list(set(options["components"]) & \
+                                             # set(self.wsm_components.options))
+                                             
+            self.wsm_components.value = options["components"]
+
         else :
             self.wsm_components.value = tuple([""])
                     
