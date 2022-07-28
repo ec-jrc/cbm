@@ -585,6 +585,7 @@ class data_displayer_tab(VBox) :
             if wfc_options.selected is not None :
                 optionFile = open(wfc_options.selected)
                 options = json.load(optionFile)
+                optionFile.close()
                 
                 self.initialize(options)
             
