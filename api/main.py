@@ -22,7 +22,7 @@ from logging.handlers import TimedRotatingFileHandler
 from flask import (Flask, request, send_from_directory, make_response,
                    render_template, abort, url_for, current_app)
 
-from scripts import db_queries, image_chips, users, info_page, file_manager
+from scripts import db_queries, image_requests, users, info_page, file_manager
 
 # Global variables
 UPLOAD_ENABLE = True  # Enable upload page (http://HOST/files/upload).
@@ -130,8 +130,8 @@ swag = Swagger(app, decorators=[auth_required],
                template_file='static/swagger.yaml')
 try:
     dashboard.config.group_by = get_user_id
-except Exception:
-    pass
+except Exception as err:
+    print("Cloud not start dashboard", err)
 
 
 @app.route('/query/info', methods=['GET'])
@@ -530,7 +530,8 @@ def rawChipsBatch_query():
             return json.dumps({
                 "error": f"{i} parameters supplied, {len(required)} required"})
 
-    unique_id = f"dump/{rip}_{params.get('lon')}_{params.get('lat')}_{params.get('chipsize')}_RAW".replace('.', '_')
+    unique_id = f"dump/{rip}_{params.get('lon')}_{params.get('lat')}_{params.get('chipsize')}_RAW".replace(
+        '.', '_')
     logger.info(unique_id)
 
     if not os.path.exists(f"chip_extract/{unique_id}"):
@@ -632,6 +633,45 @@ def parcelPeers_query():
     else:
         return json.dumps(dict(zip(list(data[0]),
                                    [list(i) for i in zip(*data[1:])])))
+
+
+@app.route('/query/parcelStatsPeers', methods=['GET'])
+@auth_required
+def parcelStatsPeers_query():
+    """
+    Get the parcel “peers” for a known parcel ID,
+    responses:
+        List of parcel IDs
+    """
+    if 'aoi' in request.args.keys():
+        aoi = request.args.get('aoi').lower()
+    else:
+        aoi = DEFAULT_AOI
+    year = request.args.get('year')
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    band = request.args.get('band')
+    value = request.args.get('values')
+    ptype = ''
+    stype = 'mean'
+    maxPeers = 100
+    if 'ptype' in request.args.keys():
+        if request.args.get('ptype') != '':
+            ptype = f"_{request.args.get('ptype')}"
+    if 'stype' in request.args.keys():
+        stype = request.args.get('stype')
+    if 'max' in request.args.keys():
+        maxPeers = int(request.args.get('max'))
+
+    dataset = datasets[f'{aoi}_{year}']
+    data = db_queries.getParcelStatsPeers(dataset, start_date, end_date, band,
+                                          stype, value, maxPeers, ptype)
+    if not data:
+        return json.dumps({})
+    elif len(data) == 1:
+        return json.dumps({"pids": data})
+    else:
+        return json.dumps({"pids": data})
 
 
 # -------- Queries - Time Series --------------------------------------------- #
@@ -936,5 +976,5 @@ def upload_file():
 
 # ======== Main ============================================================== #
 if __name__ == "__main__":
-    app.run(debug=True, use_reloader=True,
+    app.run(debug=False, use_reloader=True,
             host='0.0.0.0', port=80, threaded=True)
