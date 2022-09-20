@@ -377,6 +377,56 @@ def getParcelPeers(dataset, pid, distance, maxPeers, ptype=''):
         return data.append('Ended with no data')
 
 
+def getParcelStatsPeers(dataset, start_date, end_date, band, stype,
+                        value, maxPeers=100, ptype=''):
+
+    conn = db.conn(dataset['db'])
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    data = []
+    parcels_table = dataset['tables']['parcels']
+    sigs_table = dataset['tables']['s2']
+    dias_catalog = dataset['tables']['dias_catalog']
+    parcel_id = dataset['pcolumns']['parcel_id']
+    cropname = dataset['pcolumns']['crop_name']
+    logging.debug(f'getParcelStatsPeers {parcels_table}{ptype}, {stype}, {value}')
+
+#     print('ptype',ptype)
+    if len(value.split('-')) == 2:
+        vmin, vmax = value.split('-')
+        vsql = f'AND {stype} BETWEEN {vmin} AND {vmax}'
+    else:
+        vsql = f'AND {stype} = {value}'
+
+    try:
+        getTableDataSql = f"""
+            SELECT p.{parcel_id}::text as pids FROM {sigs_table} s, {parcels_table}{ptype} p, {dias_catalog} d
+            WHERE s.obsid = d.id AND p.ogc_fid = s.pid
+            AND s.band = '{band}'
+            {vsql}
+            AND d.obstime BETWEEN '{start_date} 00:00:00'::timestamp
+            AND '{end_date} 23:59:59'::timestamp
+            GROUP BY p.{parcel_id}
+            LIMIT {maxPeers};
+            """
+#         print(getTableDataSql)
+        cur.execute(getTableDataSql)
+        rows = cur.fetchall()
+
+#         data.append(tuple(etup.name for etup in cur.description))
+        if len(rows) > 0:
+            for r in rows:
+                data.append(r[0])
+        else:
+            print("No parcel peers found in",
+                  f"{parcels_table} with {stype}, ({value})")
+        return data
+
+    except Exception as err:
+        print("Did not find data, please select the right database and table: ",
+              err)
+        return data.append('Ended with no data')
+
+
 def getS2frames(dataset, pid, start, end, ptype=''):
     """Get the sentinel images frames from dias cataloge for the given parcel"""
 
