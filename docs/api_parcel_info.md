@@ -39,3 +39,7 @@ returns
 | clon        | a list of centroid longitude  | The longitude of the parcel centroid |
 | clat        | a list of centroid latitude  | The latitude of the parcel centroid |
 |*geom*      | a list of geometries  | WKT representations of the parcel geometry |
+
+
+**ptype** is used only in case there are different datasets dedicated to different type of analysis for the same year.
+For example datasets dedicated to grazing use **g**, for mowing **m** etc.

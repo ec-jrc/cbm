@@ -35,7 +35,7 @@
    api_time_series
    api_sentinel_images
    api_background_images
-   api_parcels_lists
+   api_parcel_peers
    api_analytics
    api_post_requests
 
