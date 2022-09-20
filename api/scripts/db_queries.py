@@ -24,30 +24,24 @@ def getParcelByLocation(dataset, lon, lat, ptype='',
     parcels_table = dataset['tables']['parcels']
 
     try:
-        logging.debug("start queries")
-        getTableSrid = f"""
-            SELECT Find_SRID('', '{parcels_table}{ptype}',
-                'wkb_geometry');"""
-        logging.debug(getTableSrid)
         cur.execute(getTableSrid)
         srid = cur.fetchone()[0]
-        logging.debug(srid)
         cropname = dataset['pcolumns']['crop_name']
         cropcode = dataset['pcolumns']['crop_code']
         parcel_id = dataset['pcolumns']['parcel_id']
 
         if withGeometry:
             if wgs84:
-                geomSql = ", st_asgeojson(st_transform(wkb_geometry, 4326)) as geom"
+                geometrySql = ", st_asgeojson(st_transform(wkb_geometry, 4326)) As geom"
             else:
-                geomSql = ", st_asgeojson(wkb_geometry) as geom"
+                geometrySql = ", st_asgeojson(wkb_geometry) as geom"
         else:
-            geomSql = ""
+            geometrySql = ""
 
         getTableDataSql = f"""
             SELECT {parcel_id}::text as pid, {cropname} as cropname,
                 {cropcode} as cropcode,
-                st_srid(wkb_geometry) as srid{geomSql},
+                st_srid(wkb_geometry) as srid{geometrySql},
                 st_area(st_transform(wkb_geometry, 3035))::integer as area,
                 st_X(st_transform(st_centroid(wkb_geometry), 4326)) as clon,
                 st_Y(st_transform(st_centroid(wkb_geometry), 4326)) as clat
@@ -59,18 +53,16 @@ def getParcelByLocation(dataset, lon, lat, ptype='',
         #  Return a list of tuples
         cur.execute(getTableDataSql)
         rows = cur.fetchall()
-        logging.debug(rows)
 
         data.append(tuple(etup.name for etup in cur.description))
         if len(rows) > 0:
             for r in rows:
                 data.append(tuple(r))
+            logging.debug(f'ParcelByLocation {parcels_table}{ptype}, {lon} {lat}')
         else:
             logging.debug(
                 f"No parcel found in {parcels_table}{ptype} that",
                 f"intersects with point ({lon}, {lat})")
-        logging.debug(data)
-        return data
 
     except Exception as err:
         print(err)
@@ -79,7 +71,8 @@ def getParcelByLocation(dataset, lon, lat, ptype='',
         return data.append('Ended with no data')
 
 
-def getParcelByID(dataset, pid, ptype='', withGeometry=False, wgs84=False):
+def getParcelByID(dataset, pid, ptype='', withGeometry=False,
+                  wgs84=False):
 
     conn = db.conn(dataset['db'])
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -87,23 +80,22 @@ def getParcelByID(dataset, pid, ptype='', withGeometry=False, wgs84=False):
     parcels_table = dataset['tables']['parcels']
 
     try:
-        logging.debug("start queries")
         cropname = dataset['pcolumns']['crop_name']
         cropcode = dataset['pcolumns']['crop_code']
         parcel_id = dataset['pcolumns']['parcel_id']
 
         if withGeometry:
             if wgs84:
-                geomSql = ", st_asgeojson(st_transform(wkb_geometry, 4326)) as geom"
+                geometrySql = ", st_asgeojson(st_transform(wkb_geometry, 4326)) as geom"
             else:
-                geomSql = ", st_asgeojson(wkb_geometry) as geom"
+                geometrySql = ", st_asgeojson(wkb_geometry) as geom"
         else:
-            geomSql = ""
+            geometrySql = ""
 
         getTableDataSql = f"""
             SELECT {parcel_id}::text as pid, {cropname} as cropname,
                 {cropcode}::text as cropcode,
-                st_srid(wkb_geometry) as srid{geomSql},
+                st_srid(wkb_geometry) as srid{geometrySql},
                 st_area(st_transform(wkb_geometry, 3035))::integer as area,
                 st_X(st_transform(st_centroid(wkb_geometry), 4326)) as clon,
                 st_Y(st_transform(st_centroid(wkb_geometry), 4326)) as clat
@@ -120,6 +112,7 @@ def getParcelByID(dataset, pid, ptype='', withGeometry=False, wgs84=False):
         if len(rows) > 0:
             for r in rows:
                 data.append(tuple(r))
+            logging.debug(f'ParcelByID {parcels_table}{ptype}, {pid}')
         else:
             logging.debug(
                 f"No parcel found in the selected table with id ({pid}).")
@@ -142,33 +135,30 @@ def getParcelsByPolygon(dataset, polygon, ptype='', withGeometry=False,
     parcels_table = dataset['tables']['parcels']
 
     try:
-        logging.debug("start queries")
         getTableSrid = f"""
             SELECT Find_SRID('', '{parcels_table}{ptype}',
                 'wkb_geometry');"""
-        logging.debug(getTableSrid)
         cur.execute(getTableSrid)
         srid = cur.fetchone()[0]
-        logging.debug(srid)
         cropname = dataset['pcolumns']['crop_name']
         cropcode = dataset['pcolumns']['crop_code']
         parcel_id = dataset['pcolumns']['parcel_id']
 
         if withGeometry:
             if wgs84:
-                geomSql = ", st_asgeojson(st_transform(wkb_geometry, 4326)) as geom"
+                geometrySql = ", st_asgeojson(st_transform(wkb_geometry, 4326)) as geom"
             else:
-                geomSql = ", st_asgeojson(wkb_geometry) as geom"
+                geometrySql = ", st_asgeojson(wkb_geometry) as geom"
         else:
-            geomSql = ""
+            geometrySql = ""
 
         if only_ids:
-            selectSql = f"{parcel_id} as pid{geomSql}"
+            selectSql = f"{parcel_id} as pid{geometrySql}"
         else:
             selectSql = f"""
                 {parcel_id} as pid, {cropname} As cropname,
                 {cropcode} As cropcode,
-                st_srid(wkb_geometry) As srid{geomSql},
+                st_srid(wkb_geometry) As srid{geometrySql},
                 st_area(st_transform(wkb_geometry, 3035))::integer As area,
                 st_X(st_transform(st_centroid(wkb_geometry), 4326)) As clon,
                 st_Y(st_transform(st_centroid(wkb_geometry), 4326)) As clat"""
@@ -189,6 +179,7 @@ def getParcelsByPolygon(dataset, polygon, ptype='', withGeometry=False,
         if len(rows) > 0:
             for r in rows:
                 data.append(tuple(r))
+            logging.debug(f'ParcelsByPolygon {parcels_table}{ptype}, {polygon}')
         else:
             print(f"No parcel found in {parcels_table}{ptype} that",
                   "intersects with the polygon.")
@@ -212,18 +203,7 @@ def getParcelTimeSeries(dataset, pid, ptype='',
     dias_catalog = dataset['tables']['dias_catalog']
     parcels_table = dataset['tables']['parcels']
     parcel_id = dataset['pcolumns']['parcel_id']
-    if sigs_table != dataset['tables']['csl']:
-        scl = False
-
-    if tstype.lower() == 's2':
-        where_tstype = """And band IN ('B02', 'B03', 'B04', 'B05', 'B08',
-                            'B11', 'B2', 'B3', 'B4', 'B5', 'B8', 'SC') """
-    elif tstype.lower() == 'c6':
-        where_tstype = "And band IN ('VVc', 'VHc') "
-    elif tstype.lower() == 'bs':
-        where_tstype = "And band IN ('VVb', 'VHb') "
-    else:
-        where_tstype = ""
+    logging.debug(f'getParcelTimeSeries {parcels_table}{ptype}, {pid}, {tstype}')
 
     from_hists = f", {dataset['tables']['scl']} h" if scl else ''
     select_scl = ', h.hist' if scl else ''
@@ -231,6 +211,17 @@ def getParcelTimeSeries(dataset, pid, ptype='',
 
     where_shid = 'And s.pid = h.pid And s.obsid = h.obsid' if scl else ''
     where_band = f"And s.band = '{band}' " if band else ''
+
+    if tstype.lower() == 's2':
+        where_tstype = "And band IN ('B02', 'B03', 'B04', 'B05', 'B08', 'B11', 'B2', 'B3', 'B4', 'B5', 'B8', 'SC') "
+    elif tstype.lower() == 'bs':
+        where_tstype = "And band IN ('VVb', 'VHb') "
+    elif tstype.lower() == 'c6':
+        where_tstype = "And band IN ('VVc', 'VHc') "
+    elif tstype.lower() == 'c1':
+        where_tstype = "And band IN ('VVc', 'VHc') "
+    else:
+        where_tstype = ""
 
     try:
         getTableDataSql = f"""
@@ -280,6 +271,7 @@ def getParcelWeatherTS(dataset, pid, ptype):
         env_table = dataset['tables']['env']
     except Exception:
         env_table = None
+    logging.debug(f'getParcelWeatherTS {parcels_table}{ptype}, {pid}')
 
     try:
         if env_table:
@@ -346,13 +338,6 @@ def getParcelPeers(dataset, pid, distance, maxPeers, ptype=''):
 
     try:
         logging.debug("start queries")
-        getTableSrid = f"""
-            SELECT Find_SRID('', '{parcels_table}{ptype}',
-                'wkb_geometry');"""
-        logging.debug(getTableSrid)
-        cur.execute(getTableSrid)
-        srid = cur.fetchone()[0]
-        logging.debug(srid)
         cropname = dataset['pcolumns']['crop_name']
         parcel_id = dataset['pcolumns']['parcel_id']
 
@@ -374,8 +359,6 @@ def getParcelPeers(dataset, pid, distance, maxPeers, ptype=''):
                 (SELECT geom FROM current_parcel)) asc
             LIMIT {maxPeers};
             """
-        #  Return a list of tuples
-        # print(getTableDataSql)
         cur.execute(getTableDataSql)
         rows = cur.fetchall()
 
