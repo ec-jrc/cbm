@@ -2,13 +2,13 @@
 
 ## Overview
 
-This page describes the use of parcel extraction routines. The general concept of parcel extraction is linked to the marker concept of **CAP Check by Monitoring**, which assumes that the agricultural parcel is the unit for which we want to confirm the particular agricultural activity. 
+This page describes the use of parcel extraction routines. The general concept of parcel extraction is linked to the marker concept of **CAP Check by Monitoring**, which assumes that the agricultural parcel is the unit for which we want to confirm the particular agricultural activity.
 
 In computing terms, parcel extraction leads to data reduction: we generate aggregate values from an ensemble of samples by applying some algorithm. The ensemble of samples are the pixels contained within the parcel boundary. The algorithm should, as far as possible, retain the characteristics of the parcel that we are interested in, which is typically the mean, standard deviation and percentiles statistics for the image bands.
 
 The marker principle requires the extraction to run consistently over every CARD image that is available for the period of interest and for all parcels in the region of interest (ROI). Since image cover is usually partial, i.e. only a part of the ROI is covered by a specific image frame (or scene), different combinations of parcel ensembles can be extracted for each individual image.
 
-There are 2 scenarios for parcel extraction: (1) a "burst" scenario, in which all scenes for a significant period (e.g. a year) need to be processed and (2) a "continuous" scenario, in which new scenes are processed incrementally as they arrive on the DIAS. Both scenarios are typically non-interactive, i.e. they should run automatically in the background. Since parcel extractions for distinct scenes are independent processes, they can be easily parallelized. This is particularly important for scenario (1). The typical workload for scenario (2) may not require parallelization. 
+There are 2 scenarios for parcel extraction: (1) a "burst" scenario, in which all scenes for a significant period (e.g. a year) need to be processed and (2) a "continuous" scenario, in which new scenes are processed incrementally as they arrive on the DIAS. Both scenarios are typically non-interactive, i.e. they should run automatically in the background. Since parcel extractions for distinct scenes are independent processes, they can be easily parallelized. This is particularly important for scenario (1). The typical workload for scenario (2) may not require parallelization.
 
 In the next sections, we first detail the implementation of the parcel extraction routines. We then discuss parallelization using docker swarm (for scenario (1)). Finally, we list some caveats that relate to the use of the extraction routines.
 
@@ -19,7 +19,7 @@ This document assumes familiarity with docker and the database set up used in th
 The high level implementation details of the parcel extraction routines are the following:
 
 * The **dias_catalogue** database table is required to find the metadata for the scenes that cover the ROI, and to keep track of those scenes' processing status. Other processes may insert new records, e.g. by scanning the DIAS catalogue for newly acquired scenes.
-* The **parcel_set** database table is required to get the parcel boundaries and attributes. 
+* The **parcel_set** database table is required to get the parcel boundaries and attributes.
 * As a first step, the oldest scene that intersects the ROI and with status _ingested_ is selected. The status of this scene is changed to _inprogress_.
 * The *reference* attribute for the selected scene is used to compose the key for finding the scene in the S3 store. The scene is downloaded to local disk. Depending on CARD type, more than one object needs to be downloaded (e.g. several bands for S2, the .img and .hdr objects for S1).
 * All parcel boundaries that are intersecting both the ROI and the footprint of the selected scene are selected from **parcel_set**.
@@ -27,7 +27,7 @@ The high level implementation details of the parcel extraction routines are the 
 * The extraction results (which include _count, mean, stdev, min, max, p25, p50 and p75_) are copied into the database table **results_table**. This table uses foreign keys that reference the unique parcel id in the **parcel_set** and unique scene id in **dias_catalogue**.
 * Upon successful completion of the extraction, the scene status in **dias_catalogue** is changed to _extracted_ and the local copies of the image file are removed.
 
-Separate versions are kept for each of the 'bs', 'c6' and 's2' CARD sets, to address the different data formats used. For 's2', the extraction currently handles only the 10m bands B04 (Red) and B08 (NIR) (used for NDVI calculation) and the 20m SCL scene classification band to integrate information on cloud conditions and data quality. This can obviously be reconfigured to include other or more bands. For 'bs' and 'c6' both VV and VH bands are extracted. 
+Separate versions are kept for each of the 'bs', 'c6' and 's2' CARD sets, to address the different data formats used. For 's2', the extraction currently handles only the 10m bands B04 (Red) and B08 (NIR) (used for NDVI calculation) and the 20m SCL scene classification band to integrate information on cloud conditions and data quality. This can obviously be reconfigured to include other or more bands. For 'bs' and 'c6' both VV and VH bands are extracted.
 
 ## Configuration files
 
@@ -92,7 +92,7 @@ The output will report progress on downloading relevant files, selection of the 
 
 ## Parallelization with docker swarm
 
-The extraction routines can easily run in parallel on several VMs with the use of docker swarm. We normally run the configuration as in the figure below: 
+The extraction routines can easily run in parallel on several VMs with the use of docker swarm. We normally run the configuration as in the figure below:
 
 ![Docker Swarm configuration](https://info.crunchydata.com/hs-fs/hubfs/docker-cluster-v2.png?width=1306&height=874&name=docker-cluster-v2.png)
 
@@ -110,8 +110,8 @@ On the DIAS, create 4 new VMs, either through the console, or with the use of th
 Write down the different (internal) IP addresses assigned to the new VMs and enter these in .ssh/config on the permanent VM:
 
 ```
-Host vm_new1 
-  HostName 192.168.*.* 
+Host vm_new1
+  HostName 192.168.*.*
   User cloud
   ServerAliveInterval 10
 ```
@@ -223,7 +223,7 @@ volumes:
   database:
 ```
 
-This will create one task, _pg\_spat_, on the manager node (i.e. the permanent VM), that runs the database server, using the mounted volume where the database outputs are written. The _vector\_extractor_ task is started on the worker nodes, as 8 replicas (thus 2 tasks on each node). 
+This will create one task, _pg\_spat_, on the manager node (i.e. the permanent VM), that runs the database server, using the mounted volume where the database outputs are written. The _vector\_extractor_ task is started on the worker nodes, as 8 replicas (thus 2 tasks on each node).
 
 The swarm can be started as follows:
 

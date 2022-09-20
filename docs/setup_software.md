@@ -200,12 +200,12 @@ docker pull gtcap/cbm_jupyter
 
 To configure and access the current local directory within the jupyter server run:
 ```sh
-docker run -it --privileged=true --user root -e NB_USER="$USER" -e NB_UID="$UID" -e NB_GID="$UID" -p 8888:8888 -v "$PWD":/home/"$USER" --name=cbm_jupyter gtcap/cbm_jupyter
+docker run -it -p 8888:8888 -v "$PWD":/home/jovyan --name=cbm_jupyter gtcap/cbm_jupyter
 ```
 
 To run the Jupyter server with a predefined token, add at the end of the command:
 ```sh
-start-notebook.sh --NotebookApp.token='abcdefghijk1234567890'
+start-notebook.sh --ServerApp.token='abcdefghijk1234567890'
 ```
 
 **Note**: JupyterLab can be accessed by adding /lab at the url, instead of /tree (e.g. localhost/lab).
@@ -214,7 +214,7 @@ To run with enabled JupyterLab by default add -e JUPYTER_ENABLE_LAB=yes flag.
 
 To run with enabled JupyterLab by default and mount the current directory run:
 ```sh
-docker run -it --privileged=true --user root -e NB_USER="$USER" -e NB_UID="$UID" -e NB_GID="$UID" -e JUPYTER_ENABLE_LAB=yes -p 8888:8888 -v "$PWD":/home/"$USER" --name=jupyter4cbm gtcap/cbm_jupyter
+docker run -it -e JUPYTER_ENABLE_LAB=yes -p 8888:8888 -v "$PWD":/home/jovyan --name=cbm_jupyter gtcap/cbm_jupyter
 ```
 
 For more options visit [jupyter-docker-stacks.readthedocs.io](https://jupyter-docker-stacks.readthedocs.io/en/latest)
