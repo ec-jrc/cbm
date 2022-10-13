@@ -38,8 +38,33 @@ def calculate_ndvi(image_file, ndvi_file):
     with rasterio.open(ndvi_file, 'w', **kwargs) as dst:
             dst.write_band(1, ndvi.astype(rasterio.float32))
     
+def calculate_ndvi_from_2022(image_file, ndvi_file):
+    # Load red and NIR bands - note all PlanetScope 4-band images have band order BGRN
+    with rasterio.open(image_file) as src:
+        band_red = src.read(3)
 
-    # plt.imsave("ndvi_cmap.png", ndvi, cmap=plt.cm.summer)
+    with rasterio.open(image_file) as src:
+        band_nir = src.read(1)
+        
+    band_1000 = numpy.ones_like(band_red)*1000
+    band_red = band_red - band_1000
+    band_nir = band_nir - band_1000
+    
+    # Allow division by zero
+    numpy.seterr(divide='ignore', invalid='ignore')
+
+    # Calculate NDVI
+    ndvi = (band_nir.astype(float) - band_red.astype(float)) / (band_nir + band_red)
+    
+    # Set spatial characteristics of the output object to mirror the input
+    kwargs = src.meta
+    kwargs.update(
+        dtype=rasterio.float32,
+        count = 1)
+
+    # Create the file
+    with rasterio.open(ndvi_file, 'w', **kwargs) as dst:
+            dst.write_band(1, ndvi.astype(rasterio.float32))
 
 
 def calculate_ndwi(image_file, ndwi_file):
@@ -66,6 +91,34 @@ def calculate_ndwi(image_file, ndwi_file):
     with rasterio.open(ndwi_file, 'w', **kwargs) as dst:
             dst.write_band(1, ndwi.astype(rasterio.float32))
     
+def calculate_ndwi_from_2022(image_file, ndwi_file):
+    # Load red and NIR bands - note all PlanetScope 4-band images have band order BGRN
+    with rasterio.open(image_file) as src:
+        band_red = src.read(3)
+
+    with rasterio.open(image_file) as src:
+        band_swir = src.read(2)
+
+    band_1000 = numpy.ones_like(band_red)*1000
+    band_red = band_red - band_1000
+    band_swir = band_swir - band_1000
+
+        
+    # Allow division by zero
+    numpy.seterr(divide='ignore', invalid='ignore')
+
+    # Calculate ndwi
+    ndwi = (band_swir.astype(float) - band_red.astype(float)) / (band_swir + band_red)
+    
+    # Set spatial characteristics of the output object to mirror the input
+    kwargs = src.meta
+    kwargs.update(
+        dtype=rasterio.float32,
+        count = 1)
+
+    # Create the file
+    with rasterio.open(ndwi_file, 'w', **kwargs) as dst:
+            dst.write_band(1, ndwi.astype(rasterio.float32))
 
     # plt.imsave("ndwi_cmap.png", ndwi, cmap=plt.cm.summer)    
 
@@ -73,6 +126,10 @@ def extract_stats_for_one_parcel_geopandas_presel(tif_file, parcel):
     warnings.simplefilter(action='ignore', category=UserWarning)
     src_image = rasterio.open(tif_file)
     parcel = parcel.to_crs(src_image.crs)
+    
+    # here we could use the src_image as input instead of the tif file itself
+    # so that we can take into account the new radiometry instroduced by ESA
+    # on 2022-01-25
     band_stats_for_parcel = zonal_stats(parcel,
                      tif_file,
                      stats="count mean std",
@@ -154,6 +211,11 @@ def calculate_baresoil_index_image(image_folder, index_file):
 
     with rasterio.open(image_file) as src:
         band_nir = src.read(1)
+        
+    band_1000 = numpy.ones_like(band_red)*1000
+    band_red = band_red - band_1000
+    band_nir = band_nir - band_1000
+        
         
     # Allow division by zero
     numpy.seterr(divide='ignore', invalid='ignore')

@@ -1,0 +1,9 @@
+{
+"type": "FeatureCollection",
+"name": "overlay",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "parcel_id": 1, "crop_en": "maize" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 8.604597, 45.766646 ], [ 8.605198, 45.767361 ], [ 8.605541, 45.767256 ], [ 8.605133, 45.766815 ], [ 8.604849, 45.766519 ], [ 8.604597, 45.766646 ] ] ] } },
+{ "type": "Feature", "properties": { "parcel_id": 2, "crop_en": "grassland" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 8.606722, 45.766957 ], [ 8.607141, 45.766931 ], [ 8.607543, 45.766893 ], [ 8.607387, 45.767286 ], [ 8.607006, 45.767447 ], [ 8.606722, 45.766957 ] ] ] } }
+]
+}

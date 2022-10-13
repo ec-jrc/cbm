@@ -173,6 +173,30 @@ def get_current_list_of_textsts(first_year_month, number_of_year_months):
                        ("202110", "2021 OCT"),
                        ("202111", "2021 NOV"),
                        ("202112", "2021 DEC"),
+                       ("202201", "2022 JAN"),
+                       ("202202", "2022 FEB"),
+                       ("202203", "2022 MAR"),
+                       ("202204", "2022 APR"),
+                       ("202205", "2022 MAY"),
+                       ("202206", "2022 JUN"),
+                       ("202207", "2022 JUL"),
+                       ("202208", "2022 AUG"),
+                       ("202209", "2022 SEP"),
+                       ("202210", "2022 OCT"),
+                       ("202211", "2022 NOV"),
+                       ("202212", "2022 DEC"),       
+                       ("202301", "2023 JAN"),
+                       ("202302", "2023 FEB"),
+                       ("202303", "2023 MAR"),
+                       ("202304", "2023 APR"),
+                       ("202305", "2023 MAY"),
+                       ("202306", "2023 JUN"),
+                       ("202307", "2023 JUL"),
+                       ("202308", "2023 AUG"),
+                       ("202309", "2023 SEP"),
+                       ("202310", "2023 OCT"),
+                       ("202311", "2023 NOV"),
+                       ("202312", "2023 DEC"),                       
                       ]
 
     # find the index of the first occurrence of first_year_month in textstrs_tuples
@@ -875,9 +899,14 @@ def get_image_files(image_folder, logfile):
     for image_file in image_files:
         image_file_base = os.path.basename(image_file)
         image_file_path = os.path.dirname(image_file)
-        tile_name = image_file_base.split(".")[0]
-        acq_date = download_utils.get_acquisition_date_from_tile_name(tile_name)
-        acq_dates_image_files_dict[acq_date]=image_file
+        if len(image_file_base) > 50:
+            tile_name = image_file_base.split(".")[0]
+            acq_date = download_utils.get_acquisition_date_from_tile_name(tile_name)
+            acq_dates_image_files_dict[acq_date]=image_file
+        else:
+            acq_date = image_file_base[3:7] + "-" + image_file_base[8:10] + "-" + image_file_base[11:13]
+            acq_dates_image_files_dict[acq_date]=image_file
+            
     print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "\t\t\tget_image_files:\t", "{0:.3f}".format(time.time() - start), file=fout)
     fout.close()
     return collections.OrderedDict(sorted(acq_dates_image_files_dict.items()))  
@@ -1077,6 +1106,17 @@ def calendar_view_half_weekly_more_param_index(parcel_id, crop, out_tif_folder_b
     info_text = vector_filename_base + "\n" + str(parcel_id) + "\n" + crop
     a[0][0].text(0.5, 0.5, info_text, transform=a[0][0].transAxes, fontsize=10,
                     verticalalignment='center', horizontalalignment='center')
+                    
+    # set colour map depending on the index type  
+    if index_name == "bare_soil_index":
+        cmap = 'RdYlGn_r'
+        vmin=-1
+        vmax=0.3
+    elif index_name == "plant_senescence_reflectance_index":
+        cmap = 'RdYlGn_r'
+        vmin=-0.3
+        vmax=0.3
+        
 
     for acq_date, index_file in acquisition_dates_and_index_files_dict.items():    
         act_col = get_half_weekly_column(acq_date, year_months_dict_half_weekly)
@@ -1090,9 +1130,9 @@ def calendar_view_half_weekly_more_param_index(parcel_id, crop, out_tif_folder_b
             a[act_row][act_col].set_title(acq_date, verticalalignment='center', fontdict={'fontsize': 8, 'fontweight': 'medium'})
 
             rasterio.plot.show(toPlot, ax=a[act_row][act_col], transform=src_image.window_transform(win), 
-                                         cmap='RdYlGn_r',
-                                         vmin=-1, 
-                                         vmax=0.3)
+                                         cmap=cmap,
+                                         vmin=vmin, 
+                                         vmax=vmax)
 
             
             parcel.plot(ax=a[act_row][act_col], facecolor='none', edgecolor=vector_color) 
