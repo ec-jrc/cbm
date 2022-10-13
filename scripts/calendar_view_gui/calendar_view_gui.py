@@ -68,6 +68,8 @@ def calendar_view_gui(**kwargs):
     default_api_user = kwargs.get("api_user")
     default_api_pass = kwargs.get("api_pass")
     default_ptype = kwargs.get("ptype")
+    default_create_psri = kwargs.get("create_psri")
+    default_create_ndwi = kwargs.get("create_ndwi")
  
     
     layout1 = Layout(width='96%', height='35px')
@@ -79,6 +81,7 @@ def calendar_view_gui(**kwargs):
     # function to run when Run button is clicked
     def on_button_clicked(b):
         #run the calendar view script with parameter defined here
+        importlib.reload(run_calendar_view_from_jupyter)
         
         run_calendar_view_from_jupyter.run_calendar_view(
 #        rcvfj.run_calendar_view_from_jupyter(
@@ -131,7 +134,9 @@ def calendar_view_gui(**kwargs):
             year = str(default_year),
             api_user = default_api_user,
             api_pass = default_api_pass,
-            ptype = default_ptype
+            ptype = default_ptype,
+            create_psri = default_create_psri,
+            create_ndwi = default_create_ndwi
             )
 
 
@@ -684,7 +689,7 @@ def calendar_view_gui(**kwargs):
     w_buffer_size_meter = widgets.BoundedIntText(
             value = 50,
             min=0,
-            max=1000,
+            max=5000,
             step=50,
             description='Buffer size around parcel: ',
             disabled=False,

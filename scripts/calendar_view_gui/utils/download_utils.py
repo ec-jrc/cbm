@@ -529,8 +529,15 @@ def get_s1_coh6_imagettes(raw_chips_s1_batch_url, lon, lat, start_date, end_date
         print(post_dict)
         response = requests.post(raw_chips_s1_batch_url, json=post_dict, auth = (username, password), timeout=180)
         print("this is after the request")
-        list_of_s1_coh6_imagettes = json.loads(response.content)
-        print(list_of_s1_coh6_imagettes)
+        
+        # check if response.content is a valid json string
+        if validate_JSON(response.content):
+            list_of_s1_coh6_imagettes = json.loads(response.content)
+            print(list_of_s1_coh6_imagettes)
+        else:
+            print("response.content is not a valid JSON string")
+            print("this is response.content")
+            print(response.content)
     except requests.exceptions.HTTPError as errh:
         was_error = True
         print ("Http Error:",errh)
@@ -661,6 +668,10 @@ def rescale_s1_bs_image(tifFileName, output):
 
     # Register GDAL format drivers and configuration options with a
     # context manager.
+
+    # At the end of the ``with rasterio.Env()`` block, context
+    # manager exits and all drivers are de-registered.
+
     with rasterio.Env():
         with rasterio.open(tifFileName) as src:
             srcx10000 = src.read(1)*10000
@@ -679,6 +690,10 @@ def rescale_s1_bs_image(tifFileName, output):
 
         with rasterio.open(output, 'w', **profile) as dst:
             dst.write(srcx10000.astype(rasterio.uint16), 1)
-
-    # At the end of the ``with rasterio.Env()`` block, context
-    # manager exits and all drivers are de-registered.
+    
+def validate_JSON(json_data):
+    try:
+        json.loads(json_data)
+    except ValueError as err:
+        return False
+    return True

@@ -23,6 +23,8 @@ import numpy
 import pandas as pd
 import rasterio
 from rasterio.enums import Resampling
+import importlib
+importlib.reload(plot_utils)
 
 
 def select_parcel(vector_file_name, parcel_id_column, parcel_id, logfile):
@@ -202,7 +204,7 @@ def run_get_and_download_band_imagettes(max_number_of_tiles_per_request, tiles_t
         was_error_2 = True
         while was_error_1:
             # print("Requesting band imagettes for tiles: ")
-            # print(tiles_to_download_subset)
+            print(tiles_to_download_subset)
             list_of_band_imagettes, was_error_1 = download_utils.get_band_imagettes(raw_chips_batch_url, lon, lat, 
                                                tiles_to_download_subset, 
                                                bands, username, password, chipsize )
@@ -346,6 +348,7 @@ def run_lut_stretch(parcel_id, crop, out_tif_folder_base, left_percent, right_pe
         tile_name = merged_file_base.split(".")[0] 
         #get acquisition date from tile name
         acq_date = download_utils.get_acquisition_date_from_tile_name(tile_name)
+        acq_year = acq_date[0:4]
 
     #     print(tile_name)
         output = merge_lut_folder + "/" + tile_name + ".tif"
@@ -357,7 +360,14 @@ def run_lut_stretch(parcel_id, crop, out_tif_folder_base, left_percent, right_pe
         else:
             print("LUT stretching tile: ", tile_name, end="")
             lut.writeMinMaxToFile(merged_file, acq_date, lut_bands, left_percent, right_percent, lut_txt_file, tile_name)
-            lut.lutStretchMagicLut(merged_file, output, lut_bands )
+
+            reference_date = "2022-01-25"
+            if datetime.date.fromisoformat(acq_date) < datetime.date.fromisoformat(reference_date):
+                print(" Lut stretching with old radiometry", end="")
+                lut.lutStretchMagicLut(merged_file, output, lut_bands )            
+            else:
+                print(" Lut stretching with new radiometry", end="")
+                lut.lutStretchMagicLut_2022(merged_file, output, lut_bands )
             # lut.lutStretch(merged_file, output, left_percent, right_percent, lut_bands )
             print("...done")
     
@@ -595,6 +605,7 @@ def get_acq_dates_band_names_tif_files_list(parcel_id, crop, out_tif_folder_base
     return acq_dates_band_names_tif_files_list
     
 def run_ndvi_creation(parcel_id, crop, out_tif_folder_base, logfile):
+    
     fout = open(logfile, 'a')
     start = time.time()
     # create ndvi image
@@ -632,9 +643,16 @@ def run_ndvi_creation(parcel_id, crop, out_tif_folder_base, logfile):
             print(tile_name + " ndvi already created")
         else:
             print("Creating NDVI for tile: ", tile_name, end="")
-            
-            extract_utils.calculate_ndvi(merged_file, output)
-            print("...done")
+            reference_date = "2022-01-25"
+            if datetime.date.fromisoformat(acq_date) < datetime.date.fromisoformat(reference_date):
+                print(" old radiometry", end="")
+                extract_utils.calculate_ndvi(merged_file, output)
+                print("...done")                
+            else:
+                print(" new radiometry", end="")
+                extract_utils.calculate_ndvi_from_2022(merged_file, output)
+                print("...done")                
+
     print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "\t", parcel_id,  "\tbatch_utils.run_ndvi_creation:\t", "{0:.3f}".format(time.time() - start), file=fout)
     fout.close()
     print(f"NDVI created in: {time.time() - start} seconds")
@@ -776,7 +794,7 @@ def calculate_ndwi_statistics(parcel_id, crop, out_tif_folder_base, tiles_to_dow
     if not os.path.exists(output_ndwi_folder):
         os.makedirs(output_ndwi_folder)
 
-    first_line ="Field_ID,acq_date,ndwi_mean,ndwi_count,ndwi_std"
+    first_line ="Field_ID,acq_date,mean,count,std"
     print(first_line, file=open(output_ndwi_csv_file, "w"))
 
     for merged_ndwi_file in merged_ndwi_files:
@@ -1326,6 +1344,8 @@ def calculate_band_statistics(parcel_id, crop, out_tif_folder_base, parcel):
             print(stats_line, file=open(band_stats_file, "a"))                          
 
 def create_index_images(parcel_id, crop, out_tif_folder_base, acq_dates_band_names_tif_files_list, index_name):
+    print("we are in create_index_images function")
+    print("index_name is:", index_name)
     # create bare soil index image
     # https://giscrack.com/list-of-spectral-indices-for-sentinel-and-landsat/
 
@@ -1337,6 +1357,13 @@ def create_index_images(parcel_id, crop, out_tif_folder_base, acq_dates_band_nam
 
     if index_name == "bare_soil_index":
         create_bare_soil_index_images(acq_dates_band_names_tif_files_list, index_name, out_tif_folder)
+    else:
+        print(index_name + " index calculation is not defined yet")
+        
+
+    if index_name == "plant_senescence_reflectance_index":
+        create_plant_senescence_reflectance_index_images(acq_dates_band_names_tif_files_list, index_name, out_tif_folder)
+        # PSRI Value = (B04 - B02) / B06
     else:
         print(index_name + " index calculation is not defined yet")
         
@@ -1428,6 +1455,90 @@ def create_bare_soil_index_images(acq_dates_band_names_tif_files_list, index_nam
 
         else:
             print("We do not have all bands for this index")
+            
+def create_plant_senescence_reflectance_index_images(acq_dates_band_names_tif_files_list, index_name, out_tif_folder):
+    # https://www.indexdatabase.de/db/i-single.php?id=69
+    df = pd.DataFrame(acq_dates_band_names_tif_files_list, columns = ['band_file_path', 'tile_name', 'band','acq_date'])  
+    bands_needed_for_this_index = ['B02', 'B04', 'B06']
+
+    # create index image
+    index_folder = out_tif_folder + "_merged_" + index_name 
+
+    if not os.path.exists(index_folder):
+        os.makedirs(index_folder)
+
+    # first create a list of unique dates where there is at least one band image
+    acq_dates = df.acq_date.unique()
+    for acq_date in acq_dates:
+    #         select corresponding band files
+        current_bands = df[df['acq_date'] == acq_date]
+        bands_present_for_this_date = current_bands['band'].tolist()
+        all_bands_available =  all(elem in bands_present_for_this_date  for elem in bands_needed_for_this_index)
+        if all_bands_available:
+    #         print("All bands available, we can calculate the given index")
+            # we put together given band filenames for rasterio processing
+            full_path = current_bands['band_file_path'].iloc[0]
+            tile_name = current_bands['tile_name'].iloc[0]
+
+            band02_tif = full_path + "/" + tile_name + ".B02.tif"
+            band04_tif = full_path + "/" + tile_name + ".B04.tif"
+            band06_tif = full_path + "/" + tile_name + ".B06.tif"
+
+
+            with rasterio.open(band02_tif) as src02:
+                band02 = src02.read(1)
+
+            with rasterio.open(band04_tif) as src04:
+                band04 = src04.read(1)
+
+                
+            with rasterio.open(band06_tif) as src06:
+                band06 = src06.read(1,
+                    out_shape=(
+                        src06.count,
+                        src04.height,
+                        src04.width
+                        ),
+                        resampling=Resampling.bilinear    
+                )
+
+                # scale image transform
+                transform = src06.transform * src06.transform.scale(
+                    (src06.width / band06.shape[-1]),
+                    (src06.height / band06.shape[-2])
+                )                    
+
+            # Allow division by zero
+            numpy.seterr(divide='ignore', invalid='ignore')
+            index_file = index_folder + "/" + tile_name + ".tif"
+
+        #     here again: if the index image is already created we do not create it again
+            if os.path.isfile(index_file):
+                #       we already created the index image for this date for this parcel so we skip it
+                print(tile_name + " " + index_name + "index image already created")
+            else:
+                print("Creating " + index_name + " index image for tile: ", tile_name, end="")
+
+    #           Calculate INDEX
+                index = (band04.astype(float) - band02.astype(float)) / (band06)
+
+
+
+                # Set spatial characteristics of the output object to mirror the input
+                kwargs = src04.meta
+                kwargs.update(
+                    dtype=rasterio.float32,
+                    count = 1)
+
+                # Create the file
+                with rasterio.open(index_file, 'w', **kwargs) as dst:
+                        dst.write_band(1, index.astype(rasterio.float32))
+
+                print("...done")                        
+
+
+        else:
+            print("We do not have all bands for this index")            
 
 
 def convert_string_to_filename(input_string):

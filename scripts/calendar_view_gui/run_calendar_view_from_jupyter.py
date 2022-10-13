@@ -20,6 +20,10 @@ import db_utils
 import geopandas
 import json
 import datetime
+import importlib
+importlib.reload(batch_utils)
+importlib.reload(graph_utils)
+importlib.reload(plot_utils)
 
 
 def run_calendar_view(**kwargs):
@@ -86,6 +90,8 @@ def run_calendar_view(**kwargs):
     api_user = kwargs.get("api_user")
     api_pass = kwargs.get("api_pass")
     ptype = kwargs.get("ptype")
+    create_psri = kwargs.get("create_psri")
+    create_ndwi = kwargs.get("create_ndwi")
     
   
 
@@ -108,8 +114,9 @@ def run_calendar_view(**kwargs):
     if exclude_cirrus:
         cloud_categories = [0,1,3,8,9,10,11] # exclude 10 which is thin cirrus
     else:
-        cloud_categories = []
-#        cloud_categories = [0,1,3,8,9,11]
+        # cloud_categories = []
+        cloud_categories = [0,1,3,8,9,11]
+        # cloud_categories = []
     
     if stats_band:
         bands =  ["B02", "B03", "B04", "B05", "B06", "B07", "B08", "B8A", "B11", "B12"]
@@ -117,6 +124,14 @@ def run_calendar_view(**kwargs):
         bands = ["B04", "B08", "B11", "B02"]
     else:
         bands = ["B04", "B08", "B11"]
+        
+    if create_psri:
+        if not "B06" in bands: 
+            bands.append("B06")
+        if not "B02" in bands: 
+            bands.append("B02")
+        if not "B04" in bands: 
+            bands.append("B04")    
     
     raw_chips_by_location_url = url_base + "/query/rawChipByLocation"
     raw_chips_batch_url = url_base + "/query/rawChipsBatch"
@@ -158,6 +173,7 @@ def run_calendar_view(**kwargs):
         parcel_area_ha = parcel_utils.get_parcel_area_ha_2decimals_str(parcel)
         parcel_id = fid
         crop = parcel[crop_name_column].values[0]
+        crop = batch_utils.convert_string_to_filename(crop)
         
         print(parcel_id, crop, parcel_area_ha)
         
@@ -294,7 +310,35 @@ def run_calendar_view(**kwargs):
 
             graph_utils.display_ndvi_profiles_with_fixed_date_range(parcel_id, crop, plot_title, out_tif_folder_base, logfile, 
                                             index_graph_start_date, index_graph_end_date, 
-                                            parcel_area_ha, add_error_bars = True)                                              
+                                            parcel_area_ha, add_error_bars = True)    
+
+
+
+
+
+        #Create NDWI imagettes
+        stats_ndwi = False
+        graphs_ndwi = False
+        if create_ndwi:
+            index_name = "ndwi" 
+            stats_ndwi = True
+            graphs_ndwi = True
+
+            batch_utils.run_ndwi_creation(parcel_id, crop, out_tif_folder_base, logfile)
+        
+        #Calculate NDWI statistics, output to csv files
+        if stats_ndwi:
+            batch_utils.calculate_ndwi_statistics(parcel_id, crop, out_tif_folder_base, tiles_to_download, parcel, 
+                                                  vector_file_name, parcel_id_column, logfile)
+        
+        #Plot NDWI profile graph
+        if graphs_ndwi:
+            graph_utils.display_index_profiles_with_fixed_date_range(parcel_id, crop, plot_title, out_tif_folder_base, logfile, 
+                                                        index_graph_start_date, index_graph_end_date,
+                                                        index_name,
+                                                        add_error_bars = True)
+
+                                            
         
         #Calendar view of NDVI histograms
         if cv_ndvi_hist:
@@ -306,8 +350,9 @@ def run_calendar_view(**kwargs):
             plot_utils.plot_scatter_for_one_parcel_fixed_scale_cumulative(parcel_id, crop, out_tif_folder_base, 
                                                                           tiles_to_download, parcel, vector_file_name, 
                                                                           parcel_id_column, logfile, jpg_resolution)
-        
+        ##############################
         # Calculate extra indices
+        ##############################
         if create_bsi:
             index_name = "bare_soil_index"        
             acq_dates_band_names_tif_files_list = batch_utils.get_acq_dates_band_names_tif_files_list(parcel_id, crop, 
@@ -333,6 +378,40 @@ def run_calendar_view(**kwargs):
                                                                   parcel, vector_file_name, 
                                                                   buffer_size_meter, vector_color, logfile, jpg_resolution, 
                                                                   index_name)
+        # create_psri
+        stats_psri = False
+        graphs_psri = False
+        cv_psri = False
+        if create_psri:
+            stats_psri = True
+            graphs_psri = True
+            cv_psri = True
+            index_name = "plant_senescence_reflectance_index"        
+            acq_dates_band_names_tif_files_list = batch_utils.get_acq_dates_band_names_tif_files_list(parcel_id, crop, 
+                                                                                                      out_tif_folder_base)
+            batch_utils.create_index_images(parcel_id, crop, out_tif_folder_base, acq_dates_band_names_tif_files_list, index_name)
+        
+        #Calculate Index statistics, output to csv files
+        if stats_psri:
+            batch_utils.calculate_index_statistics(parcel_id, crop, out_tif_folder_base, parcel, logfile, index_name)
+        
+        #Plot Index profile graph
+        if graphs_psri:
+            add_error_bars=True
+            graph_utils.display_index_profiles_with_fixed_date_range(parcel_id, crop, plot_title, out_tif_folder_base, 
+                                                                     logfile, index_graph_start_date, index_graph_end_date,
+                                                                     index_name, add_error_bars)                                               
+        
+        
+        #Calendar view of Index imagettes
+        if cv_psri:
+            vector_color = "black"
+            fig, a = plot_utils.calendar_view_half_weekly_more_param_index(parcel_id, crop, out_tif_folder_base, 
+                                                                  parcel, vector_file_name, 
+                                                                  buffer_size_meter, vector_color, logfile, jpg_resolution, 
+                                                                  index_name)
+
+                                                                  
         
         #Calculate band statistics, output to csv file
         if stats_band:

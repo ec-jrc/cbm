@@ -84,7 +84,31 @@ def get_current_list_of_months(first_year_month, number_of_year_months):
                        ("202109", "2021\nSEP"),
                        ("202110", "2021\nOCT"),
                        ("202111", "2021\nNOV"),
-                       ("202112", "2021\nDEC"),                       
+                       ("202112", "2021\nDEC"),            
+                       ("202201", "2022\nJAN"),
+                       ("202202", "2022\nFEB"),
+                       ("202203", "2022\nMAR"),
+                       ("202204", "2022\nAPR"),
+                       ("202205", "2022\nMAY"),
+                       ("202206", "2022\nJUN"),
+                       ("202207", "2022\nJUL"),
+                       ("202208", "2022\nAUG"),
+                       ("202209", "2022\nSEP"),
+                       ("202210", "2022\nOCT"),
+                       ("202211", "2022\nNOV"),
+                       ("202212", "2022\nDEC"),                                   
+                       ("202301", "2023\nJAN"),
+                       ("202302", "2023\nFEB"),
+                       ("202303", "2023\nMAR"),
+                       ("202304", "2023\nAPR"),
+                       ("202305", "2023\nMAY"),
+                       ("202306", "2023\nJUN"),
+                       ("202307", "2023\nJUL"),
+                       ("202308", "2023\nAUG"),
+                       ("202309", "2023\nSEP"),
+                       ("202310", "2023\nOCT"),
+                       ("202311", "2023\nNOV"),
+                       ("202312", "2023\nDEC"),                                   
                       ]
 
     # find the index of the first occurrence of first_year_month in textstrs_tuples
@@ -143,70 +167,73 @@ def display_ndvi_profiles(parcel_id, crop, plot_title, out_tif_folder_base, logf
 #        not ndvi_profile['ndvi_std'].dtypes == "float64":
 #        return    
 
-    # plot the time series
-    ax0 = pyplot.gca()
 
     if not ndvi_profile.empty:
+    
+        # plot the time series
+        ax0 = pyplot.gca()
+
         if add_error_bars:
             ndvi_profile.plot(kind='line', marker='+', x='date',y='S2 NDVI', yerr='ndvi_std', color = 'blue', ax=ax0, 
                               capsize=4, ecolor='grey', barsabove = 'True')   
         else:
             ndvi_profile.plot(kind='line', marker='+', x='date',y='S2 NDVI', color = 'blue', ax=ax0)
 
-    # format the graph a little bit
-    pyplot.ylabel('NDVI')
-    parcelNumber = ndvi_profile.iloc[0]['Field_ID']
-    pyplot.title(plot_title + ", Parcel id: " + str(parcelNumber) + " " + crop)
-    ax0.set_ylim([0,1])
-    ax0.xaxis.set_major_locator(mdates.MonthLocator(interval=1))
-    ax0.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
-         
-    ax0.xaxis.grid() # horizontal lines
-    ax0.yaxis.grid() # vertical lines
 
-    fig = pyplot.gcf()
-    fig.autofmt_xdate() # Rotation
-    fig_size_x = 13
-    fig_size_y = 7
-    fig.set_size_inches(fig_size_x, fig_size_y)
-    
-    min_month = min(ndvi_profile['date']).date().month
-    min_year = min(ndvi_profile['date']).date().year
-    
-    max_month = max(ndvi_profile['date']).date().month
-    max_year = max(ndvi_profile['date']).date().year
-    
-    number_of_months = diff_month(max(ndvi_profile['date']).date(), min(ndvi_profile['date']).date()) + 1
-    ax0.set_xlim([datetime.date(min_year, min_month, 1), 
-                  datetime.date(max_year, max_month,
-                                calendar.monthrange(max_year, max_month)[1])])
-    
-    min_year_month = str(min_year) + ('0' + str(min_month))[-2:]
-#     start_x = 0.045
-    step_x = 1/number_of_months
-    start_x = step_x/2 # positions are in graph coordinate system between 0 and 1
-                                     # so first year_month label is at half the size of the widht of
-                                     # one month
-            
+        # format the graph a little bit
+        pyplot.ylabel('NDVI')
+        parcelNumber = ndvi_profile.iloc[0]['Field_ID']
+        pyplot.title(plot_title + ", Parcel id: " + str(parcelNumber) + " " + crop)
+        ax0.set_ylim([0,1])
+        ax0.xaxis.set_major_locator(mdates.MonthLocator(interval=1))
+        ax0.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+             
+        ax0.xaxis.grid() # horizontal lines
+        ax0.yaxis.grid() # vertical lines
 
-    loc_y = 0.915
-    
-    current_year_month_text = get_current_list_of_months(min_year_month, number_of_months)
-    
-    for current_year_month_index in range (0, number_of_months):
-        t = current_year_month_text[current_year_month_index]
-        loc_x = start_x + (current_year_month_index) * step_x
-        ax0.text(loc_x, loc_y, t, verticalalignment='bottom', horizontalalignment='center', transform=ax0.transAxes,
-                color='blue', fontsize=13)
-
-
-
-    ax0.yaxis.set_major_locator(ticker.MultipleLocator(y_tick_spacing))
-
+        fig = pyplot.gcf()
+        fig.autofmt_xdate() # Rotation
+        fig_size_x = 13
+        fig_size_y = 7
+        fig.set_size_inches(fig_size_x, fig_size_y)
+        
+        min_month = min(ndvi_profile['date']).date().month
+        min_year = min(ndvi_profile['date']).date().year
+        
+        max_month = max(ndvi_profile['date']).date().month
+        max_year = max(ndvi_profile['date']).date().year
+        
+        number_of_months = diff_month(max(ndvi_profile['date']).date(), min(ndvi_profile['date']).date()) + 1
+        ax0.set_xlim([datetime.date(min_year, min_month, 1), 
+                      datetime.date(max_year, max_month,
+                                    calendar.monthrange(max_year, max_month)[1])])
+        
+        min_year_month = str(min_year) + ('0' + str(min_month))[-2:]
+    #     start_x = 0.045
+        step_x = 1/number_of_months
+        start_x = step_x/2 # positions are in graph coordinate system between 0 and 1
+                                         # so first year_month label is at half the size of the widht of
+                                         # one month
                 
-    # save the figure to a jpg file
-    fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id_as_filename) + '_NDVI.jpg') 
-    pyplot.close(fig)    
+
+        loc_y = 0.915
+        
+        current_year_month_text = get_current_list_of_months(min_year_month, number_of_months)
+        
+        for current_year_month_index in range (0, number_of_months):
+            t = current_year_month_text[current_year_month_index]
+            loc_x = start_x + (current_year_month_index) * step_x
+            ax0.text(loc_x, loc_y, t, verticalalignment='bottom', horizontalalignment='center', transform=ax0.transAxes,
+                    color='blue', fontsize=13)
+
+
+
+        ax0.yaxis.set_major_locator(ticker.MultipleLocator(y_tick_spacing))
+
+                    
+        # save the figure to a jpg file
+        fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id_as_filename) + '_NDVI.jpg') 
+        pyplot.close(fig)    
     print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "\t", parcel_id,  "\traph_utils.display_ndvi_profiles:\t", "{0:.3f}".format(time.time() - start), file=fout)
     fout.close()
     return ndvi_profile
@@ -994,67 +1021,70 @@ def display_ndvi_profiles_with_fixed_date_range(parcel_id, crop, plot_title, out
 #        not ndvi_profile['ndvi_std'].dtypes == "float64":
 #        return    
 
-    # plot the time series
-    ax0 = pyplot.gca()
 
     if not ndvi_profile.empty:
+
+        # plot the time series
+        ax0 = pyplot.gca()
+    
+    
         if add_error_bars:
             ndvi_profile.plot(kind='line', marker='+', x='date',y='S2 NDVI', yerr='ndvi_std', color = 'blue', ax=ax0, 
                               capsize=4, ecolor='grey', barsabove = 'True')   
         else:
             ndvi_profile.plot(kind='line', marker='+', x='date',y='S2 NDVI', color = 'blue', ax=ax0)
 
-    # format the graph a little bit
-    pyplot.ylabel('NDVI')
-    parcelNumber = ndvi_profile.iloc[0]['Field_ID']
-    pyplot.title(plot_title + ", Parcel id: " + str(parcelNumber) + " (" + crop + ", " + parcel_area_ha + " ha)")
-    ax0.set_ylim([0,1])
-    ax0.xaxis.set_major_locator(mdates.MonthLocator(interval=1))
-    ax0.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
-         
-    ax0.xaxis.grid() # horizontal lines
-    ax0.yaxis.grid() # vertical lines
+        # format the graph a little bit
+        pyplot.ylabel('NDVI')
+        parcelNumber = ndvi_profile.iloc[0]['Field_ID']
+        pyplot.title(plot_title + ", Parcel id: " + str(parcelNumber) + " (" + crop + ", " + parcel_area_ha + " ha)")
+        ax0.set_ylim([0,1])
+        ax0.xaxis.set_major_locator(mdates.MonthLocator(interval=1))
+        ax0.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+             
+        ax0.xaxis.grid() # horizontal lines
+        ax0.yaxis.grid() # vertical lines
 
-    fig = pyplot.gcf()
-    fig.autofmt_xdate() # Rotation
-    fig_size_x = 13
-    fig_size_y = 7
-    fig.set_size_inches(fig_size_x, fig_size_y)
+        fig = pyplot.gcf()
+        fig.autofmt_xdate() # Rotation
+        fig_size_x = 13
+        fig_size_y = 7
+        fig.set_size_inches(fig_size_x, fig_size_y)
 
-    x_start_date_date = datetime.datetime.strptime(x_start_date, '%Y-%m-%d').date()
-    x_end_date_date = datetime.datetime.strptime(x_end_date, '%Y-%m-%d').date()
-    min_month = x_start_date_date.month
-    min_year = x_start_date_date.year
-    max_month = x_end_date_date.month
-    max_year = x_end_date_date.year
-    number_of_months = diff_month(x_end_date_date, x_start_date_date) + 1
+        x_start_date_date = datetime.datetime.strptime(x_start_date, '%Y-%m-%d').date()
+        x_end_date_date = datetime.datetime.strptime(x_end_date, '%Y-%m-%d').date()
+        min_month = x_start_date_date.month
+        min_year = x_start_date_date.year
+        max_month = x_end_date_date.month
+        max_year = x_end_date_date.year
+        number_of_months = diff_month(x_end_date_date, x_start_date_date) + 1
 
-    ax0.set_xlim([datetime.date(min_year, min_month, 1), 
-                  datetime.date(max_year, max_month,
-                                calendar.monthrange(max_year, max_month)[1])])
-    
-    min_year_month = str(min_year) + ('0' + str(min_month))[-2:]
-#     start_x = 0.045
-    step_x = 1/number_of_months
-    start_x = step_x/2 # positions are in graph coordinate system between 0 and 1
-                                     # so first year_month label is at half the size of the widht of
-                                     # one month
+        ax0.set_xlim([datetime.date(min_year, min_month, 1), 
+                      datetime.date(max_year, max_month,
+                                    calendar.monthrange(max_year, max_month)[1])])
+        
+        min_year_month = str(min_year) + ('0' + str(min_month))[-2:]
+    #     start_x = 0.045
+        step_x = 1/number_of_months
+        start_x = step_x/2 # positions are in graph coordinate system between 0 and 1
+                                         # so first year_month label is at half the size of the widht of
+                                         # one month
 
-    loc_y = 0.915
-    
-    current_year_month_text = get_current_list_of_months(min_year_month, number_of_months)
-    
-    for current_year_month_index in range (0, number_of_months):
-        t = current_year_month_text[current_year_month_index]
-        loc_x = start_x + (current_year_month_index) * step_x
-        ax0.text(loc_x, loc_y, t, verticalalignment='bottom', horizontalalignment='center', transform=ax0.transAxes,
-                color='blue', fontsize=13)
-                
-    ax0.yaxis.set_major_locator(ticker.MultipleLocator(y_tick_spacing))
-                
-    # save the figure to a jpg file
-    fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id_as_filename) + '_NDVI.jpg') 
-    pyplot.close(fig)    
+        loc_y = 0.915
+        
+        current_year_month_text = get_current_list_of_months(min_year_month, number_of_months)
+        
+        for current_year_month_index in range (0, number_of_months):
+            t = current_year_month_text[current_year_month_index]
+            loc_x = start_x + (current_year_month_index) * step_x
+            ax0.text(loc_x, loc_y, t, verticalalignment='bottom', horizontalalignment='center', transform=ax0.transAxes,
+                    color='blue', fontsize=13)
+                    
+        ax0.yaxis.set_major_locator(ticker.MultipleLocator(y_tick_spacing))
+                    
+        # save the figure to a jpg file
+        fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id_as_filename) + '_NDVI.jpg') 
+        pyplot.close(fig)    
     print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "\t", parcel_id,  "\traph_utils.display_ndvi_profiles:\t", "{0:.3f}".format(time.time() - start), file=fout)
     fout.close()
     return ndvi_profile   
@@ -1089,40 +1119,52 @@ def display_index_profiles_with_fixed_date_range(parcel_id, crop, plot_title, ou
         not index_profile['std'].dtypes == "float64":
         return    
 
-    # plot the time series
-    ax0 = pyplot.gca()
 
     if not index_profile.empty:
+
+        # plot the time series
+        ax0 = pyplot.gca()
+    
+    
         if add_error_bars:
             index_profile.plot(kind='line', marker='+', x='acq_date',y='mean', yerr='std', color = 'blue', ax=ax0, 
                               capsize=4, ecolor='grey', barsabove = 'True')   
         else:
             index_profile.plot(kind='line', marker='+', x='acq_date',y='mean', color = 'blue', ax=ax0)
 
-    # format the graph a little bit
-    index_name_capital = index_name.replace("_", " ").title()
-    pyplot.ylabel(index_name_capital)
-    parcelNumber = index_profile.iloc[0]['Field_ID']
-    pyplot.title(plot_title + ", Parcel id: " + str(parcelNumber) + " " + crop)
-    # ax0.set_ylim([0,1])
-    ax0.xaxis.set_major_locator(mdates.MonthLocator(interval=1))
-    ax0.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
-         
-    ax0.xaxis.grid() # horizontal lines
-    ax0.yaxis.grid() # vertical lines
+        # format the graph a little bit
+        index_name_capital = index_name.replace("_", " ").title()
+        pyplot.ylabel(index_name_capital)
+        parcelNumber = index_profile.iloc[0]['Field_ID']
+        pyplot.title(plot_title + ", Parcel id: " + str(parcelNumber) + " " + crop)
+        
+        if index_name == "plant_senescence_reflectance_index":
+            ax0.set_ylim([-0.2,0.4])
+            
+        if index_name == "ndwi":
+            ax0.set_ylim([-1,1])
+            y_tick_spacing = 0.2
+            ax0.set_ylabel("NDWI")
+            ax0.set_xlabel("date")
+            
+        ax0.xaxis.set_major_locator(mdates.MonthLocator(interval=1))
+        ax0.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+             
+        ax0.xaxis.grid() # horizontal lines
+        ax0.yaxis.grid() # vertical lines
 
-    fig = pyplot.gcf()
-    fig.autofmt_xdate() # Rotation
-    fig_size_x = 13
-    fig_size_y = 7
-    fig.set_size_inches(fig_size_x, fig_size_y)
+        fig = pyplot.gcf()
+        fig.autofmt_xdate() # Rotation
+        fig_size_x = 13
+        fig_size_y = 7
+        fig.set_size_inches(fig_size_x, fig_size_y)
 
-    ax0.yaxis.set_major_locator(ticker.MultipleLocator(y_tick_spacing))
-    add_month_names_to_the_graph(x_start_date, x_end_date, ax0)    
-                
-    # save the figure to a jpg file
-    fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id_as_filename) + '_' + index_name + '.jpg') 
-    pyplot.close(fig)    
+        ax0.yaxis.set_major_locator(ticker.MultipleLocator(y_tick_spacing))
+        add_month_names_to_the_graph(x_start_date, x_end_date, ax0)    
+                    
+        # save the figure to a jpg file
+        fig.savefig(output_graph_folder + '/parcel_id_' + str(parcel_id_as_filename) + '_' + index_name + '.jpg') 
+        pyplot.close(fig)    
     print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "\t", parcel_id,  "\traph_utils.display_index_profiles:\t", "{0:.3f}".format(time.time() - start), file=fout)
     fout.close()
     return index_profile    

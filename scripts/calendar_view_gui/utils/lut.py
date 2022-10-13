@@ -103,6 +103,7 @@ def lutStretchMagicLut(tifFileName, output, bands ):
     #B08#1200#5700,
     #B11#800#4100,
     #B04#150#2800
+    #  B08#1200#5700,B11#800#4100,B04#150#2800
 
 
     rmin = 1200
@@ -112,11 +113,40 @@ def lutStretchMagicLut(tifFileName, output, bands ):
     bmin = 150
     bmax = 2800
     
+    # # Lut specific to a parcel from spain Aragon, very bright throughout the season
+    # rmin = 1500
+    # rmax = 6700
+    # gmin = 1500
+    # gmax = 7000
+    # bmin = 0
+    # bmax = 6200
+    
     # scaleParams --- list of scale parameters, each of the form [src_min,src_max] or [src_min,src_max,dst_min,dst_max]
     ds = gdal.Open(tifFileName)
     # ds = gdal.Translate(output, ds, scaleParams = [[rmin, rmax, 0, 255], [gmin, gmax, 0, 255], [bmin, bmax, 0, 255]], bandList = [4,2,1], outputType = gdal.GDT_Byte)
     ds = gdal.Translate(output, ds, scaleParams = [[rmin, rmax, 0, 255], [gmin, gmax, 0, 255], [bmin, bmax, 0, 255]], bandList = bands, outputType = gdal.GDT_Byte)
     ds = None    
+    
+def lutStretchMagicLut_2022(tifFileName, output, bands ):
+    #B08#1200#5700,
+    #B11#800#4100,
+    #B04#150#2800
+    
+    # B08#2200#6700,B11#1800#5100,B04#1150#3800
+
+
+    rmin = 2200
+    rmax = 6700
+    gmin = 1800
+    gmax = 5100
+    bmin = 1150
+    bmax = 3800
+    
+    # scaleParams --- list of scale parameters, each of the form [src_min,src_max] or [src_min,src_max,dst_min,dst_max]
+    ds = gdal.Open(tifFileName)
+    # ds = gdal.Translate(output, ds, scaleParams = [[rmin, rmax, 0, 255], [gmin, gmax, 0, 255], [bmin, bmax, 0, 255]], bandList = [4,2,1], outputType = gdal.GDT_Byte)
+    ds = gdal.Translate(output, ds, scaleParams = [[rmin, rmax, 0, 255], [gmin, gmax, 0, 255], [bmin, bmax, 0, 255]], bandList = bands, outputType = gdal.GDT_Byte)
+    ds = None        
 
 def get_cumulative_cut_count_for_one_band_float(tifFileName, leftPercent, rightPercent):
     src_ds = gdal.Open( tifFileName )
