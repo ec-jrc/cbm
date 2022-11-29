@@ -1,4 +1,4 @@
-# Required software
+# Software prerequisites
 
 ## Docker (Ubuntu 20.04)
 Note these instructions are for Ubuntu 20.04 and may not work for other platforms.
@@ -39,7 +39,7 @@ information about location and mapping.
 
 To run a postgres database with postgis extension run:
 ```sh
-docker run --name cbm_db -d --restart always -v database:/var/lib/postgresql -v "$PWD"/sql:/root/sql --shm-size=2gb -p 5432:5432 -e POSTGRES_USER=postgres -e POSTGRES_PASS=mydiaspassword kartoza/postgis
+docker run --name cbm_db --restart always -v pgdata:/var/lib/postgresql -p 5432:5432 -e POSTGRES_PASSWORD=MYPASSWORD -d postgis/postgis
 ```
 
 
@@ -49,7 +49,7 @@ This will return with a long docker container ID. Check if all is well:
 ```sh
 docker ps -a
 CONTAINER ID        IMAGE             COMMAND                  CREATED             STATUS                   PORTS                    NAMES
-75fc1f296c79        kartoza/postgis   "docker-entrypoint.s…"   9 seconds ago       Up 7 seconds             0.0.0.0:5432->5432/tcp   cbm_db
+85fc1f296000        postgis/postgis   "docker-entrypoint.s…"   9 seconds ago       Up 7 seconds             0.0.0.0:5432->5432/tcp   cbm_db
 ```
 You need postgresql client tools to access the database. Make sure these match
 the database version (which is 10 in the example case). For example, for the
@@ -66,7 +66,7 @@ Type "help" for help.
 
 postgres=#
 ```
-To enable the required postgis extensions for cbm run:
+To be sure the required postgis extensions are enable run:
 
 ```sql
 CREATE EXTENSION postgis;
@@ -76,7 +76,7 @@ CREATE EXTENSION postgis_raster;
 The postgis image may contain the TIGER data base per default (this is a often
     used in postgis training). We don't need it, so remove with:
 ```
-postgres=# drop schema tiger cascade;
+postgres=# DROP schema tiger, tiger_data cascade;;
 ```
 and exit and reconnect (you are now in schema *public*). List the default tables
 in that schema:
@@ -112,34 +112,43 @@ based on your hardware configuration and application, suggested configurations c
 We now need to create the tables that we will use in the CbM context:
 
 ```sql
-postgres=# create table public.aois (
-    name text not null,
-    wkb_geometry public.geometry(Polygon,4326)
-);
 
-postgres=# create table public.dias_catalogue (
-    id serial,
-    obstime timestamp without time zone not null,
-    reference character varying(120) not null,
-    sensor character(2) not null,
-    card character(2) not null,
-    status character varying(12) DEFAULT 'ingested'::character varying not null,
+CREATE TABLE public.aois (name text);
+SELECT addgeometrycolumn('aois', 'wkb_geometry', 4326, 'POLYGON', 2);
+
+
+CREATE TABLE public.dias_catalogue (
+    id serial NOT NULL,
+    obstime timestamp without time zone NOT NULL,
+    reference character varying(120) NOT NULL,
+    sensor character(2) NOT NULL,
+    card character(2) NOT NULL,
+    status character varying(24) DEFAULT 'ingested'::character varying NOT NULL,
     footprint public.geometry(Polygon,4326)
 );
 
-postgres=# create table public.signatures_2020_s2 (
-    pid int,
-    obsid int,
-    band char(2),
-    count real,
-    mean real,
-    std real,
-    min real,
-    max real,
-    p25 real,
-    p50 real,
-    p75 real
+ALTER TABLE ONLY public.dias_catalogue
+    ADD CONSTRAINT dias_catalogue_pkey PRIMARY KEY (id);
+
+CREATE INDEX dias_catalogue_footprint_idx ON public.dias_catalogue USING gist (footprint);
+
+CREATE UNIQUE INDEX dias_catalogue_reference_idx ON public.dias_catalogue USING btree (reference);
+
+CREATE TABLE public.aoi_s2_signatures (
+    pid integer,
+    obsid integer,
+    band character(3),
+    count real, mean real, std real,
+    min real, max real,
+    p25 real, p50 real, p75 real
 );
+
+CREATE INDEX aoi_s2_signatures_bidx ON public.aoi_s2_signatures USING btree (band);
+CREATE INDEX aoi_s2_signatures_obsidx ON public.aoi_s2_signatures USING btree (obsid);
+CREATE INDEX aoi_s2_signatures_pidx ON public.aoi_s2_signatures USING btree (pid);
+
+
+
 ```
 
 The table *aois* is an ancillary table in which one can define the geometries of
