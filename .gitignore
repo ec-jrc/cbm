@@ -7,19 +7,21 @@ config/*
 
 # RESTful API
 
-api/config/*
-!api/config/default_main.json
-!api/config/default_datasets.json
+api/config/main.json
+api/config/users.json
+api/config/datasets.json
 
-api/static/dump/*
+
+api/static/tmp/*
 api/files/*
 api/uploads/*
 api/logs/*
-api/tms/*
-!api/tms/google.xml
-!api/tms/bing.xml
-!api/tms/osm.xml
-!api/tms/ags.xml
+api/config/tms/*
+!api/config/tms/google.xml
+!api/config/tms/bing.xml
+!api/config/tms/osm.xml
+!api/config/tms/ags.xml
+!api/config/tms/esri.xml
 
 api/core
 api/gunicorn

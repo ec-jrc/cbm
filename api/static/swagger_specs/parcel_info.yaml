@@ -48,8 +48,9 @@ paths:
       parameters:
         - $ref: "params.yaml#/components/parameters/aoi"
         - $ref: "params.yaml#/components/parameters/year"
-        - $ref: "params.yaml#/components/parameters/ptype"
         - $ref: "params.yaml#/components/parameters/poly"
+        - $ref: "params.yaml#/components/parameters/ptype"
+        - $ref: "params.yaml#/components/parameters/withGeometry"
       responses:
         200:
           description: Parcel information for a geographical location in json format.

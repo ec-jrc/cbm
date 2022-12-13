@@ -26,8 +26,8 @@ def by_location(lon, lat, start_date, end_date, band, chipsize, debug=False):
         lon, lat, the the coords of the parcel (float).
         start_date, Start date '2019-06-01' (str)
         end_date, End date '2019-06-01' (str)
-        band, 3 Sentinel-2 band names. One of [‘B02’, ‘B03’, ‘B04’, ‘B08’]
-            (10 m bands) or [‘B05’, ‘B06’, ‘B07’, ‘B8A’, ‘B11’, ‘B12’]
+        band, 3 Sentinel-2 band names. One of ['B02', 'B03', 'B04', 'B08']
+            (10 m bands) or ['B05', 'B06', 'B07', 'B8A', 'B11', 'B12']
             (20 m bands). 10m and 20m bands can be combined.
             The first band determines the resolution in the output
             composite. Defaults to B08_B04_B03.
@@ -73,8 +73,8 @@ def by_pid(aoi, year, pid, start_date, end_date, band, chipsize,
         pid, the parcel id (int).
         start_date, Start date '2019-06-01' (str)
         end_date, End date '2019-06-01' (str)
-        band, 3 Sentinel-2 band names. One of [‘B02’, ‘B03’, ‘B04’, ‘B08’]
-            (10 m bands) or [‘B05’, ‘B06’, ‘B07’, ‘B8A’, ‘B11’, ‘B12’]
+        band, 3 Sentinel-2 band names. One of ['B02', 'B03', 'B04', 'B08']
+            (10 m bands) or ['B05', 'B06', 'B07', 'B8A', 'B11', 'B12']
             (20 m bands). 10m and 20m bands can be combined.
             The first band determines the resolution in the output
             composite. Defaults to B08_B04_B03.

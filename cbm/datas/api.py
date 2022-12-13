@@ -184,6 +184,7 @@ def rcbl(clon, clat, start_date, end_date,
         df_file = normpath(join(filespath, f'images_list.{band}.csv'))
         if isfile(df_file):
             df_old = pd.read_csv(df_file, index_col=[0])
+            # df = pd.concat([df, df_old], ignore_index=True)
             df = df.append(df_old, ignore_index=True)
             df = df.drop_duplicates(subset=['chips'])
         df = df.sort_values(by="dates")

@@ -162,7 +162,7 @@ def centroid(indata):
         return(round(_x, 4), round(_y, 4))
 
 
-def transform_geometry(indata, target_epsg=4326, source_epsg=None, debug=False):
+def transform_geometry(indata, target_epsg=4326, source_epsg=None):
     """
     Args:
         indata: json or list with coordinates
@@ -186,9 +186,6 @@ def transform_geometry(indata, target_epsg=4326, source_epsg=None, debug=False):
             geom['coordinates'] = indata
             geom = str(geom)
 
-        if debug:
-            print('geom', geom)
-
         g = ogr.CreateGeometryFromJson(geom)
         source = osr.SpatialReference()
 
@@ -199,13 +196,8 @@ def transform_geometry(indata, target_epsg=4326, source_epsg=None, debug=False):
         else:
             print("Please provide source srid.")
 
-        if debug:
-            print('g', g)
-            print('source', source)
-
         target = osr.SpatialReference()
         target.ImportFromEPSG(target_epsg)
-
         transform = osr.CoordinateTransformation(source, target)
         g.Transform(transform)
         geom_target = json.loads(g.ExportToJson())

@@ -76,7 +76,7 @@ CREATE EXTENSION postgis_raster;
 The postgis image may contain the TIGER data base per default (this is a often
     used in postgis training). We don't need it, so remove with:
 ```
-postgres=# DROP schema tiger, tiger_data cascade;;
+postgres=# DROP schema tiger, tiger_data cascade;
 ```
 and exit and reconnect (you are now in schema *public*). List the default tables
 in that schema:

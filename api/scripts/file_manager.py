@@ -17,7 +17,7 @@ from flask import (make_response, render_template, flash)
 def allowed_file(filename):
     # Allow specific file types.
     return '.' in filename and \
-           filename.split('.', 1)[1].lower() in ['zip', 'tar.gz']
+           filename.split('.', 1)[1].lower() in ['zip', 'tar.gz', 'pdf']
 
 
 def get_files_list(path, aoi):
@@ -81,10 +81,10 @@ def upload(request, files, aoi):
             with open(save_path, 'ab') as f:
                 f.seek(int(request.form['dzchunkbyteoffset']))
                 f.write(file.stream.read())
-        except OSError:
+        except OSError as err:
             # log.exception will include the traceback so we can see
             # what's wrong
-            print('Could not write to file')
+            print('Could not write to file', err)
             return make_response("Couldn't write the file to disk", 500)
 
         total_chunks = int(request.form['dztotalchunkcount'])

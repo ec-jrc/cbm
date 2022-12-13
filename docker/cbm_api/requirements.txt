@@ -10,3 +10,4 @@ descartes
 boto3
 botocore
 rasterio
+ssh2-python

@@ -17,7 +17,7 @@ basePath: "/query"
 paths:
   /info:
     $ref: "./static/swagger_specs/parcel_info.yaml#/paths/info"
-  /parcelByID:
+  /parcelById:
     $ref: "./static/swagger_specs/parcel_info.yaml#/paths/parcelByID"
   /parcelByLocation:
     $ref: "./static/swagger_specs/parcel_info.yaml#/paths/parcelByLocation"
@@ -35,7 +35,7 @@ paths:
     $ref: "./static/swagger_specs/chips_raw_batch.yaml#/paths/rawChipsBatch"
   /rawS1ChipsBatch:
     $ref: "./static/swagger_specs/chips_raw_batch.yaml#/paths/rawS1ChipsBatch"
-  /backgroundByParcelID:
+  /backgroundByParcelId:
     $ref: "./static/swagger_specs/orthophotos.yaml#/paths/backgroundByParcelID"
   /backgroundByLocation:
     $ref: "./static/swagger_specs/orthophotos.yaml#/paths/backgroundByLocation"

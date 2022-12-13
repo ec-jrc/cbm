@@ -15,4 +15,4 @@ RUN apt-get install ca-certificates
 
 RUN pip install --upgrade pip
 COPY requirements.txt /tmp/
-RUN pip install --no-cache-dir -r /tmp/requirements.txt
+RUN pip install --no-cache-dir --upgrade -r /tmp/requirements.txt

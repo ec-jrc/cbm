@@ -27,8 +27,8 @@ from rasterio.transform import Affine
 from osgeo import osr, ogr
 
 
-def getBackgroundExtract(lon, lat, chipSize=256, chipExtend=500, unique_dir='',
-                         tms="google", iformat='tif', withGeometry=False):
+def getBackgroundExtract(lon, lat, chipSize, chipExtend, unique_dir,
+                         tms="Google", iformat='tif', withGeometry=False):
     """Generate an extract from either Google or Bing.
     It uses the WMTS standard to grab and compose,
     which makes it fast (does not depend on DIAS S3 store).
@@ -77,8 +77,8 @@ def getBackgroundExtract(lon, lat, chipSize=256, chipExtend=500, unique_dir='',
     south = point.GetY() - chipExtend / 2
     north = point.GetY() + chipExtend / 2
 
-    if os.path.isfile(f"tms/{tms.lower()}.xml"):
-        with rio.open(f"tms/{tms.lower()}.xml") as TMS_dataset:
+    if os.path.isfile(f"config/tms/{tms.lower()}.xml"):
+        with rio.open(f"config/tms/{tms.lower()}.xml") as TMS_dataset:
             bl = TMS_dataset.index(west, south, op=math.floor)
             tr = TMS_dataset.index(east, north, op=math.ceil)
 
@@ -120,7 +120,6 @@ def getBackgroundExtract(lon, lat, chipSize=256, chipExtend=500, unique_dir='',
                 return False
             chipset.write(output_dataset)
             chipset.close()
-
             if withGeometry and iformat == 'png':
                 from copy import copy
                 from rasterio.plot import show
@@ -130,7 +129,7 @@ def getBackgroundExtract(lon, lat, chipSize=256, chipExtend=500, unique_dir='',
                 from scripts import spatial_utils
                 from scripts import db_queries
 
-                def overlay_parcel(geom):
+                def overlay_parcel(img, geom):
                     """Create parcel polygon overlay"""
                     patche = [PolygonPatch(feature, edgecolor="yellow",
                                            facecolor="none", linewidth=2
@@ -150,7 +149,7 @@ def getBackgroundExtract(lon, lat, chipSize=256, chipExtend=500, unique_dir='',
 
                 with rio.open(f"{unique_dir}/{tms.lower()}.png") as img:
                     geom = spatial_utils.transform_geometry(parcel, 3857)
-                    patches = overlay_parcel(geom)
+                    patches = overlay_parcel(img, geom)
                     for patch in patches:
                         fig = plt.figure()
                         ax = fig.gca()

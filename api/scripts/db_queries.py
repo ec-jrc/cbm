@@ -24,15 +24,21 @@ def getParcelByLocation(dataset, lon, lat, ptype='',
     parcels_table = dataset['tables']['parcels']
 
     try:
+        logging.debug("start queries")
+        getTableSrid = f"""
+            SELECT Find_SRID('', '{parcels_table}{ptype}',
+                'wkb_geometry');"""
+        logging.debug(getTableSrid)
         cur.execute(getTableSrid)
         srid = cur.fetchone()[0]
+        logging.debug(srid)
         cropname = dataset['pcolumns']['crop_name']
         cropcode = dataset['pcolumns']['crop_code']
         parcel_id = dataset['pcolumns']['parcel_id']
 
         if withGeometry:
             if wgs84:
-                geometrySql = ", st_asgeojson(st_transform(wkb_geometry, 4326)) As geom"
+                geometrySql = ", st_asgeojson(st_transform(wkb_geometry, 4326)) as geom"
             else:
                 geometrySql = ", st_asgeojson(wkb_geometry) as geom"
         else:
@@ -53,16 +59,18 @@ def getParcelByLocation(dataset, lon, lat, ptype='',
         #  Return a list of tuples
         cur.execute(getTableDataSql)
         rows = cur.fetchall()
+        logging.debug(rows)
 
         data.append(tuple(etup.name for etup in cur.description))
         if len(rows) > 0:
             for r in rows:
                 data.append(tuple(r))
-            logging.debug(f'ParcelByLocation {parcels_table}{ptype}, {lon} {lat}')
         else:
             logging.debug(
                 f"No parcel found in {parcels_table}{ptype} that",
                 f"intersects with point ({lon}, {lat})")
+        logging.debug(data)
+        return data
 
     except Exception as err:
         print(err)
@@ -80,6 +88,7 @@ def getParcelByID(dataset, pid, ptype='', withGeometry=False,
     parcels_table = dataset['tables']['parcels']
 
     try:
+        logging.debug("start queries")
         cropname = dataset['pcolumns']['crop_name']
         cropcode = dataset['pcolumns']['crop_code']
         parcel_id = dataset['pcolumns']['parcel_id']
@@ -112,7 +121,6 @@ def getParcelByID(dataset, pid, ptype='', withGeometry=False,
         if len(rows) > 0:
             for r in rows:
                 data.append(tuple(r))
-            logging.debug(f'ParcelByID {parcels_table}{ptype}, {pid}')
         else:
             logging.debug(
                 f"No parcel found in the selected table with id ({pid}).")
@@ -135,11 +143,14 @@ def getParcelsByPolygon(dataset, polygon, ptype='', withGeometry=False,
     parcels_table = dataset['tables']['parcels']
 
     try:
+        logging.debug("start queries")
         getTableSrid = f"""
             SELECT Find_SRID('', '{parcels_table}{ptype}',
                 'wkb_geometry');"""
+        logging.debug(getTableSrid)
         cur.execute(getTableSrid)
         srid = cur.fetchone()[0]
+        logging.debug(srid)
         cropname = dataset['pcolumns']['crop_name']
         cropcode = dataset['pcolumns']['crop_code']
         parcel_id = dataset['pcolumns']['parcel_id']
@@ -179,7 +190,6 @@ def getParcelsByPolygon(dataset, polygon, ptype='', withGeometry=False,
         if len(rows) > 0:
             for r in rows:
                 data.append(tuple(r))
-            logging.debug(f'ParcelsByPolygon {parcels_table}{ptype}, {polygon}')
         else:
             print(f"No parcel found in {parcels_table}{ptype} that",
                   "intersects with the polygon.")
@@ -338,6 +348,13 @@ def getParcelPeers(dataset, pid, distance, maxPeers, ptype=''):
 
     try:
         logging.debug("start queries")
+        getTableSrid = f"""
+            SELECT Find_SRID('', '{parcels_table}{ptype}',
+                'wkb_geometry');"""
+        logging.debug(getTableSrid)
+        cur.execute(getTableSrid)
+        srid = cur.fetchone()[0]
+        logging.debug(srid)
         cropname = dataset['pcolumns']['crop_name']
         parcel_id = dataset['pcolumns']['parcel_id']
 
@@ -359,6 +376,8 @@ def getParcelPeers(dataset, pid, distance, maxPeers, ptype=''):
                 (SELECT geom FROM current_parcel)) asc
             LIMIT {maxPeers};
             """
+        #  Return a list of tuples
+        # print(getTableDataSql)
         cur.execute(getTableDataSql)
         rows = cur.fetchall()
 
@@ -408,7 +427,7 @@ def getParcelStatsPeers(dataset, start_date, end_date, band, stype,
             GROUP BY p.{parcel_id}
             LIMIT {maxPeers};
             """
-#         print(getTableDataSql)
+        print(getTableDataSql)
         cur.execute(getTableDataSql)
         rows = cur.fetchall()
 

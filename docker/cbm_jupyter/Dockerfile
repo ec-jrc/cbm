@@ -37,7 +37,7 @@ RUN pip install --upgrade pip setuptools wheel
 RUN pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
 
 COPY requirements.txt /tmp
-RUN pip install -r /tmp/requirements.txt
+RUN pip install --no-cache-dir --upgrade -r /tmp/requirements.txt
 
 EXPOSE 8888
 
