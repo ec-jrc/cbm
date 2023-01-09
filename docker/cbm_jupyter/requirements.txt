@@ -4,3 +4,4 @@ tflearn
 lxml
 geopandas
 descartes
+ipyfilechooser
