@@ -1,0 +1,17 @@
+Package: SALMS
+Type: Package
+Title: Functions to analyse remote sensing signal behaviour
+Version: 1.0-0
+Date: 2023-02-01
+Author: Jon Olav Skoien
+Maintainer: Jon Olav Skoien <jon.skoien@gmail.com>
+Imports: ggplot2, gridExtra, sp, lubridate, insol, raster, methods, corrplot, grDevices, stats, Rdpack
+Suggests: knitr, rmarkdown, pastecs, entropy
+Description: This is a set of different utility functions that can be used for analyses of signal behaviour.
+License: BSD 3-clause License + file LICENSE
+NeedsCompilation: yes
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.1  
+VignetteBuilder: knitr
+RdMacros: Rdpack
+

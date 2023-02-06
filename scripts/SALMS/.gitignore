@@ -1,0 +1,6 @@
+/doc/
+/Meta/
+.Rhistory
+DESCRIPTION.bak
+SALMS.Rproj
+.Rbuildignore
