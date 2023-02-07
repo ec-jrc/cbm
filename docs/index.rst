@@ -44,6 +44,7 @@
    :maxdepth: 3
    :caption: Use cases
 
+   uc_salms
    uc_calendar
    uc_foi
    uc_ml
