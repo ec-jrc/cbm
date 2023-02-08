@@ -292,10 +292,11 @@ second one fewer.
     #> $s2_idx
     #> list()
 
-![Time series of signals for the 50th percentile of
-NDVI](https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/salms_timeseries-1.png)![Time
-series of signals for the 50th percentile of
-NDVI](https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/salms_timeseries-2.png)
+<img src="img/SALMS_timeseries-1.jpg" alt="Plots from plotTimeSeries"  />
+<img src="img/SALMS_timeseries-2.jpg" alt="Plots from plotTimeSeries"  />
+<p class="caption">
+Time series of signals for the 50th percentile of NDVI
+</p>
 
 Figure 1 above shows the time series for NDVI, for the P50
 percentile. The black line shows the date of an activity (mowing of
@@ -457,8 +458,8 @@ missing values, which can particularly happen for S2-based signals
 (i.e., from presence of clouds).The header is the same as for the
 signalMeans.
 
-<img src="SALMS_meanPlot.jpg" width="300" alt="plot of mean values" />
-<img src="SALMS_TTplot.jpg" width="300" alt="plot of t.test results" />
+<img src="img/SALMS_meanPlot.jpg" width="300" alt="plot of mean values" />
+<img src="img/SALMS_TTplot.jpg" width="300" alt="plot of t.test results" />
 <p class="caption">
 Figure 3. Examples of plots of mean and the t.tests
 </p>
@@ -549,7 +550,7 @@ indexes like this, we can see that `P50` seems to be good for most
 indexes for identifying possible activities, although “P25” is better
 for “BSI” in this particular case.
 
-<img src="SALMS_rasterProbabilities.jpg" width="300" alt="plot of t.test results" />
+<img src="img/SALMS_rasterProbabilities.jpg" width="300" alt="plot of t.test results" />
 <p class="caption">
 Figure 4. Example of probability raster</p>
 
@@ -564,7 +565,7 @@ that there is no advantage of using cumulative values (panels to the
 right) for this data set. This could be different for other data.
 
 
-<img src="SALMS_graphProbabilities.jpg" width="300" alt="plot of t.test results" />
+<img src="img/SALMS_graphProbabilities.jpg" width="300" alt="plot of t.test results" />
 <p class="caption">
 Figure 5. Graphs of signal value change and probabilities for
 coherence-based signals, both the value itself, and the cumulative
