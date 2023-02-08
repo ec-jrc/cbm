@@ -1,7 +1,4 @@
-<!-- output: rmarkdown::html_vignette  -->
-<!-- setwd("D:/git/jskoien/CBM/scripts/SALMS"); devtools::build_rmd("vignettes/SALMSexample.rmd") -->
-<!-- devtools::install(build_vignettes = TRUE) -->
-<!--  devtools::build_vignettes() # before building source package for export -->
+# SALMS R-package
 
 ## Introduction
 
@@ -292,8 +289,8 @@ second one fewer.
     #> $s2_idx
     #> list()
 
-<img src="img/SALMS_timeseries-1.jpg" alt="Plots from plotTimeSeries"  />
-<img src="img/SALMS_timeseries-2.jpg" alt="Plots from plotTimeSeries"  />
+<img src="https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/SALMS_timeseries-1.jpg" alt="Plots from plotTimeSeries"  />
+<img src="https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/SALMS_timeseries-2.jpg" alt="Plots from plotTimeSeries"  />
 <p class="caption">
 Time series of signals for the 50th percentile of NDVI
 </p>
@@ -352,7 +349,7 @@ different coherence signals for the first activity, centred around the
 week of day 253. The plots shows the mean and the quantiles of the
 signals, together with dots for the original observations.
 
-<img src="img/SALMS_createSig.jpg" alt="Plots from CreateSignals"  />
+<img src="https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/SALMS_createSig.jpg" alt="Plots from CreateSignals"  />
 <p class="caption">
 Figure 2. Plots from CreateSignals
 </p>
@@ -458,8 +455,8 @@ missing values, which can particularly happen for S2-based signals
 (i.e., from presence of clouds).The header is the same as for the
 signalMeans.
 
-<img src="img/SALMS_meanPlot.jpg" width="300" alt="plot of mean values" />
-<img src="img/SALMS_TTplot.jpg" width="300" alt="plot of t.test results" />
+<img src="https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/SALMS_meanPlot.jpg" width="300" alt="plot of mean values" />
+<img src="https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/SALMS_TTplot.jpg" width="300" alt="plot of t.test results" />
 <p class="caption">
 Figure 3. Examples of plots of mean and the t.tests
 </p>
@@ -550,7 +547,7 @@ indexes like this, we can see that `P50` seems to be good for most
 indexes for identifying possible activities, although “P25” is better
 for “BSI” in this particular case.
 
-<img src="img/SALMS_rasterProbabilities.jpg" width="300" alt="plot of t.test results" />
+<img src="https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/SALMS_rasterProbabilities.jpg" width="300" alt="Probability raster" />
 <p class="caption">
 Figure 4. Example of probability raster</p>
 
@@ -565,7 +562,7 @@ that there is no advantage of using cumulative values (panels to the
 right) for this data set. This could be different for other data.
 
 
-<img src="img/SALMS_graphProbabilities.jpg" width="300" alt="plot of t.test results" />
+<img src="https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/SALMS_graphProbabilities.jpg" width="300" alt="probability graphs" />
 <p class="caption">
 Figure 5. Graphs of signal value change and probabilities for
 coherence-based signals, both the value itself, and the cumulative
@@ -622,12 +619,11 @@ the descriptor. We can here see that there is not a huge difference
 between the quantiles and the mean although the median is still the most
 optimal.
 
-<img src="img/SALMS_optimalSignal1.jpg" width="200" alt="optimalSignal1" />
-<img src="img/SALMS_optimalSignal2.jpg" width="200" alt="optimalSignal2" />
-<img src="img/SALMS_optimalSignal3.jpg" width="200" alt="optimalSignal3" />
+<img src="https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/SALMS_optimalSignal1.jpg" width="200" alt="optimalSignal1" />
+<img src="https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/SALMS_optimalSignal2.jpg" width="200" alt="optimalSignal2" />
+<img src="https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/SALMS_optimalSignal3.jpg" width="200" alt="optimalSignal3" />
 <p class="caption">
-Figure 6. An overview of the best, the poorest and good signal
-descriptors
+Figure 6. An overview of the best, the poorest and good signal descriptors
 sums</p>
 
 
@@ -660,7 +656,7 @@ descriptors.
 Figure 7 shows the correlations between the different signals for the
 `P50`descriptor.
 
-<img src="img/SALMS_optimalSignal3.jpg" width="200" alt="optimalSignal3" />
+<img src="https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/SALMS_correlations.jpg" width="200" alt="signal correlations" />
 <p class="caption">
 Figure 7. Correlations between signals for the `P50`
 descriptor</p>
