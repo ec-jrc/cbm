@@ -3,7 +3,7 @@
 <!-- devtools::install(build_vignettes = TRUE) -->
 <!--  devtools::build_vignettes() # before building source package for export -->
 
-# Introduction
+## Introduction
 
 Land cover objects are commonly observed through remote sensing. The
 change in land cover leads to changes in the observed remote sensing
@@ -69,7 +69,7 @@ the functionality in this package is based on a reduction of the areal
 observations by different statistical descriptors for each signal
 source.
 
-# Descriptors
+## Descriptors
 
 The most common statistical descriptors are the ones such as mean,
 quantiles, standard deviation. However, there are many more, including
@@ -98,7 +98,7 @@ descriptors would be:
 The package does not include the functionality for extracting these the
 time series from the remote sensing images.
 
-# Input data
+## Input data
 
 The analyses start with two types of .csv-files:
 
@@ -110,7 +110,7 @@ The intention is to include more flexibility regarding names, but for
 the moment, the time series need to have names reflecting their content
 based sensor source i.e. Sentinel-1 and Sentinel-2.
 
-## FOIinfo
+### FOIinfo
 
 The ground truth are read into `FOIinfo` which is a `data.frame`. This
 should contain an overview of the activities and corresponding FOIs of
@@ -144,7 +144,7 @@ The following shows the first 6 events of the example data set.
 This example also includes the area (in ha in this case). One FOI can
 have several activities observed (i.e. throughout the season) .
 
-## ts-files
+### ts-files
 
 The .csv-files with time series should be stored in a single directory,
 for each area of interest and for each group of remote sensing
@@ -240,7 +240,7 @@ outline of the FOI, depending on the approach for selecting pixels on
 the border (the example only uses pixels completely within the boundary,
 the number which is the also repeated under count).
 
-# plotTimeSeries
+## plotTimeSeries
 
 Before starting the analyses, it would be advisable to plot some of the
 original time series first, with the function plotTimeSeries. The
@@ -293,11 +293,11 @@ second one fewer.
     #> list()
 
 ![Time series of signals for the 50th percentile of
-NDVI](https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/timeseries-1.png)![Time
+NDVI](https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/salms_timeseries-1.png)![Time
 series of signals for the 50th percentile of
-NDVI](https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/timeseries-2.png)
+NDVI](https://raw.githubusercontent.com/ec-jrc/cbm/main/docs/img/salms_timeseries-2.png)
 
-@ref(fig:timeseries)) above shows the time series for NDVI, for the P50
+Figure 1 above shows the time series for NDVI, for the P50
 percentile. The black line shows the date of an activity (mowing of
 grass in this case), as indicated in the FOIinfo-file. For the NDVI, a
 drop in the signal value is observed after the activity took place.
@@ -306,7 +306,7 @@ The function can produce plots for all indexes and all descriptors,
 normally plotted in one or several pdfs. The legend is usually good for
 pdfs, less good in this example.
 
-# createSignals
+## createSignals
 
 The function `createSignals` will take the time series above and extract
 activity centred and weekly time series, with a length equal to
@@ -351,12 +351,12 @@ different coherence signals for the first activity, centred around the
 week of day 253. The plots shows the mean and the quantiles of the
 signals, together with dots for the original observations.
 
-<img src="createSig.jpg" alt="New output of CreateSignals"  />
+<img src="img/SALMS_createSig.jpg" alt="Plots from CreateSignals"  />
 <p class="caption">
-New output of CreateSignals
+Figure 2. Plots from CreateSignals
 </p>
 
-# What is week0
+## What is week0
 
 The analyses consider the difference between `week0` and the surrounding
 weeks. The `week0` is the week of the activity observed. The date of
@@ -375,7 +375,7 @@ activity. The default variables will create 15 week time series where
 the activity takes place in week 8. If ground observations are collected
 weakly, the recommendation is to use `week0 = 7` in all analyses.
 
-# Produce and plot means, standard deviations and t-tests
+## Produce and plot means, standard deviations and t-tests
 
 The first part of the analyses is, for a given activity type, to
 estimate the means and standard deviations for each of the tested
@@ -457,11 +457,14 @@ missing values, which can particularly happen for S2-based signals
 (i.e., from presence of clouds).The header is the same as for the
 signalMeans.
 
-<img src="meanPlot.jpg" width="300" alt="plot of mean values" /><img src="TTplot.jpg" width="300" alt="plot of t.test results" />
-
+<img src="SALMS_meanPlot.jpg" width="300" alt="plot of mean values" />
+<img src="SALMS_TTplot.jpg" width="300" alt="plot of t.test results" />
+<p class="caption">
 Figure 3. Examples of plots of mean and the t.tests
+</p>
 
-# Analysing signal probabilities
+
+## Analysing signal probabilities
 
 The plots produced by the functions above are useful step-by-step
 analyses, but too detailed for getting an overview of the capabilities
@@ -546,7 +549,9 @@ indexes like this, we can see that `P50` seems to be good for most
 indexes for identifying possible activities, although “P25” is better
 for “BSI” in this particular case.
 
-![Figure 4. Example of probability raster](rasterProbabilities.jpg)
+<img src="SALMS_rasterProbabilities.jpg" width="300" alt="plot of t.test results" />
+<p class="caption">
+Figure 4. Example of probability raster</p>
 
 Figure 5 shows an example of the graph plots for different statistical
 descriptors for week 10 for the coherence-based signals. The two panels
@@ -558,11 +563,15 @@ mean and the quantiles, except for min and max. Second, we can notice
 that there is no advantage of using cumulative values (panels to the
 right) for this data set. This could be different for other data.
 
-![Figure 5. Graphs of signal value change and probabilities for
-coherence-based signals, both the value itself, and the cumulative
-sums.](graphProbabilities.jpg)
 
-# Summarizing the results
+<img src="SALMS_graphProbabilities.jpg" width="300" alt="plot of t.test results" />
+<p class="caption">
+Figure 5. Graphs of signal value change and probabilities for
+coherence-based signals, both the value itself, and the cumulative
+sums</p>
+
+
+## Summarizing the results
 
 The functions above let us analyse signals separately. `optimalSignal`
 is a function which can help in identifying which descriptor is in
@@ -612,12 +621,16 @@ the descriptor. We can here see that there is not a huge difference
 between the quantiles and the mean although the median is still the most
 optimal.
 
-<img src="optimalSignal1.jpg" width="200" alt="optimalSignal1" /><img src="optimalSignal2.jpg" width="200" alt="optimalSignal2" /><img src="optimalSignal3.jpg" width="200" alt="optimalSignal3" />
-
+<img src="img/SALMS_optimalSignal1.jpg" width="200" alt="optimalSignal1" />
+<img src="img/SALMS_optimalSignal2.jpg" width="200" alt="optimalSignal2" />
+<img src="img/SALMS_optimalSignal3.jpg" width="200" alt="optimalSignal3" />
+<p class="caption">
 Figure 6. An overview of the best, the poorest and good signal
 descriptors
+sums</p>
 
-# Correlations
+
+## Correlations
 
 There are many situations where it would be possible to use several
 signals for detection of a single activity. In this case, it is better
@@ -646,12 +659,14 @@ descriptors.
 Figure 7 shows the correlations between the different signals for the
 `P50`descriptor.
 
-![Figure 7. Correlations between signals for the `P50`
-descriptor](correlations.jpg)
+<img src="img/SALMS_optimalSignal3.jpg" width="200" alt="optimalSignal3" />
+<p class="caption">
+Figure 7. Correlations between signals for the `P50`
+descriptor</p>
 
-# References
+## References
 
 Zieliński, Rafal, Jon Olav Skøien, Laura Acquafresca, and Wim Devos.
-2022. “<span class="nocase">Proposed workflow for optimization of land
-monitoring systems</span>.” JRC130659. Ispra: European Commission.
+2022. Proposed workflow for optimization of land
+monitoring systems. JRC130659. Ispra: European Commission.
 <https://marswiki.jrc.ec.europa.eu/wikicap/images/9/90/JRC130659_final.pdf>.
