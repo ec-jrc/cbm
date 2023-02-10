@@ -2,7 +2,18 @@
 
 ## Introduction
 
-Land cover objects are commonly observed through remote sensing. The
+SALMS (Signal Analyses for Land Monitoring Systems) is an R package
+that can help with analayses of remote sensing signals. The text
+below is mainly taken from the vignette of the package. The package 
+is currently in the CBM repository in GitHub:
+https://github.com/ec-jrc/cbm/tree/main/scripts/SALMS
+can be installed directly in R with the command:
+
+    install_github("ec-jrc/cbm/scripts/SALMS")
+
+
+The background for this package is that land cover objects are 
+commonly observed through remote sensing. The
 change in land cover leads to changes in the observed remote sensing
 signal for an area of interest. This area could be any spatially
 represented feature (i.e., an agricultural parcel, forest unit).
@@ -10,7 +21,7 @@ Ideally, it should have a homogeneous cover, for which we will expect
 all parts to react similar to an activity, with normal statistical
 variability.
 
-The package has developed for help with detection of agricultural
+The package was developed for help with detection of agricultural
 activities (typically mowing, ploughing, harvesting etc.), but can also
 be used for other applications. An example could be help for detection
 of illegal activities in natural reserves. The functions are most
@@ -663,7 +674,6 @@ descriptor</p>
 
 ## References
 
-Zieliński, Rafal, Jon Olav Skøien, Laura Acquafresca, and Wim Devos.
-2022. Proposed workflow for optimization of land
-monitoring systems. JRC130659. Ispra: European Commission.
+Zieliński, Rafal, Jon Olav Skøien, Laura Acquafresca, and Wim Devos. Proposed workflow for optimization of land
+monitoring systems. JRC130659. Ispra: European Commission. 2022.
 <https://marswiki.jrc.ec.europa.eu/wikicap/images/9/90/JRC130659_final.pdf>.
