@@ -326,16 +326,37 @@ class data_merger(base_pre_processor) :
         # first component
         data1 = ts[self.signals[0]]
         
+        if len(self.components) == 0 :
+            components = list(data1.columns)
+        else :
+            components = self.components
+        
+        # rename the components of interest
+        data1 = data1.rename(columns = dict(zip(components, \
+                     [self.signals[0] + "_" + value for value in components])))
+        
         # second component
-        data2 = ts[self.signals[1]]
+        # keep only the specified components
+        data2 = ts[self.signals[1]][components]
+        data2 = data2.rename(columns = dict(zip(components, \
+                     [self.signals[1] + "_" + value for value in components])))
             
         df = pd.merge(data1, data2, left_index=True, right_index=True)
 
-        if len(self.outnames) > 0 :
+        # Merge additional components if presents
+        if len(self.signals) > 2 :
+            for ii in range(2, len(self.signals)) :
+                data2 = ts[self.signals[ii]][components]
+                data2 = data2.rename(columns = dict(zip(components, \
+                             [self.signals[ii] + "_" + value for value in components])))
+                df = pd.merge(df, data2, left_index=True, right_index=True)
+                
+        if len(self.outnames) > 0 and self.outnames[0] != '':
             new_signal = self.outnames[0]
-        
         else :
-            new_signal = self.signals[0] + '_' + self.signals[1]
+            new_signal = self.signals[0]
+            for ii in range(1, len(self.signals)) :
+                new_signal = new_signal + '_' + self.signals[ii]
 
         out_dict[new_signal] = df
                 
@@ -873,8 +894,10 @@ class norm_processor(base_pre_processor) :
         
         ii = 0
         for signal in self.signals :
-            
-            df = ts[signal]
+            if signal in ts :
+                df = ts[signal]
+            else :
+                continue
             
             norm = np.zeros(len(df))
             

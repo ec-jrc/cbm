@@ -139,7 +139,7 @@ class base_processor_widget(VBox) :
         signals = list(self.children[1].children[0].value)
         
         # Check if there is at list one signal
-        if (len(signals) == 1) and (signals[0] != "") :
+        if (len(signals) >= 1) and (signals[0] != "") :
             out_dict["signals"] = signals
             
         # Add the components
@@ -320,15 +320,32 @@ class data_merger_widget(base_processor_widget) :
        if len(signals) < 2 :
             return {}
         
-       # keep only the first two signals 
-       signals = signals[:2]
-
-       signal_name = signals[0] + '_' + signals[1]
-
-       components_0 = [signals[0] + '_' + compo for compo in self.components[signals[0]]]
-       components_1 = [signals[1] + '_' + compo for compo in self.components[signals[1]]]
+       # Now check the components
+       if len(self.wsm_components.value) == 0 or ("" in self.wsm_components.value) :
+           components = self.components[signals[0]]
+       else :
+           components = list(set(self.wsm_components.value))
        
-       out_dic = {signal_name : [*components_0, *components_1]}
+       # Build the list of the output components
+       # The original components from the first signal are kept
+       out_components = []
+       for component in self.components[signals[0]] :
+           if component in components :
+               out_components.append(signals[0] + '_' + component)
+           else :
+               out_components.append(component)
+
+       # Now add the other components
+       for signal in signals[1:] :
+           for component in components :
+               out_components.append(signal + '_' + component)
+               
+       # Determine the name of the output signal
+       new_signal = signals[0]
+       for ii in range(1, len(signals)) :
+           new_signal = new_signal + '_' + signals[ii]
+       
+       out_dic = {new_signal : out_components}
        
        return out_dic
         
