@@ -31,7 +31,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from datetime import datetime
 from pathlib import Path
+
 import pandas as pd
+from pandas.testing import assert_frame_equal
 
 
 def fill_buckets_2024(
@@ -173,7 +175,7 @@ def fill_buckets_2024(
     return pd.DataFrame(bucket_parcels)
 
 
-def test_MT():
+def test_MT_data():
     # Input
     input_dir = Path(__file__).resolve().parent / "data"
     bucket_size = 4
@@ -211,10 +213,22 @@ def test_MT():
         "unique parcels": len(buckets_MT_2024_df.parcel_id.unique()),
         "unique holdings": len(buckets_MT_2024_df.holding_id.unique()),
     }
+
     buckets_MT_2024_df.to_excel(output_dir / f"{name}.xlsx")
     print(simulation)
     print(f"{name} took {datetime.now()-start_time}")
 
+    # Compare with expected result
+    expected_df = pd.read_csv(input_dir / "MT_expected_result.csv")
+    expected_df = expected_df.sort_values(by=list(expected_df.columns)).reset_index(
+        drop=True
+    )
+    result_df = buckets_MT_2024_df[["parcel_id", "bucket", "holding_id"]].rename(
+        columns={"bucket": "scheme", "holding_id": "farmer_id"}
+    )
+    result_df = result_df.sort_values(by=list(result_df.columns)).reset_index(drop=True)
+    assert_frame_equal(result_df, expected_df)
+
 
 if __name__ == "__main__":
-    test_MT()
+    test_MT_data()
