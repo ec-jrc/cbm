@@ -1,0 +1,6 @@
+numpy==1.25.2
+openpyxl==3.0.10
+pandas==2.2.1
+psycopg2==2.9.9
+PyYAML==6.0
+tqdm==4.65.0
