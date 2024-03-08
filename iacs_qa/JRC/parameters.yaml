@@ -1,0 +1,53 @@
+database:
+  connection:
+    host:   ....
+    db:     ....
+    user:   ....
+    port:   ....
+    pwd:    ....
+
+
+  table_names:
+    parcels:
+      name: ua_grp_tiles    
+      schema: sampling_2024
+
+    targets:
+      name: view_target_sample_size
+      schema: sampling_2024
+
+  column_names:
+    country: gsa_code
+    intervention_id: ua_grp_id
+    holding_id: gsa_hol_id
+    parcel_id: gsa_par_id
+    ranking: ranking
+    covered: covered
+    target: target1
+
+
+countries: ['mt'] # Country code
+# options:
+# ["at","befl","bewa","bg","cy","cz","de","dk","ee","es","fi","fr","hr","hu","ie","it","lt","lu","lv","mt","nl","pl","pt","ro","se","si","sk"]
+
+constraints:  
+
+  intervention_target:
+    active: True    # False will skip this contraint, True will limit the number of parcels per intervention to the value below
+    max: 300
+
+  holding_target:
+    active: True    # False will skip this contraint, True will prioritize the number of parcels per holding to the value below
+    max: 3
+
+  holding_percentage:
+    active:  False  # False will skip this contraint, True will limit the number of unique holdings per intervention to the value below
+    max: 0.03       # percentage of the total
+
+  image_coverage:
+    active: True    # False will consider all parcels, True will take only the parcels covered by HR images
+    
+output:
+  path: ./output    # The output folder can be relative or absolute path
+  suffix: STATS_300
+  temporary: False  # True will keep the temporary files, False will delete the tmp folder at the end of processing
