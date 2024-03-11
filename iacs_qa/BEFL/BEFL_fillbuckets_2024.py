@@ -78,13 +78,16 @@ def fill_buckets_2024(
 
     # Join ranking data with the parcel data
     parcels_df = parcels_df.merge(ranking_df, on="parcel_id")
+
     # Recreate ranking df with holding_id added + sort on ranking
     ranking_df = (
         parcels_df[["parcel_id", "holding_id", "ranking"]]
         .drop_duplicates()
         .sort_values(["ranking"])
     )
-    parcels_df = parcels_df.set_index("holding_id", drop=False)
+    parcels_df = parcels_df.set_index("parcel_id", drop=False)
+    # Also create a parcel list with an index on holding_id
+    parcels_h_df = parcels_df.set_index("holding_id", drop=False)
 
     # Init buckets
     buckets = {}
@@ -100,12 +103,11 @@ def fill_buckets_2024(
         if buckets_filled == buckets_needed:
             break
 
-        # If the current parcel only has ua_groups that are already filled up, skip
-        # treating it
+        # If the current parcel only has ua_groups that are already filled up, skip it.
         parcel_ua_groups = None
         if skip_parcels_0_ua_groups:
             parcel_ua_groups = set(
-                parcels_df.loc[parcels_df.parcel_id == parcel.parcel_id]["ua_group"]
+                parcels_df.loc[parcels_df.index == parcel.parcel_id]["ua_group"]
             )
             if len(parcel_ua_groups - buckets_filled) == 0:
                 continue
@@ -113,6 +115,7 @@ def fill_buckets_2024(
         # Extra buckets filled, so filter the parcel DataFrame some more.
         if len(buckets_filled) > nb_buckets_filled:
             parcels_df = parcels_df[~parcels_df.ua_group.isin(buckets_filled)]
+            parcels_h_df = parcels_df.set_index("holding_id", drop=False)
             nb_buckets_filled = len(buckets_filled)
 
         if print_progress and counter % 10000 == 0:
@@ -121,7 +124,9 @@ def fill_buckets_2024(
         if parcel.holding_id not in holdings_treated:
             holdings_treated.add(parcel.holding_id)
             # All parcels of the holding
-            parcels_holding_df = parcels_df.loc[parcels_df.index == parcel.holding_id]
+            parcels_holding_df = parcels_h_df.loc[
+                parcels_h_df.index == parcel.holding_id
+            ]
 
             # Loop over ua_groups in holding
             for ua_group in parcels_holding_df["ua_group"].unique():
@@ -156,9 +161,9 @@ def fill_buckets_2024(
 
             # Loop over ua_groups of current parcel
             if parcel_ua_groups is None:
-                parcel_ua_groups = parcels_df.loc[
-                    parcels_df.parcel_id == parcel.parcel_id
-                ]["ua_group"].unique()
+                parcel_ua_groups = parcels_df.loc[parcels_df.index == parcel.parcel_id][
+                    "ua_group"
+                ].unique()
             for ua_group in parcel_ua_groups:
                 if parcel.parcel_id not in buckets[ua_group]:
                     buckets[ua_group][parcel_ua_group.parcel_id] = {
