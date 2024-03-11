@@ -7,7 +7,7 @@ from pandas.testing import assert_frame_equal
 from iacs_qa.BEFL.BEFL_fillbuckets_2024 import fill_buckets_2024
 
 
-def test_fillbuckets_2024():
+def test_fillbuckets_2024(skip_parcels_0_ua_groups: bool):
     # Input
     input_dir = Path(__file__).resolve().parent / "testdata"
     bucket_size = 4
@@ -21,7 +21,10 @@ def test_fillbuckets_2024():
     start_time = datetime.now()
     name = f"simulate_{bucket_size}P_2024_testdata"
     buckets_test_df = fill_buckets_2024(
-        parcels_df, ranking_df, bucket_size=bucket_size, skip_parcels_0_ua_groups=False
+        parcels_df,
+        ranking_df,
+        bucket_size=bucket_size,
+        skip_parcels_0_ua_groups=skip_parcels_0_ua_groups,
     )
     simulation = {
         "name": name,
@@ -40,7 +43,11 @@ def test_fillbuckets_2024():
     print(f"{name} took {datetime.now()-start_time}")
 
     # Compare with expected result
-    expected_df = pd.read_csv(input_dir / "expected_result.csv")
+    if skip_parcels_0_ua_groups:
+        expected_path = input_dir / "expected_result_skip_parcels_0_ua_groups.csv"
+    else:
+        expected_path = input_dir / "expected_result.csv"
+    expected_df = pd.read_csv(expected_path)
     expected_df = expected_df.sort_values(by=list(expected_df.columns)).reset_index(
         drop=True
     )
@@ -53,4 +60,5 @@ def test_fillbuckets_2024():
 
 
 if __name__ == "__main__":
-    test_fillbuckets_2024()
+    test_fillbuckets_2024(skip_parcels_0_ua_groups=False)
+    test_fillbuckets_2024(skip_parcels_0_ua_groups=True)
