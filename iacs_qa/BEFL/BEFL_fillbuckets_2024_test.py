@@ -21,7 +21,7 @@ def test_fillbuckets_2024():
     start_time = datetime.now()
     name = f"simulate_{bucket_size}P_2024_testdata"
     buckets_test_df = fill_buckets_2024(
-        parcels_df, ranking_df, bucket_size=bucket_size, skip_parcels_0_ua_groups=True
+        parcels_df, ranking_df, bucket_size=bucket_size, skip_parcels_0_ua_groups=False
     )
     simulation = {
         "name": name,
