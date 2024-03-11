@@ -29,15 +29,15 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from datetime import datetime
-from pathlib import Path
-
 import pandas as pd
-from pandas.testing import assert_frame_equal
 
 
 def fill_buckets_2024(
-    parcels_df: pd.DataFrame, max_parcels_per_bucket: int, print_progress: bool = False
+    parcels_df: pd.DataFrame,
+    ranking_df: pd.DataFrame,
+    bucket_size: int,
+    skip_parcels_0_ua_groups: bool,
+    print_progress: bool = False,
 ) -> pd.DataFrame:
     """
     Simulation to fill buckets according to new rules of 2024.
@@ -49,186 +49,132 @@ def fill_buckets_2024(
       - there is no support (yet) for different bucket sizes per unit amount.
 
     Args:
-        parcels_df (pd.DataFrame): dataframe with parcels
-        max_parcels_per_bucket (int): maximum number of parcels per bucket
+        parcels_df (pd.DataFrame): DataFrame with parcels. Expected columns:
+            ["parcel_id", "holding_id", "ua_group"].
+        ranking_df (pd.DataFrame): DataFrame with parcel ranking. Expected columns:
+            ["parcel_id", "ranking"].
+        bucket_size (int): maximum number of parcels per bucket.
+        skip_parcels_0_ua_groups (bool): skip parcels that at the moment they are
+            reached in the ranking belong to no ua groups anymore. This results in
+            3% fewer unique parcels and 25% fewer unique holdings in the buckets.
         print_progress (bool, optional): True to print some progress. Defaults to False.
 
     Returns:
         pd.DataFrame: the filled up buckets.
     """
-    parcels_sorted_df = parcels_df.sort_values(["ranking"])
+    # Check input parameters
+    expected_columns = ["parcel_id", "holding_id", "ua_group"]
+    if sorted(parcels_df.columns) != sorted(expected_columns):
+        raise ValueError(
+            f"parcels_df should have columns {expected_columns}, not "
+            f"{list(parcels_df.columns)}"
+        )
+    expected_columns = ["parcel_id", "ranking"]
+    if sorted(ranking_df.columns) != sorted(expected_columns):
+        raise ValueError(
+            f"ranking_df should have columns {expected_columns}, not "
+            f"{list(ranking_df.columns)}"
+        )
 
-    treated_parcels = set()
-    treated_holdings = set()
+    # Join ranking data with the parcel data
+    parcels_df = parcels_df.merge(ranking_df, on="parcel_id")
+    # Recreate ranking df with holding_id added + sort on ranking
+    ranking_df = (
+        parcels_df[["parcel_id", "holding_id", "ranking"]]
+        .drop_duplicates()
+        .sort_values(["ranking"])
+    )
+    parcels_df = parcels_df.set_index("holding_id", drop=False)
 
     # Init buckets
-    bucket_parcels_dict = {}
+    buckets = {}
     buckets_needed = set(parcels_df["ua_group"].unique())
     for ua_group in buckets_needed:
-        bucket_parcels_dict[ua_group] = {}
+        buckets[ua_group] = {}
 
-    # Keep looping till all buckers are filled or if we get till the end of the ranked
-    # parcel list.
+    # Loop through parcels
     buckets_filled = set()
-    prc_counter = 0
-    while buckets_filled != buckets_needed:
-        # We got till the end of the parcel loop without getting all buckets filled :-(.
-        if prc_counter >= len(parcels_sorted_df):
-            print("No more parcels to loop :-(...")
+    holdings_treated = set()
+    nb_buckets_filled = 0
+    for counter, parcel in enumerate(ranking_df.itertuples()):
+        if buckets_filled == buckets_needed:
             break
-        prc_counter = 0
 
-        # Only keep parcels that are relevant for UA groups for which the buckets aren't
-        # filled up yet.
-        parcels_sorted_df = parcels_sorted_df[
-            ~parcels_sorted_df.ua_group.isin(buckets_filled)
-        ]
-
-        # Loop through parcels
-        restart_prc_loop = False
-        for prc in parcels_sorted_df.itertuples():
-            # A bucket was filled in the previous iteration, so filter list first to get
-            # some speedup.
-            if restart_prc_loop:
-                break
-
-            prc_counter += 1
-            if print_progress and prc_counter % 10000 == 0:
-                print(f"processed {prc_counter} parcels of {len(parcels_sorted_df)}")
-            if prc.parcel_id in treated_parcels:
+        # If the current parcel only has ua_groups that are already filled up, skip
+        # treating it
+        parcel_ua_groups = None
+        if skip_parcels_0_ua_groups:
+            parcel_ua_groups = set(
+                parcels_df.loc[parcels_df.parcel_id == parcel.parcel_id]["ua_group"]
+            )
+            if len(parcel_ua_groups - buckets_filled) == 0:
                 continue
-            treated_parcels.add(prc.parcel_id)
 
-            if prc.holding_id not in treated_holdings:
-                treated_holdings.add(prc.holding_id)
-                # All parcels of the holding, sorted on ranking
-                prc_of_holding_df = parcels_df.loc[
-                    parcels_df.holding_id == prc.holding_id
+        # Extra buckets filled, so filter the parcel DataFrame some more.
+        if len(buckets_filled) > nb_buckets_filled:
+            parcels_df = parcels_df[~parcels_df.ua_group.isin(buckets_filled)]
+            nb_buckets_filled = len(buckets_filled)
+
+        if print_progress and counter % 10000 == 0:
+            print(f"processed {counter} parcels of {len(ranking_df)}")
+
+        if parcel.holding_id not in holdings_treated:
+            holdings_treated.add(parcel.holding_id)
+            # All parcels of the holding
+            parcels_holding_df = parcels_df.loc[parcels_df.index == parcel.holding_id]
+
+            # Loop over ua_groups in holding
+            for ua_group in parcels_holding_df["ua_group"].unique():
+                # Parcels in the holding with this ua_group, sorted by ranking
+                parcels_ua_group_df = parcels_holding_df.loc[
+                    parcels_holding_df.ua_group == ua_group
                 ].sort_values(["ranking"])
 
-                # Loop over ua_groups in holding
-                for ua_group in prc_of_holding_df["ua_group"].unique():
-                    # Never more than max_parcels_per_bucket in bucket
-                    if len(bucket_parcels_dict[ua_group]) >= max_parcels_per_bucket:
-                        if ua_group not in buckets_filled:
-                            buckets_filled.add(ua_group)
-                            restart_prc_loop = True
-                        continue
-                    prc_groep_df = prc_of_holding_df.loc[
-                        prc_of_holding_df.ua_group == ua_group
-                    ]
-                    nb_added = 0
-                    for prc_groep in prc_groep_df.itertuples():
-                        if prc_groep.parcel_id not in bucket_parcels_dict[ua_group]:
-                            bucket_parcels_dict[ua_group][prc_groep.parcel_id] = {
-                                "bucket": ua_group,
-                                "parcel_id": prc_groep.parcel_id,
-                                "holding_id": prc_groep.holding_id,
-                                "ua_group": ua_group,
-                                "ranking": prc_groep.ranking,
-                            }
-                            nb_added += 1
+                nb_added = 0
+                for parcel_ua_group in parcels_ua_group_df.itertuples():
+                    buckets[ua_group][parcel_ua_group.parcel_id] = {
+                        "bucket": ua_group,
+                        "parcel_id": parcel_ua_group.parcel_id,
+                        "holding_id": parcel_ua_group.holding_id,
+                        "ua_group": ua_group,
+                        "ranking": parcel_ua_group.ranking,
+                    }
 
-                            # Add only 3 parcels per holding to a bucket
-                            if nb_added >= 3:
-                                break
-                            # Only up till general maximum in bucket
-                            if (
-                                len(bucket_parcels_dict[ua_group])
-                                >= max_parcels_per_bucket
-                            ):
-                                if ua_group not in buckets_filled:
-                                    buckets_filled.add(ua_group)
-                                    restart_prc_loop = True
-                                break
-
-            else:
-                # Holding has already been processed... just try to add this single
-                # parcel to each relevant bucket if it isn't in it yet.
-
-                # All ua_groups of parcel
-                prc_ua_groupen_df = parcels_df.loc[
-                    parcels_df.parcel_id == prc.parcel_id
-                ]
-                # Loop over ua_groups in holding
-                for ua_group in prc_ua_groupen_df["ua_group"].unique():
-                    # Never more than max_parcels_per_bucket in bucket
-                    if len(bucket_parcels_dict[ua_group]) >= max_parcels_per_bucket:
+                    # Only up till bucket size in bucket
+                    if len(buckets[ua_group]) >= bucket_size:
                         buckets_filled.add(ua_group)
-                        restart_prc_loop = True
-                        continue
-                    if prc.parcel_id not in bucket_parcels_dict[ua_group]:
-                        bucket_parcels_dict[ua_group][prc_groep.parcel_id] = {
-                            "bucket": ua_group,
-                            "parcel_id": prc.parcel_id,
-                            "holding_id": prc.holding_id,
-                            "ua_group": ua_group,
-                            "ranking": prc.ranking,
-                        }
+                        break
+
+                    # Add maximum 3 parcels per holding to a bucket
+                    nb_added += 1
+                    if nb_added >= 3:
+                        break
+
+        else:
+            # Holding has already been processed... just try to add this single
+            # parcel to each relevant bucket if it isn't in it yet.
+
+            # Loop over ua_groups of current parcel
+            if parcel_ua_groups is None:
+                parcel_ua_groups = parcels_df.loc[
+                    parcels_df.parcel_id == parcel.parcel_id
+                ]["ua_group"].unique()
+            for ua_group in parcel_ua_groups:
+                if parcel.parcel_id not in buckets[ua_group]:
+                    buckets[ua_group][parcel_ua_group.parcel_id] = {
+                        "bucket": ua_group,
+                        "parcel_id": parcel.parcel_id,
+                        "holding_id": parcel.holding_id,
+                        "ua_group": ua_group,
+                        "ranking": parcel.ranking,
+                    }
+                    if len(buckets[ua_group]) >= bucket_size:
+                        buckets_filled.add(ua_group)
 
     # Prepare result
     bucket_parcels = []
-    for bucket in bucket_parcels_dict:
-        for prc in bucket_parcels_dict[bucket]:
-            bucket_parcels.append(bucket_parcels_dict[bucket][prc])
+    for bucket in buckets:
+        for parcel in buckets[bucket]:
+            bucket_parcels.append(buckets[bucket][parcel])
 
     return pd.DataFrame(bucket_parcels)
-
-
-def test_MT_data():
-    # Input
-    input_dir = Path(__file__).resolve().parent / "data"
-    bucket_size = 4
-
-    # Read input data
-    gsa_df = pd.read_csv(input_dir / "MT_GSA.csv").set_index("parcel_ID")
-    ranking_df = pd.read_csv(input_dir / "MT_ranked_list.csv").set_index("parcel_ID")
-
-    # Join gsa and ranking
-    df = gsa_df.join(ranking_df).reset_index()
-
-    # Rename columns to be compatible with BEFL names
-    df = df.rename(
-        columns={
-            "parcel_ID": "parcel_id",
-            "scheme": "ua_group",
-            "farmer_ID": "holding_id",
-            "rank_ID": "ranking",
-        }
-    )
-
-    output_dir = input_dir
-
-    start_time = datetime.now()
-    name = f"sim_{bucket_size}P_2024_MT"
-    buckets_MT_2024_df = fill_buckets_2024(df, max_parcels_per_bucket=bucket_size)
-    simulation = {
-        "name": name,
-        "descr": (
-            "Grouped Small Buckets, "
-            "300 first ranked Parcels, 3 parcels/holding, "
-            "rules of 2024"
-        ),
-        "total parcels": len(buckets_MT_2024_df),
-        "unique parcels": len(buckets_MT_2024_df.parcel_id.unique()),
-        "unique holdings": len(buckets_MT_2024_df.holding_id.unique()),
-    }
-
-    buckets_MT_2024_df.to_excel(output_dir / f"{name}.xlsx")
-    print(simulation)
-    print(f"{name} took {datetime.now()-start_time}")
-
-    # Compare with expected result
-    expected_df = pd.read_csv(input_dir / "MT_expected_result.csv")
-    expected_df = expected_df.sort_values(by=list(expected_df.columns)).reset_index(
-        drop=True
-    )
-    result_df = buckets_MT_2024_df[["parcel_id", "bucket", "holding_id"]].rename(
-        columns={"bucket": "scheme", "holding_id": "farmer_id"}
-    )
-    result_df = result_df.sort_values(by=list(result_df.columns)).reset_index(drop=True)
-    assert_frame_equal(result_df, expected_df)
-
-
-if __name__ == "__main__":
-    test_MT_data()
