@@ -5,7 +5,6 @@ import numpy as np
 def get_data_from_country(conn, country, columns, table_names): 
 
     parcels = table_names.get('parcels')
-    # targets = table_names.get('targets')
     
     query = f"""
         SELECT 
@@ -25,7 +24,6 @@ def get_data_from_country(conn, country, columns, table_names):
 
     return df
 
-
 def get_country_intervention_targets(conn, country, columns, table_names):
 
     targets = table_names.get('targets')
@@ -35,9 +33,7 @@ def get_country_intervention_targets(conn, country, columns, table_names):
         FROM {targets['schema']}.{targets['name']} 
         WHERE {columns['country']} = '{country}'
         """
-    
-    # -- AND {columns['target']} > 0 
-
+        
     return pd.read_sql_query(query,conn)
 
 def get_holding_id_per_intervention(conn, country, columns, table_names, min_holdings):
@@ -72,7 +68,7 @@ def get_holding_id_per_intervention(conn, country, columns, table_names, min_hol
         SELECT * FROM grouped  
     
     """
-
+    
     return pd.read_sql_query(query,conn)
 
 
