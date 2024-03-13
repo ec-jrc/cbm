@@ -1,13 +1,13 @@
-
+    
 """
     Name: 
         JRC_IACS_QA_v1
     Author: 
         Fernando Fahl
     Date:
-         March 7, 2024
+         March 13, 2024
     Version: 
-        1.0
+        1.1
     Description: 
         Tool to select inspection samples for the quality assessments (QA) of the Area Monitoring System (AMS) and GeoSpatial Application (GSA) 
     Usage: 
@@ -15,6 +15,10 @@
         Modify the file parameters.yaml accondingly
     Dependencies: 
         see file requirements.txt
+        
+        
+    Changelog:
+    2023-03-13: fix infinite loop when there is not enough data for filling up the buckets
 """
 
 
@@ -140,7 +144,13 @@ def loop_01_parcels(dt, bk, counter=[0]):
  
         # _______________ Bucket control
         if bucket_control(bk) is True:   
-            return      
+            return "bucket full"     
+            
+        # _______________ Data control - break if it gets to the end of the dataframe without filling up the buckets
+        if idx == dt.data.index[-1]: 
+            message = f" ... There is not enough data to fill up the buckets"
+            bk.log(message)  
+            return "not enough data"  
 
         # _______________ Get parcel ids from holding id
         parcel_ids_from_holding_ = dt.get_parcel_ids_from_holding(holding_id_)
@@ -191,10 +201,7 @@ def main():
         # _______________ Load data from database
         dt = ctr.Data()
         dt.initiate_country(country)
-        dt.load_db_data()
-       
-
-        # print (dt)
+        dt.load_db_data()    
  
         # _______________ Create empty buckets
         bk = ctr.Bucket(country, dt.intervention_targets, dt.n_holdings_allowed)
@@ -216,8 +223,8 @@ def main():
             status_ = loop_01_parcels(dt, bk)    
  
             # _______________ Bucket control
-            if bucket_control(bk) is True:
-                break      
+            if bucket_control(bk) is True or status_ == "not enough data" or status_ == "bucket full":
+                break     
 
         # _______________ Analyse of partial dataset: condition when the number of holdings has reached the percentagem limit
         else:
@@ -246,8 +253,7 @@ def main():
         # _______________ End of processing
         total_time_ = round((time.time() - start_time) / 60,2)             
 
-        message = f" ... {'END: Total processing time = ' + str(total_time_) + ' min':40} "                       
-        # :: n_rows: {bk.n_rows_bucket:<5} :: n_parcels: {bk.n_parcels_unique_bucket:<5} :: n_holdings: {bk.n_holdings_unique_bucket:<5} :: n_interventions: {bk.n_intervention_unique_bucket:<5}
+        message = f" ... {'END: Total processing time = ' + str(total_time_) + ' min':40} "     
         bk.log(message, level='info') 
 
         bk.close_process(dt, total_time_)

@@ -259,9 +259,6 @@ class Data(Base):
         # ___________ do stats with the data
         self.set_stats_from_data() 
 
-        # utl.save_csv(self.df_data_aggregated, 'TMP_MT_data_aggregated.csv')
-
-
     def set_stats_from_data(self):
 
         # Holdings 
@@ -338,8 +335,6 @@ class Data(Base):
 
         self.n_holdings_unique_constrained = len(self.df_data_constrained.index.get_level_values('holding_id').unique().tolist()) 
         self.n_parcels_unique_constrained  = len(self.df_data_constrained.index.get_level_values('parcel_id').unique().tolist())
-       
-        # utl.save_csv(df_data_aggregated_, 'TMP_MT_data_aggregated.csv')
 
     # ________________ Intervention
     def get_intervention_ids_from_parcel(self, holding_id, parcel_id):
@@ -557,8 +552,6 @@ class Bucket(Base):
         else:
             if self.bucket_holding.index.isin([(intervention_id, holding_id)]).any(): # index exists    
                 return self.bucket_holding.loc[(intervention_id, holding_id), 'completed']
-        # else:
-        #     return 0  
 
     def update_holding_selected_list(self, holding_id):  
 
@@ -637,7 +630,6 @@ class Bucket(Base):
             pass
 
     # ________________ END of processing
-
     def delete_dfs(self):
 
         del (self.bucket)        
