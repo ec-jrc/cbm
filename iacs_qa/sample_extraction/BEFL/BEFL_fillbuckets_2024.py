@@ -29,13 +29,14 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
+from typing import Dict, Union
 import pandas as pd
 
 
 def fill_buckets_2024(
     parcels_df: pd.DataFrame,
     ranking_df: pd.DataFrame,
-    bucket_size: int,
+    bucket_size: Union[int, Dict[str, int]],
     skip_parcels_0_ua_groups: bool,
     print_progress: bool = False,
 ) -> pd.DataFrame:
@@ -46,14 +47,15 @@ def fill_buckets_2024(
       - this has been developed only for simulation purposes, so is not to be treated as
         production ready code and hasn't been thouroughly tested.
       - there is no support (yet) for the 3 % capping rule.
-      - there is no support (yet) for different bucket sizes per unit amount.
 
     Args:
         parcels_df (pd.DataFrame): DataFrame with parcels. Expected columns:
             ["parcel_id", "holding_id", "ua_group"].
         ranking_df (pd.DataFrame): DataFrame with parcel ranking. Expected columns:
             ["parcel_id", "ranking"].
-        bucket_size (int): maximum number of parcels per bucket.
+        bucket_size (int, dict): either an int with the maximum number of parcels per
+            bucket for all "ua_group"s, or a dict with for each ua_group the maximum
+            number that should be in the corresponding bucket.
         skip_parcels_0_ua_groups (bool): skip parcels that at the moment they are
             reached in the ranking belong to no ua groups anymore. This results in
             3% fewer unique parcels and 25% fewer unique holdings in the buckets.
@@ -94,6 +96,14 @@ def fill_buckets_2024(
     buckets_needed = set(parcels_df["ua_group"].unique())
     for ua_group in buckets_needed:
         buckets[ua_group] = {}
+
+    # If bucket_size is a single int, prepare a dict with bucket sizes to simplify the
+    # code coming later on.
+    if isinstance(bucket_size, int):
+        bucket_size_dict = {}
+        for ua_group in buckets_needed:
+            bucket_size_dict[ua_group] = bucket_size
+        bucket_size = bucket_size_dict
 
     # Loop through parcels
     buckets_filled = set()
@@ -146,7 +156,7 @@ def fill_buckets_2024(
                     }
 
                     # Only up till bucket size in bucket
-                    if len(buckets[ua_group]) >= bucket_size:
+                    if len(buckets[ua_group]) >= bucket_size[ua_group]:
                         buckets_filled.add(ua_group)
                         break
 
@@ -173,7 +183,7 @@ def fill_buckets_2024(
                         "ua_group": ua_group,
                         "ranking": parcel.ranking,
                     }
-                    if len(buckets[ua_group]) >= bucket_size:
+                    if len(buckets[ua_group]) >= bucket_size[ua_group]:
                         buckets_filled.add(ua_group)
 
     # Prepare result
