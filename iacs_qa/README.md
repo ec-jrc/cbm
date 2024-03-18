@@ -4,4 +4,4 @@ This space is used to discuss possible technical solutions, share tools and good
 All Member States are invited to participate and contribute to this repository.   
   
 Implementation of the algorithms: 
-* [Extraction of the samples from the ranked list](sample_extraction/readme.md)
+* [Extraction of the samples from the ranked list](sample_extraction/README.md)
