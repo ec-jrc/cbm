@@ -46,21 +46,21 @@ def fill_buckets_2024(
 
     Notes:
       - this has been developed only for simulation purposes, so is not to be treated as
-        production ready code and hasn't been thouroughly tested.
+        production ready code and hasn't been thoroughly tested.
 
     Args:
         parcels_df (pd.DataFrame): DataFrame with parcels. Expected columns:
             ["parcel_id", "holding_id", "ua_group"].
         ranking_df (pd.DataFrame): DataFrame with parcel ranking. Expected columns:
             ["parcel_id", "ranking"].
-        bucket_size (int, dict): either an int with the maximum number of parcels per
+        bucket_size (int, dict): Either an int with the maximum number of parcels per
             bucket for all "ua_group"s, or a dict with for each ua_group the maximum
             number that should be in the corresponding bucket.
-        skip_parcels_0_ua_groups (bool): skip parcels that at the moment they are
+        skip_parcels_0_ua_groups (bool): Skip parcels that at the moment they are
             reached in the ranking belong to no ua groups anymore. This results in
             3% fewer unique parcels and 25% fewer unique holdings in the buckets.
-        capping (int or float): if >= 1, the maximum number of holdings to use for the
-            selection when capping is used. if between 0 and 1, the maximum fraction
+        capping (int or float): If >= 1, the maximum number of holdings to use for the
+            selection when capping is used. If between 0 and 1, the maximum fraction
             of holdings in parcels_df to use for the selection. If value is -1, no
             capping is applied. Defaults to -1.
         print_progress (bool, optional): True to print some progress. Defaults to False.
@@ -97,8 +97,8 @@ def fill_buckets_2024(
         .sort_values(["ranking"])
     )
 
+    # Created indexed dataframes for performance
     parcels_p_df = parcels_all_df.set_index("parcel_id", drop=False)
-    # Also create a parcel list with an index on holding_id
     parcels_h_df = parcels_all_df.set_index("holding_id", drop=False)
 
     # Init buckets
