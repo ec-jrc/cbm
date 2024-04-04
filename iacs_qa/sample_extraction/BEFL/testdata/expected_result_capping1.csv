@@ -1,0 +1,11 @@
+bucket,parcel_id,holding_id,ua_group,ranking
+UA5,75,A,UA5,2
+UA4,3289,B,UA4,8
+UA4,3,B,UA4,11
+UA3,601,A,UA3,9
+UA3,2195,A,UA3,12
+UA1,6235,A,UA1,1
+UA1,75,A,UA1,2
+UA1,753,A,UA1,7
+gUA2,75,A,gUA2,2
+gUA2,2195,A,gUA2,12
