@@ -52,27 +52,35 @@ def verify_target_df(target_df):
     Returns True if valid, otherwise prints an error and returns False.
     """
     requirements = {
-        "ua_grp_id": (str, "string"),
-        "target1": (int, "integer")
+        "ua_grp_id": ("string", "string"),
+        "target": ("int64", "integer")
     }
 
-    for column, (expected_type, type_name) in requirements.items():
+    for column, (expected_type_str, type_name) in requirements.items():
         if column not in target_df.columns:
             print(f"Column '{column}' not found in the dataframe.")
             return False
         if target_df[column].isnull().any():
             print(f"Column '{column}' contains empty values.")
             return False
-        if not pd.api.types.is_dtype_equal(target_df[column].dtype, expected_type):
-            actual_type = target_df[column].dtype
-            print(f"Column '{column}' has incorrect data type. Expected {type_name}, got {actual_type}.")
-            return False
+
+        actual_type = target_df[column].dtype
+
+        if expected_type_str == "string":
+            if not (pd.api.types.is_string_dtype(target_df[column]) or actual_type == "object"):
+                print(f"Column '{column}' has incorrect data type. Expected {type_name}, got {actual_type}.")
+                return False
+        else:
+            if not pd.api.types.is_integer_dtype(target_df[column]):
+                print(f"Column '{column}' has incorrect data type. Expected {type_name}, got {actual_type}.")
+                return False
 
     if not target_df["ua_grp_id"].is_unique:
         print("Column 'ua_grp_id' contains duplicate values.")
         return False
 
     return True
+
 
 def cross_verify_dfs(parcel_df, target_df):
     """

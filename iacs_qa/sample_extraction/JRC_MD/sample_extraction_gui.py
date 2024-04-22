@@ -13,7 +13,7 @@ import pandas as pd
 
 PARAMETERS = {"parcels_path": "",
               "targets_path": "",
-              "ua_group_thresholds": {v:0 for v in range(1, 23)}
+              "ua_groups_and_thresholds": {},
               }
 
 style_html = """
@@ -60,6 +60,15 @@ def create_info_button(info):
         tooltip="Detailed info about file loading and verification."
     )
 
+def get_ua_groups_from_parcel_file(parcels_df):
+    """Extract unique ua_grp_id values from the parcel dataframe.
+    Then populate the ua_groups_and_thresholds dictionary with these ids.
+    Set default threshold values to 300 for each group.
+    """
+    ua_groups = parcels_df["ua_grp_id"].unique()
+    for group in ua_groups:
+        PARAMETERS["ua_groups_and_thresholds"][group] = 300
+
 def load_parcel_file(entry_widget, output_area):
     """Callback function to load a file and display its contents."""
     with output_area:
@@ -74,6 +83,7 @@ def load_parcel_file(entry_widget, output_area):
                 print("File loaded successfully. Preview: \n")
                 print(df.head())
             PARAMETERS["parcels_path"] = file_path
+            get_ua_groups_from_parcel_file(df)
             return True
         else:
             with output_area:
@@ -85,9 +95,6 @@ def load_parcel_file(entry_widget, output_area):
             clear_output()
             print(f"Error loading file: {e}\n")
         return False
-    
-def test_callback(b):
-    print("test_callback is called")
 
 def display_parcel_input_config():
     """Display the widgets for configuring the input parcel file path."""
@@ -114,13 +121,15 @@ def create_info_button(tooltip, css_class="info-button-style"):
     button.add_class(css_class)
     return button
 
-def create_target_widgets(parcel_df):
-    ua_groups = parcel_df["ua_grp_id"].unique()
+def create_target_widgets():
+    """Create target widgets based on the parameters dictionary."""
     widgets_list = []
-    for group in ua_groups:
+    if PARAMETERS["ua_groups_and_thresholds"] == {}:
+        print("No ua_grp_id values found in the parcel data. Please load the parcel file first.")
+    for group, threshold in PARAMETERS["ua_groups_and_thresholds"].items():
         label = group
         entry = widgets.BoundedIntText(
-            value=300, 
+            value=threshold, 
             min=0, 
             max=int(1e10), 
             description=label, 
@@ -134,38 +143,43 @@ def populate_target_values(target_df, widgets_list):
     """Populate widget values from the target dataframe."""
     for index, row in target_df.iterrows():
         ua_group = row["ua_grp_id"]
-        target = row["target1"]
+        target = row["target"]
         for widget in widgets_list:
             if widget.description == ua_group:
                 widget.value = target
                 break
 
-def load_target_file(b, entry_widget, output_area, widgets_list, ua_groups):
+def load_target_file(b, entry_widget, output_area, widgets_list):
     """Load target values from a file and populate widgets."""
     file_path = entry_widget.value
     try:
         df = pd.read_csv(file_path)
-        with output_area:
-            clear_output()
-            print("File loaded successfully. Fields populated. \n")
-            print(df.head())
-            populate_target_values(df, widgets_list, ua_groups)
+        if verify_target_df(df):
+            with output_area:
+                clear_output()
+                print("File loaded successfully. Fields populated. \n")
+                print(df.head())
+                populate_target_values(df, widgets_list)
+        else:
+            with output_area:
+                clear_output()
+                print("File verification failed. Please check the file and try again.\n")
     except Exception as e:
         with output_area:
             clear_output()
             print(f"Error loading file: {e}\n")
 
-def setup_bucket_targets_config(ua_groups):
+def display_bucket_targets_config():
     """Set up and display the bucket targets configuration interface."""
     #ua_groups = { "YFS": 1, "SFS": 2, "ME2": 3, "ES2": 4, "ES1": 5, "E7B": 6, "E7A": 7, "E5": 8, "E4": 9, "E3": 10, "E2": 11, "E1C": 12, "CIS: LA": 13, "???" : 14, "C6C": 15, "C5": 16, "C4": 17, "C3": 18, "C2B": 19, "C1": 20, "BIS": 21, "ANC": 22}
-    widgets_list = create_target_widgets(ua_groups)
+    widgets_list = create_target_widgets()
 
     target_info_button = create_info_button("You can either provide the target values manually using the fields below, or load the values from a CSV file.")
     target_file_path_entry = create_text_entry("Bucket targets file path:", "example: input/targets.csv")
     target_file_load_button = create_button("Load", "info", "Click to pre-populate target values")
 
     output_area = widgets.Output()
-    target_file_load_button.on_click(lambda b: load_target_file(b, target_file_path_entry, output_area, widgets_list, ua_groups))
+    target_file_load_button.on_click(lambda b: load_target_file(b, target_file_path_entry, output_area, widgets_list))
 
     grid = widgets.GridBox(widgets_list, layout=widgets.Layout(grid_template_columns="repeat(4, 200px)"))
     hbox = widgets.HBox([target_info_button, target_file_path_entry, target_file_load_button], layout=widgets.Layout(padding="10px"))
