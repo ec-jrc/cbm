@@ -1,6 +1,8 @@
-import ipywidgets as widgets
+from input_verification import verify_parcel_df, verify_target_df, cross_verify_dfs
 from IPython.display import display, clear_output, HTML
+import ipywidgets as widgets
 import pandas as pd
+
 
 # TODO still:
 # - text descriptions / instructions (me to write, ferdi to verify?)
@@ -28,235 +30,146 @@ style_html = """
 """
 display(HTML(style_html))
 
-def verify_parcel_df(parcel_df):
-    pass
 
-def verify_target_df(target_df):
-    pass
+def create_text_entry(description, placeholder, width='500px'):
+    """Create a text entry widget with specified properties."""
+    return widgets.Combobox(
+        placeholder=placeholder,
+        description=description,
+        ensure_option=False,
+        disabled=False,
+        style={"description_width": "initial"},
+        layout=widgets.Layout(width=width)
+    )
 
-def display_parcel_input_config():
-    """
-    Display the widgets for configuring the input parcel file path.
-    """
+def create_button(description, button_style, tooltip, color='#1daee3'):
+    """Create a button with specified properties."""
+    return widgets.Button(
+        description=description,
+        button_style=button_style,
+        tooltip=tooltip,
+        style={"button_color": color}
+    )
 
-    def load_file(b, entry_widget, button_widget):
-        file_path = entry_widget.value
+def create_info_button(info):
+    """Create an information button with predefined style and tooltip."""
+    return widgets.Button(
+        icon="info",
+        layout=widgets.Layout(width="30px"),
+        button_style='',
+        tooltip="Detailed info about file loading and verification."
+    )
 
-        try:
-            df = pd.read_csv(file_path)
-            with output_area:
+def load_parcel_file(entry_widget, output_area):
+    """Callback function to load a file and display its contents."""
+    with output_area:
+        clear_output()
+        print("Verifying file. Please wait...\n")
+    file_path = entry_widget.value 
+    try:
+        df = pd.read_csv(file_path)
+        if verify_parcel_df(df):
+            with output_area:        
                 clear_output()
                 print("File loaded successfully. Preview: \n")
                 print(df.head())
-            valid_parcels_widget.value = True
-            valid_parcels_widget.layout.display = ""
             PARAMETERS["parcels_path"] = file_path
-
-        except Exception as e:
+            return True
+        else:
             with output_area:
                 clear_output()
-                print(f"Error loading file: {e}\n")
-                print("Correct the path or file format and load again.")
-            valid_parcels_widget.value = False
-            valid_parcels_widget.layout.display = ""
-            PARAMETERS["parcels_path"] = ""
+                print("File verification failed. Please check the file and try again.\n")
+            return False
+    except Exception as e:
+        with output_area:
+            clear_output()
+            print(f"Error loading file: {e}\n")
+        return False
+    
+def test_callback(b):
+    print("test_callback is called")
 
-    parcel_info_button = widgets.Button(
-        icon="info",
-        layout = widgets.Layout(width="30px"),
-        #style={"button_color": "white"}
-        button_style = "",
-        tooltip="""The main input for the sample extraction process is a CSV file containing the parcel data.
-The file should follow the format described in the text cell above.
-The file path should be provided in the field to the right. Click the "Load" button to validate and load the file.
-In case the validation or loading fails, an error message will be displayed below the file path field.
-In that case you'll be able to provide a corrected path or correct your file and try again."""
-    )
-
-    parcel_info_button.add_class("info-button-style")
-
-    parcel_file_path_entry = widgets.Combobox(
-        placeholder="example: input/parcels.csv",
-        description="Parcel file path:",
-        ensure_option=False,
-        disabled=False,
-        style={"description_width": "initial"},
-        layout = widgets.Layout(width="500px")
-    )
-
-    parcel_file_load_button = widgets.Button(
-        description="Load",
-        button_style="info",
-        tooltip="Click to load parcel file",
-        style={"button_color": "#1daee3ff"}
-    )
-
-    valid_parcels_widget = widgets.Valid(
-    value=True,
-    description="",
-    layout=widgets.Layout(display="none")
-    )
-
+def display_parcel_input_config():
+    """Display the widgets for configuring the input parcel file path."""
+    parcel_file_path_entry = create_text_entry("Parcel file path:", "example: input/parcels.csv")
+    parcel_file_load_button = create_button("Load", "info", "Click to load parcel file")
+    parcel_info_button = create_info_button("Info text here.")
+    
     output_area = widgets.Output()
-
-    parcel_file_load_button.on_click(lambda b: load_file(b, parcel_file_path_entry, parcel_file_load_button))
-
-    hbox = widgets.HBox([parcel_info_button, parcel_file_path_entry, parcel_file_load_button, valid_parcels_widget])
+    parcel_file_load_button.unobserve_all()
+    parcel_file_load_button.on_click(lambda b: load_parcel_file(parcel_file_path_entry, output_area))
+    
+    hbox = widgets.HBox([parcel_info_button, parcel_file_path_entry, parcel_file_load_button])
     vbox = widgets.VBox([hbox, output_area])
     display(vbox)
 
-
-
-def display_bucket_targets_config():
-    
-    target_info_button = widgets.Button(
+def create_info_button(tooltip, css_class="info-button-style"):
+    """Create an information button with predefined style and tooltip."""
+    button = widgets.Button(
         icon="info",
-        layout = widgets.Layout(width="30px"),
-        #style={"button_color": "white"}
-        button_style = "",
-        tooltip="""You can either provide the target values manually using the fields below, or load the values from a CSV file.
-In order to load the file, use the "Bucket targets file path" field to provide the path to the CSV file and click "Load".
-Values loaded from a file can also be edited manually after loading.
-In addition, you can set a maximum threshold value that will reduce the value for all the targets above the defined threhsold."""
+        layout=widgets.Layout(width="30px"),
+        button_style='',
+        tooltip=tooltip
     )
+    button.add_class(css_class)
+    return button
 
-    target_info_button.add_class("info-button-style")
-
-    target_file_path_entry = widgets.Combobox(
-        placeholder="example: input/targets.csv",
-        description="Bucket targets file path:",
-        #width = "400px",
-        ensure_option=False,
-        disabled=False,
-        style={"description_width": "initial"},
-        layout = widgets.Layout(width="500px")
-    )
-
-    target_file_load_button = widgets.Button(
-        description="Load",
-        button_style="info",
-        tooltip="Click to pre-populate target values",
-        style={"button_color": "#1daee3ff"}
-    )
-
-    valid_targets_widget = widgets.Valid(
-    value=True,
-    description="",
-    layout=widgets.Layout(display="none")
-    )
-
-    # group name / id mapping
-    ua_groups = {   "YFS": 1, 
-                    "SFS": 2, 
-                    "ME2": 3, 
-                    "ES2": 4, 
-                    "ES1": 5, 
-                    "E7B": 6, 
-                    "E7A": 7, 
-                    "E5": 8, 
-                    "E4": 9, 
-                    "E3": 10, 
-                    "E2": 11, 
-                    "E1C": 12, 
-                    "CIS: LA": 13, 
-                    "???" : 14, 
-                    "C6C": 15, 
-                    "C5": 16, 
-                    "C4": 17, 
-                    "C3": 18, 
-                    "C2B": 19, 
-                    "C1": 20, 
-                    "BIS": 21, 
-                    "ANC": 22}
-
-    # Create widgets for each dictionary entry
+def create_target_widgets(parcel_df):
+    ua_groups = parcel_df["ua_grp_id"].unique()
     widgets_list = []
-    for key, value in ua_groups.items():
-        label = f"{key} (id: {value})"
-        entry = widgets.BoundedIntText(value=0, 
-                                       min=0, 
-                                       max=99999999999999, 
-                                       description=label, 
-                                       layout=widgets.Layout(width="150px"),
-                                       style={"description_width": "initial"},
-                                       )
+    for group in ua_groups:
+        label = group
+        entry = widgets.BoundedIntText(
+            value=300, 
+            min=0, 
+            max=int(1e10), 
+            description=label, 
+            layout=widgets.Layout(width="150px"),
+            style={"description_width": "initial"}
+        )
         widgets_list.append(entry)
+    return widgets_list
 
+def populate_target_values(target_df, widgets_list):
+    """Populate widget values from the target dataframe."""
+    for index, row in target_df.iterrows():
+        ua_group = row["ua_grp_id"]
+        target = row["target1"]
+        for widget in widgets_list:
+            if widget.description == ua_group:
+                widget.value = target
+                break
 
+def load_target_file(b, entry_widget, output_area, widgets_list, ua_groups):
+    """Load target values from a file and populate widgets."""
+    file_path = entry_widget.value
+    try:
+        df = pd.read_csv(file_path)
+        with output_area:
+            clear_output()
+            print("File loaded successfully. Fields populated. \n")
+            print(df.head())
+            populate_target_values(df, widgets_list, ua_groups)
+    except Exception as e:
+        with output_area:
+            clear_output()
+            print(f"Error loading file: {e}\n")
 
-    target_cutoff_info_button = widgets.Button(
-        icon="info",
-        layout = widgets.Layout(width="30px"),
-        #style={"button_color": "white"}
-        button_style = "",
-        tooltip="""Provide a maximum target threshold independent from the values loaded above.
-If any of the target values is above this threshold, it will be reduced to the threshold value."""
-    )
+def setup_bucket_targets_config(ua_groups):
+    """Set up and display the bucket targets configuration interface."""
+    #ua_groups = { "YFS": 1, "SFS": 2, "ME2": 3, "ES2": 4, "ES1": 5, "E7B": 6, "E7A": 7, "E5": 8, "E4": 9, "E3": 10, "E2": 11, "E1C": 12, "CIS: LA": 13, "???" : 14, "C6C": 15, "C5": 16, "C4": 17, "C3": 18, "C2B": 19, "C1": 20, "BIS": 21, "ANC": 22}
+    widgets_list = create_target_widgets(ua_groups)
 
-    target_cutoff_info_button.add_class("info-button-style")
-
-    target_cutoff_entry = widgets.BoundedIntText(value=0, 
-                                       min=0, 
-                                       max=99999999999999, 
-                                       description="Target cutoff:", 
-                                       layout=widgets.Layout(width="150px"),
-                                       style={"description_width": "initial"},
-                                       )
-
-    target_cutoff_recalculate_button = widgets.Button(
-        description="Recalculate targets",
-        button_style="info",
-        tooltip="Click to recalculate target values based on the target cutoff.",
-        style={"button_color": "#1daee3ff"}
-    )
+    target_info_button = create_info_button("You can either provide the target values manually using the fields below, or load the values from a CSV file.")
+    target_file_path_entry = create_text_entry("Bucket targets file path:", "example: input/targets.csv")
+    target_file_load_button = create_button("Load", "info", "Click to pre-populate target values")
 
     output_area = widgets.Output()
+    target_file_load_button.on_click(lambda b: load_target_file(b, target_file_path_entry, output_area, widgets_list, ua_groups))
 
-    def populate_target_values(target_df, widgets_list):
-        for index, row in target_df.iterrows():
-            ua_group = row["ua_grp_id"]
-            target = row["target1"]
-            if ua_group in ua_groups.values():
-                widgets_list[ua_group - 1].value = target
-
-    def load_target_file(b, entry_widget, button_widget):
-        file_path = entry_widget.value
-        try:
-            df = pd.read_csv(file_path)
-            with output_area:
-                clear_output()
-                print("File loaded successfully. Fields populated. \n")
-                print(df.head())
-                populate_target_values(df, widgets_list)
-            valid_targets_widget.value = True
-            valid_targets_widget.layout.display = ""
-            PARAMETERS["targets_path"] = file_path
-        except Exception as e:
-            with output_area:
-                clear_output()
-                print(f"Error loading file: {e}\n")
-                print("Correct the path or file format and load again.")
-                print("You can also populate the values below manually instead of loading a CSV file.")
-            valid_targets_widget.value = False
-            valid_targets_widget.layout.display = ""
-            PARAMETERS["targets_path"] = ""
-    
-    def recalculate_targets_based_on_threshold(b):
-        threshold = target_cutoff_entry.value
-        for widget in widgets_list:
-            if widget.value > threshold:
-                widget.value = threshold
-
-    target_file_load_button.on_click(lambda b: load_target_file(b, target_file_path_entry, target_file_load_button))
-    target_cutoff_recalculate_button.on_click(recalculate_targets_based_on_threshold)
-
-    # Organize widgets into a grid layout
-    hbox1 = widgets.HBox([target_info_button, target_file_path_entry, target_file_load_button, valid_targets_widget], layout = widgets.Layout(padding="10px"))
     grid = widgets.GridBox(widgets_list, layout=widgets.Layout(grid_template_columns="repeat(4, 200px)"))
-    hbox2 = widgets.HBox([output_area], layout = widgets.Layout(padding="10px"))
-    hbox3 = widgets.HBox([grid], layout = widgets.Layout(padding="10px"))
-    hbox4 = widgets.HBox([target_cutoff_info_button, target_cutoff_entry, target_cutoff_recalculate_button], layout = widgets.Layout(padding="10px"))
-    vbox = widgets.VBox([hbox1, hbox2, hbox3, hbox4])
+    hbox = widgets.HBox([target_info_button, target_file_path_entry, target_file_load_button], layout=widgets.Layout(padding="10px"))
+    vbox = widgets.VBox([hbox, output_area, grid])
     display(vbox)
 
 def display_advanced_config():
