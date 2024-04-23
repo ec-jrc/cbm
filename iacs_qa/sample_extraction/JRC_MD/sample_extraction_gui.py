@@ -14,6 +14,7 @@ import pandas as pd
 PARAMETERS = {"parcels_path": "",
               "targets_path": "",
               "ua_groups_and_thresholds": {},
+              "parcel_file_loaded":False,
               }
 
 style_html = """
@@ -83,11 +84,10 @@ def load_parcel_file(entry_widget, output_area):
             get_ua_groups_from_parcel_file(df)
             print("File loaded successfully. Preview: \n")
             print(df.head())
+            PARAMETERS["parcel_file_loaded"] = True
         except Exception as e:
             clear_output()
             print(f"Error loading file: {e}\n")
-
-
 
 
 def display_parcel_input_config():
