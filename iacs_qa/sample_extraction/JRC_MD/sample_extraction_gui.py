@@ -1,4 +1,4 @@
-from input_verification import verify_parcel_df, verify_target_df, cross_verify_dfs
+from input_verification import verify_parcel_df, verify_target_df, cross_verify_dfs, compare_bucket_lists
 from IPython.display import display, clear_output, HTML
 import ipywidgets as widgets
 import pandas as pd
@@ -74,27 +74,21 @@ def load_parcel_file(entry_widget, output_area):
     with output_area:
         clear_output()
         print("Verifying file. Please wait...\n")
-    file_path = entry_widget.value 
-    try:
-        df = pd.read_csv(file_path)
-        if verify_parcel_df(df):
-            with output_area:        
-                clear_output()
-                print("File loaded successfully. Preview: \n")
-                print(df.head())
+        file_path = entry_widget.value 
+        try:
+            df = pd.read_csv(file_path)
+            verify_parcel_df(df)
+            clear_output()
             PARAMETERS["parcels_path"] = file_path
             get_ua_groups_from_parcel_file(df)
-            return True
-        else:
-            with output_area:
-                clear_output()
-                print("File verification failed. Please check the file and try again.\n")
-            return False
-    except Exception as e:
-        with output_area:
+            print("File loaded successfully. Preview: \n")
+            print(df.head())
+        except Exception as e:
             clear_output()
             print(f"Error loading file: {e}\n")
-        return False
+
+
+
 
 def display_parcel_input_config():
     """Display the widgets for configuring the input parcel file path."""
@@ -152,22 +146,20 @@ def populate_target_values(target_df, widgets_list):
 def load_target_file(b, entry_widget, output_area, widgets_list):
     """Load target values from a file and populate widgets."""
     file_path = entry_widget.value
-    try:
-        df = pd.read_csv(file_path)
-        if verify_target_df(df):
-            with output_area:
-                clear_output()
-                print("File loaded successfully. Fields populated. \n")
-                print(df.head())
-                populate_target_values(df, widgets_list)
-        else:
-            with output_area:
-                clear_output()
-                print("File verification failed. Please check the file and try again.\n")
-    except Exception as e:
-        with output_area:
+    with output_area:
+        clear_output()
+        print("Verifying file. Please wait...\n")
+        try:
+            df = pd.read_csv(file_path)
+            verify_target_df(df)
+            populate_target_values(df, widgets_list)
+            compare_bucket_lists(PARAMETERS["ua_groups_and_thresholds"], df)
+            print("File loaded successfully. Fields populated. \n")
+            print(df.head())
+        except Exception as e:
             clear_output()
             print(f"Error loading file: {e}\n")
+
 
 def display_bucket_targets_config():
     """Set up and display the bucket targets configuration interface."""
