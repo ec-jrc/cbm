@@ -347,3 +347,60 @@ def display_advanced_config():
             widget.disabled = True
     
     display(config_box)
+
+
+def display_output_area(buckets):
+
+    # display(HTML("<style>.red_label { color:red }</style>"))
+    # l = Label(value="My Label")
+    # l.add_class("red_label")
+    # display(l)
+    vbox_list = []
+
+    display(HTML("<style>.orange_label { color:orange }</style>"))
+    display(HTML("<style>.orange_label_bold { color:orange; font-weight: bold }</style>"))
+
+    display(HTML("<style>.green_label_bold { color:green; font-weight: bold }</style>"))
+    display(HTML("<style>.green_label { color:green }</style>"))
+
+
+
+    for bucket_id, bucket in buckets.items():
+        header_label = widgets.Label(value=f"Bucket: {bucket_id}")
+        if bucket["target"] == 0:
+            header_label.add_class("green_label_bold")
+            progress_value = 1
+            progress_label = widgets.Label(value=f"Progress: {progress_value:.2%} ( {len(bucket['parcels'])} / {bucket['target']} )")
+            progress_label.add_class("green_label")
+        else:
+            header_label.add_class("orange_label_bold")
+            progress_value = len(bucket["parcels"]) / bucket["target"]
+            progress_label = widgets.Label(value=f"Progress: {progress_value:.2%} ( {len(bucket['parcels'])} / {bucket['target']} )")
+            progress_label.add_class("orange_label")
+        progress_bar = widgets.FloatProgress(
+            value=progress_value,
+            min=0,
+            max=1,
+            description="Progress:",
+            bar_style="info",
+            style={"description_width": "initial"}
+        )
+        vbox_list.append(widgets.VBox([header_label, progress_label, progress_bar]))
+    
+    grid = widgets.GridBox(vbox_list, layout=widgets.Layout(grid_template_columns="repeat(3, 1fr)", padding="10px"))
+    display(grid)
+    return grid
+
+def update_output_area(buckets, grid):
+    """
+    update widgets created in display_output_area
+    """
+    for i, (bucket_id, bucket) in enumerate(buckets.items()):
+        if bucket['target'] == 0:
+            continue
+        if len(bucket['parcels']) == bucket['target']:
+            grid.children[i].children[0].add_class("green_label_bold")
+            grid.children[i].children[1].add_class("green_label")
+        grid.children[i].children[1].value = f"Progress: {len(bucket['parcels']) / bucket['target']:.2%} ( {len(bucket['parcels'])} / {bucket['target']} )"
+        grid.children[i].children[2].value = len(bucket['parcels']) / bucket['target']
+        

@@ -1,6 +1,7 @@
 import pandas as pd
 import datetime
 import cosmetics_tools
+import sample_extraction_gui as gui
 
 
 def prepare_input_dataframe(parcel_df):
@@ -142,13 +143,13 @@ def check_parcel(parcel_group, buckets, added_rows, bucket_counter=None):
     return buckets, bucket_counter
 
 
-def iterate_over_interventions(parcel_df, buckets): #, progress_bars):
+def iterate_over_interventions(parcel_df, buckets, progress_widgets): #, progress_bars):
     """
     Main loop of the script.
     Iterates over the rows in the interventions dataframe and adds parcels to the buckets.
     """
 
-    print("Buckets: (\033[92mgreen\033[0m = full, \033[93myellow\033[0m = still looking for parcels)")
+    #print("Buckets: (\033[92mgreen\033[0m = full, \033[93myellow\033[0m = still looking for parcels)")
 
     checked_holdings = set()
     added_rows = set()
@@ -165,12 +166,14 @@ def iterate_over_interventions(parcel_df, buckets): #, progress_bars):
             parcel_group = parcel_df[parcel_df["gsa_par_id"] == row["gsa_par_id"]]
             buckets, bucket_counter = check_parcel(parcel_group, buckets, added_rows)
 
-        cosmetics_tools.print_progress(buckets)
+        #cosmetics_tools.print_progress(buckets)
+        if index % 20 == 0:
+            gui.update_output_area(buckets, progress_widgets)
 
         # print(dir(cosmetics_tools))
         # exit()
         #cosmetics_tools.update_progress_bars(buckets, progress_bars)
-
+    gui.update_output_area(buckets, progress_widgets)
     return buckets
 
 
