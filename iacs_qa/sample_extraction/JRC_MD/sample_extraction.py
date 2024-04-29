@@ -5,7 +5,7 @@ import sample_extraction_gui as gui
 
 
 def prepare_input_dataframe(parcel_df):
-    parcel_df = parcel_df[parcel_df["covered"] == 1]
+    # parcel_df = parcel_df[parcel_df["covered"] == 1]
     # Sort the dataframe by the 'ranking' column
     parcel_df = parcel_df.sort_values(by="ranking")
 

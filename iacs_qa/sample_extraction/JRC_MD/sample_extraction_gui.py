@@ -133,8 +133,12 @@ def get_target_values_from_widgets(widgets_list):
 def create_target_widgets():
     widget_list = []
     for group, info in PARAMETERS["ua_groups"].items():
+        target = info["target"]
+        count = info["count"]
+        if target > count:
+            target = count
         entry = widgets.BoundedIntText(
-            value=info["target"],
+            value=target,
             min=0,
             max=int(1e10),
             description=group,
@@ -144,7 +148,7 @@ def create_target_widgets():
         )
         entry.observe(target_widgets_on_value_change, names='value')
 
-        count_label = widgets.Label(value=f"({info["count"]} found)")
+        count_label = widgets.Label(value=f"({info['count']} found)")
 
         group_box = widgets.HBox([entry, count_label])
         widget_list.append(group_box)
@@ -188,6 +192,7 @@ def recalculate_targets_based_on_threshold(entry_widget, widgets_list):
     entry_widget (ipywidgets.Widget): Widget that contains the new threshold value.
     widgets_list (list): List of target widgets to be adjusted.
     """
+    # group_box = widgets.HBox([entry, count_label])
     threshold = entry_widget.value
     for widget_box in widgets_list:
         widget = widget_box.children[0]
@@ -385,7 +390,8 @@ def display_output_area(buckets):
             bar_style="info",
             style={"description_width": "initial"}
         )
-        vbox_list.append(widgets.VBox([header_label, progress_label, progress_bar]))
+        hbox_header_progress = widgets.HBox([header_label, progress_label])
+        vbox_list.append(widgets.VBox([hbox_header_progress, progress_bar]))
     
     grid = widgets.GridBox(vbox_list, layout=widgets.Layout(grid_template_columns="repeat(3, 1fr)", padding="10px"))
     display(grid)
@@ -399,8 +405,8 @@ def update_output_area(buckets, grid):
         if bucket['target'] == 0:
             continue
         if len(bucket['parcels']) == bucket['target']:
-            grid.children[i].children[0].add_class("green_label_bold")
-            grid.children[i].children[1].add_class("green_label")
-        grid.children[i].children[1].value = f"Progress: {len(bucket['parcels']) / bucket['target']:.2%} ( {len(bucket['parcels'])} / {bucket['target']} )"
-        grid.children[i].children[2].value = len(bucket['parcels']) / bucket['target']
+            grid.children[i].children[0].children[0].add_class("green_label_bold")
+            grid.children[i].children[0].children[1].add_class("green_label")
+        grid.children[i].children[0].children[1].value = f"Progress: {len(bucket['parcels']) / bucket['target']:.2%} ( {len(bucket['parcels'])} / {bucket['target']} )"
+        grid.children[i].children[1].value = len(bucket['parcels']) / bucket['target']
         
