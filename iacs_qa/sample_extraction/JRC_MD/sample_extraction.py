@@ -23,25 +23,25 @@ def buckets_global_count(buckets):
     """
     return sum([len(bucket['parcels']) for bucket in buckets.values()])
 
-def extract_buckets(path):
-    """
-    Extracts the targets from the csv file and returns a dictionary with the keys being the intervention_type_id
-    and the values being a dictionary with the keys:
-    - target: the target number of parcels
-    - parcels: a list of dictionaries with the keys:
-        - gsa_par_id
-        - gsa_hol_id
-        - ranking
-    """
-    targets_full_df = pd.read_csv(path)
-    targets_df = targets_full_df[["ua_grp_id", "target1"]]
-    targets = targets_df.set_index('ua_grp_id').T.to_dict('records')[0]
-    buckets = {}
-    for id, target in targets.items():
-        if target > 300:
-            target = 300
-        buckets[id] = {'target': target, 'parcels': []}
-    return buckets
+# def extract_buckets(path):
+#     """
+#     Extracts the targets from the csv file and returns a dictionary with the keys being the intervention_type_id
+#     and the values being a dictionary with the keys:
+#     - target: the target number of parcels
+#     - parcels: a list of dictionaries with the keys:
+#         - gsa_par_id
+#         - gsa_hol_id
+#         - ranking
+#     """
+#     targets_full_df = pd.read_csv(path)
+#     targets_df = targets_full_df[["ua_grp_id", "target1"]]
+#     targets = targets_df.set_index('ua_grp_id').T.to_dict('records')[0]
+#     buckets = {}
+#     for id, target in targets.items():
+#         if target > 300:
+#             target = 300
+#         buckets[id] = {'target': target, 'parcels': []}
+#     return buckets
 
 def prepare_buckets(ua_groups_dict):
     # PARAMETERS["ua_groups"][group] = {"target" : 300, "count" : ua_group_count[group]}
@@ -63,7 +63,7 @@ def generate_output(buckets):
     output = []
     for bucket_id, bucket in buckets.items():
         for parcel in bucket['parcels']:
-            output.append([bucket_id, parcel["gsa_par_id"], parcel["gsa_hol_id"], parcel["ranking"], parcel["order_added"])#, bucket['target']])
+            output.append([bucket_id, parcel["gsa_par_id"], parcel["gsa_hol_id"], parcel["ranking"], parcel["order_added"]])#, bucket['target']])
     output_df = pd.DataFrame(output, columns=["bucket_id", "gsa_par_id", "gsa_hol_id", "ranking", "order_added"])#, "target"])
 
     filename_excel = "sample_extraction_output_" + datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S") + ".xlsx"
