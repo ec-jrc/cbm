@@ -1,7 +1,6 @@
 import pandas as pd
 import datetime
-import cosmetics_tools
-import sample_extraction_gui as gui
+from modules import gui
 
 
 def prepare_input_dataframe(parcel_df):

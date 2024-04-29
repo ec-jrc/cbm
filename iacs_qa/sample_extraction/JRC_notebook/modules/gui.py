@@ -1,4 +1,4 @@
-from input_verification import verify_parcel_df, verify_target_df, cross_verify_dfs, compare_bucket_lists
+from modules.input_verification import verify_parcel_df, verify_target_df, cross_verify_dfs, compare_bucket_lists
 from IPython.display import display, clear_output, HTML
 import ipywidgets as widgets
 import pandas as pd
