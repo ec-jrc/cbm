@@ -122,7 +122,7 @@ def create_info_button(tooltip, css_class="info-button-style"):
 
 
 def target_widgets_on_value_change(change):
-    PARAMETERS["target_values_state"] = f"(Target values were manually modified. Last change: {change['owner'].description} field changed to {change["new"]}.)"
+    PARAMETERS["target_values_state"] = f"(Target values were manually modified. Last change: {change['owner'].description} field changed to {change['new']}.)"
     PARAMETERS["target_source_label"].value = PARAMETERS["target_values_state"]
 
 def get_target_values_from_widgets(widgets_list):
