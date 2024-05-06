@@ -85,31 +85,6 @@ def verify_target_df(target_df):
     return True
 
 
-def cross_verify_dfs(parcel_df, target_df):
-    """
-    Verifies if all unique values in 'ua_grp_id' from 'target_df' are present in 'parcel_df'.
-    Verifies if all unique values in 'ua_grp_id' from 'parcel_df' are present in 'target_df'.
-
-    Raises:
-        DataFrameValidationError: If the verification fails.
-
-    Returns:
-        True if valid.
-    """
-    parcel_ua_groups = set(parcel_df["ua_grp_id"].unique())
-    target_ua_groups = set(target_df["ua_grp_id"].unique())
-
-    if not target_ua_groups.issubset(parcel_ua_groups):
-        missing_groups = target_ua_groups - parcel_ua_groups
-        raise DataFrameValidationError(f"Target groups {missing_groups} not found in the parcel data.")
-
-    if not parcel_ua_groups.issubset(target_ua_groups):
-        missing_groups = parcel_ua_groups - target_ua_groups
-        raise DataFrameValidationError(f"Parcel groups {missing_groups} not found in the target data.")
-
-    return True
-
-
 def compare_bucket_lists(ua_id_dict, target_df):
     """
     Verifies if all unique values in 'ua_grp_id' from 'target_df' are present in 'ua_id_dict'.
