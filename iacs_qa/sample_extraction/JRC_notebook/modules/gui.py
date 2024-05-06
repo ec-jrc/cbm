@@ -1,14 +1,8 @@
-from modules.input_verification import verify_parcel_df, verify_target_df, cross_verify_dfs, compare_bucket_lists
+from modules.input_verification import verify_parcel_df, verify_target_df, compare_bucket_lists
 from IPython.display import display, clear_output, HTML
 import ipywidgets as widgets
 import pandas as pd
 
-
-# TODO still:
-# - text descriptions / instructions (me to write, ferdi to verify?)
-# - input file format verification
-# - 3% config (algorithm)
-# - indicator if value loaded, manually modified, or limited by threshold
 
 
 # Global parameters for the GUI
@@ -163,8 +157,11 @@ def get_ua_groups_from_parcel_file(parcels_df):
     """
     ua_groups = parcels_df["ua_grp_id"].unique()
     ua_group_count = parcels_df["ua_grp_id"].value_counts().to_dict()
+    ua_group_dict = {}
     for group in ua_groups:
-        PARAMETERS["ua_groups"][group] = {"target" : 300, "count" : ua_group_count[group]}
+        ua_group_dict[group] = {"target" : 300, "count" : ua_group_count[group]}
+    return ua_group_dict
+        #PARAMETERS["ua_groups"][group] = {"target" : 300, "count" : ua_group_count[group]}
 
 
 def populate_target_values(target_df, widgets_list):
@@ -202,6 +199,7 @@ def recalculate_targets_based_on_threshold(entry_widget, widgets_list):
     PARAMETERS["target_source_label"].value = PARAMETERS["target_values_state"]
     get_target_values_from_widgets(widgets_list)
 
+
 def load_parcel_file(entry_widget, output_area):
     """
     Load parcel data from a file specified by the user, verify its structure, and update the UI accordingly.
@@ -219,7 +217,8 @@ def load_parcel_file(entry_widget, output_area):
             verify_parcel_df(df)
             clear_output()
             PARAMETERS["parcels_path"] = file_path
-            get_ua_groups_from_parcel_file(df)
+            ua_group_dict = get_ua_groups_from_parcel_file(df)
+            PARAMETERS["ua_groups"] = ua_group_dict
             print("File loaded successfully. Preview: \n")
             print(df.head())
             PARAMETERS["parcels_df"] = df
