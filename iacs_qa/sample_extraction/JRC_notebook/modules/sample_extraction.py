@@ -22,25 +22,6 @@ def buckets_global_count(buckets):
     """
     return sum([len(bucket['parcels']) for bucket in buckets.values()])
 
-# def extract_buckets(path):
-#     """
-#     Extracts the targets from the csv file and returns a dictionary with the keys being the intervention_type_id
-#     and the values being a dictionary with the keys:
-#     - target: the target number of parcels
-#     - parcels: a list of dictionaries with the keys:
-#         - gsa_par_id
-#         - gsa_hol_id
-#         - ranking
-#     """
-#     targets_full_df = pd.read_csv(path)
-#     targets_df = targets_full_df[["ua_grp_id", "target1"]]
-#     targets = targets_df.set_index('ua_grp_id').T.to_dict('records')[0]
-#     buckets = {}
-#     for id, target in targets.items():
-#         if target > 300:
-#             target = 300
-#         buckets[id] = {'target': target, 'parcels': []}
-#     return buckets
 
 def prepare_buckets(ua_groups_dict):
     # PARAMETERS["ua_groups"][group] = {"target" : 300, "count" : ua_group_count[group]}
@@ -82,6 +63,18 @@ def buckets_full(buckets):
     """
     return all(len(bucket['parcels']) >= bucket['target'] for bucket in buckets.values())
 
+def full_bucket_ids(buckets):
+    """
+    Returns a list of bucket IDs that are full
+    
+    """
+    return [bucket_id for bucket_id, bucket in buckets.items() if len(bucket['parcels']) >= bucket['target']]
+
+def reduce_parcel_dataframe(parcel_df, full_bucket):
+    """
+    removes all rows from the dataframe where ua_grp_id equals the full_bucket value
+    """
+    return parcel_df[parcel_df["ua_grp_id"] != full_bucket]
 
 def check_holding_group_old(holding_group, buckets, added_rows):
     """
@@ -179,6 +172,47 @@ def iterate_over_interventions(parcel_df, buckets, progress_widgets): #, progres
     return buckets
 
 
+def iterate_over_inteventions_with_df_reducing(parcel_df, buckets, progress_widgets):
+    """
+    Main loop of the script.
+    Iterates over the rows in the interventions dataframe and adds parcels to the buckets.
+    Every time a bucket is full, the rows with the same ua_grp_id are removed from the dataframe and the loop
+    starts over the reduced dataframe. The buckets keep their state.
+    """
+
+    #print("Buckets: (\033[92mgreen\033[0m = full, \033[93myellow\033[0m = still looking for parcels)")
+
+    checked_holdings = set()
+    added_rows = set()
+
+    stop_flag = False
+
+    while not buckets_full(buckets) and not stop_flag:
+        full_buckets = full_bucket_ids(buckets)
+        # work in progress
+
+    for index, row in parcel_df.iterrows():
+        
+        if buckets_full(buckets):
+            break
+        if row["gsa_hol_id"] not in checked_holdings:
+            checked_holdings.add(row["gsa_hol_id"])
+            holding_group = parcel_df[parcel_df["gsa_hol_id"] == row["gsa_hol_id"]]
+            buckets = check_holding_group(holding_group, buckets, added_rows)
+        else:
+            #buckets = check_individual_row(row, buckets, added_rows)
+            parcel_group = parcel_df[parcel_df["gsa_par_id"] == row["gsa_par_id"]]
+            buckets, bucket_counter = check_parcel(parcel_group, buckets, added_rows)
+
+        #cosmetics_tools.print_progress(buckets)
+        if index % 20 == 0:
+            gui.update_output_area(buckets, progress_widgets)
+
+        # print(dir(cosmetics_tools))
+        # exit()
+        #cosmetics_tools.update_progress_bars(buckets, progress_bars)
+    gui.update_output_area(buckets, progress_widgets)
+    return buckets, parcel_df
 
 
 

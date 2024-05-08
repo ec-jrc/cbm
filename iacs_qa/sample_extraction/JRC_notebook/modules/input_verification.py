@@ -1,5 +1,11 @@
 import pandas as pd
 
+"""
+Contains: Functions like verify_parcel_df, verify_target_df, and compare_bucket_lists.
+Responsibilities: Provides validation utilities for parcel and target data files.
+Imports: Might import necessary libraries like pandas if validation involves data manipulations.
+"""
+
 class DataFrameValidationError(Exception):
     """Exception raised for errors in the input DataFrame."""
     pass
@@ -16,7 +22,7 @@ def verify_parcel_df(parcel_df):
         True if the dataframe is valid.
     """
     requirements = {
-        "gsa_par_id": ("string", "string"),
+        "gsa_par_id": ("int64", "integer"),
         "gsa_hol_id": ("int64", "integer"),
         "ua_grp_id": ("string", "string"),
         "covered": ("int64", "integer"),
