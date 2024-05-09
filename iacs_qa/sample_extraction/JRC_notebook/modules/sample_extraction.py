@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 import datetime
 from modules import gui
@@ -40,6 +42,13 @@ def generate_output(buckets):
     - ranking
     - target
     """
+    output_dir = "output"
+    # check if exists, if not create
+    try:
+        os.makedirs(output_dir)
+    except FileExistsError:
+        pass
+
     output = []
     for bucket_id, bucket in buckets.items():
         for parcel in bucket['parcels']:
@@ -47,10 +56,10 @@ def generate_output(buckets):
     output_df = pd.DataFrame(output, columns=["bucket_id", "gsa_par_id", "gsa_hol_id", "ranking", "order_added"])#, "target"])
 
     filename_excel = "sample_extraction_output_" + datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S") + ".xlsx"
-    output_df.to_excel(filename_excel, index=False)
+    output_df.to_excel(os.path.join(output_dir, filename_excel), index=False)
 
     filename_csv = "sample_extraction_output_" + datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S") + ".csv"
-    output_df.to_csv(filename_csv, index=False)
+    output_df.to_csv(os.path.join(output_dir, filename_csv), index=False)
 
 # -----
 
@@ -63,18 +72,18 @@ def buckets_full(buckets):
     """
     return all(len(bucket['parcels']) >= bucket['target'] for bucket in buckets.values())
 
-def full_bucket_ids(buckets):
+def get_full_bucket_ids(buckets):
     """
     Returns a list of bucket IDs that are full
     
     """
     return [bucket_id for bucket_id, bucket in buckets.items() if len(bucket['parcels']) >= bucket['target']]
 
-def reduce_parcel_dataframe(parcel_df, full_bucket):
+def reduce_parcel_dataframe(parcel_df, full_bucket_id):
     """
     removes all rows from the dataframe where ua_grp_id equals the full_bucket value
     """
-    return parcel_df[parcel_df["ua_grp_id"] != full_bucket]
+    return parcel_df[parcel_df["ua_grp_id"] != full_bucket_id]
 
 def check_holding_group_old(holding_group, buckets, added_rows):
     """
@@ -157,40 +166,16 @@ def iterate_over_interventions(parcel_df, buckets, progress_widgets): #, progres
             holding_group = parcel_df[parcel_df["gsa_hol_id"] == row["gsa_hol_id"]]
             buckets = check_holding_group(holding_group, buckets, added_rows)
         else:
-            #buckets = check_individual_row(row, buckets, added_rows)
             parcel_group = parcel_df[parcel_df["gsa_par_id"] == row["gsa_par_id"]]
             buckets, bucket_counter = check_parcel(parcel_group, buckets, added_rows)
 
-        #cosmetics_tools.print_progress(buckets)
         if index % 20 == 0:
             gui.update_output_area(buckets, progress_widgets)
 
-        # print(dir(cosmetics_tools))
-        # exit()
-        #cosmetics_tools.update_progress_bars(buckets, progress_bars)
     gui.update_output_area(buckets, progress_widgets)
     return buckets
 
-
-def iterate_over_inteventions_with_df_reducing(parcel_df, buckets, progress_widgets):
-    """
-    Main loop of the script.
-    Iterates over the rows in the interventions dataframe and adds parcels to the buckets.
-    Every time a bucket is full, the rows with the same ua_grp_id are removed from the dataframe and the loop
-    starts over the reduced dataframe. The buckets keep their state.
-    """
-
-    #print("Buckets: (\033[92mgreen\033[0m = full, \033[93myellow\033[0m = still looking for parcels)")
-
-    checked_holdings = set()
-    added_rows = set()
-
-    stop_flag = False
-
-    while not buckets_full(buckets) and not stop_flag:
-        full_buckets = full_bucket_ids(buckets)
-        # work in progress
-
+def intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, added_rows, full_buckets):
     for index, row in parcel_df.iterrows():
         
         if buckets_full(buckets):
@@ -200,19 +185,54 @@ def iterate_over_inteventions_with_df_reducing(parcel_df, buckets, progress_widg
             holding_group = parcel_df[parcel_df["gsa_hol_id"] == row["gsa_hol_id"]]
             buckets = check_holding_group(holding_group, buckets, added_rows)
         else:
-            #buckets = check_individual_row(row, buckets, added_rows)
             parcel_group = parcel_df[parcel_df["gsa_par_id"] == row["gsa_par_id"]]
             buckets, bucket_counter = check_parcel(parcel_group, buckets, added_rows)
 
-        #cosmetics_tools.print_progress(buckets)
         if index % 20 == 0:
             gui.update_output_area(buckets, progress_widgets)
 
-        # print(dir(cosmetics_tools))
-        # exit()
-        #cosmetics_tools.update_progress_bars(buckets, progress_bars)
+        new_full_buckets = get_full_bucket_ids(buckets)
+
+        if len(new_full_buckets) != len(full_buckets):
+            # new_full_bucket must be the extra element in new buckets compared to previous full bucket list
+            new_full_bucket = list(set(new_full_buckets) - set(full_buckets))[0]
+            return buckets, new_full_bucket
+        # why discrepancies happen:
+        # I think that if we don't clean up rows related to full buckets, some of them can act as gateways for parcels low in the ranking:
+        # In the old scenario:
+        # - the script fills up a bucket, but all rows related to that bucket are still in the dataframe
+        # - the script encounters a new row that is related to the full bucket
+        # - the script does not add the row to the bucket, but triggers the holding search anyway
+        # - this allows rows lower in the ranking, but belonging to the same holding, to be added to the bucket
+        # In the new scnenario:
+        # - the script fills up a bucket, and removes all rows related to that bucket from the dataframe
+        # - the script no longer encounters rows related to the full bucket
+        # - therefore the holdings that are searched are only the ones where their first row is not related to a full bucket
+        # I hope this is not a problem, because the time savings with the new method are huge (43s vs 12s for Malta)
+
     gui.update_output_area(buckets, progress_widgets)
-    return buckets, parcel_df
+    return buckets, new_full_bucket
+
+def iterate_over_interventions_v2(parcel_df, buckets, progress_widgets):
+    """
+    Main loop of the script.
+    Iterates over the rows in the interventions dataframe and adds parcels to the buckets.
+    """
+
+    #print("Buckets: (\033[92mgreen\033[0m = full, \033[93myellow\033[0m = still looking for parcels)")
+
+    checked_holdings = set()
+    added_rows = set()
+    full_buckets = []
+    while not buckets_full(buckets):
+        buckets, new_full_bucket = intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, added_rows, full_buckets)
+        full_buckets.append(new_full_bucket)
+        parcel_df = reduce_parcel_dataframe(parcel_df, new_full_bucket)
+
+    gui.update_output_area(buckets, progress_widgets)
+    return buckets
+
+
 
 
 
