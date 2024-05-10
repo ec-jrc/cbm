@@ -23,7 +23,7 @@ from pkg_resources import get_distribution, DistributionNotFound
 from cbm import show, get, extract, foi, card2db, reports
 
 if sys.version_info < (3, 6):
-    print("Not supoted python version, cbm needs python version > 3.6")
+    print("Not supported python version, cbm needs python version > 3.6")
     sys.exit()
 
 try:
