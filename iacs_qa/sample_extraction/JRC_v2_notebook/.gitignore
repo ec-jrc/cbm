@@ -1,0 +1,6 @@
+*.xlsx
+*.csv
+input/
+output/
+*.pickle
+test_notebook.ipynb
