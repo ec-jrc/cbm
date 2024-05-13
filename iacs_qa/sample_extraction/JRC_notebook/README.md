@@ -1,6 +1,6 @@
 # IACS QA Sample Extraction
 <div>
-<img src="JRC_notebook/images/jrc_ec_logo.jpg" width="400"/>
+<img src="images/jrc_ec_logo.jpg" width="400"/>
 </div>
 
 The code included in this notebook, developed by the JRC, implements the procedure for Member States to define their samples for the IACS quality assessment. This involves extracting parcels from the ranked list provided by the Commission, following the selection rules in the Union Level Methodology 2024 (Chapters 3 and 4). Member States have discretion over the sample sizes, within the constraints of the Methodology.
