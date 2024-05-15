@@ -20,6 +20,7 @@ class DataManager:
         self.parcels_path = parcels_path
         self.targets_path = targets_path
         self.ua_groups = {}
+        # ua_group_dict[group] = {"target" : 300, "count" : ua_group_count[group], "desc" : create_ua_group_description(group, counter)}
         self.parcel_file_loaded = False
         self.target_values_state = "(Target values loaded from the parcel file.)"
         self.parcels_df = None
