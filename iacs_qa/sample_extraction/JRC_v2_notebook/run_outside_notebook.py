@@ -11,7 +11,7 @@ def extract_parcels_and_ua_groups(path):
     Extracts the parcels from the csv file and returns a dataframe and UA group dictionary.
     """
     try:
-        parcel_df = pd.read_csv(path)
+        parcel_df = pd.read_csv(path) 
         verify_parcel_df(parcel_df)
         ua_group_dict = get_ua_groups_from_parcel_file(parcel_df)
         logging.info("Parcel file verified successfully. Preview: \n%s", parcel_df.head())
@@ -21,7 +21,7 @@ def extract_parcels_and_ua_groups(path):
         raise
     except pd.errors.ParserError:
         logging.error("Parsing error while reading the file: %s", path)
-        raise
+        raise 
     except Exception as e:
         logging.error("Unexpected error loading parcel file: %s", e)
         raise
@@ -58,6 +58,5 @@ if __name__ == "__main__":
         logging.info("All files loaded successfully.")
     except Exception as e:
         logging.error("An error occurred: %s", e)
-
 
     

@@ -34,14 +34,16 @@ def create_target_widgets(datamanager):
         if target > count:
             target = count
 
+        # set the boundedintext widget's input field width to 100px
         entry = widgets.BoundedIntText(
             value=target,
             min=0,
             max=int(1e10),
             description=desc,
-            layout=widgets.Layout(width="150px"),
-            style={"description_width": "initial"},
-            tooltip=group
+            layout=widgets.Layout(width="200px"),
+            style={"description_width": "65%", "font_family": "monospace"},
+            tooltip=group,
+            max_width = "50px"
         )
         entry.observe(lambda change, dm=datamanager: target_widgets_on_value_change(change, dm), names='value')
 
@@ -53,9 +55,12 @@ def create_target_widgets(datamanager):
     return widget_list
 
 def create_ua_group_description(group_id, counter):
-    limit = 9
+    limit = 20
     if len(group_id) > limit:
         group_id = group_id[:limit] + "..."
+    # else:
+    #     # add spaces to the end of the string to make all descriptions the same length
+    #     group_id = group_id + " " * (limit - len(group_id))
     
     return f"{counter}. {group_id}"
 
@@ -219,7 +224,7 @@ def display_bucket_targets_config(datamanager):
         target_cutoff_recalculate_button.on_click(lambda b: recalculate_targets_based_on_threshold(target_cutoff_entry, widgets_list, datamanager))
 
         hbox0 = widgets.HBox([target_source_label])
-        grid = widgets.GridBox(widgets_list, layout=widgets.Layout(grid_template_columns="repeat(3, 300px)", padding="10px"))
+        grid = widgets.GridBox(widgets_list, layout=widgets.Layout(grid_template_columns="repeat(3, 350px)", padding="10px"))
         hbox1 = widgets.HBox([target_file_path_entry, target_file_load_button,target_info_button], layout=widgets.Layout(padding="10px"))
         hbox2 = widgets.HBox([target_cutoff_entry, target_cutoff_recalculate_button, target_cutoff_info_button], layout=widgets.Layout(padding="10px"))
         vbox = widgets.VBox([hbox0, grid, hbox1, hbox2, output_area])
@@ -295,12 +300,12 @@ def display_output_area(buckets, datamanager):
         if bucket["target"] == 0:
             header_label.add_class("green_label_bold")
             progress_value = 1
-            progress_label = widgets.Label(value=f"Completed: {progress_value:.2%} ( {len(bucket['parcels'])} / {bucket['target']} )")
+            progress_label = widgets.Label(value=f"| Found: {progress_value:.2%} ( {len(bucket['parcels'])} / {bucket['target']} )")
             progress_label.add_class("green_label")
         else:
             header_label.add_class("orange_label_bold")
             progress_value = len(bucket["parcels"]) / bucket["target"]
-            progress_label = widgets.Label(value=f"Completed: {progress_value:.2%} ( {len(bucket['parcels'])} / {bucket['target']} )")
+            progress_label = widgets.Label(value=f"| Found: {progress_value:.2%} ( {len(bucket['parcels'])} / {bucket['target']} )")
             progress_label.add_class("orange_label")
         progress_bar = widgets.FloatProgress(
             value=progress_value,
@@ -313,7 +318,7 @@ def display_output_area(buckets, datamanager):
         hbox_header_progress = widgets.HBox([header_label, progress_label])
         vbox_list.append(widgets.VBox([hbox_header_progress, progress_bar]))
     
-    grid = widgets.GridBox(vbox_list, layout=widgets.Layout(grid_template_columns="repeat(3, 1fr)", padding="10px"))
+    grid = widgets.GridBox(vbox_list, layout=widgets.Layout(grid_template_columns="repeat(3, 1fr)", padding="5px"))
     display(grid)
     return grid
 
@@ -327,6 +332,6 @@ def update_output_area(buckets, grid):
         if len(bucket['parcels']) == bucket['target']:
             grid.children[i].children[0].children[0].add_class("green_label_bold")
             grid.children[i].children[0].children[1].add_class("green_label")
-        grid.children[i].children[0].children[1].value = f"Completed: {len(bucket['parcels']) / bucket['target']:.2%} ( {len(bucket['parcels'])} / {bucket['target']} )"
+        grid.children[i].children[0].children[1].value = f"| Found: {len(bucket['parcels']) / bucket['target']:.2%} ( {len(bucket['parcels'])} / {bucket['target']} )"
         grid.children[i].children[1].value = len(bucket['parcels']) / bucket['target']
         
