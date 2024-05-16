@@ -22,14 +22,14 @@ def verify_parcel_df(parcel_df):
         True if the dataframe is valid.
     """
     requirements = {
-        "gsa_par_id": ("string", "string"),
-        "gsa_hol_id": ("int64", "integer"),
-        "ua_grp_id": ("string", "string"),
-        "covered": ("int64", "integer"),
-        "ranking": ("int64", "integer")
+        "gsa_par_id": [("string", "string"), ("int64", "integer")],
+        "gsa_hol_id": [("int64", "integer"),],
+        "ua_grp_id": [("string", "string")],
+        "covered": [("int64", "integer")],
+        "ranking": [("int64", "integer")]
     }
 
-    for column, (expected_type_str, type_name) in requirements.items():
+    for column, expected_types in requirements.items():
         if column not in parcel_df.columns:
             raise DataFrameValidationError(f"Column '{column}' not found in the dataframe.")
         if parcel_df[column].isnull().any():
@@ -40,16 +40,23 @@ def verify_parcel_df(parcel_df):
         # Special check for the 'covered' column to ensure it's binary (0 or 1)
         if column == "covered":
             if not pd.api.types.is_integer_dtype(parcel_df[column]):
-                raise DataFrameValidationError(f"Column '{column}' has incorrect data type. Expected {type_name}, got {actual_type}.")
+                raise DataFrameValidationError(f"Column '{column}' has incorrect data type. Expected {expected_types}, got {actual_type}.")
             if not parcel_df[column].isin([0, 1]).all():
                 raise DataFrameValidationError(f"Column '{column}' should only contain 0s or 1s.")
         else:
-            if expected_type_str == "string":
-                if not (pd.api.types.is_string_dtype(parcel_df[column]) or actual_type == "object"):
-                    raise DataFrameValidationError(f"Column '{column}' has incorrect data type. Expected {type_name}, got {actual_type}.")
-            else:
-                if not pd.api.types.is_dtype_equal(actual_type, expected_type_str):
-                    raise DataFrameValidationError(f"Column '{column}' has incorrect data type. Expected {type_name}, got {actual_type}.")
+            type_matched = False
+            for expected_type_str, type_name in expected_types:
+                if expected_type_str == "string":
+                    if pd.api.types.is_string_dtype(parcel_df[column]) or actual_type == "object":
+                        type_matched = True
+                        break
+                else:
+                    if pd.api.types.is_dtype_equal(actual_type, expected_type_str):
+                        type_matched = True
+                        break
+            
+            if not type_matched:
+                raise DataFrameValidationError(f"Column '{column}' has incorrect data type. Expected {expected_types}, got {actual_type}.")
 
     return True
 

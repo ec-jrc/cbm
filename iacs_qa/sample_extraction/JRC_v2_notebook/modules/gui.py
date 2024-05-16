@@ -13,28 +13,37 @@ display(HTML(define_infobutton_style()))
 def target_widgets_on_value_change(change, datamanager): # controls gui behavior - stays in gui.py
     datamanager.target_values_state = f"(Target values were manually modified. Last change: {change['owner'].description} field changed to {change['new']}.)"
     datamanager.target_source_label.value = datamanager.target_values_state
+    get_target_values_from_widgets(datamanager.target_widgets_list, datamanager)
+
+def get_group_id_based_on_widget_description(description, datamanager):
+    for group, info in datamanager.ua_groups.items():
+        if info["desc"] == description:
+            return group
 
 def get_target_values_from_widgets(widgets_list, datamanager): # controls gui behavior - stays in gui.py
     for widget_box in widgets_list:
         widget = widget_box.children[0]
-        datamanager.ua_groups[widget.description]["target"] = widget.value
+        datamanager.ua_groups[get_group_id_based_on_widget_description(widget.description,datamanager)]["target"] = widget.value
 
 def create_target_widgets(datamanager):
     widget_list = []
     for group, info in datamanager.ua_groups.items():
         target = info["target"]
         count = info["count"]
+        desc = info["desc"]
         if target > count:
             target = count
 
+        # set the boundedintext widget's input field width to 100px
         entry = widgets.BoundedIntText(
             value=target,
             min=0,
             max=int(1e10),
-            description=group,
-            layout=widgets.Layout(width="150px"),
-            style={"description_width": "initial"}
-            
+            description=desc,
+            layout=widgets.Layout(width="200px"),
+            style={"description_width": "65%", "font_family": "monospace"},
+            tooltip=group,
+            max_width = "50px"
         )
         entry.observe(lambda change, dm=datamanager: target_widgets_on_value_change(change, dm), names='value')
 
@@ -42,7 +51,18 @@ def create_target_widgets(datamanager):
 
         group_box = widgets.HBox([entry, count_label])
         widget_list.append(group_box)
+    datamanager.target_widgets_list = widget_list
     return widget_list
+
+def create_ua_group_description(group_id, counter):
+    limit = 20
+    if len(group_id) > limit:
+        group_id = group_id[:limit] + "..."
+    # else:
+    #     # add spaces to the end of the string to make all descriptions the same length
+    #     group_id = group_id + " " * (limit - len(group_id))
+    
+    return f"{counter}. {group_id}"
 
 def get_ua_groups_from_parcel_file(parcels_df):
     """
@@ -54,13 +74,14 @@ def get_ua_groups_from_parcel_file(parcels_df):
     ua_groups = parcels_df["ua_grp_id"].unique()
     ua_group_count = parcels_df["ua_grp_id"].value_counts().to_dict()
     ua_group_dict = {}
+    counter = 1
     for group in ua_groups:
-        ua_group_dict[group] = {"target" : 300, "count" : ua_group_count[group]}
+        ua_group_dict[group] = {"target" : 300, "count" : ua_group_count[group], "desc" : create_ua_group_description(group, counter)}
+        counter += 1
     return ua_group_dict
         #PARAMETERS["ua_groups"][group] = {"target" : 300, "count" : ua_group_count[group]}
 
-
-def populate_target_values(target_df, widgets_list):
+def populate_target_values(target_df, widgets_list, datamanager):
     """
     Populate the values of target widgets using a dataframe that contains target values.
 
@@ -73,7 +94,7 @@ def populate_target_values(target_df, widgets_list):
         target = row["target"]
         for widget_box in widgets_list:
             widget = widget_box.children[0]
-            if widget.description == ua_group:
+            if widget.description == datamanager.ua_groups[ua_group]["desc"]:
                 widget.value = target
                 break
 
@@ -140,7 +161,7 @@ def load_target_file(b, entry_widget, output_area, widgets_list, datamanager):
         try:
             df = pd.read_csv(file_path)
             verify_target_df(df)
-            populate_target_values(df, widgets_list)
+            populate_target_values(df, widgets_list, datamanager)
             compare_bucket_lists(datamanager.ua_groups, df)
             datamanager.target_values_state = "(Target values loaded from the targets file.)"
             datamanager.target_source_label.value = datamanager.target_values_state
@@ -167,7 +188,7 @@ def display_parcel_input_config(datamanager):
     output_area = widgets.Output()
     parcel_file_load_button.unobserve_all()
     parcel_file_load_button.on_click(lambda b: load_parcel_file(parcel_file_path_entry, output_area, datamanager))
-    
+      
     hbox = widgets.HBox([parcel_info_button, parcel_file_path_entry, parcel_file_load_button])
     vbox = widgets.VBox([hbox, output_area])
     display(vbox)
@@ -203,7 +224,7 @@ def display_bucket_targets_config(datamanager):
         target_cutoff_recalculate_button.on_click(lambda b: recalculate_targets_based_on_threshold(target_cutoff_entry, widgets_list, datamanager))
 
         hbox0 = widgets.HBox([target_source_label])
-        grid = widgets.GridBox(widgets_list, layout=widgets.Layout(grid_template_columns="repeat(3, 300px)", padding="10px"))
+        grid = widgets.GridBox(widgets_list, layout=widgets.Layout(grid_template_columns="repeat(3, 350px)", padding="10px"))
         hbox1 = widgets.HBox([target_file_path_entry, target_file_load_button,target_info_button], layout=widgets.Layout(padding="10px"))
         hbox2 = widgets.HBox([target_cutoff_entry, target_cutoff_recalculate_button, target_cutoff_info_button], layout=widgets.Layout(padding="10px"))
         vbox = widgets.VBox([hbox0, grid, hbox1, hbox2, output_area])
@@ -256,13 +277,14 @@ def display_advanced_config():
     display(config_box)
 
 
-def display_output_area(buckets):
+def display_output_area(buckets, datamanager):
 
     # display(HTML("<style>.red_label { color:red }</style>"))
     # l = Label(value="My Label")
     # l.add_class("red_label")
     # display(l)
     vbox_list = []
+    dm = datamanager
 
     display(HTML("<style>.orange_label { color:orange }</style>"))
     display(HTML("<style>.orange_label_bold { color:orange; font-weight: bold }</style>"))
@@ -273,16 +295,17 @@ def display_output_area(buckets):
 
 
     for bucket_id, bucket in buckets.items():
-        header_label = widgets.Label(value=f"Bucket: {bucket_id}")
+        header_label_text = dm.ua_groups[bucket_id]["desc"]
+        header_label = widgets.Label(value=header_label_text, tooltip=bucket_id)
         if bucket["target"] == 0:
             header_label.add_class("green_label_bold")
             progress_value = 1
-            progress_label = widgets.Label(value=f"Completed: {progress_value:.2%} ( {len(bucket['parcels'])} / {bucket['target']} )")
+            progress_label = widgets.Label(value=f"| Found: {progress_value:.2%} ( {len(bucket['parcels'])} / {bucket['target']} )")
             progress_label.add_class("green_label")
         else:
             header_label.add_class("orange_label_bold")
             progress_value = len(bucket["parcels"]) / bucket["target"]
-            progress_label = widgets.Label(value=f"Completed: {progress_value:.2%} ( {len(bucket['parcels'])} / {bucket['target']} )")
+            progress_label = widgets.Label(value=f"| Found: {progress_value:.2%} ( {len(bucket['parcels'])} / {bucket['target']} )")
             progress_label.add_class("orange_label")
         progress_bar = widgets.FloatProgress(
             value=progress_value,
@@ -295,7 +318,7 @@ def display_output_area(buckets):
         hbox_header_progress = widgets.HBox([header_label, progress_label])
         vbox_list.append(widgets.VBox([hbox_header_progress, progress_bar]))
     
-    grid = widgets.GridBox(vbox_list, layout=widgets.Layout(grid_template_columns="repeat(3, 1fr)", padding="10px"))
+    grid = widgets.GridBox(vbox_list, layout=widgets.Layout(grid_template_columns="repeat(3, 1fr)", padding="5px"))
     display(grid)
     return grid
 
@@ -309,6 +332,6 @@ def update_output_area(buckets, grid):
         if len(bucket['parcels']) == bucket['target']:
             grid.children[i].children[0].children[0].add_class("green_label_bold")
             grid.children[i].children[0].children[1].add_class("green_label")
-        grid.children[i].children[0].children[1].value = f"Completed: {len(bucket['parcels']) / bucket['target']:.2%} ( {len(bucket['parcels'])} / {bucket['target']} )"
+        grid.children[i].children[0].children[1].value = f"| Found: {len(bucket['parcels']) / bucket['target']:.2%} ( {len(bucket['parcels'])} / {bucket['target']} )"
         grid.children[i].children[1].value = len(bucket['parcels']) / bucket['target']
         

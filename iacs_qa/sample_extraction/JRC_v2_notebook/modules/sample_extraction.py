@@ -175,7 +175,7 @@ def iterate_over_interventions(parcel_df, buckets, progress_widgets): #, progres
     gui.update_output_area(buckets, progress_widgets)
     return buckets
 
-def intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, added_rows, full_buckets):
+def intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, added_rows, full_buckets, dm):
     for index, row in parcel_df.iterrows():
         
         if buckets_full(buckets):
@@ -211,9 +211,9 @@ def intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, ad
         # I hope this is not a problem, because the time savings with the new method are huge (43s vs 12s for Malta)
 
     gui.update_output_area(buckets, progress_widgets)
-    return buckets, new_full_bucket
+    return buckets, ""
 
-def iterate_over_interventions_v2(parcel_df, buckets, progress_widgets):
+def iterate_over_interventions_v2(parcel_df, buckets, progress_widgets, dm):
     """
     Main loop of the script.
     Iterates over the rows in the interventions dataframe and adds parcels to the buckets.
@@ -225,9 +225,10 @@ def iterate_over_interventions_v2(parcel_df, buckets, progress_widgets):
     added_rows = set()
     full_buckets = []
     while not buckets_full(buckets):
-        buckets, new_full_bucket = intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, added_rows, full_buckets)
-        full_buckets.append(new_full_bucket)
-        parcel_df = reduce_parcel_dataframe(parcel_df, new_full_bucket)
+        buckets, new_full_bucket = intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, added_rows, full_buckets, dm)
+        if new_full_bucket != "":
+            full_buckets.append(new_full_bucket)
+            parcel_df = reduce_parcel_dataframe(parcel_df, new_full_bucket)
 
     gui.update_output_area(buckets, progress_widgets)
     return buckets
