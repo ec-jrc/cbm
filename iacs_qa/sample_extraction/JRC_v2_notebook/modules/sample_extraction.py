@@ -5,7 +5,11 @@ import datetime
 from modules import gui
 
 
-def prepare_input_dataframe(parcel_df):
+def prepare_input_dataframe(datamanager):
+    parcel_df = datamanager.parcels_df
+
+    if datamanager.covered_priority == 2:
+        parcel_df = parcel_df[parcel_df["covered"] == 1]
     # parcel_df = parcel_df[parcel_df["covered"] == 1]
     # Sort the dataframe by the 'ranking' column
     parcel_df = parcel_df.sort_values(by="ranking")
@@ -85,27 +89,6 @@ def reduce_parcel_dataframe(parcel_df, full_bucket_id):
     """
     return parcel_df[parcel_df["ua_grp_id"] != full_bucket_id]
 
-def check_holding_group_old(holding_group, buckets, added_rows):
-    """
-    Checks the holding group for parcels that can be added to buckets.
-    If possible, adds up to 3 parcels from the holding group to buckets.
-    Adds added rows to the added_rows set, and the holding group to the checked_holdings set.
-    """
-    counter = 3
-    for index, holding_row in holding_group.iterrows():
-        if buckets_full(buckets) or counter == 0:
-            break
-        for bucket_id, bucket in buckets.items():
-            if holding_row["ua_grp_id"] == bucket_id and len(bucket['parcels']) < bucket['target'] and holding_row["row_id"] not in added_rows:
-                bucket['parcels'].append({"gsa_par_id": holding_row["gsa_par_id"],
-                                          "gsa_hol_id": holding_row["gsa_hol_id"],
-                                          "ranking": holding_row["ranking"],
-                                          
-                                          })
-                added_rows.add(holding_row["row_id"])
-                counter -= 1
-
-    return buckets
 
 def all_buckets_used_3_times(bucket_counter):
     """

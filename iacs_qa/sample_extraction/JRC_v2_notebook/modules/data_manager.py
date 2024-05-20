@@ -25,6 +25,13 @@ class DataManager:
         self.target_values_state = "(Target values loaded from the parcel file.)"
         self.parcels_df = None
         self.target_source_label = None # Label that informs about the latest source of target values displayed
+        self.param_3_percent = False
+        self.covered_priority = 0 # Prioritize parcels covered by HR images, Include only parcels covered by HR images
+        self.covered_priority_dict = {"Do not prioritize parcels covered by HR images": 0, 
+                                      "Prioritize parcels covered by HR images": 1, 
+                                      "Include only parcels covered by HR images": 2}
+
+
 
     def load_parcels(self):
         pass

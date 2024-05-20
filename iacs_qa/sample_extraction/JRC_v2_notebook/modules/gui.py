@@ -15,6 +15,12 @@ def target_widgets_on_value_change(change, datamanager): # controls gui behavior
     datamanager.target_source_label.value = datamanager.target_values_state
     get_target_values_from_widgets(datamanager.target_widgets_list, datamanager)
 
+def limit_3perc_widget_on_value_change(change, datamanager):
+    datamanager.param_3_percent = change["new"]
+
+def image_coverage_widget_on_value_change(change, datamanager):
+    datamanager.covered_priority = datamanager.covered_priority_dict[change["new"]]
+
 def get_group_id_based_on_widget_description(description, datamanager):
     for group, info in datamanager.ua_groups.items():
         if info["desc"] == description:
@@ -76,7 +82,12 @@ def get_ua_groups_from_parcel_file(parcels_df):
     ua_group_dict = {}
     counter = 1
     for group in ua_groups:
-        ua_group_dict[group] = {"target" : 300, "count" : ua_group_count[group], "desc" : create_ua_group_description(group, counter)}
+        count_for_group = ua_group_count[group]
+        if count_for_group >= 300:
+            default_target = 300
+        else:
+            default_target = int(count_for_group * 0.05)
+        ua_group_dict[group] = {"target" : default_target, "count" : ua_group_count[group], "desc" : create_ua_group_description(group, counter)}
         counter += 1
     return ua_group_dict
         #PARAMETERS["ua_groups"][group] = {"target" : 300, "count" : ua_group_count[group]}
@@ -230,51 +241,28 @@ def display_bucket_targets_config(datamanager):
         vbox = widgets.VBox([hbox0, grid, hbox1, hbox2, output_area])
         display(vbox)
 
-def display_advanced_config():
-    """
-    Display a configuration interface with advanced options for setting constraints on parcel processing and output settings.
-    """
-   
-    # Widgets for holding target
-    holding_active = widgets.Checkbox(value=True, description="Prioritize parcels of a holding until a limit per bucket is reached", style={"description_width": "initial"})
-    holding_max = widgets.IntText(value=3, description="Parcels per bucket in a holding:", style={"description_width": "initial"})
-    
-    # Widgets for holding percentage
-    holding_percentage_active = widgets.Checkbox(value=False, description="Limit search to a given fraction of holdings", style={"description_width": "initial"})
-    holding_percentage_max = widgets.FloatText(value=0.03, description="Holding fraction limit:", style={"description_width": "initial"})
-    
-    # Widgets for image coverage
-    image_coverage_active = widgets.Checkbox(value=True, description="Only include parcels covered by HR Images", style={"description_width": "initial"})
-    
-    # Widgets for output settings
-    output_path = widgets.Text(value="./output", description="Output path:", style={"description_width": "initial"})
-    #output_suffix = widgets.Text(value="STATS_300", description="Output Suffix:")
+def display_advanced_parameters(datamanager):
+    holding_percentage_active = widgets.Checkbox(value=False, description="Limit search to 3% of holdings", style={"description_width": "initial"})
+    holding_percentage_active.observe(lambda change: limit_3perc_widget_on_value_change(change, datamanager), names='value')
+    # new set of radiobuttons, 3 options: 
+    # - do not prioritize parcels covered by HR images
+    # - prioritize parcels covered by HR images
+    # - include only parcels covered by HR images
 
-    # Observers to enable/disable max fields based on 'active' checkbox state
-    def toggle_holding(change):
-        holding_max.disabled = not change.new
+    image_coverage_radiobuttons = widgets.RadioButtons(
+        options=["Do not prioritize parcels covered by HR images", "Prioritize parcels covered by HR images", "Include only parcels covered by HR images"],
+        value="Prioritize parcels covered by HR images",
+        description="HR image coverage options:",
+        style={"description_width": "initial"}
+    )
+    image_coverage_radiobuttons.observe(lambda change: image_coverage_widget_on_value_change(change, datamanager), names='value')
 
-    def toggle_holding_percentage(change):
-        holding_percentage_max.disabled = not change.new
-
-    holding_active.observe(toggle_holding, names='value')
-    holding_percentage_active.observe(toggle_holding_percentage, names='value')
-
-    # Layout for each parameter section
-    holding_box = widgets.VBox([holding_active, holding_max], layout = widgets.Layout(padding="10px"))
-    holding_percentage_box = widgets.VBox([holding_percentage_active, holding_percentage_max], layout = widgets.Layout(padding="10px"))
-    image_coverage_box = widgets.VBox([image_coverage_active], layout = widgets.Layout(padding="10px"))
-    output_box = widgets.VBox([widgets.Label(value="Output Settings:"), output_path], layout = widgets.Layout(padding="10px"))
+    hbox0 = widgets.HBox([widgets.Label(value="Advanced Parameters:")], layout=widgets.Layout(padding="10px"))
+    hbox1 = widgets.HBox([holding_percentage_active], layout=widgets.Layout(padding="0px"))
+    hbox2 = widgets.HBox([image_coverage_radiobuttons], layout=widgets.Layout(padding="12px"))
+    vbox = widgets.VBox([hbox0, hbox1, hbox2], layout=widgets.Layout(padding="10px"))
+    display(vbox)
     
-    # Display all settings together
-    config_box = widgets.VBox([holding_box, holding_percentage_box, image_coverage_box, output_box])
-    
-    # make all widgets in the config_box boxes disabled:
-    for box in config_box.children:
-        for widget in box.children:
-            widget.disabled = True
-    
-    display(config_box)
 
 
 def display_output_area(buckets, datamanager):
