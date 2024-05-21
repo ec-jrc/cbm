@@ -8,6 +8,14 @@ from modules import gui
 def prepare_input_dataframe(datamanager):
     parcel_df = datamanager.parcels_df
 
+    # get number of unique gsa_hol_id values:
+    datamanager.total_holding_count = len(parcel_df["gsa_hol_id"].unique())
+    print("Total holding count: ", datamanager.total_holding_count)
+
+    # calculate 3% of total holdings, round down
+    datamanager.holding_3_percent_count = int(datamanager.total_holding_count * 0.03)
+
+
     if datamanager.covered_priority == 2:
         parcel_df = parcel_df[parcel_df["covered"] == 1]
     # parcel_df = parcel_df[parcel_df["covered"] == 1]
@@ -96,7 +104,7 @@ def all_buckets_used_3_times(bucket_counter):
     """
     return all(value == 3 for value in bucket_counter.values())
 
-def check_holding_group(holding_group, buckets, added_rows):
+def check_holding_group(holding_group, buckets, added_rows, added_holdings):
     """
     New version that adds parcels the right (?) way.
     """
@@ -106,12 +114,12 @@ def check_holding_group(holding_group, buckets, added_rows):
         if buckets_full(buckets) or all_buckets_used_3_times(bucket_counter):
             break
         parcel_group = holding_group[holding_group["gsa_par_id"] == holding_row["gsa_par_id"]]
-        buckets, bucket_counter = check_parcel(parcel_group, buckets, added_rows, bucket_counter)
+        buckets, bucket_counter, added_rows, added_holdings = check_parcel(parcel_group, buckets, added_rows, added_holdings, bucket_counter)
 
-    return buckets
+    return buckets, added_rows, added_holdings
 
 
-def check_parcel(parcel_group, buckets, added_rows, bucket_counter=None):
+def check_parcel(parcel_group, buckets, added_rows, added_holdings, bucket_counter=None):
     for index, parcel_row in parcel_group.iterrows():
         if buckets_full(buckets):
             break
@@ -124,10 +132,17 @@ def check_parcel(parcel_group, buckets, added_rows, bucket_counter=None):
                                                 "order_added" : buckets_global_count(buckets)+1,
                                                 })
                         added_rows.add(parcel_row["row_id"])
+                        if parcel_row["gsa_hol_id"] not in added_holdings:
+                            added_holdings.add(parcel_row["gsa_hol_id"])
+                            #print("Added holdings:",len(added_holdings))
                         if bucket_counter != None:
                             bucket_counter[bucket_id] += 1
     
-    return buckets, bucket_counter
+    return buckets, bucket_counter, added_rows, added_holdings
+
+def reduce_holdings(parcel_df, added_holdings):
+    # removes all rows from the dataframe where gsa_hol_id is not one of the checked_holdings
+    return parcel_df[parcel_df["gsa_hol_id"].isin(added_holdings)]
 
 
 def iterate_over_interventions(parcel_df, buckets, progress_widgets): #, progress_bars):
@@ -158,45 +173,43 @@ def iterate_over_interventions(parcel_df, buckets, progress_widgets): #, progres
     gui.update_output_area(buckets, progress_widgets)
     return buckets
 
-def intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, added_rows, full_buckets, dm):
+def intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, added_rows, added_holdings, full_buckets, dm):
+
     for index, row in parcel_df.iterrows():
-        
         if buckets_full(buckets):
             break
         if row["gsa_hol_id"] not in checked_holdings:
             checked_holdings.add(row["gsa_hol_id"])
             holding_group = parcel_df[parcel_df["gsa_hol_id"] == row["gsa_hol_id"]]
-            buckets = check_holding_group(holding_group, buckets, added_rows)
+            buckets, added_rows, added_holdings = check_holding_group(holding_group, buckets, added_rows, added_holdings)
         else:
             parcel_group = parcel_df[parcel_df["gsa_par_id"] == row["gsa_par_id"]]
-            buckets, bucket_counter = check_parcel(parcel_group, buckets, added_rows)
-
+            buckets, bucket_counter, added_rows, added_holdings = check_parcel(parcel_group, buckets, added_rows, added_holdings)
+            
         if index % 20 == 0:
             gui.update_output_area(buckets, progress_widgets)
 
         new_full_buckets = get_full_bucket_ids(buckets)
+        holding_threshold_exceeded = False
+
+        if dm.param_3_percent and len(added_holdings) >= dm.holding_3_percent_count:
+            holding_threshold_exceeded = True
+            dm.param_3_percent = False # to make sure the holding reduction only happens once
 
         if len(new_full_buckets) != len(full_buckets):
             # new_full_bucket must be the extra element in new buckets compared to previous full bucket list
             new_full_bucket = list(set(new_full_buckets) - set(full_buckets))[0]
-            return buckets, new_full_bucket
-        # why discrepancies happen:
-        # I think that if we don't clean up rows related to full buckets, some of them can act as gateways for parcels low in the ranking:
-        # In the old scenario:
-        # - the script fills up a bucket, but all rows related to that bucket are still in the dataframe
-        # - the script encounters a new row that is related to the full bucket
-        # - the script does not add the row to the bucket, but triggers the holding search anyway
-        # - this allows rows lower in the ranking, but belonging to the same holding, to be added to the bucket
-        # In the new scnenario:
-        # - the script fills up a bucket, and removes all rows related to that bucket from the dataframe
-        # - the script no longer encounters rows related to the full bucket
-        # - therefore the holdings that are searched are only the ones where their first row is not related to a full bucket
-        # I hope this is not a problem, because the time savings with the new method are huge (43s vs 12s for Malta)
+        else:
+            new_full_bucket = ""
+        
+        if new_full_bucket != "" or holding_threshold_exceeded: # this is always true after the first time it's true. this resets the lopp indefinitely
+            return buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, False
+
 
     gui.update_output_area(buckets, progress_widgets)
-    return buckets, ""
+    return buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, True
 
-def iterate_over_interventions_v2(parcel_df, buckets, progress_widgets, dm):
+def iterate_over_interventions_fast(parcel_df, buckets, progress_widgets, dm):
     """
     Main loop of the script.
     Iterates over the rows in the interventions dataframe and adds parcels to the buckets.
@@ -206,14 +219,19 @@ def iterate_over_interventions_v2(parcel_df, buckets, progress_widgets, dm):
 
     checked_holdings = set()
     added_rows = set()
+    added_holdings = set()
     full_buckets = []
-    while not buckets_full(buckets):
-        buckets, new_full_bucket = intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, added_rows, full_buckets, dm)
+    all_checked = False
+    while not buckets_full(buckets) and not all_checked:
+        buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, all_checked = intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, added_rows, added_holdings, full_buckets, dm)
         if new_full_bucket != "":
             full_buckets.append(new_full_bucket)
             parcel_df = reduce_parcel_dataframe(parcel_df, new_full_bucket)
+        if holding_threshold_exceeded:
+            parcel_df = reduce_holdings(parcel_df, added_holdings)
 
     gui.update_output_area(buckets, progress_widgets)
+    dm.final_bucket_state = buckets
     return buckets
 
 

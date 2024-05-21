@@ -4,13 +4,6 @@ Responsibilities: Manages configuration and state, handles file loading, and upd
 Imports: pandas for file operations and modules from input_verification.py for data validation.
 """
 
-# PARAMETERS = {"parcels_path": "",
-#               "targets_path": "",
-#               "ua_groups": {},
-#               "parcel_file_loaded":False,
-#               "target_values_state": "(Target values loaded from the parcel file.)",
-#               "parcels_df": None,
-#               }
 
 import pandas as pd
 
@@ -30,8 +23,6 @@ class DataManager:
         self.covered_priority_dict = {"Do not prioritize parcels covered by HR images": 0, 
                                       "Prioritize parcels covered by HR images": 1, 
                                       "Include only parcels covered by HR images": 2}
-
-
-
-    def load_parcels(self):
-        pass
+        self.total_holding_count = 0
+        self.holding_3_percent_count = 0
+        self.final_bucket_state = None
