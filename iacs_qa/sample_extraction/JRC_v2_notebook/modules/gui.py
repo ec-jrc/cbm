@@ -322,4 +322,83 @@ def update_output_area(buckets, grid):
             grid.children[i].children[0].children[1].add_class("green_label")
         grid.children[i].children[0].children[1].value = f"| Found: {len(bucket['parcels']) / bucket['target']:.2%} ( {len(bucket['parcels'])} / {bucket['target']} )"
         grid.children[i].children[1].value = len(bucket['parcels']) / bucket['target']
+
+def display_result_statistics(datamanager):
+
+    # total statistic (top)
+    total_rows = len(datamanager.parcels_df)
+    selected_rows = sum([len(bucket['parcels']) for bucket in datamanager.final_bucket_state.values()])
+    total_holdings = len(datamanager.parcels_df["gsa_hol_id"].unique())
+    selected_holdings = len(datamanager.added_holdings)
+
+    # labels that display the following information:
+    # - first row: are all buckets full or not all full
+    # - second row: fraction of rows selected + values (selected/total)
+    # - third row: fraction of holdings selected + values (selected/total)
+
+    # first row
+    all_buckets_full = all([bucket["target"] == len(bucket["parcels"]) for bucket in datamanager.final_bucket_state.values()])
+    if all_buckets_full:
+        first_row_label = widgets.Label(value="All buckets are full!")
+        first_row_label.add_class("green_label_bold")
+    else:
+        first_row_label = widgets.Label(value="Not all buckets are full. See progress indicators for details.")
+        first_row_label.add_class("orange_label_bold")
+
+    # second row
+    second_row_label = widgets.Label(value=f"Selected rows: {selected_rows} / {total_rows} ({selected_rows / total_rows:.2%})")
+    
+    # third row
+    third_row_label = widgets.Label(value=f"Selected holdings: {selected_holdings} / {total_holdings} ({selected_holdings / total_holdings:.2%})")
+
+    vbox = widgets.VBox([first_row_label, second_row_label, third_row_label], layout=widgets.Layout(padding="10px"))
+    display(vbox)
+    
+def display_stats_test():
+    import ipywidgets as widgets
+    from IPython.display import display
+    import matplotlib.pyplot as plt
+    import io
+    from PIL import Image
+
+    def display_result_statistics(datamanager):
+        # total statistic (top)
+        total_rows = len(datamanager.parcels_df)
+        selected_rows = sum([len(bucket['parcels']) for bucket in datamanager.final_bucket_state.values()])
+        total_holdings = len(datamanager.parcels_df["gsa_hol_id"].unique())
+        selected_holdings = len(datamanager.added_holdings)
+
+        # Pie chart for selected rows
+        def create_pie_chart(selected, total, title):
+            fig, ax = plt.subplots()
+            sizes = [selected, total - selected]
+            labels = ['Selected', 'Not Selected']
+            colors = ['#ff9999','#66b3ff']
+            ax.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=140)
+            ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+            plt.title(title)
+            buf = io.BytesIO()
+            plt.savefig(buf, format='png')
+            buf.seek(0)
+            return Image.open(buf)
         
+        rows_pie = create_pie_chart(selected_rows, total_rows, "Selected Rows")
+        holdings_pie = create_pie_chart(selected_holdings, total_holdings, "Selected Holdings")
+
+        rows_pie_widget = widgets.Image(value=rows_pie.tobytes(), format='png', width=200, height=200)
+        holdings_pie_widget = widgets.Image(value=holdings_pie.tobytes(), format='png', width=200, height=200)
+
+        # first row
+        all_buckets_full = all([bucket["target"] == len(bucket["parcels"]) for bucket in datamanager.final_bucket_state.values()])
+        if all_buckets_full:
+            first_row_label = widgets.Label(value="All buckets are full!")
+            first_row_label.add_class("green_label_bold")
+        else:
+            first_row_label = widgets.Label(value="Not all buckets are full. See progress indicators for details.")
+            first_row_label.add_class("orange_label_bold")
+
+        # Create the layout
+        pie_charts_box = widgets.HBox([rows_pie_widget, holdings_pie_widget], layout=widgets.Layout(justify_content='space-around'))
+        vbox = widgets.VBox([first_row_label, pie_charts_box], layout=widgets.Layout(padding="10px"))
+        display(vbox)
+

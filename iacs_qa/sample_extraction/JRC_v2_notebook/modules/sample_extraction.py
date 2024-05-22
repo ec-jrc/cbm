@@ -10,7 +10,6 @@ def prepare_input_dataframe(datamanager):
 
     # get number of unique gsa_hol_id values:
     datamanager.total_holding_count = len(parcel_df["gsa_hol_id"].unique())
-    print("Total holding count: ", datamanager.total_holding_count)
 
     # calculate 3% of total holdings, round down
     datamanager.holding_3_percent_count = int(datamanager.total_holding_count * 0.03)
@@ -68,10 +67,14 @@ def generate_output(buckets):
     output_df = pd.DataFrame(output, columns=["bucket_id", "gsa_par_id", "gsa_hol_id", "ranking", "order_added"])#, "target"])
 
     filename_excel = "sample_extraction_output_" + datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S") + ".xlsx"
+    output_path_excel = os.path.join(output_dir, filename_excel)
     output_df.to_excel(os.path.join(output_dir, filename_excel), index=False)
 
     filename_csv = "sample_extraction_output_" + datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S") + ".csv"
-    output_df.to_csv(os.path.join(output_dir, filename_csv), index=False)
+    output_path_csv = os.path.join(output_dir, filename_csv)
+    output_df.to_csv(output_path_csv, index=False)
+
+    return output_path_excel, output_path_csv
 
 # -----
 
@@ -232,7 +235,10 @@ def iterate_over_interventions_fast(parcel_df, buckets, progress_widgets, dm):
 
     gui.update_output_area(buckets, progress_widgets)
     dm.final_bucket_state = buckets
+    dm.added_holdings = added_holdings
     return buckets
+
+
 
 
 
