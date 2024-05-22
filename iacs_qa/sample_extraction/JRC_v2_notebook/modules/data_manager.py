@@ -19,10 +19,12 @@ class DataManager:
         self.parcels_df = None
         self.target_source_label = None # Label that informs about the latest source of target values displayed
         self.param_3_percent = False
+        self.holdings_reduced = False
         self.covered_priority = 0 # Prioritize parcels covered by HR images, Include only parcels covered by HR images
         self.covered_priority_dict = {"Do not prioritize parcels covered by HR images": 0, 
                                       "Prioritize parcels covered by HR images": 1, 
                                       "Include only parcels covered by HR images": 2}
         self.total_holding_count = 0
         self.holding_3_percent_count = 0
+        
         self.final_bucket_state = None
