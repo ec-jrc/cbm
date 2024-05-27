@@ -1,14 +1,11 @@
+import io
 from IPython.display import display, clear_output, HTML
 import ipywidgets as widgets
 import pandas as pd
 import matplotlib.pyplot as plt
-import io
 
 from modules.widget_builder import create_text_entry, create_button, create_info_button, create_int_entry, define_infobutton_style
 from modules.input_verification import verify_parcel_df, verify_target_df, compare_bucket_lists
-# from modules.data_manager import DataManager
-
-# dm = DataManager()
 
 display(HTML(define_infobutton_style()))
 
@@ -119,7 +116,6 @@ def recalculate_targets_based_on_threshold(entry_widget, widgets_list, datamanag
     entry_widget (ipywidgets.Widget): Widget that contains the new threshold value.
     widgets_list (list): List of target widgets to be adjusted.
     """
-    # group_box = widgets.HBox([entry, count_label])
     threshold = entry_widget.value
     for widget_box in widgets_list:
         widget = widget_box.children[0]
@@ -246,10 +242,6 @@ def display_bucket_targets_config(datamanager):
 def display_advanced_parameters(datamanager):
     holding_percentage_active = widgets.Checkbox(value=False, description="Limit search to 3% of holdings", style={"description_width": "initial"})
     holding_percentage_active.observe(lambda change: limit_3perc_widget_on_value_change(change, datamanager), names='value')
-    # new set of radiobuttons, 3 options: 
-    # - do not prioritize parcels covered by HR images
-    # - prioritize parcels covered by HR images
-    # - include only parcels covered by HR images
 
     image_coverage_radiobuttons = widgets.RadioButtons(
         options=["Include all parcels in the sample extraction", "Include only parcels covered by HR images"],
@@ -268,11 +260,6 @@ def display_advanced_parameters(datamanager):
 
 
 def display_output_area(buckets, datamanager):
-
-    # display(HTML("<style>.red_label { color:red }</style>"))
-    # l = Label(value="My Label")
-    # l.add_class("red_label")
-    # display(l)
     vbox_list = []
     dm = datamanager
 
@@ -326,19 +313,11 @@ def update_output_area(buckets, grid):
         grid.children[i].children[1].value = len(bucket['parcels']) / bucket['target']
 
 def display_result_statistics(datamanager):
-
-    # total statistic (top)
     total_rows = len(datamanager.parcels_df)
     selected_rows = sum([len(bucket['parcels']) for bucket in datamanager.final_bucket_state.values()])
     total_holdings = len(datamanager.parcels_df["gsa_hol_id"].unique())
     selected_holdings = len(datamanager.added_holdings)
 
-    # labels that display the following information:
-    # - first row: are all buckets full or not all full
-    # - second row: fraction of rows selected + values (selected/total)
-    # - third row: fraction of holdings selected + values (selected/total)
-
-    # first row
     all_buckets_full = all([bucket["target"] == len(bucket["parcels"]) for bucket in datamanager.final_bucket_state.values()])
     if all_buckets_full:
         first_row_label = widgets.Label(value="All buckets are full!")
@@ -347,10 +326,8 @@ def display_result_statistics(datamanager):
         first_row_label = widgets.Label(value="Not all buckets are full. See progress indicators for details.")
         first_row_label.add_class("orange_label_bold")
 
-    # second row
     second_row_label = widgets.Label(value=f"Selected rows: {selected_rows} / {total_rows} ({selected_rows / total_rows:.2%})")
-    
-    # third row
+
     third_row_label = widgets.Label(value=f"Selected holdings: {selected_holdings} / {total_holdings} ({selected_holdings / total_holdings:.2%})")
 
     vbox = widgets.VBox([first_row_label, second_row_label, third_row_label], layout=widgets.Layout(padding="10px"))
@@ -404,8 +381,6 @@ def display_stats_test():
         vbox = widgets.VBox([first_row_label, pie_charts_box], layout=widgets.Layout(padding="10px"))
         display(vbox)
 
-
-
 def calculate_holding_with_most_interventions_selected(datamanager):
     # calculate the holding with the most interventions selected
     holding_interventions = {}
@@ -419,16 +394,7 @@ def calculate_holding_with_most_interventions_selected(datamanager):
     holding_with_most_interventions = max(holding_interventions, key=holding_interventions.get)
     return holding_with_most_interventions, holding_interventions[holding_with_most_interventions]
 
-
 def display_statistics_summary(datamanager):
-    # general statistics in text form using ipywidget labels
-
-    # selected interventions per bucket vs total
-    # average interventions selected per selected holding
-    # selected covered, selected uncovered
-    # ranking distribution
-
-    # total statistic (top)
     total_rows = len(datamanager.parcels_df)
     selected_rows = sum([len(bucket['parcels']) for bucket in datamanager.final_bucket_state.values()])
     total_holdings = len(datamanager.parcels_df["gsa_hol_id"].unique())
@@ -436,7 +402,6 @@ def display_statistics_summary(datamanager):
     avg_int_per_holding = selected_rows / selected_holdings
     most_interventions = calculate_holding_with_most_interventions_selected(datamanager)
 
-    # first row
     all_buckets_full = all([bucket["target"] == len(bucket["parcels"]) for bucket in datamanager.final_bucket_state.values()])
     if all_buckets_full:
         first_row_label = widgets.Label(value="All buckets are full!")
@@ -445,25 +410,13 @@ def display_statistics_summary(datamanager):
         first_row_label = widgets.Label(value="Not all buckets are full. See progress indicators for details.")
         first_row_label.add_class("orange_label_bold")
 
-    # second row: selected interventions vs total
-
     second_row_label = widgets.Label(value=f"Selected interventions: {selected_rows} / {total_rows} ({selected_rows/total_rows*100:.2f}%)")
-
-    # third row: selected holdings vs total
 
     third_row_label = widgets.Label(value=f"Selected holdings: {selected_holdings} / {total_holdings} ({selected_holdings/total_holdings*100:.2f}%)")
 
-    # fourth row: average interventions per selected holding
-
     fourth_row_label = widgets.Label(value=f"Average selected interventions per selected holding: {avg_int_per_holding:.2f}")
 
-    # fifth row: holding with most interventions selected
-
     fifth_row_label = widgets.Label(value=f"Holding with most interventions selected: {most_interventions[0]} ({most_interventions[1]} interventions)")
-
-    # 
-
-    # for now pass
 
     vbox = widgets.VBox([first_row_label, second_row_label, third_row_label, fourth_row_label, fifth_row_label], layout=widgets.Layout(padding="10px"))
 
@@ -488,7 +441,7 @@ def display_pie_charts(datamanager):
         
         # Set the font size of the labels dynamically
         for text in texts:
-            text.set_fontsize(40)
+            text.set_fontsize(40) 
         for autotext in autotexts:
             autotext.set_fontsize(40)
         
@@ -516,11 +469,11 @@ def display_pie_charts(datamanager):
         title_label = widgets.Label(value=label)
         if selected == info["target"]:
             title_label.add_class("green_label_bold")
-            title_label.value += " (full)"
+            title_label.value += " (target reached)"
         else:
             title_label.add_class("orange_label_bold")
-            title_label.value += f" (not full)"
-        selected_label = widgets.Label(value=f"Selected: {selected} / {total} ({selected/total*100:.2f}%)")
+            title_label.value += f" (target not reached)"
+        selected_label = widgets.Label(value=f"Selected: {selected} / {total} ({selected/total*100:.2f}%) Target: {info['target']}")
         bucket_pie_widget = create_pie_chart(selected, total, bucket_id, figsize=(10,10))
         vbox = widgets.VBox([title_label, selected_label, bucket_pie_widget], layout=widgets.Layout(padding="10px"))
         bucket_stats_widget_list.append(vbox)

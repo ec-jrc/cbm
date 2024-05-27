@@ -1,10 +1,3 @@
-"""
-Contains: DataManager class.
-Responsibilities: Manages configuration and state, handles file loading, and updates parameters.
-Imports: pandas for file operations and modules from input_verification.py for data validation.
-"""
-
-
 import pandas as pd
 
 

@@ -22,6 +22,7 @@ Authors: Mateusz Dobrychłop (mateusz.dobrychlop@ext.ec.europa.eu), Fernando Fah
 * By default, the target values are now set to 5% of all interventions available in the input data for a given bucket, but not more than 300.
 
 **Please note**: To achieve the significant performance improvements in this version, we have made minor adjustments to the algorithm. As a result, the output may differ slightly from previous versions. This is due to the data filtering that now happens at certain stages of the procedure. Because we now eliminate some interventions that can't contribute to any buckets, some interventions lower in the ranking can potentially not be picked now, even if they were picked in the previous version.
+
 ---
 
 The solution is still in its beta testing phase. Implementation of some of the expected features and general optimization is planned for the upcoming weeks.
