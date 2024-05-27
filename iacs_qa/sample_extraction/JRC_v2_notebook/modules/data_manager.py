@@ -21,8 +21,8 @@ class DataManager:
         self.param_3_percent = False
         self.holdings_reduced = False
         self.covered_priority = 0 # Prioritize parcels covered by HR images, Include only parcels covered by HR images
-        self.covered_priority_dict = {"Do not prioritize parcels covered by HR images": 0, 
-                                      "Prioritize parcels covered by HR images": 1, 
+        self.covered_priority_dict = {"Include all parcels in the sample extraction": 0, 
+                                      #"Prioritize parcels covered by HR images": 1, 
                                       "Include only parcels covered by HR images": 2}
         self.total_holding_count = 0
         self.holding_3_percent_count = 0
