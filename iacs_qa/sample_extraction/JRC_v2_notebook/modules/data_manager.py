@@ -1,17 +1,3 @@
-"""
-Contains: DataManager class.
-Responsibilities: Manages configuration and state, handles file loading, and updates parameters.
-Imports: pandas for file operations and modules from input_verification.py for data validation.
-"""
-
-# PARAMETERS = {"parcels_path": "",
-#               "targets_path": "",
-#               "ua_groups": {},
-#               "parcel_file_loaded":False,
-#               "target_values_state": "(Target values loaded from the parcel file.)",
-#               "parcels_df": None,
-#               }
-
 import pandas as pd
 
 
@@ -25,6 +11,13 @@ class DataManager:
         self.target_values_state = "(Target values loaded from the parcel file.)"
         self.parcels_df = None
         self.target_source_label = None # Label that informs about the latest source of target values displayed
-
-    def load_parcels(self):
-        pass
+        self.param_3_percent = False
+        self.holdings_reduced = False
+        self.covered_priority = 0 # Prioritize parcels covered by HR images, Include only parcels covered by HR images
+        self.covered_priority_dict = {"Include all parcels in the sample extraction": 0, 
+                                      #"Prioritize parcels covered by HR images": 1, 
+                                      "Include only parcels covered by HR images": 2}
+        self.total_holding_count = 0
+        self.holding_3_percent_count = 0
+        
+        self.final_bucket_state = None

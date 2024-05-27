@@ -1,12 +1,11 @@
+import io
 from IPython.display import display, clear_output, HTML
 import ipywidgets as widgets
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from modules.widget_builder import create_text_entry, create_button, create_info_button, create_int_entry, define_infobutton_style
 from modules.input_verification import verify_parcel_df, verify_target_df, compare_bucket_lists
-# from modules.data_manager import DataManager
-
-# dm = DataManager()
 
 display(HTML(define_infobutton_style()))
 
@@ -14,6 +13,12 @@ def target_widgets_on_value_change(change, datamanager): # controls gui behavior
     datamanager.target_values_state = f"(Target values were manually modified. Last change: {change['owner'].description} field changed to {change['new']}.)"
     datamanager.target_source_label.value = datamanager.target_values_state
     get_target_values_from_widgets(datamanager.target_widgets_list, datamanager)
+
+def limit_3perc_widget_on_value_change(change, datamanager):
+    datamanager.param_3_percent = change["new"]
+
+def image_coverage_widget_on_value_change(change, datamanager):
+    datamanager.covered_priority = datamanager.covered_priority_dict[change["new"]]
 
 def get_group_id_based_on_widget_description(description, datamanager):
     for group, info in datamanager.ua_groups.items():
@@ -76,7 +81,12 @@ def get_ua_groups_from_parcel_file(parcels_df):
     ua_group_dict = {}
     counter = 1
     for group in ua_groups:
-        ua_group_dict[group] = {"target" : 300, "count" : ua_group_count[group], "desc" : create_ua_group_description(group, counter)}
+        count_for_group = ua_group_count[group]
+        if count_for_group >= 300:
+            default_target = 300
+        else:
+            default_target = int(count_for_group * 0.05)
+        ua_group_dict[group] = {"target" : default_target, "count" : ua_group_count[group], "desc" : create_ua_group_description(group, counter)}
         counter += 1
     return ua_group_dict
         #PARAMETERS["ua_groups"][group] = {"target" : 300, "count" : ua_group_count[group]}
@@ -106,7 +116,6 @@ def recalculate_targets_based_on_threshold(entry_widget, widgets_list, datamanag
     entry_widget (ipywidgets.Widget): Widget that contains the new threshold value.
     widgets_list (list): List of target widgets to be adjusted.
     """
-    # group_box = widgets.HBox([entry, count_label])
     threshold = entry_widget.value
     for widget_box in widgets_list:
         widget = widget_box.children[0]
@@ -230,59 +239,27 @@ def display_bucket_targets_config(datamanager):
         vbox = widgets.VBox([hbox0, grid, hbox1, hbox2, output_area])
         display(vbox)
 
-def display_advanced_config():
-    """
-    Display a configuration interface with advanced options for setting constraints on parcel processing and output settings.
-    """
-   
-    # Widgets for holding target
-    holding_active = widgets.Checkbox(value=True, description="Prioritize parcels of a holding until a limit per bucket is reached", style={"description_width": "initial"})
-    holding_max = widgets.IntText(value=3, description="Parcels per bucket in a holding:", style={"description_width": "initial"})
-    
-    # Widgets for holding percentage
-    holding_percentage_active = widgets.Checkbox(value=False, description="Limit search to a given fraction of holdings", style={"description_width": "initial"})
-    holding_percentage_max = widgets.FloatText(value=0.03, description="Holding fraction limit:", style={"description_width": "initial"})
-    
-    # Widgets for image coverage
-    image_coverage_active = widgets.Checkbox(value=True, description="Only include parcels covered by HR Images", style={"description_width": "initial"})
-    
-    # Widgets for output settings
-    output_path = widgets.Text(value="./output", description="Output path:", style={"description_width": "initial"})
-    #output_suffix = widgets.Text(value="STATS_300", description="Output Suffix:")
+def display_advanced_parameters(datamanager):
+    holding_percentage_active = widgets.Checkbox(value=False, description="Limit search to 3% of holdings", style={"description_width": "initial"})
+    holding_percentage_active.observe(lambda change: limit_3perc_widget_on_value_change(change, datamanager), names='value')
 
-    # Observers to enable/disable max fields based on 'active' checkbox state
-    def toggle_holding(change):
-        holding_max.disabled = not change.new
+    image_coverage_radiobuttons = widgets.RadioButtons(
+        options=["Include all parcels in the sample extraction", "Include only parcels covered by HR images"],
+        value="Include all parcels in the sample extraction",
+        description="HR image coverage options:",
+        style={"description_width": "initial"}
+    )
+    image_coverage_radiobuttons.observe(lambda change: image_coverage_widget_on_value_change(change, datamanager), names='value')
 
-    def toggle_holding_percentage(change):
-        holding_percentage_max.disabled = not change.new
-
-    holding_active.observe(toggle_holding, names='value')
-    holding_percentage_active.observe(toggle_holding_percentage, names='value')
-
-    # Layout for each parameter section
-    holding_box = widgets.VBox([holding_active, holding_max], layout = widgets.Layout(padding="10px"))
-    holding_percentage_box = widgets.VBox([holding_percentage_active, holding_percentage_max], layout = widgets.Layout(padding="10px"))
-    image_coverage_box = widgets.VBox([image_coverage_active], layout = widgets.Layout(padding="10px"))
-    output_box = widgets.VBox([widgets.Label(value="Output Settings:"), output_path], layout = widgets.Layout(padding="10px"))
+    hbox0 = widgets.HBox([widgets.Label(value="Advanced Parameters:")], layout=widgets.Layout(padding="10px"))
+    hbox1 = widgets.HBox([holding_percentage_active], layout=widgets.Layout(padding="0px"))
+    hbox2 = widgets.HBox([image_coverage_radiobuttons], layout=widgets.Layout(padding="12px"))
+    vbox = widgets.VBox([hbox0, hbox1, hbox2], layout=widgets.Layout(padding="10px"))
+    display(vbox)
     
-    # Display all settings together
-    config_box = widgets.VBox([holding_box, holding_percentage_box, image_coverage_box, output_box])
-    
-    # make all widgets in the config_box boxes disabled:
-    for box in config_box.children:
-        for widget in box.children:
-            widget.disabled = True
-    
-    display(config_box)
 
 
 def display_output_area(buckets, datamanager):
-
-    # display(HTML("<style>.red_label { color:red }</style>"))
-    # l = Label(value="My Label")
-    # l.add_class("red_label")
-    # display(l)
     vbox_list = []
     dm = datamanager
 
@@ -334,4 +311,174 @@ def update_output_area(buckets, grid):
             grid.children[i].children[0].children[1].add_class("green_label")
         grid.children[i].children[0].children[1].value = f"| Found: {len(bucket['parcels']) / bucket['target']:.2%} ( {len(bucket['parcels'])} / {bucket['target']} )"
         grid.children[i].children[1].value = len(bucket['parcels']) / bucket['target']
+
+def display_result_statistics(datamanager):
+    total_rows = len(datamanager.parcels_df)
+    selected_rows = sum([len(bucket['parcels']) for bucket in datamanager.final_bucket_state.values()])
+    total_holdings = len(datamanager.parcels_df["gsa_hol_id"].unique())
+    selected_holdings = len(datamanager.added_holdings)
+
+    all_buckets_full = all([bucket["target"] == len(bucket["parcels"]) for bucket in datamanager.final_bucket_state.values()])
+    if all_buckets_full:
+        first_row_label = widgets.Label(value="All buckets are full!")
+        first_row_label.add_class("green_label_bold")
+    else:
+        first_row_label = widgets.Label(value="Not all buckets are full. See progress indicators for details.")
+        first_row_label.add_class("orange_label_bold")
+
+    second_row_label = widgets.Label(value=f"Selected rows: {selected_rows} / {total_rows} ({selected_rows / total_rows:.2%})")
+
+    third_row_label = widgets.Label(value=f"Selected holdings: {selected_holdings} / {total_holdings} ({selected_holdings / total_holdings:.2%})")
+
+    vbox = widgets.VBox([first_row_label, second_row_label, third_row_label], layout=widgets.Layout(padding="10px"))
+    display(vbox)
+    
+def display_stats_test():
+    import ipywidgets as widgets
+    from IPython.display import display
+    import matplotlib.pyplot as plt
+    import io
+    from PIL import Image
+
+    def display_result_statistics(datamanager):
+        # total statistic (top)
+        total_rows = len(datamanager.parcels_df)
+        selected_rows = sum([len(bucket['parcels']) for bucket in datamanager.final_bucket_state.values()])
+        total_holdings = len(datamanager.parcels_df["gsa_hol_id"].unique())
+        selected_holdings = len(datamanager.added_holdings)
+
+        # Pie chart for selected rows
+        def create_pie_chart(selected, total, title):
+            fig, ax = plt.subplots()
+            sizes = [selected, total - selected]
+            labels = ['Selected', 'Not Selected']
+            colors = ['#ff9999','#66b3ff']
+            ax.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=140)
+            ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+            plt.title(title)
+            buf = io.BytesIO()
+            plt.savefig(buf, format='png')
+            buf.seek(0)
+            return Image.open(buf)
         
+        rows_pie = create_pie_chart(selected_rows, total_rows, "Selected Rows")
+        holdings_pie = create_pie_chart(selected_holdings, total_holdings, "Selected Holdings")
+
+        rows_pie_widget = widgets.Image(value=rows_pie.tobytes(), format='png', width=200, height=200)
+        holdings_pie_widget = widgets.Image(value=holdings_pie.tobytes(), format='png', width=200, height=200)
+
+        # first row
+        all_buckets_full = all([bucket["target"] == len(bucket["parcels"]) for bucket in datamanager.final_bucket_state.values()])
+        if all_buckets_full:
+            first_row_label = widgets.Label(value="All buckets are full!")
+            first_row_label.add_class("green_label_bold")
+        else:
+            first_row_label = widgets.Label(value="Not all buckets are full. See progress indicators for details.")
+            first_row_label.add_class("orange_label_bold")
+
+        # Create the layout
+        pie_charts_box = widgets.HBox([rows_pie_widget, holdings_pie_widget], layout=widgets.Layout(justify_content='space-around'))
+        vbox = widgets.VBox([first_row_label, pie_charts_box], layout=widgets.Layout(padding="10px"))
+        display(vbox)
+
+def calculate_holding_with_most_interventions_selected(datamanager):
+    # calculate the holding with the most interventions selected
+    holding_interventions = {}
+    for bucket in datamanager.final_bucket_state.values():
+        for parcel in bucket["parcels"]:
+            holding = parcel["gsa_hol_id"]
+            if holding in holding_interventions:
+                holding_interventions[holding] += 1
+            else:
+                holding_interventions[holding] = 1
+    holding_with_most_interventions = max(holding_interventions, key=holding_interventions.get)
+    return holding_with_most_interventions, holding_interventions[holding_with_most_interventions]
+
+def display_statistics_summary(datamanager):
+    total_rows = len(datamanager.parcels_df)
+    selected_rows = sum([len(bucket['parcels']) for bucket in datamanager.final_bucket_state.values()])
+    total_holdings = len(datamanager.parcels_df["gsa_hol_id"].unique())
+    selected_holdings = len(datamanager.added_holdings)
+    avg_int_per_holding = selected_rows / selected_holdings
+    most_interventions = calculate_holding_with_most_interventions_selected(datamanager)
+
+    all_buckets_full = all([bucket["target"] == len(bucket["parcels"]) for bucket in datamanager.final_bucket_state.values()])
+    if all_buckets_full:
+        first_row_label = widgets.Label(value="All buckets are full!")
+        first_row_label.add_class("green_label_bold")
+    else:
+        first_row_label = widgets.Label(value="Not all buckets are full. See progress indicators for details.")
+        first_row_label.add_class("orange_label_bold")
+
+    second_row_label = widgets.Label(value=f"Selected interventions: {selected_rows} / {total_rows} ({selected_rows/total_rows*100:.2f}%)")
+
+    third_row_label = widgets.Label(value=f"Selected holdings: {selected_holdings} / {total_holdings} ({selected_holdings/total_holdings*100:.2f}%)")
+
+    fourth_row_label = widgets.Label(value=f"Average selected interventions per selected holding: {avg_int_per_holding:.2f}")
+
+    fifth_row_label = widgets.Label(value=f"Holding with most interventions selected: {most_interventions[0]} ({most_interventions[1]} interventions)")
+
+    vbox = widgets.VBox([first_row_label, second_row_label, third_row_label, fourth_row_label, fifth_row_label], layout=widgets.Layout(padding="10px"))
+
+    display(vbox)
+
+
+
+def display_pie_charts(datamanager):
+    # total statistic (top)
+    total_rows = len(datamanager.parcels_df)
+    selected_rows = sum([len(bucket['parcels']) for bucket in datamanager.final_bucket_state.values()])
+    total_holdings = len(datamanager.parcels_df["gsa_hol_id"].unique())
+    selected_holdings = len(datamanager.added_holdings)
+
+    # Function to create a pie chart and return it as an image widget
+    def create_pie_chart(selected, total, title, figsize=(7, 7)):
+        fig, ax = plt.subplots(figsize=figsize)  # Adjust size here
+        sizes = [selected, total - selected]
+        labels = ['Selected', 'Remaining']
+        colors = ['#31C800', '#DFDFDF']
+        wedges, texts, autotexts = ax.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=140, textprops={'fontsize': 14})
+        
+        # Set the font size of the labels dynamically
+        for text in texts:
+            text.set_fontsize(40) 
+        for autotext in autotexts:
+            autotext.set_fontsize(40)
+        
+        ax.axis('equal')
+        plt.title(title, fontsize=40)
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', bbox_inches='tight')
+        buf.seek(0)
+        plt.close(fig)
+        return widgets.Image(value=buf.getvalue(), format='png', width=figsize[0]*25, height=figsize[1]*25)
+
+    pcs = 15
+
+    rows_pie_widget = create_pie_chart(selected_rows, total_rows, f"Selected interventions ({selected_rows} / {total_rows})", figsize=(pcs, pcs))
+    holdings_pie_widget = create_pie_chart(selected_holdings, total_holdings, f"Selected holdings ({selected_holdings} / {total_holdings})", figsize=(pcs, pcs))
+
+    # create a horizontal box to display the pie charts side by side
+    hbox = widgets.HBox([rows_pie_widget, holdings_pie_widget], layout=widgets.Layout(justify_content='space-around'))
+
+    bucket_stats_widget_list = []
+    for bucket_id, info in datamanager.ua_groups.items():
+        label = info["desc"]
+        selected = info["selected"]
+        total = info["count"]
+        title_label = widgets.Label(value=label)
+        if selected == info["target"]:
+            title_label.add_class("green_label_bold")
+            title_label.value += " (target reached)"
+        else:
+            title_label.add_class("orange_label_bold")
+            title_label.value += f" (target not reached)"
+        selected_label = widgets.Label(value=f"Selected: {selected} / {total} ({selected/total*100:.2f}%) Target: {info['target']}")
+        bucket_pie_widget = create_pie_chart(selected, total, bucket_id, figsize=(10,10))
+        vbox = widgets.VBox([title_label, selected_label, bucket_pie_widget], layout=widgets.Layout(padding="10px"))
+        bucket_stats_widget_list.append(vbox)
+
+    buckets_grid = widgets.GridBox(bucket_stats_widget_list, layout=widgets.Layout(grid_template_columns="repeat(3, 350px)", padding="10px"))
+    
+    vbox = widgets.VBox([hbox, buckets_grid], layout=widgets.Layout(padding="10px"))
+    display(vbox)
