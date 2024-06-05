@@ -82,7 +82,8 @@ def get_ua_groups_from_parcel_file(parcels_df):
     counter = 1
     for group in ua_groups:
         count_for_group = ua_group_count[group]
-        if count_for_group >= 300:
+        print(group, count_for_group)
+        if count_for_group >= 6000:
             default_target = 300
         else:
             default_target = int(count_for_group * 0.05)

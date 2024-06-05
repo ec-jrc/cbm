@@ -175,7 +175,7 @@ def intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, ad
         if dm.param_3_percent and len(added_holdings) >= dm.holding_3_percent_count and not dm.holdings_reduced:
             holding_threshold_exceeded = True
             dm.holdings_reduced = True # to make sure the holding reduction only happens once
-
+ 
         if len(new_full_buckets) != len(full_buckets):
             # new_full_bucket must be the extra element in new buckets compared to previous full bucket list
             new_full_bucket = list(set(new_full_buckets) - set(full_buckets))[0]
