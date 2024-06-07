@@ -80,15 +80,17 @@ def get_ua_groups_from_parcel_file(parcels_df):
     ua_group_count = parcels_df["ua_grp_id"].value_counts().to_dict()
     ua_group_dict = {}
     counter = 1
+    print(f"Detected {len(ua_groups)} UA groups:\n")
     for group in ua_groups:
         count_for_group = ua_group_count[group]
-        print(group, count_for_group)
+        print(f"{group}: {count_for_group} rows detected.")
         if count_for_group >= 6000:
             default_target = 300
         else:
             default_target = int(count_for_group * 0.05)
         ua_group_dict[group] = {"target" : default_target, "count" : ua_group_count[group], "desc" : create_ua_group_description(group, counter)}
         counter += 1
+    print("\nDefault target values set based on the number of rows in each UA group (5%, max 300).\n")
     return ua_group_dict
         #PARAMETERS["ua_groups"][group] = {"target" : 300, "count" : ua_group_count[group]}
 
@@ -189,7 +191,7 @@ def display_parcel_input_config(datamanager):
     """
     parcel_file_path_entry = create_text_entry("Parcel file path:", "example: input/parcels.csv")
     parcel_file_load_button = create_button("Load", "info", "Click to load parcel file")
-    parcel_info_button = create_info_button("Info text here.")
+    parcel_info_button = create_info_button("Direct or relative path to the .CSV file containing the parcel list.")
     parcel_info_button.add_class("info-button-style")
 
     if datamanager.parcels_path != "":
@@ -227,7 +229,7 @@ def display_bucket_targets_config(datamanager):
         output_area = widgets.Output()
         target_file_load_button.on_click(lambda b: load_target_file(b, target_file_path_entry, output_area, widgets_list, datamanager))
 
-        target_cutoff_info_button = create_info_button("Info text here.")
+        target_cutoff_info_button = create_info_button("This allows you to automatically limit all targets to a certain value (will only affect values above the defined cutoff).")
         target_cutoff_info_button.add_class("info-button-style")
         target_cutoff_entry = create_int_entry("Target cutoff:", "example: 300", 0, int(1e10), width="150px")
         target_cutoff_recalculate_button = create_button("Recalculate", "info", "Click to recalculate target values")

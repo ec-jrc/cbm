@@ -32,7 +32,7 @@ The following developments are planned for the near future:
 
 * Prioritization of covered parcels (but without completely excluding non-covered parcels)
 
-* Some more flexibility regarding the output will soon be introduced. We are also working on making the output more informative.
+* Some more flexibility regarding the output will soon be introduced. We are also`1 working on making the output more informative.
 
 * In the upcoming updates, a lot of emphasis will still be placed on speed improvements.
 

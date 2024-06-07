@@ -211,10 +211,17 @@ def find_one_and_finish(parcel_df, buckets, progress_widgets, added_rows, dm):
 def some_buckets_empty(buckets):
     return any(len(bucket['parcels']) == 0 for bucket in buckets.values())
 
+def divide_into_covered_and_non_covered(parcel_df):
+    covered = parcel_df[parcel_df["covered"] == 1]
+    non_covered = parcel_df[parcel_df["covered"] == 0]
+    return covered, non_covered
+
 def iterate_over_interventions_fast(parcel_df, buckets, progress_widgets, dm):
     """
     Main loop of the script.
     Iterates over the rows in the interventions dataframe and adds parcels to the buckets.
+
+    This currently desperately needs refactoring. A lot of code blocks are repeated.
     """
     checked_holdings = set()
     added_rows = set()
@@ -222,13 +229,70 @@ def iterate_over_interventions_fast(parcel_df, buckets, progress_widgets, dm):
     full_buckets = []
     all_checked = False
     dm.holdings_reduced = False
+
+    if dm.covered_priority == 1:
+        covered, non_covered = divide_into_covered_and_non_covered(parcel_df)
+        parcel_df = covered
+
     while not buckets_full(buckets) and not all_checked:
         buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, all_checked = intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, added_rows, added_holdings, full_buckets, dm)
         if new_full_bucket != "":
+            # remove rows associated with a recently completed bucket
             full_buckets.append(new_full_bucket)
             parcel_df = reduce_parcel_dataframe(parcel_df, new_full_bucket)
         if holding_threshold_exceeded:
+            # reduce the holdings to the ones that have already been added
             parcel_df, all_the_rest_df = reduce_holdings(parcel_df, added_holdings)
+
+    # After the loop above:
+    # 
+    # - if 3% rule is NOT selected and "prioritize covered" is NOT selected: all parcels were checked
+    # 
+    # - if 3% rule is NOT selected and "prioritize covered" is selected: all covered parcels were checked
+    # ---> if some buckets are still not full, go through non-covered belonging to added holdings
+    # ------> if some buckets are still not full, go through the rest of non-covered
+    #
+    # - if 3% rule is selected and "prioritize covered" is selected: all covered in 3% were checked
+    # ---> if some buckets are still not full, go through non-covered belonging to added holdings
+    # ------> if some buckets are still not full, go through the rest of covered (outside 3%)
+    # ---------> if some buckets are still not full, go through the rest of non-covered (outside 3%)
+    #
+    # - if 3% rule is selected and "prioritize covered" is not selected: all parcels in 3% were checked
+    # ---> if some buckets are still not full, go through the rest of parcels
+    #
+    # BIGGEST ISSUE RIGHT NOW:
+    # - what about the loop that goes through non-covered parcels in added holdings? will it not violate
+    #   the rule that only 3 parcels per holding can be added to a bucket?
+    #   Probably in the check_holding_group we can either reset the bucket counter or do the countinmg if dm has this parameter checked
+ 
+    if dm.covered_priority == 1 and some_buckets_empty(buckets):
+        parcel_df, all_the_rest_noncovered = reduce_holdings(non_covered, added_holdings)
+        for bucket_id in full_buckets:
+            parcel_df = reduce_parcel_dataframe(parcel_df, bucket_id)
+        # now the parcel_df contains non-covered that are in added holdings and only corresponding to non-full buckets
+        # SHOULD WE RESET THE ADDED_HOLDINGS SET NOW? I THINK YES, BUT THEN WE SOMEHOW HAVE TO MITIGATE THE 3 PARCELS PER HOLDING PER BUCKET RULE
+        while not buckets_full(buckets) and not all_checked:
+            buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, all_checked = intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, added_rows, added_holdings, full_buckets, dm)
+            if new_full_bucket != "":
+                # remove rows associated with a recently completed bucket
+                full_buckets.append(new_full_bucket)
+                parcel_df = reduce_parcel_dataframe(parcel_df, new_full_bucket)
+        # at this point all covered were checked, and non-covered that are in added holdings were checked
+        # now we have to check the rest of non-covered
+        if some_buckets_empty(buckets):
+            parcel_df = all_the_rest_noncovered
+            while not buckets_full(buckets) and not all_checked:
+                buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, all_checked = intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, added_rows, added_holdings, full_buckets, dm)
+                if new_full_bucket != "":
+                    # remove rows associated with a recently completed bucket
+                    full_buckets.append(new_full_bucket)
+                    parcel_df = reduce_parcel_dataframe(parcel_df, new_full_bucket)
+
+
+    # the if statement above deals with both the 3% and no 3% scenario in "prioritize covered" mode.
+    # even if the 3% rule is not selected, the first loop that goes through the non-covered parcels
+    # has to only consider the holdings already added to the sample.
+
     
     if dm.holdings_reduced and some_buckets_empty(buckets):
         print("Searching through the 3% of holdings finished. Some buckets are still empty. Trying to add one parcel to each of them, using the remaining data.")
@@ -237,11 +301,36 @@ def iterate_over_interventions_fast(parcel_df, buckets, progress_widgets, dm):
     gui.update_output_area(buckets, progress_widgets)
     dm.final_bucket_state = buckets
     dm.added_holdings = added_holdings
+
+
+
+
     return buckets
 
 
+# def prioritize_covered():
+#     pass
+    # 1. Divide into covered and non covered
+    # 2. Go through all covered (full algo)
+    # 3. Go through non-covered list:
+    # - only take rows for buchets that are still not full
+    # - get list of all holdings already added
+    # - for the added holdings, run "check_holding_group" one by one (order the same as in the list of added holdings)
+    # ---- > this will have to be solved with a new "intervention loop" function because the current now checks "added holdings" ofcourse
+    # ---- > maybe one full loop for covered, and then reset added holdings (but not added rows! (?)) and just run the non-covered loop
+    # ---- > this could however not solve the fact that we have to check the holdings in the order they were added
+    # ---- > so, separate "manual" loops for the holdings, and then, when the new "added holdings" list is completed with the added holdings,
+    #            and the "added rows" list is completed with added rows, run the intervention loop normally because the added holdings will initially be skipped
+    # 4. As stated in the line below, let the non-covered normal loop finish and it should be fine.
 
 
+
+# hi Ferdi, can you please confirm that in case the 3% rule is selected AND the "prioritize covered" is selected:
+
+# we search through all covered, and when 3% of holdings is reached, we reuse as many covered from the 3% as possible
+# then, we check all non-covered within the 3% of holdings used
+# then, to add the "1 per bucket" we look at covered only
+# if still some buckets are empty, we use non-covered for the "1 per bucket" procedure
 
 
 
