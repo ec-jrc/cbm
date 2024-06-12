@@ -247,9 +247,9 @@ def display_advanced_parameters(datamanager):
     holding_percentage_active.observe(lambda change: limit_3perc_widget_on_value_change(change, datamanager), names='value')
 
     image_coverage_radiobuttons = widgets.RadioButtons(
-        options=["Include all parcels in the sample extraction", "Include only parcels covered by HR images"],
+        options=["Include all parcels in the sample extraction", "Prioritize parcels covered by VHR images (beta)", "Include only parcels covered by VHR images"],
         value="Include all parcels in the sample extraction",
-        description="HR image coverage options:",
+        description="VHR image coverage options:",
         style={"description_width": "initial"}
     )
     image_coverage_radiobuttons.observe(lambda change: image_coverage_widget_on_value_change(change, datamanager), names='value')
@@ -413,13 +413,13 @@ def display_statistics_summary(datamanager):
         first_row_label = widgets.Label(value="Not all buckets are full. See progress indicators for details.")
         first_row_label.add_class("orange_label_bold")
 
-    second_row_label = widgets.Label(value=f"Selected interventions: {selected_rows} / {total_rows} ({selected_rows/total_rows*100:.2f}%)")
+    second_row_label = widgets.Label(value=f"Selected rows: {selected_rows} / {total_rows} ({selected_rows/total_rows*100:.2f}%)")
 
     third_row_label = widgets.Label(value=f"Selected holdings: {selected_holdings} / {total_holdings} ({selected_holdings/total_holdings*100:.2f}%)")
 
-    fourth_row_label = widgets.Label(value=f"Average selected interventions per selected holding: {avg_int_per_holding:.2f}")
+    fourth_row_label = widgets.Label(value=f"Average selected rows per selected holding: {avg_int_per_holding:.2f}")
 
-    fifth_row_label = widgets.Label(value=f"Holding with most interventions selected: {most_interventions[0]} ({most_interventions[1]} interventions)")
+    fifth_row_label = widgets.Label(value=f"Holding with most rows selected: {most_interventions[0]} ({most_interventions[1]} interventions)")
 
     vbox = widgets.VBox([first_row_label, second_row_label, third_row_label, fourth_row_label, fifth_row_label], layout=widgets.Layout(padding="10px"))
 
