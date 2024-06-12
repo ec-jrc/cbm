@@ -1,0 +1,15 @@
+{
+    "editor.tokenColorCustomizations": {
+        "[Dracula]": {
+            "comments": "#99bbff",
+            "textMateRules": [
+                {
+                    "scope":"string.quoted.docstring.multi.python",
+                    "settings": {
+                        "foreground": "#99bbff" //change to your preference
+                    }
+                }
+            ]
+        }
+    }
+}
