@@ -54,8 +54,8 @@ def generate_output(buckets):
     output = []
     for bucket_id, bucket in buckets.items():
         for parcel in bucket['parcels']:
-            output.append([bucket_id, parcel["gsa_par_id"], parcel["gsa_hol_id"], parcel["ranking"], parcel["covered"], parcel["order_added"],parcel["phase"]])
-    output_df = pd.DataFrame(output, columns=["bucket_id", "gsa_par_id", "gsa_hol_id", "ranking", "covered", "order_added", "phase"])
+            output.append([bucket_id, parcel["gsa_par_id"], parcel["gsa_hol_id"], parcel["ranking"], parcel["covered"], parcel["order_added"]])#,parcel["phase"]])
+    output_df = pd.DataFrame(output, columns=["bucket_id", "gsa_par_id", "gsa_hol_id", "ranking", "covered", "order_added"])#, "phase"])
 
     filename_excel = "sample_extraction_output_" + datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S") + ".xlsx"
     output_path_excel = os.path.join(output_dir, filename_excel)
@@ -257,7 +257,6 @@ def iterate_over_interventions_fast(parcel_df, buckets, progress_widgets, dm):
         if new_full_bucket != "":
             # remove rows associated with a recently completed bucket
             full_buckets.append(new_full_bucket)
-            print("REDUCING FULL BUCKET")
             parcel_df = reduce_parcel_dataframe(parcel_df, new_full_bucket)
         if holding_threshold_exceeded:
             # reduce the holdings to the ones that have already been added
@@ -283,16 +282,7 @@ def iterate_over_interventions_fast(parcel_df, buckets, progress_widgets, dm):
  
     if dm.covered_priority == 1 and some_buckets_empty(buckets):
         all_checked = False
-        parcel_df.to_excel("parcel_df_beforereducing.xlsx")
-        non_covered.to_excel("non_covered_beforereducing.xlsx")
         parcel_df, all_the_rest_noncovered = reduce_holdings(non_covered, added_holdings)
-        print("we got inside this if statement")
-        print("added holdings: ", added_holdings)
-        print(len(parcel_df), len(all_the_rest_noncovered))
-        # save parcel_Df to excel for debugging
-        parcel_df.to_excel("parcel_df.xlsx")
-        print(parcel_df)
-        all_the_rest_noncovered.to_excel("all_the_rest_noncovered.xlsx")
         parcel_df = set_phase(parcel_df, "noncovered belonging to added holdings")
         for bucket_id in full_buckets:
             parcel_df = reduce_parcel_dataframe(parcel_df, bucket_id)
@@ -301,8 +291,6 @@ def iterate_over_interventions_fast(parcel_df, buckets, progress_widgets, dm):
         checked_holdings = set()
 
         while not buckets_full(buckets) and not all_checked:
-            print("we got inside this while")
-            print(len(parcel_df))
             buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, all_checked = intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, added_rows, added_holdings, full_buckets, dm)
             if new_full_bucket != "":
                 # remove rows associated with a recently completed bucket
@@ -311,10 +299,7 @@ def iterate_over_interventions_fast(parcel_df, buckets, progress_widgets, dm):
         # at this point all covered were checked, and non-covered that are in added holdings were checked
         # now we have to check the rest of non-covered
         if some_buckets_empty(buckets):
-            print("we got into the other if statement")
-            parcel_df = all_the_rest_noncovered
             parcel_df = set_phase(parcel_df, "noncovered not in added holdings")
-            print(len(parcel_df))
             while not buckets_full(buckets):
                 buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, all_checked = intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, added_rows, added_holdings, full_buckets, dm)
                 if new_full_bucket != "":
