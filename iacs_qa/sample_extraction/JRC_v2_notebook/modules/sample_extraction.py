@@ -7,8 +7,12 @@ import warnings
 
 warnings.filterwarnings("ignore", category=pd.errors.SettingWithCopyWarning)
 
+LOG_PATH = "log.txt"
+log = open(LOG_PATH, "w")
+
 
 def prepare_input_dataframe(datamanager):
+    print(f"Preprocessing the parcel list... ({len(datamanager.parcels_df)} rows.)")
     parcel_df = datamanager.parcels_df
     datamanager.total_holding_count = len(parcel_df["gsa_hol_id"].unique())
     datamanager.holding_3_percent_count = int(datamanager.total_holding_count * 0.03)
@@ -34,6 +38,7 @@ def prepare_buckets(ua_groups_dict):
     Prepares a dictionary of buckets with the following structure:
     {group_id: {'target': 300, 'parcels': []}}
     """
+    print("Preparing buckets...")
     return {group_id: {'target': info["target"], 'parcels': []} for group_id, info in ua_groups_dict.items()}
 
 
@@ -151,6 +156,7 @@ def reduce_holdings(parcel_df, added_holdings):
 def intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, added_rows, added_holdings, full_buckets, dm):
     new_full_bucket = ""
     holding_threshold_exceeded = False
+    counter_for_refreshing = 0
     for index, row in parcel_df.iterrows():
         if buckets_full(buckets):
             break
@@ -162,8 +168,10 @@ def intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, ad
             parcel_group = parcel_df[parcel_df["gsa_par_id"] == row["gsa_par_id"]]
             buckets, _, added_rows, added_holdings = check_parcel(parcel_group, buckets, added_rows, added_holdings)
             
-        if index % 20 == 0:
+        if counter_for_refreshing % 2 == 0:
             gui.update_output_area(buckets, progress_widgets)
+            # print(f"Progress: {counter_for_refreshing}/{len(parcel_df)} | Phase: {row['phase']} | Added holdings: {len(added_holdings)} | Added rows: {len(added_rows)}")
+            # log.write(f"Progress: {counter_for_refreshing}/{len(parcel_df)} | Phase: {row['phase']} | Added holdings: {len(added_holdings)} | Added rows: {len(added_rows)}")
 
         new_full_buckets = get_full_bucket_ids(buckets)
         holding_threshold_exceeded = False
@@ -178,7 +186,7 @@ def intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, ad
         
         if new_full_bucket != "" or holding_threshold_exceeded:
             return buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, False
-
+        counter_for_refreshing += 1
 
     gui.update_output_area(buckets, progress_widgets)
     return buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, True
@@ -283,7 +291,8 @@ def iterate_over_interventions_fast(parcel_df, buckets, progress_widgets, dm):
         # now we have to check the rest of non-covered
         if some_buckets_empty(buckets):
             parcel_df = set_phase(parcel_df, "noncovered not in added holdings")
-            while not buckets_full(buckets):
+            all_checked = False
+            while not buckets_full(buckets) and not all_checked:
                 buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, all_checked = intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, added_rows, added_holdings, full_buckets, dm)
                 if new_full_bucket != "":
                     # remove rows associated with a recently completed bucket
@@ -376,7 +385,8 @@ def iterate_over_interventions_fast2(parcel_df, buckets, progress_widgets, dm):
             parcel_df = handle_new_full_bucket(parcel_df, new_full_bucket, full_buckets)
 
         if some_buckets_empty(buckets):
-            while not buckets_full(buckets):
+            all_checked = False
+            while not buckets_full(buckets) and not all_checked:
                 buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, all_checked = run_intervention_loop(parcel_df, "noncovered not in added holdings", checked_holdings, added_rows, added_holdings, full_buckets, buckets, progress_widgets, dm)
                 parcel_df = handle_new_full_bucket(parcel_df, new_full_bucket, full_buckets)
 

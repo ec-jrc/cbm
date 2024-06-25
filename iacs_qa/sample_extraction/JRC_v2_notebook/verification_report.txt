@@ -1,0 +1,2 @@
+Column 'gsa_hol_id' contains empty values.
+Column 'gsa_hol_id' has incorrect data type. Expected [('int64', 'integer')], got float64.
