@@ -4,3 +4,4 @@ input/
 output/
 *.pickle
 test_notebook.ipynb
+anonymizer.py
