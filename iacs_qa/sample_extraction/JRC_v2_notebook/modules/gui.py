@@ -87,10 +87,30 @@ def get_ua_groups_from_parcel_file(parcels_df):
     for group in ua_groups:
         count_for_group = ua_group_count[group]
         # print(f"{group}: {count_for_group} rows detected.")
-        if count_for_group >= 6000:
+        if 0 <= count_for_group <= 50:
+            default_target = count_for_group
+        elif 51 <= count_for_group <= 100:
+            default_target = 50
+        elif 101 <= count_for_group <= 200:
+            default_target = 50
+        elif 201 <= count_for_group <= 300:
+            default_target = 55
+        elif 301 <= count_for_group <= 400:
+            default_target = 110
+        elif 401 <= count_for_group <= 500:
+            default_target = 115
+        elif 501 <= count_for_group <= 600:
+            default_target = 170
+        elif 601 <= count_for_group <= 700:
+            default_target = 170
+        elif 701 <= count_for_group <= 800:
+            default_target = 175
+        elif 801 <= count_for_group <= 900:
+            default_target = 230
+        elif 901 <= count_for_group <= 1200:
+            default_target = 230
+        else: # more than 1200
             default_target = 300
-        else:
-            default_target = int(count_for_group * 0.05)
         ua_group_dict[group] = {"target" : default_target, "count" : ua_group_count[group], "desc" : create_ua_group_description(group, counter)}
         counter += 1
 
@@ -99,19 +119,19 @@ def get_ua_groups_from_parcel_file(parcels_df):
     fig = plt.figure(figsize=(10, 4))  # Reduced height from 5 to 3
     ax = fig.add_subplot(111)
 
-    bars = ax.bar(ua_group_count.keys(), ua_group_count.values(), color='#1daee3')
+    bars = ax.bar(ua_group_count.keys(), ua_group_count.values(), color="#1daee3")
 
     plt.xlabel("UA Group ID")
     plt.ylabel("Number of rows")
     plt.title("Distribution of UA groups")
-    plt.xticks(rotation=45, ha='right')
+    plt.xticks(rotation=45, ha="right")
 
     # Add value labels on top of bars
     for bar in bars:
         height = bar.get_height()
         ax.text(bar.get_x() + bar.get_width()/2., height,
-                f'{height}',
-                ha='center', va='bottom')
+                str(height),
+                ha="center", va="bottom")
 
     plt.tight_layout()  # Adjust layout to prevent cut-off labels
     plt.show()
@@ -138,20 +158,20 @@ def populate_target_values(target_df, widgets_list, datamanager):
                 widget.value = target
                 break
 
-def recalculate_targets_based_on_threshold(entry_widget, widgets_list, datamanager):
+def recalculate_targets_based_on_percentage(entry_widget, widgets_list, datamanager):
     """
-    Adjust the values of target fields based on a new threshold set by the user.
+    Adjust the values of target fields based on a percentage set by the user.
+    (adds or removes a percentage of the current target value)
 
     Args:
     entry_widget (ipywidgets.Widget): Widget that contains the new threshold value.
     widgets_list (list): List of target widgets to be adjusted.
     """
-    threshold = entry_widget.value
+    percentage = entry_widget.value
     for widget_box in widgets_list:
         widget = widget_box.children[0]
-        if widget.value > threshold:
-            widget.value = threshold
-    datamanager.target_values_state = "(Target values modified using the target cutoff setting.)"
+        widget.value += widget.value * percentage / 100
+    datamanager.target_values_state = "(Target values modified using the increase by fraction setting.)"
     datamanager.target_source_label.value = datamanager.target_values_state
 
     get_target_values_from_widgets(widgets_list, datamanager)
@@ -273,7 +293,7 @@ def display_bucket_targets_config(datamanager):
         target_cutoff_info_button.add_class("info-button-style")
         target_cutoff_entry = create_int_entry("Target cutoff:", "example: 300", 0, int(1e10), width="150px")
         target_cutoff_recalculate_button = create_button("Recalculate", "info", "Click to recalculate target values")
-        target_cutoff_recalculate_button.on_click(lambda b: recalculate_targets_based_on_threshold(target_cutoff_entry, widgets_list, datamanager))
+        target_cutoff_recalculate_button.on_click(lambda b: recalculate_targets_based_on_percentage(target_cutoff_entry, widgets_list, datamanager))
 
         hbox0 = widgets.HBox([target_source_label])
         grid = widgets.GridBox(widgets_list, layout=widgets.Layout(grid_template_columns="repeat(3, 350px)", padding="10px"))
@@ -730,7 +750,7 @@ def display_bucket_stats(datamanager):
         bucket_stats_widget_list.append(vbox)
 
     buckets_grid = widgets.GridBox(bucket_stats_widget_list, 
-                                   layout=widgets.Layout(grid_template_columns="repeat(1, 320px)", 
+                                   layout=widgets.Layout(grid_template_columns="repeat(3, 320px)", 
                                                          grid_gap='15px', 
                                                          padding="10px"))
     
