@@ -56,7 +56,7 @@ def generate_output(buckets, debug=False):
     output_dir = "output"
     os.makedirs(output_dir, exist_ok=True)
 
-    parcel_columns = ["gsa_par_id", "gsa_hol_id", "ranking", "covered", "order_added", "phase"]
+    parcel_columns = ["gsa_par_id", "gsa_hol_id", "ranking", "covered", "order_added"]#, "phase"]
     if debug:
         parcel_columns.append("phase")
 
@@ -274,7 +274,7 @@ def iterate_over_interventions_fast(parcel_df, buckets, progress_widgets, dm):
     if dm.covered_priority == 1 and some_buckets_empty(buckets):
         all_checked = False
         parcel_df, all_the_rest_noncovered = reduce_holdings(non_covered, added_holdings)
-        print("setting phase to noncovered belonging to added holdings")
+        #print("setting phase to noncovered belonging to added holdings")
         parcel_df = set_phase(parcel_df, "noncovered belonging to added holdings")
         parcel_df.to_excel("noncovered_belonging_to_added_holdings.xlsx")
         all_the_rest_noncovered.to_excel("all_the_rest_noncovered1.xlsx")
@@ -294,7 +294,7 @@ def iterate_over_interventions_fast(parcel_df, buckets, progress_widgets, dm):
         # at this point all covered were checked, and non-covered that are in added holdings were checked
         # now we have to check the rest of non-covered
         if some_buckets_empty(buckets):
-            print("setting phase to noncovered not in added holdings")
+            #print("setting phase to noncovered not in added holdings")
             parcel_df = all_the_rest_noncovered
             parcel_df = set_phase(parcel_df, "noncovered not in added holdings")
             parcel_df.to_excel("noncovered_not_in_added_holdings.xlsx")
@@ -315,11 +315,11 @@ def iterate_over_interventions_fast(parcel_df, buckets, progress_widgets, dm):
 
     
     if dm.holdings_reduced and some_buckets_empty(buckets):
-        print("Searching through the 3% of holdings finished. Some buckets are still empty. Trying to add one parcel to each of them, using the remaining data.")
+        #print("Searching through the 3% of holdings finished. Some buckets are still empty. Trying to add one parcel to each of them, using the remaining data.")
         all_the_rest_df = set_phase(all_the_rest_df, "covered or non-covered outside 3%, single parcel for empty bucket check")
         buckets = find_one_and_finish(all_the_rest_df, buckets, progress_widgets, added_rows, dm)
         if dm.covered_priority == 1 and some_buckets_empty(buckets):
-            print("Some buckets are still empty. Trying to add one parcel to each of them, using the remaining non-covered parcels.")
+            #print("Some buckets are still empty. Trying to add one parcel to each of them, using the remaining non-covered parcels.")
             all_the_rest_noncovered = set_phase(all_the_rest_noncovered, "non-covered outside 3%, single parcel for empty bucket check")
             buckets = find_one_and_finish(all_the_rest_noncovered, buckets, progress_widgets, added_rows, dm)
 
@@ -327,85 +327,5 @@ def iterate_over_interventions_fast(parcel_df, buckets, progress_widgets, dm):
     dm.final_bucket_state = buckets
     dm.added_holdings = added_holdings
 
-
-    return buckets
-
-#_____----___----_---_--_-
-
-def run_intervention_loop(parcel_df, phase, checked_holdings, added_rows, added_holdings, full_buckets, buckets, progress_widgets, dm):
-    parcel_df = set_phase(parcel_df, phase)
-    return intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, added_rows, added_holdings, full_buckets, dm)
-
-def process_covered_priority(parcel_df):
-    covered, non_covered = divide_into_covered_and_non_covered(parcel_df)
-    return covered, non_covered
-
-def handle_new_full_bucket(parcel_df, new_full_bucket, full_buckets):
-    if new_full_bucket:
-        full_buckets.append(new_full_bucket)
-        parcel_df = reduce_parcel_dataframe(parcel_df, new_full_bucket)
-    return parcel_df
-
-def handle_holding_threshold(parcel_df, added_holdings):
-    parcel_df, all_the_rest_df = reduce_holdings(parcel_df, added_holdings)
-    parcel_df = set_phase(parcel_df, "first loop but 3% exceeded")
-    return parcel_df, all_the_rest_df
-
-def process_remaining_parcels(parcel_df, non_covered, full_buckets, added_holdings):
-    parcel_df, all_the_rest_noncovered = reduce_holdings(non_covered, added_holdings)
-    parcel_df = set_phase(parcel_df, "noncovered belonging to added holdings")
-    for bucket_id in full_buckets:
-        parcel_df = reduce_parcel_dataframe(parcel_df, bucket_id)
-        all_the_rest_noncovered = reduce_parcel_dataframe(all_the_rest_noncovered, bucket_id)
-    return parcel_df, all_the_rest_noncovered
-
-def find_and_finish(remaining_df, buckets, progress_widgets, added_rows, dm):
-    remaining_df = set_phase(remaining_df, "single parcel for empty bucket check")
-    return find_one_and_finish(remaining_df, buckets, progress_widgets, added_rows, dm)
-
-def iterate_over_interventions_fast2(parcel_df, buckets, progress_widgets, dm):
-    """
-    Main loop of the script.
-    Iterates over the rows in the interventions dataframe and adds parcels to the buckets.
-    """
-    checked_holdings = set()
-    added_rows = set()
-    added_holdings = set()
-    full_buckets = []
-    all_checked = False
-    dm.holdings_reduced = False
-
-    if dm.covered_priority == 1:
-        parcel_df, non_covered = process_covered_priority(parcel_df)
-
-    while not buckets_full(buckets) and not all_checked:
-        buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, all_checked = run_intervention_loop(parcel_df, "first loop", checked_holdings, added_rows, added_holdings, full_buckets, buckets, progress_widgets, dm)
-        parcel_df = handle_new_full_bucket(parcel_df, new_full_bucket, full_buckets)
-        if holding_threshold_exceeded:
-            parcel_df, all_the_rest_df = handle_holding_threshold(parcel_df, added_holdings)
-
-    if dm.covered_priority == 1 and some_buckets_empty(buckets):
-        all_checked = False
-        parcel_df, all_the_rest_noncovered = process_remaining_parcels(parcel_df, non_covered, full_buckets, added_holdings)
-        checked_holdings = set()
-
-        while not buckets_full(buckets) and not all_checked:
-            buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, all_checked = run_intervention_loop(parcel_df, "noncovered belonging to added holdings", checked_holdings, added_rows, added_holdings, full_buckets, buckets, progress_widgets, dm)
-            parcel_df = handle_new_full_bucket(parcel_df, new_full_bucket, full_buckets)
-
-        if some_buckets_empty(buckets):
-            all_checked = False
-            while not buckets_full(buckets) and not all_checked:
-                buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, all_checked = run_intervention_loop(parcel_df, "noncovered not in added holdings", checked_holdings, added_rows, added_holdings, full_buckets, buckets, progress_widgets, dm)
-                parcel_df = handle_new_full_bucket(parcel_df, new_full_bucket, full_buckets)
-
-    if dm.holdings_reduced and some_buckets_empty(buckets):
-        buckets = find_and_finish(all_the_rest_df, buckets, progress_widgets, added_rows, dm)
-        if dm.covered_priority == 1 and some_buckets_empty(buckets):
-            buckets = find_and_finish(all_the_rest_noncovered, buckets, progress_widgets, added_rows, dm)
-
-    gui.update_output_area(buckets, progress_widgets)
-    dm.final_bucket_state = buckets
-    dm.added_holdings = added_holdings
 
     return buckets
