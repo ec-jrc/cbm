@@ -88,9 +88,11 @@ def verify_and_report_parcel_df(parcel_df):
         if column not in parcel_df.columns:
             issues_found.append(f"Column '{column}' not found in the dataframe.")
 
-        if parcel_df[column].isnull().any():
-            issues_found.append(f"Column '{column}' contains empty values.")
-            empty_values = True     
+        try:
+            if parcel_df[column].isnull().any():
+                issues_found.append(f"Column '{column}' contains empty values.")
+        except:
+            issues_found.append(f"Column '{column}' contains empty values.")    
 
         actual_type = parcel_df[column].dtype
 

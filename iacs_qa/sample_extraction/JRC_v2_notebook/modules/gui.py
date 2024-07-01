@@ -119,6 +119,76 @@ def get_ua_groups_from_parcel_file(parcels_df):
     print("\nDefault target values set based on the number of rows in each UA group (5%, max 300).\n")
 
     return ua_group_dict
+
+
+def get_ua_groups_from_parcel_file_ulm(parcels_df):
+    """
+    Extract unique ua group identifiers from a parcel dataframe and update a global dictionary with default thresholds.
+
+    Args:
+    parcels_df (pandas.DataFrame): Dataframe containing parcel data with a column "ua_grp_id".
+    """
+    ua_groups = parcels_df["ua_grp_id"].unique()
+    ua_group_count = parcels_df["ua_grp_id"].value_counts().to_dict()
+    ua_group_dict = {}
+    counter = 1
+    print(f"File loaded successfully. Number of rows: {len(parcels_df)}\n")
+    print(f"Detected {len(ua_groups)} unique UA groups:\n")
+    for group in ua_groups:
+        count_for_group = ua_group_count[group]
+        # print(f"{group}: {count_for_group} rows detected.")
+        if 0 <= count_for_group <= 50:
+            default_target = count_for_group
+        elif 51 <= count_for_group <= 100:
+            default_target = 50
+        elif 101 <= count_for_group <= 200:
+            default_target = 50
+        elif 201 <= count_for_group <= 300:
+            default_target = 55
+        elif 301 <= count_for_group <= 400:
+            default_target = 110
+        elif 401 <= count_for_group <= 500:
+            default_target = 115
+        elif 501 <= count_for_group <= 600:
+            default_target = 170
+        elif 601 <= count_for_group <= 700:
+            default_target = 170
+        elif 701 <= count_for_group <= 800:
+            default_target = 175
+        elif 801 <= count_for_group <= 900:
+            default_target = 230
+        elif 901 <= count_for_group <= 1200:
+            default_target = 230
+        else: # more than 1200
+            default_target = 300
+        ua_group_dict[group] = {"target" : default_target, "count" : ua_group_count[group], "desc" : create_ua_group_description(group, counter)}
+        counter += 1
+
+    # draw a simple bar chart to visualize the distribution of ua groups
+
+    fig = plt.figure(figsize=(10, 4))  # Reduced height from 5 to 3
+    ax = fig.add_subplot(111)
+
+    bars = ax.bar(ua_group_count.keys(), ua_group_count.values(), color="#1daee3")
+
+    plt.xlabel("UA Group ID")
+    plt.ylabel("Number of rows")
+    plt.title("Distribution of UA groups")
+    plt.xticks(rotation=45, ha="right")
+
+    # Add value labels on top of bars
+    for bar in bars:
+        height = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width()/2., height,
+                str(height),
+                ha="center", va="bottom")
+
+    plt.tight_layout()  # Adjust layout to prevent cut-off labels
+    plt.show()
+
+    print("\nDefault targets set based on the values recommended by the Union level methodology.\n")
+
+    return ua_group_dict
         #PARAMETERS["ua_groups"][group] = {"target" : 300, "count" : ua_group_count[group]}
 
 def populate_target_values(target_df, widgets_list, datamanager):
@@ -152,6 +222,25 @@ def recalculate_targets_based_on_threshold(entry_widget, widgets_list, datamanag
         if widget.value > threshold:
             widget.value = threshold
     datamanager.target_values_state = "(Target values modified using the target cutoff setting.)"
+    datamanager.target_source_label.value = datamanager.target_values_state
+
+    get_target_values_from_widgets(widgets_list, datamanager)
+
+
+def recalculate_targets_based_on_percentage(entry_widget, widgets_list, datamanager):
+    """
+    Adjust the values of target fields based on a percentage set by the user.
+    (adds or removes a percentage of the current target value)
+
+    Args:
+    entry_widget (ipywidgets.Widget): Widget that contains the new threshold value.
+    widgets_list (list): List of target widgets to be adjusted.
+    """
+    percentage = entry_widget.value
+    for widget_box in widgets_list:
+        widget = widget_box.children[0]
+        widget.value += widget.value * percentage / 100
+    datamanager.target_values_state = "(Target values modified using the increase by fraction setting.)"
     datamanager.target_source_label.value = datamanager.target_values_state
 
     get_target_values_from_widgets(widgets_list, datamanager)
@@ -203,8 +292,9 @@ def load_target_file(b, entry_widget, output_area, widgets_list, datamanager):
         try:
             df = pd.read_csv(file_path)
             verify_target_df(df)
-            populate_target_values(df, widgets_list, datamanager)
             compare_bucket_lists(datamanager.ua_groups, df)
+            populate_target_values(df, widgets_list, datamanager)
+            
             datamanager.target_values_state = "(Target values loaded from the targets file.)"
             datamanager.target_source_label.value = datamanager.target_values_state
             get_target_values_from_widgets(widgets_list, datamanager)
@@ -244,7 +334,6 @@ def display_parcel_input_config(datamanager):
     vbox = widgets.VBox([fc, hbox, output_area])
 
     display(vbox)
-
 
 def display_bucket_targets_config(datamanager):
     """
@@ -289,6 +378,54 @@ def display_bucket_targets_config(datamanager):
 
         hbox1 = widgets.HBox([target_file_path_entry, target_file_load_button,target_info_button], layout=widgets.Layout(padding="10px"))
         hbox2 = widgets.HBox([target_cutoff_entry, target_cutoff_recalculate_button, target_cutoff_info_button], layout=widgets.Layout(padding="10px"))
+        vbox = widgets.VBox([hbox0, grid, fc, hbox1, hbox2, output_area])
+
+        display(vbox)
+
+def display_bucket_targets_config_ulm(datamanager):
+    """
+    Set up and display a user interface for configuring and populating target values for different buckets using widgets.
+    """
+    widgets_list = create_target_widgets(datamanager)
+
+    if widgets_list == []:
+        print("Please load the parcel file first and run this cell again.")
+    else:
+        target_source_label = widgets.Label(value=datamanager.target_values_state)
+        datamanager.target_source_label = target_source_label
+
+        target_info_button = create_info_button("You can either provide the target values manually using the fields below, or load the values from a CSV file.")
+        target_info_button.add_class("info-button-style")
+        target_file_path_entry = create_text_entry("Bucket targets file path:", "example: input/targets.csv")
+        target_file_load_button = create_button("Load", "info", "Click to pre-populate target values")
+
+        if datamanager.targets_path != "":
+            target_file_path_entry.value = datamanager.targets_path
+        
+        output_area = widgets.Output()
+        target_file_load_button.on_click(lambda b: load_target_file(b, target_file_path_entry, output_area, widgets_list, datamanager))
+
+        target_cutoff_info_button = create_info_button("This allows you to automatically limit all targets to a certain value (will only affect values above the defined cutoff).")
+        target_cutoff_info_button.add_class("info-button-style")
+        target_cutoff_entry = create_int_entry("Increase all targets by", "example: 10", -100, int(1e10), width="200px")
+        target_perc_label = widgets.Label(value="%")
+        target_cutoff_recalculate_button = create_button("Recalculate", "info", "Click to recalculate target values")
+        target_cutoff_recalculate_button.on_click(lambda b: recalculate_targets_based_on_percentage(target_cutoff_entry, widgets_list, datamanager))
+
+        hbox0 = widgets.HBox([target_source_label])
+        grid = widgets.GridBox(widgets_list, layout=widgets.Layout(grid_template_columns="repeat(3, 350px)", padding="10px"))
+
+        fc = FileChooser()
+        fc.filter_pattern = ["*.csv", "*.CSV"]
+        fc.title = "Select target file using the file selector ('Select' button) or provide a path below.\nYou can then load it using the 'Load' button."
+
+        def target_entry_completion_callback(fc):
+            target_file_path_entry.value = fc.selected
+        
+        fc.register_callback(target_entry_completion_callback)
+
+        hbox1 = widgets.HBox([target_file_path_entry, target_file_load_button,target_info_button], layout=widgets.Layout(padding="10px"))
+        hbox2 = widgets.HBox([target_cutoff_entry, target_perc_label, target_cutoff_recalculate_button, target_cutoff_info_button], layout=widgets.Layout(padding="10px"))
         vbox = widgets.VBox([hbox0, grid, fc, hbox1, hbox2, output_area])
 
         display(vbox)
@@ -730,7 +867,7 @@ def display_bucket_stats(datamanager):
         bucket_stats_widget_list.append(vbox)
 
     buckets_grid = widgets.GridBox(bucket_stats_widget_list, 
-                                   layout=widgets.Layout(grid_template_columns="repeat(1, 320px)", 
+                                   layout=widgets.Layout(grid_template_columns="repeat(3, 320px)", 
                                                          grid_gap='15px', 
                                                          padding="10px"))
     

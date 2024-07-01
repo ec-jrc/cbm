@@ -1,7 +1,9 @@
-# IACS QA Sample Extraction
 <div>
 <img src="images/jrc_ec_logo.jpg" width="400"/>
 </div>
+
+# **QUASSA**
+### IACS **QU**ality **AS**essment **SA**mple Extraction Tool
 
 The code included in this notebook, developed by the JRC, implements the procedure for Member States to define their samples for the IACS quality assessment. This involves extracting parcels from the ranked list provided by the Commission, following the selection rules in the Union Level Methodology 2024 (Chapters 3 and 4). Member States have discretion over the sample sizes, within the constraints of the Methodology.
 
@@ -14,20 +16,12 @@ Authors: Mateusz Dobrychłop (mateusz.dobrychlop@ext.ec.europa.eu), Fernando Fah
 **Version 2 (Jupyter Notebook)**
 
 ---
-**Latest update: June 12th**
-* **Prioritize parcels covered by VHR images** - new feature, currently in its test phase. Aside from being able to only select the VHR-covered parcels in the extraction, the user can now prioritize covered parcels without completely disregarding the non-covered ones.
-* Minor bug and typo fixes.
----
-
-The solution is still in its beta testing phase. Implementation of some of the expected features and general optimization is planned for the upcoming weeks.
-
-The following developments are planned for the near future:
-
-* Some more flexibility regarding the output will soon be introduced. We are also working on making the output more informative.
-
-* Easier way to select input files
-
-* In the upcoming updates, a lot of emphasis will still be placed on speed improvements.
+**Latest update: June 25th** - v2.6
+* Selection of input files using a graphical file selector - as an alternative to providing a path, the user can now select the file in the file system using a new GUI feature.
+* Some basic charts are now displayed describing the input data.
+* New visualizations and stats were added to the final statistics frame after the extraction's completion.
+* In case the parcel CSV file does not pass verification, a timestamped text file is saved listing all rows where issues occur.
+* Covered parcel prioritization - bug fixes.
 
 ## Jupyter Notebook
 
@@ -47,6 +41,12 @@ To open and use this notebook, you will need an environment that supports Jupyte
 * Further speed increase
 
 ## Release log
+**June 25th** - v2.6
+* Selection of input files using a graphical file selector - as an alternative to providing a path, the user can now select the file in the file system using a new GUI feature.
+* Some basic charts are now displayed describing the input data.
+* New visualizations and stats were added to the final statistics frame after the extraction's completion.
+* In case the parcel CSV file does not pass verification, a timestamped text file is saved listing all rows where issues occur.
+* Covered parcel prioritization - bug fixes.
 ---
 **June 12th** - v2.5
 * **Prioritize parcels covered by VHR images** - new feature, currently in its test phase. Aside from being able to only select the VHR-covered parcels in the extraction, the user can now prioritize covered parcels without completely disregarding the non-covered ones.
