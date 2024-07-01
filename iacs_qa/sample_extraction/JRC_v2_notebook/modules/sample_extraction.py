@@ -210,6 +210,30 @@ def find_one_and_finish(parcel_df, buckets, progress_widgets, added_rows, dm):
                     gui.update_output_area(buckets, progress_widgets)
                     break
     return buckets
+
+def find_one_holding_and_finish(parcel_df, buckets, progress_widgets, added_rows, dm):
+    for bucket_id, bucket in buckets.items():
+        if len(bucket["parcels"]) == 0:
+            for _, row in parcel_df.iterrows():
+                if row["ua_grp_id"] == bucket_id and row["row_id"] not in added_rows:
+                    holding_group = parcel_df[parcel_df["gsa_hol_id"] == row["gsa_hol_id"]]
+                    # reduce holding_group to only the rows that are related to the empty bucket
+                    holding_group = holding_group[holding_group["ua_grp_id"] == row["ua_grp_id"]]
+                    for _, row in holding_group.iterrows():
+                        if row["row_id"] not in added_rows and len(bucket['parcels']) < bucket['target']:
+                            bucket['parcels'].append({"gsa_par_id": row["gsa_par_id"],
+                                                    "gsa_hol_id": row["gsa_hol_id"],
+                                                    "ranking": row["ranking"],
+                                                    "covered": row["covered"],
+                                                    "order_added" : buckets_global_count(buckets)+1,
+                                                    "phase" : row["phase"],
+                                                    })
+                            added_rows.add(row["row_id"])
+                            gui.update_output_area(buckets, progress_widgets)
+                    break
+    return buckets
+
+
     
 def some_buckets_empty(buckets):
     return any(len(bucket['parcels']) == 0 and bucket['target'] > 0 for bucket in buckets.values())
@@ -316,12 +340,12 @@ def iterate_over_interventions_fast(parcel_df, buckets, progress_widgets, dm):
     
     if dm.holdings_reduced and some_buckets_empty(buckets):
         #print("Searching through the 3% of holdings finished. Some buckets are still empty. Trying to add one parcel to each of them, using the remaining data.")
-        all_the_rest_df = set_phase(all_the_rest_df, "covered or non-covered outside 3%, single parcel for empty bucket check")
-        buckets = find_one_and_finish(all_the_rest_df, buckets, progress_widgets, added_rows, dm)
+        all_the_rest_df = set_phase(all_the_rest_df, "covered or non-covered outside 3%, single holding for empty bucket check")
+        buckets = find_one_holding_and_finish(all_the_rest_df, buckets, progress_widgets, added_rows, dm)
         if dm.covered_priority == 1 and some_buckets_empty(buckets):
             #print("Some buckets are still empty. Trying to add one parcel to each of them, using the remaining non-covered parcels.")
-            all_the_rest_noncovered = set_phase(all_the_rest_noncovered, "non-covered outside 3%, single parcel for empty bucket check")
-            buckets = find_one_and_finish(all_the_rest_noncovered, buckets, progress_widgets, added_rows, dm)
+            all_the_rest_noncovered = set_phase(all_the_rest_noncovered, "non-covered outside 3%, single holding for empty bucket check")
+            buckets = find_one_holding_and_finish(all_the_rest_noncovered, buckets, progress_widgets, added_rows, dm)
 
     gui.update_output_area(buckets, progress_widgets)
     dm.final_bucket_state = buckets
