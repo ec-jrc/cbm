@@ -8,6 +8,7 @@ class DataManager:
         self.ua_groups = {}
         # ua_group_dict[group] = {"target" : 300, "count" : ua_group_count[group], "desc" : create_ua_group_description(group, counter)}
         self.parcel_file_loaded = False
+        self.targets_displayed_and_set = False
         self.target_values_state = "(Target values loaded from the parcel file.)"
         self.parcels_df = None
         self.target_source_label = None # Label that informs about the latest source of target values displayed
@@ -20,4 +21,8 @@ class DataManager:
         self.total_holding_count = 0
         self.holding_3_percent_count = 0
         
+        self.extraction_id = ""
+        
         self.final_bucket_state = None
+
+        self.holding_level_interventions = []
