@@ -2,6 +2,7 @@ import os
 import datetime
 import pandas as pd
 from modules import gui
+from modules.output_tools import generate_samples_extract_output, generate_holding_level_intervention_file
 
 import warnings
 
@@ -41,40 +42,6 @@ def prepare_buckets(ua_groups_dict):
     print("Preparing buckets...")
     return {group_id: {'target': info["target"], 'parcels': []} for group_id, info in ua_groups_dict.items()}
 
-
-def generate_output(buckets, debug=False):
-    """
-    Generates xlsx and csv files with the following columns:
-    - bucket_id
-    - gsa_par_id
-    - gsa_hol_id
-    - ranking
-    - covered
-    - order_added
-    - phase (if debug=True)
-    """
-    output_dir = "output"
-    os.makedirs(output_dir, exist_ok=True)
-
-    parcel_columns = ["gsa_par_id", "gsa_hol_id", "ranking", "covered", "order_added"]#, "phase"]
-    if debug:
-        parcel_columns.append("phase")
-
-    output = []
-    for bucket_id, bucket in buckets.items():
-        for parcel in bucket['parcels']:
-            output.append([bucket_id] + [parcel[column] for column in parcel_columns])
-    
-    output_df = pd.DataFrame(output, columns=["bucket_id"] + parcel_columns)
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
-
-    output_path_excel = os.path.join(output_dir, f"sample_extraction_output_{timestamp}.xlsx")
-    output_path_csv = os.path.join(output_dir, f"sample_extraction_output_{timestamp}.csv")
-
-    output_df.to_excel(output_path_excel, index=False)
-    output_df.to_csv(output_path_csv, index=False)
-
-    return output_path_excel, output_path_csv
 
 
 def buckets_full(buckets):
@@ -212,6 +179,7 @@ def find_one_and_finish(parcel_df, buckets, progress_widgets, added_rows, dm):
     return buckets
 
 def find_one_holding_and_finish(parcel_df, buckets, progress_widgets, added_rows, dm):
+    added_extra_holdings = set()
     for bucket_id, bucket in buckets.items():
         if len(bucket["parcels"]) == 0:
             for _, row in parcel_df.iterrows():
@@ -230,8 +198,9 @@ def find_one_holding_and_finish(parcel_df, buckets, progress_widgets, added_rows
                                                     })
                             added_rows.add(row["row_id"])
                             gui.update_output_area(buckets, progress_widgets)
+                            added_extra_holdings.add(row["gsa_hol_id"])
                     break
-    return buckets
+    return buckets, added_extra_holdings
 
 
     
@@ -317,7 +286,7 @@ def iterate_over_interventions_fast(parcel_df, buckets, progress_widgets, dm):
                 parcel_df = reduce_parcel_dataframe(parcel_df, new_full_bucket)
         # at this point all covered were checked, and non-covered that are in added holdings were checked
         # now we have to check the rest of non-covered
-        if some_buckets_empty(buckets):
+        if some_buckets_empty(buckets) and not dm.param_3_percent:
             #print("setting phase to noncovered not in added holdings")
             parcel_df = all_the_rest_noncovered
             parcel_df = set_phase(parcel_df, "noncovered not in added holdings")
@@ -332,20 +301,20 @@ def iterate_over_interventions_fast(parcel_df, buckets, progress_widgets, dm):
                     full_buckets.append(new_full_bucket)
                     parcel_df = reduce_parcel_dataframe(parcel_df, new_full_bucket)
 
-
     # the if statement above deals with both the 3% and no 3% scenario in "prioritize covered" mode.
     # even if the 3% rule is not selected, the first loop that goes through the non-covered parcels
     # has to only consider the holdings already added to the sample.
 
-    
     if dm.holdings_reduced and some_buckets_empty(buckets):
         #print("Searching through the 3% of holdings finished. Some buckets are still empty. Trying to add one parcel to each of them, using the remaining data.")
         all_the_rest_df = set_phase(all_the_rest_df, "covered or non-covered outside 3%, single holding for empty bucket check")
-        buckets = find_one_holding_and_finish(all_the_rest_df, buckets, progress_widgets, added_rows, dm)
+        buckets, added_extra_holdings = find_one_holding_and_finish(all_the_rest_df, buckets, progress_widgets, added_rows, dm)
+        added_holdings = added_holdings.union(added_extra_holdings)
         if dm.covered_priority == 1 and some_buckets_empty(buckets):
             #print("Some buckets are still empty. Trying to add one parcel to each of them, using the remaining non-covered parcels.")
             all_the_rest_noncovered = set_phase(all_the_rest_noncovered, "non-covered outside 3%, single holding for empty bucket check")
-            buckets = find_one_holding_and_finish(all_the_rest_noncovered, buckets, progress_widgets, added_rows, dm)
+            buckets, added_extra_holdings = find_one_holding_and_finish(all_the_rest_noncovered, buckets, progress_widgets, added_rows, dm)
+            added_holdings = added_holdings.union(added_extra_holdings)
 
     gui.update_output_area(buckets, progress_widgets)
     dm.final_bucket_state = buckets
