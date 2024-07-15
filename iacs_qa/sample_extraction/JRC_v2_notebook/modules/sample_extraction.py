@@ -11,7 +11,6 @@ warnings.filterwarnings("ignore", category=pd.errors.SettingWithCopyWarning)
 LOG_PATH = "log.txt"
 log = open(LOG_PATH, "w")
 
-
 def prepare_input_dataframe(datamanager):
     print(f"Preprocessing the parcel list... ({len(datamanager.parcels_df)} rows.)")
     parcel_df = datamanager.parcels_df
@@ -23,8 +22,31 @@ def prepare_input_dataframe(datamanager):
     parcel_df = parcel_df.sort_values(by="ranking")
     parcel_df["row_id"] = parcel_df.apply(lambda row: f"{row['gsa_par_id']}_{row['gsa_hol_id']}_{row['ua_grp_id']}", axis=1)
     parcel_df["order_added"] = 0
+    
+    parcel_df["first_par_of_hol"] = 0
+
+    if datamanager.noncontributing_filtering == 1:
+        parcel_df = add_first_parcel_of_a_holding_flag(parcel_df)
+
+    parcel_df.to_excel("fpoh_check.xlsx")
 
     return parcel_df
+
+def add_first_parcel_of_a_holding_flag(df):
+    # add a column called "first_par_of_hol" to the dataframe
+    # for every row that corresponds to the first occurrence of a gsa_hol_id value, set first_par_of_hol to 1
+    # set the rest to 0
+
+    # Add a column called "first_par_of_hol" to the dataframe
+    # Initialize the new column with zeros
+       
+    # Find the first occurrence of each gsa_hol_id
+    first_occurrences = df.drop_duplicates(subset=["gsa_hol_id"], keep='first')
+    
+    # Set the first_par_of_hol column to 1 for these first occurrences
+    df.loc[first_occurrences.index, "first_par_of_hol"] = 1
+    
+    return df
 
 
 def buckets_global_count(buckets):
@@ -58,11 +80,19 @@ def get_full_bucket_ids(buckets):
     return [bucket_id for bucket_id, bucket in buckets.items() if len(bucket['parcels']) >= bucket['target']]
 
 
-def reduce_parcel_dataframe(parcel_df, full_bucket_id):
+def reduce_parcel_dataframe_old(parcel_df, full_bucket_id):
     """
     removes all rows from the dataframe where ua_grp_id equals the full_bucket value
     """
     return parcel_df[parcel_df["ua_grp_id"] != full_bucket_id]
+
+
+def reduce_parcel_dataframe(parcel_df, full_bucket_id):
+    """
+    removes all rows from the dataframe where ua_grp_id equals the full_bucket value
+    but leaves the first parcel of each holding
+    """
+    return parcel_df[(parcel_df["ua_grp_id"] != full_bucket_id) | (parcel_df["first_par_of_hol"] == 1)]
 
 
 def all_buckets_used_3_times(bucket_counter):

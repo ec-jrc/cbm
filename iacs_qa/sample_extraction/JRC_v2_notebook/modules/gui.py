@@ -22,6 +22,9 @@ def limit_3perc_widget_on_value_change(change, datamanager):
 def image_coverage_widget_on_value_change(change, datamanager):
     datamanager.covered_priority = datamanager.covered_priority_dict[change["new"]]
 
+def noncontributing_widget_on_value_change(change, datamanager):
+    datamanager.noncontributing_filtering = datamanager.noncontributing_filtering_dict[change["new"]]
+
 def extraction_id_widget_on_value_change(change, datamanager):
     datamanager.extraction_id = change["new"]
 
@@ -402,18 +405,29 @@ def display_optional_parameters(datamanager):
         holding_percentage_active.observe(lambda change: limit_3perc_widget_on_value_change(change, datamanager), names='value')
 
         image_coverage_radiobuttons = widgets.RadioButtons(
-            options=["Include all parcels in the sample extraction", "Prioritize parcels covered by VHR images (beta)", "Include only parcels covered by VHR images"],
+            options=["Include all parcels in the sample extraction", 
+                     "Prioritize parcels covered by VHR images (beta)", "Include only parcels covered by VHR images"],
             value="Include all parcels in the sample extraction",
             description="VHR image coverage options:",
             style={"description_width": "initial"}
         )
         image_coverage_radiobuttons.observe(lambda change: image_coverage_widget_on_value_change(change, datamanager), names='value')
 
+        consider_noncontributing_radiobuttons = widgets.RadioButtons(
+            options=["Filter out when a bucket is filled", 
+                     "Retain when a bucket is filled"],
+            value="Filter out when a bucket is filled",
+            description="Non-contributing, highest-ranked parcel of a holding:",
+            style={"description_width": "initial"}
+        )
+        consider_noncontributing_radiobuttons.observe(lambda change: noncontributing_widget_on_value_change(change, datamanager), names='value')
+
         hbox_prefix = widgets.HBox([extraction_id_entry, extraction_id_infobutton], layout=widgets.Layout(padding="10px"))
         hbox1 = widgets.HBox([holding_percentage_active], layout=widgets.Layout(padding="0px"))
         hbox2 = widgets.HBox([image_coverage_radiobuttons], layout=widgets.Layout(padding="12px"))
-        # vbox = widgets.VBox([hbox_prefix, hbox1, hbox2], layout=widgets.Layout(padding="10px"))
-        vbox = widgets.VBox([hbox1, hbox2], layout=widgets.Layout(padding="10px"))
+        hbox3 = widgets.HBox([consider_noncontributing_radiobuttons], layout=widgets.Layout(padding="12px"))
+        vbox = widgets.VBox([hbox_prefix, hbox1, hbox2, hbox3], layout=widgets.Layout(padding="10px"))
+        #vbox = widgets.VBox([hbox1, hbox2], layout=widgets.Layout(padding="10px"))
         display(vbox)
 
 

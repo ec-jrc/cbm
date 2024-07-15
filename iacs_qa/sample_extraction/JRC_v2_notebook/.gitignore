@@ -8,3 +8,4 @@ log.txt
 test_notebook.ipynb
 compare_outputs.py
 anonymizer.py
+test_tools.py
