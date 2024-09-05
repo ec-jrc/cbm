@@ -1,0 +1,206 @@
+{
+    "lpis": {
+      "lpis_code": {
+        "type": [
+          "string"
+        ]
+      },
+      "lpis_rp_id": {
+        "type": [
+          "string"
+        ]
+      },
+      "tot_area": {
+        "type": [
+          "float64"
+        ]
+      },
+      "al_area": {
+        "type": [
+          "float64",
+          "int64"
+        ]
+      },
+      "pc_area": {
+        "type": [
+          "float64",
+          "int64"
+        ]
+      },
+      "pg_area": {
+        "type": [
+          "float64",
+          "int64",
+          "bool"
+        ]
+      },
+      "na_area": {
+        "type": [
+          "float64",
+          "int64",
+          "bool"
+        ]
+      },
+      "af_area": {
+        "type": [
+          "float64",
+          "int64"
+        ]
+      },
+      "n2000_area": {
+        "type": [
+          "float64",
+          "int64"
+        ]
+      },
+      "pw_area": {
+        "type": [
+          "float64",
+          "int64"
+        ]
+      },
+      "lf_area": {
+        "type": [
+          "float64",
+          "int64"
+        ]
+      },
+      "anc_area": {
+        "type": [
+          "float64",
+          "int64"
+        ]
+      },
+      "avail_area": {
+        "type": [
+          "bool"
+        ]
+      },
+      "lpis_geom": {
+        "type": [
+          "string",
+          "geometry",
+          "object"
+        ]
+      }
+    },
+    "gsa": {
+      "gsa_par_id": {
+        "type": [
+          "string"
+        ]
+      },
+      "gsa_hol_id": {
+        "type": [
+          "string"
+        ]
+      },
+      "gsa_col_id": {
+        "type": [
+          "string"
+        ]
+      },
+      "main_crop": {
+        "type": [
+          "string"
+        ]
+      },
+      "catch_crop": {
+        "type": [
+          "string"
+        ]
+      },
+      "organic": {
+        "type": [
+          "bool"
+        ]
+      },
+      "gsa_geom": {
+        "type": [
+          "string",
+          "geometry",
+          "object"
+        ]
+      }
+    },
+    "gsa_lpis": {
+      "lpis_code": {
+        "type": [
+          "string"
+        ]
+      },
+      "lpis_rp_id": {
+        "type": [
+          "string"
+        ]
+      },
+      "gsa_par_id": {
+        "type": [
+          "string"
+        ]
+      }
+    },
+    "interventions": {
+      "ua": {
+        "type": [
+          "string"
+        ]
+      },
+      "ua_grp": {
+        "type": [
+          "string"
+        ]
+      },
+      "interv": {
+        "type": [
+          "string"
+        ]
+      },
+      "interv_lev": {
+        "type": [
+          "string"
+        ]
+      },
+      "interv_typ": {
+        "type": [
+          "string"
+        ]
+      }
+    },
+    "gsa_ua_claimed": {
+      "gsa_par_id": {
+        "type": [
+          "string"
+        ]
+      },
+      "ua": {
+        "type": [
+          "string"
+        ]
+      },
+      "claim_area": {
+        "type": [
+          "float64"
+        ]
+      }
+    },
+    "primary_keys": {
+      "lpis": [
+        "lpis_rp_id"
+      ],
+      "gsa": [
+        "gsa_par_id"
+      ],
+      "gsa_lpis": [
+        "lpis_rp_id",
+        "gsa_par_id"
+      ],
+      "interventions": [
+        "ua"
+      ],
+      "gsa_ua_claimed": [
+        "gsa_par_id",
+        "ua"
+      ]
+    }
+}
