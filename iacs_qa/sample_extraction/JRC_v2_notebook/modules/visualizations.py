@@ -1,63 +1,9 @@
 import ipywidgets as widgets
 import matplotlib.pyplot as plt
 from IPython.display import display, clear_output, HTML
+from modules.stats import all_parcels_in_buckets, count_unique_selected_parcels_per_holding, count_selected_covered_parcels, calculate_stats_for_reused_parcels, calculate_holding_with_most_interventions_selected
 import io
 
-
-def calculate_holding_with_most_interventions_selected(datamanager):
-    # calculate the holding with the most interventions selected
-    holding_interventions = {}
-    for bucket in datamanager.final_bucket_state.values():
-        for parcel in bucket["parcels"]:
-            holding = parcel["gsa_hol_id"]
-            if holding in holding_interventions:
-                holding_interventions[holding] += 1
-            else:
-                holding_interventions[holding] = 1
-    holding_with_most_interventions = max(holding_interventions, key=holding_interventions.get)
-    return holding_with_most_interventions, holding_interventions[holding_with_most_interventions]
-
-
-def all_parcels_in_buckets(buckets):
-    """
-    Count all parcels in buckets. Identify parcels by their par_id and hol_id.
-    """
-    all_parcels = []
-    for bucket in buckets.values():
-        for parcel in bucket["parcels"]:
-            unique_parcel_id = str(parcel["gsa_par_id"]) + "_" + str(parcel["gsa_hol_id"])
-            all_parcels.append(unique_parcel_id)
-    return set(all_parcels)
-
-def count_unique_selected_parcels_per_holding(all_selected_parcels):
-    parcels_per_holding = {}
-    for a in all_selected_parcels:
-        par_id = a.split("_")[0]
-        hol_id = a.split("_")[1]
-        if hol_id in parcels_per_holding:
-            parcels_per_holding[hol_id].add(par_id)
-        else:
-            parcels_per_holding[hol_id] = {par_id}
-
-    # count the number of unique parcels per holding
-    count_per_holding = {hol_id: len(parcels) for hol_id, parcels in parcels_per_holding.items()}
-
-    # calculate the average number of parcels per holding
-    avg_parcels_per_holding = sum(count_per_holding.values()) / len(count_per_holding)
-    return count_per_holding, avg_parcels_per_holding
-
-def count_selected_covered_parcels(datamanager):
-    covered_parcels = []
-    noncovered_parcels = []
-    for bucket in datamanager.final_bucket_state.values():
-        for parcel in bucket["parcels"]:
-            if parcel["covered"] == 1:
-                unique_parcel_id = str(parcel["gsa_par_id"]) + "_" + str(parcel["gsa_hol_id"])
-                covered_parcels.append(unique_parcel_id)
-            else:
-                noncovered_parcels.append(unique_parcel_id)
-
-    return len(set(covered_parcels)), len(set(noncovered_parcels))
 
 def display_statistics_summary(datamanager):
     total_rows = len(datamanager.parcels_df)
@@ -114,25 +60,6 @@ def display_statistics_summary(datamanager):
 
     display(vbox)
 
-def calculate_stats_for_reused_parcels(datamanager):
-    counts_for_parcels = {}
-
-    for bucket_id, bucket in datamanager.final_bucket_state.items():
-        for parcel in bucket["parcels"]:
-            parcel_id = str(parcel["gsa_par_id"]) + "_" + str(parcel["gsa_hol_id"])
-            if parcel_id in counts_for_parcels:
-                counts_for_parcels[parcel_id] += 1
-            else:
-                counts_for_parcels[parcel_id] = 1
-
-    histogram_buckets = {}
-    for parcel_id, count in counts_for_parcels.items():
-        if count in histogram_buckets:
-            histogram_buckets[count] += 1
-        else:
-            histogram_buckets[count] = 1
-    
-    return histogram_buckets
 
 
 def reused_histogram_widget(datamanager):

@@ -16,12 +16,13 @@ Authors: Mateusz Dobrychłop (mateusz.dobrychlop@ext.ec.europa.eu), Fernando Fah
 **Version 2 (Jupyter Notebook)**
 
 ---
-**Latest update: June 25th** - v2.6
-* Selection of input files using a graphical file selector - as an alternative to providing a path, the user can now select the file in the file system using a new GUI feature.
-* Some basic charts are now displayed describing the input data.
-* New visualizations and stats were added to the final statistics frame after the extraction's completion.
-* In case the parcel CSV file does not pass verification, a timestamped text file is saved listing all rows where issues occur.
-* Covered parcel prioritization - bug fixes.
+**Latest update: September 6th** - v2.7
+* **Holding level intervention selection** - the target selection UI now allows for selecting Holding Level interventions. Selecting one or more Holding Level interventions results in creating an additional output file, with the summary of all holdings related to the Holding Level interventions.
+* **Retain / filter out non-contributing parcels** - a new optional parameter that allows the user to decide if a highest-ranked parcel of a holding should be filtered out or retained, when all parcels of a recently completed bucket are filtered out from the parcel list.
+* Summary output files - after every extraction a new file is included in the output. It's a simple text summary file listing the parameters used and some statistics calculated on the extracted dataset.
+* Extraction ID - the user can now define a unique ID for each extraction. If a custom ID is not defined, the tool will automatically assign a randomized ID to simplify the distinction between output files generated for different extraction iterations.
+* Increase all targets by x% - taking the place of the now deprecated target capping option - allows the user to automatically increase all bucket targets by a defined percentage
+* Default target value definition - the default placeholder values for bucket targets are now calculated based on the algorithm described in the Union Level Methodology.
 
 ## Jupyter Notebook
 
@@ -35,12 +36,18 @@ To open and use this notebook, you will need an environment that supports Jupyte
 ## Planned features
 
 * More statistics and visualizations after the extraction is completed
-* Configuration parameters included in the output file
 * More statistics describing the input parcel file right after it's loaded
-* GUI-based way of selecting input files (in addition to currently available path fields)
 * Further speed increase
 
 ## Release log
+**September 6th** - v2.7
+* **Holding level intervention selection** - the target selection UI now allows for selecting Holding Level interventions. Selecting one or more Holding Level interventions results in creating an additional output file, with the summary of all holdings related to the Holding Level interventions.
+* **Retain / filter out non-contributing parcels** - a new optional parameter that allows the user to decide if a highest-ranked parcel of a holding should be filtered out or retained, when all parcels of a recently completed bucket are filtered out from the parcel list.
+* Summary output files - after every extraction a new file is included in the output. It's a simple text summary file listing the parameters used and some statistics calculated on the extracted dataset.
+* Extraction ID - the user can now define a unique ID for each extraction. If a custom ID is not defined, the tool will automatically assign a randomized ID to simplify the distinction between output files generated for different extraction iterations.
+* Increase all targets by x% - taking the place of the now deprecated target capping option - allows the user to automatically increase all bucket targets by a defined percentage
+* Default target value definition - the default placeholder values for bucket targets are now calculated based on the algorithm described in the Union Level Methodology.
+---
 **June 25th** - v2.6
 * Selection of input files using a graphical file selector - as an alternative to providing a path, the user can now select the file in the file system using a new GUI feature.
 * Some basic charts are now displayed describing the input data.

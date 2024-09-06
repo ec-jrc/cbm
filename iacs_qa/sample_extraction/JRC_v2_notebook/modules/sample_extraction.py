@@ -28,7 +28,7 @@ def prepare_input_dataframe(datamanager):
     if datamanager.noncontributing_filtering == 1:
         parcel_df = add_first_parcel_of_a_holding_flag(parcel_df)
 
-    parcel_df.to_excel("fpoh_check.xlsx")
+    print("Preprocessing done. Starting extraction...")
 
     return parcel_df
 
@@ -254,6 +254,8 @@ def iterate_over_interventions_fast(parcel_df, buckets, progress_widgets, dm):
 
     This currently desperately needs refactoring. A lot of code blocks are repeated.
     """
+    
+
     checked_holdings = set()
     added_rows = set()
     added_holdings = set()
@@ -299,12 +301,9 @@ def iterate_over_interventions_fast(parcel_df, buckets, progress_widgets, dm):
         parcel_df, all_the_rest_noncovered = reduce_holdings(non_covered, added_holdings)
         #print("setting phase to noncovered belonging to added holdings")
         parcel_df = set_phase(parcel_df, "noncovered belonging to added holdings")
-        parcel_df.to_excel("noncovered_belonging_to_added_holdings.xlsx")
-        all_the_rest_noncovered.to_excel("all_the_rest_noncovered1.xlsx")
         for bucket_id in full_buckets:
             parcel_df = reduce_parcel_dataframe(parcel_df, bucket_id)
             all_the_rest_noncovered = reduce_parcel_dataframe(all_the_rest_noncovered, bucket_id)
-            all_the_rest_noncovered.to_excel("all_the_rest_noncovered2.xlsx")
 
         checked_holdings = set()
 
@@ -320,9 +319,7 @@ def iterate_over_interventions_fast(parcel_df, buckets, progress_widgets, dm):
             #print("setting phase to noncovered not in added holdings")
             parcel_df = all_the_rest_noncovered
             parcel_df = set_phase(parcel_df, "noncovered not in added holdings")
-            parcel_df.to_excel("noncovered_not_in_added_holdings.xlsx")
-            
-            parcel_df.to_excel("all_the_rest_noncovered3.xlsx")
+
             all_checked = False
             while not buckets_full(buckets) and not all_checked:
                 buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, all_checked = intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, added_rows, added_holdings, full_buckets, dm)
