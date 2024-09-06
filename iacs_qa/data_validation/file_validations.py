@@ -7,12 +7,11 @@ import argparse
 import pandas as pd
 from typing import List, Optional
 import dask.dataframe as dd
-from utils import FileReader, progressbar
+from utils import FileReader, progressbar, colors
 
 
-# Create a temporary folder if not exists
 TMP_DIR = "./tmp/"
-os.makedirs(TMP_DIR, exist_ok=True)
+os.makedirs(TMP_DIR, exist_ok=True)  # Create a temporary folder if not exists
 
 
 # Logging configuration
@@ -88,9 +87,8 @@ class DataProcessor:
         )
 
         total_columns = len(columns_types)
-        progress = 0  # Initialize progress
+        progress = 0
 
-        # Start displaying the custom progress bar
         for column, metadata in columns_types.items():
             expected_dtypes = metadata["type"]
 
@@ -111,17 +109,17 @@ class DataProcessor:
                     f"{column} (Expected: {expected_dtypes}, Got: {actual_dtypes[column]})"
                 )
 
-            progress += 1  # Update the progress
+            progress += 1
             progressbar(
                 total=total_columns, progress=progress, label="Validating datatypes:"
-            )  # Call your custom progressbar
+            )
 
         if invalid_columns:
             self.errors += 1
-            message = f"Error: The following columns are missing or have invalid data types: {', '.join(invalid_columns)}"
+            message = f"{colors('FAIL')}Error: The following columns are missing or have invalid data types: {', '.join(invalid_columns)}{colors('ENDC')}"
             print(f"\n{message}")
             self.logger.info(message)
-            raise Exception(message)
+            raise Exception(f"{colors('FAIL')}!Validation FAILED! {self.errors} error(s) found.{colors('ENDC')}")
         else:
             message = f"Datatypes are correct. Finished in {round((time.time() - self.start_time), 1)} sec."
             print(f"{message}")
@@ -132,33 +130,32 @@ class DataProcessor:
         ddf.columns = list(map(str.lower, ddf.columns))
         required_columns = all(c in ddf.columns for c in columns)
 
-        progress = 0  # Initialize progress
+        progress = 0
         total_progress_steps = 1  # Since the progress bar was set for a length of 1, we will just track it manually
 
-        # Start displaying the custom progress bar
         if required_columns:
             grouped = ddf.groupby(columns).size().reset_index().compute()
             grouped.columns = list(columns) + ["duplicate_count"]
             duplicates = grouped[grouped["duplicate_count"] > 1]
 
-            progress += 1  # Update progress
+            progress += 1
             progressbar(
                 total=total_progress_steps,
                 progress=progress,
                 label="Validating duplicates:",
-            )  # Call your custom progress bar
+            )
 
             if not duplicates.empty:
                 self.errors += 1
                 num_duplicates = len(duplicates)
-                message = f"Error: {num_duplicates} Duplicates found based on: {', '.join(map(str, columns))}"
+                message = f"{colors('FAIL')}Error: {num_duplicates} Duplicates found based on: {', '.join(map(str, columns))}{colors('ENDC')}"
 
-                log_file_path = f"{os.path.splitext(self.INPUT_FILE_FULLPATH)[0]}_duplicates_logs.txt"
+                log_file_path = f"{os.path.splitext(self.INPUT_FILE_FULLPATH)[0]}_duplicates_log.txt"
                 with open(log_file_path, "w") as log_file:
                     log_file.write(message)
                     duplicates.to_csv(log_file, sep=";", index=False)
 
-                print(f"\n{message}")
+                print(f"{message}")
             else:
                 message = f"No duplicates found. Finished in {round((time.time() - self.start_time), 1)} sec."
                 print(f"{message}")
@@ -166,7 +163,7 @@ class DataProcessor:
         else:
             missing_columns = [c for c in columns if c not in ddf.columns]
             message = f"Error: Missing required columns: {', '.join(missing_columns)}"
-            print(f"\n{message}")
+            print(f"{message}")
             self.logger.error(message)
 
     def check_for_nulls(self, ddf: dd.DataFrame, columns: List[str]) -> None:
@@ -258,7 +255,7 @@ class DataProcessor:
             message = "Error: " + "; ".join(validation_errors)
 
             log_file_path = (
-                f"{os.path.splitext(self.INPUT_FILE_FULLPATH)[0]}_area_format_logs.txt"
+                f"{os.path.splitext(self.INPUT_FILE_FULLPATH)[0]}_area_format_log.txt"
             )
             with open(log_file_path, "w") as log_file:
                 log_file.write(message)
@@ -289,7 +286,6 @@ class DataProcessor:
         progress += 1
         progressbar(total=1, progress=progress, label="Validating area amount:")
 
-        # Check if there are any invalid areas
         if invalid_area_count > 0:
             self.errors += 1
             message = (
@@ -299,7 +295,7 @@ class DataProcessor:
             print(f"\n{message}")
 
             log_file_path = (
-                f"{os.path.splitext(self.INPUT_FILE_FULLPATH)[0]}_area_amount_logs.txt"
+                f"{os.path.splitext(self.INPUT_FILE_FULLPATH)[0]}_area_amount_log.txt"
             )
             with open(log_file_path, "w") as log_file:
                 log_file.write(message)
@@ -307,7 +303,6 @@ class DataProcessor:
 
             self.logger.info(message)
         else:
-            # Success case: No invalid areas
             message = f"No parcels with zero/negative area. Finished in {round((time.time() - self.start_time), 1)} sec."
             print(f"{message}")
             self.logger.info(message)
@@ -333,10 +328,9 @@ class DataProcessor:
             if not column2:
                 column2 = column1
 
-            progress = 0  # Initialize progress
+            progress = 0
             total_steps = 1  # Set total steps to 1 since it's a single operation
 
-            # Start the custom progress bar
             # Ensure both columns exist in their respective DataFrames
             if column1 in df1.columns and column2 in df2.columns:
 
@@ -372,23 +366,20 @@ class DataProcessor:
                 missing_entries = set_df1 - set_df2
                 num_missing_entries = len(missing_entries)
 
-                progress += 1  # Update progress after the operation
+                progress += 1
                 progressbar(
                     total=total_steps,
                     progress=progress,
                     label=f"Validating relation for {column1}:",
-                )  # Call the custom progress bar
+                )
 
                 # Handle missing entries
                 if num_missing_entries > 0:
                     self.errors += 1
                     message = f"Error: {num_missing_entries} unique entrie(s) of '{column1}' from '{self.TABLE_TYPE}' table do not exist in '{tname}' table."
-
-                    # Print error message in red
                     print(f"\n{message}")
 
-                    # Write missing entries to a log file
-                    log_file_path = f"{os.path.splitext(self.INPUT_FILE_FULLPATH)[0]}_relation_{column1}_logs.txt"
+                    log_file_path = f"{os.path.splitext(self.INPUT_FILE_FULLPATH)[0]}_relation_{column1}_log.txt"
                     with open(log_file_path, "w") as log_file:
                         log_file.write(message + "\n")
                         for entry in missing_entries:
@@ -413,7 +404,6 @@ class DataProcessor:
             raise Exception(f"Error: Fatal error during relation validation: {e}")
 
         finally:
-            # Store the result and perform memory cleanup
             del (
                 unique_df1,
                 unique_df2,
@@ -447,7 +437,7 @@ class DataProcessor:
                 )
 
             if self.errors > 0:
-                final_err_msg = f"There were {self.errors} errors in the validation, please check logs for ditails."
+                final_err_msg = f"{colors('FAIL')}There were {self.errors} errors in the validation, please check logs for ditails.{colors('ENDC')}"
                 print(final_err_msg)
                 self.logger.info(final_err_msg)
                 raise Exception(final_err_msg)
@@ -468,22 +458,15 @@ def run_processor(
     table_type: Optional[str] = None,
     relationship_table: Optional[str] = None,
 ):
-    """
-    Run the data processor with input file, relationship table, and table type.
-    """
     try:
-        # Prompt for input file if not provided
         if input_file is None:
             input_file = input("Please provide the input file path: ")
 
-        # Prompt for table type if not provided
         if table_type is None:
             table_type = input("Please provide the table type: ")
 
-        # Check if the table_type requires a relationship_table
         if table_type in ["gsa_lpis", "gsa_ua_claimed"]:
             if not relationship_table:
-                # Prompt the user to provide a relationship table if it's not set
                 relationship_table = input(
                     "Please provide the relationship table path: "
                 )
@@ -492,12 +475,11 @@ def run_processor(
         with open(tables_columns_path, "r") as f:
             tables_columns = json.load(f)
 
-        # Instantiate and run the DataProcessor
         data_processor = DataProcessor(input_file, relationship_table, table_type)
         data_processor.process(tables_columns)
 
     except Exception as e:
-        print(f"Error: {str(e)}")  # Replace print with print for error messages
+        print(f"Error: {str(e)}")
 
 
 if __name__ == "__main__":
@@ -517,7 +499,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # Call the processor with command line arguments
     run_processor(
         input_file=args.input_file,
         table_type=args.table_type,
