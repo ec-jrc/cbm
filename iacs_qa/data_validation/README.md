@@ -1,51 +1,52 @@
-# Data Validation Tool: First and Second Layer Checks
+# Data Validation Tools
 
-This repository provides tools for performing data consistency checks across two layers:
+This repository provides tools for performing data consistency checks with two methods:
 
-1. **First Layer**: Basic data checks (data types, null values, duplicates, etc.) using a Python script.
-2. **Second Layer**: Spatial and database integrity checks using SQL queries on a PostgreSQL database with PostGIS enabled.
+1. **File Validations**: Basic checks on data files (e.g., CSV, GPKG, SHP) using a Python script.
+2. **Database Validations**: Spatial and database integrity checks using SQL queries on a PostgreSQL database with PostGIS enabled.
 
-## First Layer Checks: Python Script
+## File Validations: Python Script
 
-The first layer of checks is implemented in Python using the script `validator.py`. It focuses on basic consistency checks such as:
+The file validations are implemented in Python using the script `file_validations.py`. It focuses on basic consistency checks, including:
 - Validating data types
 - Checking for missing values
 - Identifying duplicate rows
 - Validating area-related columns
+- Table relations
 
-### How to Run the First Layer Checks
+### How to Run File Validations
 
-You can run the first layer checks via the command line using `typer`.
+You can run the file validations via the command line using `typer`.
 
 ```bash
-python validator.py run-processor --input-file <path_to_file> --table-type <table_type>
+python file_validations.py run-processor --input-file <path_to_file> --table-type <table_type>
 ```
 
-- `input-file`: The path to the file to be validated (e.g., CSV, Excel).
+- `input-file`: The path to the file to be validated (e.g., CSV, GPKG, SHP).
 - `table-type`: The type of table being validated (e.g., `lpis`, `gsa`, etc.).
 
 Example:
 
 ```bash
-python validator.py run-processor --input-file ./data/lpis_data.csv --table-type lpis
+python file_validations.py run-processor --input-file ./data/lpis_data.csv --table-type lpis
 ```
 
-For more information on the Python script, refer to [validator.py in the repository](https://github.com/ec-jrc/cbm/tree/main/scripts/data_validation).
+For more information on the Python script, refer to [file_validations.py in the repository](https://github.com/ec-jrc/cbm/tree/main/iacs_qa/data_validation).
 
-## Second Layer Checks: SQL Script
+## Database Validations: SQL Script
 
-The second layer checks are SQL-based and performed on a **PostgreSQL database** with **PostGIS** enabled. This script checks for:
+The database validations are SQL-based and performed on a **PostgreSQL database** with **PostGIS** enabled. These checks include:
 - Geometry validity (well-formed and non-overlapping geometries)
 - Missing or empty geometries
 - Overlapping and duplicate geometries
 - Spatial relationships between LPIS and GSA parcels
 - Area consistency between declared and calculated values
 
-### How to Run the Second Layer Checks
+### How to Run Database Validations
 
 1. Ensure you have a **PostgreSQL** database with the **PostGIS** extension enabled.
 2. Create the required tables using the structure defined in the [specifications](https://lpis.jrc.ec.europa.eu/assets/images/dataspecifications/specs_data_submission_nov_2023.pdf).
-3. Run the SQL queries provided in `second_layer_checks.sql` to perform the checks.
+3. Run the SQL queries provided in `database_validations.sql` to perform the checks.
 
 To execute the SQL checks:
 
@@ -66,8 +67,8 @@ You can find the full list of checks in the provided SQL file.
 
 
 ## Authors
-- **ANASTASAKIS Konstantinos** – Python script (First layer checks)
-- **ISOARDI Paolo** – SQL script (Second layer checks)
+- **ANASTASAKIS Konstantinos** – Python script (File validations)
+- **ISOARDI Paolo** – SQL script (Database validations)
 
 ## License
 
@@ -76,4 +77,3 @@ This project is licensed under the [3-Clause BSD](https://opensource.org/license
 ---
 
 Copyright (c) 2024, [European Commission](https://ec.europa.eu/), Joint Research Centre. All rights reserved.
-
