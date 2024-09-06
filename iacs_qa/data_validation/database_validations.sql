@@ -319,7 +319,7 @@ FROM uagrp
 WITH intgrp AS (
 	WITH uagrp AS (
 		SELECT interv, ua_grp, count(*) AS ua_grp_cnt
-		FROM sampling_2024.interventions_2023_lu
+		FROM interventions_2023
 		GROUP BY interv, ua_grp
 		ORDER BY interv DESC, ua_grp_cnt DESC
 	)
