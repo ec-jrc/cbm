@@ -11,7 +11,6 @@ warnings.filterwarnings("ignore", category=pd.errors.SettingWithCopyWarning)
 LOG_PATH = "log.txt"
 log = open(LOG_PATH, "w")
 
-
 def prepare_input_dataframe(datamanager):
     print(f"Preprocessing the parcel list... ({len(datamanager.parcels_df)} rows.)")
     parcel_df = datamanager.parcels_df
@@ -23,8 +22,31 @@ def prepare_input_dataframe(datamanager):
     parcel_df = parcel_df.sort_values(by="ranking")
     parcel_df["row_id"] = parcel_df.apply(lambda row: f"{row['gsa_par_id']}_{row['gsa_hol_id']}_{row['ua_grp_id']}", axis=1)
     parcel_df["order_added"] = 0
+    
+    parcel_df["first_par_of_hol"] = 0
+
+    if datamanager.noncontributing_filtering == 1:
+        parcel_df = add_first_parcel_of_a_holding_flag(parcel_df)
+
+    print("Preprocessing done. Starting extraction...")
 
     return parcel_df
+
+def add_first_parcel_of_a_holding_flag(df):
+    # add a column called "first_par_of_hol" to the dataframe
+    # for every row that corresponds to the first occurrence of a gsa_hol_id value, set first_par_of_hol to 1
+    # set the rest to 0
+
+    # Add a column called "first_par_of_hol" to the dataframe
+    # Initialize the new column with zeros
+       
+    # Find the first occurrence of each gsa_hol_id
+    first_occurrences = df.drop_duplicates(subset=["gsa_hol_id"], keep='first')
+    
+    # Set the first_par_of_hol column to 1 for these first occurrences
+    df.loc[first_occurrences.index, "first_par_of_hol"] = 1
+    
+    return df
 
 
 def buckets_global_count(buckets):
@@ -58,11 +80,19 @@ def get_full_bucket_ids(buckets):
     return [bucket_id for bucket_id, bucket in buckets.items() if len(bucket['parcels']) >= bucket['target']]
 
 
-def reduce_parcel_dataframe(parcel_df, full_bucket_id):
+def reduce_parcel_dataframe_old(parcel_df, full_bucket_id):
     """
     removes all rows from the dataframe where ua_grp_id equals the full_bucket value
     """
     return parcel_df[parcel_df["ua_grp_id"] != full_bucket_id]
+
+
+def reduce_parcel_dataframe(parcel_df, full_bucket_id):
+    """
+    removes all rows from the dataframe where ua_grp_id equals the full_bucket value
+    but leaves the first parcel of each holding
+    """
+    return parcel_df[(parcel_df["ua_grp_id"] != full_bucket_id) | (parcel_df["first_par_of_hol"] == 1)]
 
 
 def all_buckets_used_3_times(bucket_counter):
@@ -224,6 +254,8 @@ def iterate_over_interventions_fast(parcel_df, buckets, progress_widgets, dm):
 
     This currently desperately needs refactoring. A lot of code blocks are repeated.
     """
+    
+
     checked_holdings = set()
     added_rows = set()
     added_holdings = set()
@@ -269,12 +301,9 @@ def iterate_over_interventions_fast(parcel_df, buckets, progress_widgets, dm):
         parcel_df, all_the_rest_noncovered = reduce_holdings(non_covered, added_holdings)
         #print("setting phase to noncovered belonging to added holdings")
         parcel_df = set_phase(parcel_df, "noncovered belonging to added holdings")
-        parcel_df.to_excel("noncovered_belonging_to_added_holdings.xlsx")
-        all_the_rest_noncovered.to_excel("all_the_rest_noncovered1.xlsx")
         for bucket_id in full_buckets:
             parcel_df = reduce_parcel_dataframe(parcel_df, bucket_id)
             all_the_rest_noncovered = reduce_parcel_dataframe(all_the_rest_noncovered, bucket_id)
-            all_the_rest_noncovered.to_excel("all_the_rest_noncovered2.xlsx")
 
         checked_holdings = set()
 
@@ -290,9 +319,7 @@ def iterate_over_interventions_fast(parcel_df, buckets, progress_widgets, dm):
             #print("setting phase to noncovered not in added holdings")
             parcel_df = all_the_rest_noncovered
             parcel_df = set_phase(parcel_df, "noncovered not in added holdings")
-            parcel_df.to_excel("noncovered_not_in_added_holdings.xlsx")
-            
-            parcel_df.to_excel("all_the_rest_noncovered3.xlsx")
+
             all_checked = False
             while not buckets_full(buckets) and not all_checked:
                 buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, all_checked = intervention_loop(parcel_df, buckets, progress_widgets, checked_holdings, added_rows, added_holdings, full_buckets, dm)

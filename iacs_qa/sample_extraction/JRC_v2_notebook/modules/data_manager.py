@@ -14,10 +14,13 @@ class DataManager:
         self.target_source_label = None # Label that informs about the latest source of target values displayed
         self.param_3_percent = False
         self.holdings_reduced = False
-        self.covered_priority = 0 # Prioritize parcels covered by HR images, Include only parcels covered by HR images
+        self.covered_priority = 0
         self.covered_priority_dict = {"Include all parcels in the sample extraction": 0, 
                                       "Prioritize parcels covered by VHR images (beta)": 1, 
                                       "Include only parcels covered by VHR images": 2}
+        self.noncontributing_filtering = 0
+        self.noncontributing_filtering_dict = {"Filter out when a bucket is filled": 0,
+                                               "Retain when a bucket is filled": 1}
         self.total_holding_count = 0
         self.holding_3_percent_count = 0
         
