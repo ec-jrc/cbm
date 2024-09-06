@@ -19,7 +19,7 @@ The file validations are implemented in Python using the script `file_validation
 You can run the file validations via the command line using `typer`.
 
 ```bash
-python file_validations.py run-processor --input-file <path_to_file> --table-type <table_type>
+python file_validations.py --input-file <path_to_file> --table-type <table_type>
 ```
 
 - `input-file`: The path to the file to be validated (e.g., CSV, GPKG, SHP).
@@ -28,7 +28,7 @@ python file_validations.py run-processor --input-file <path_to_file> --table-typ
 Example:
 
 ```bash
-python file_validations.py run-processor --input-file ./data/lpis_data.csv --table-type lpis
+python file_validations.py --input-file ./data/lpis_data.csv --table-type lpis
 ```
 
 For more information on the Python script, refer to [file_validations.py in the repository](https://github.com/ec-jrc/cbm/tree/main/iacs_qa/data_validation).
