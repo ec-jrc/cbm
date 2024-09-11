@@ -1,3 +1,51 @@
+
+"""
+This script runs consistency data validations on large datasets using Dask DataFrames. It performs various
+validations such as datatype checks, null value identification, duplicate detection, area format validation,
+and relational integrity checks between different tables. The script is designed for flexibility, allowing
+the user to specify input files, table types, and relationship tables.
+
+Modules and Functions:
+----------------------
+1. setup_logging(log_file: str) -> logging.Logger:
+- Configures logging for the application, writing logs to a file and the console with different log levels.
+
+2. DataProcessor:
+- Class for handling data validation and processing.
+- __init__(self, input_file_path: str, relationship_table: Optional[str], table_type: str):
+    Initializes the DataProcessor with the input file, relationship table, and table type.
+- validate_boolean_column(self, df: dd.DataFrame, column: str) -> bool:
+    Validates if a column contains only boolean values.
+- validate_dtypes_columns(self, ddf: dd.DataFrame, columns_types: dict) -> None:
+    Validates the data types of columns against expected types.
+- check_for_duplicates(self, ddf: dd.DataFrame, columns: List[str]) -> None:
+    Checks for duplicate rows in the specified columns.
+- check_for_nulls(self, ddf: dd.DataFrame, columns: List[str]) -> None:
+    Identifies null values in the specified columns.
+- validate_area_format(self, ddf: dd.DataFrame) -> None:
+    Validates if the area columns are in hectares with 4 decimal precision.
+- validate_area_amount(self, ddf: dd.DataFrame, pkey: str, column: str) -> None:
+    Checks if the area values in the dataset are positive.
+- process(self, tables_columns: dict) -> None:
+    Orchestrates the full data validation process.
+
+3. run_processor(input_file: Optional[str], table_type: Optional[str], relationship_table: Optional[str]) -> None:
+- Entry point for running the data processor. It loads column configurations from a JSON file,
+    creates a DataProcessor instance, and runs the data validation process.
+
+Command-line Interface:
+-----------------------
+The script supports command-line arguments for specifying the input file, table type, and an optional
+relationship table. It uses `argparse` for handling the arguments.
+
+Usage:
+------
+    python script.py --input-file /path/to/input.csv --table-type lpis
+
+    --input-file: Path to the input data file to be processed.
+    --table-type: The type of the table being processed (gsa, lpis, inter or ua).
+"""
+
 import os
 import time
 import json
@@ -38,6 +86,7 @@ def setup_logging(log_file: str):
 
 
 class DataProcessor:
+
     def __init__(
         self, input_file_path: str, relationship_table: Optional[str], table_type: str
     ):

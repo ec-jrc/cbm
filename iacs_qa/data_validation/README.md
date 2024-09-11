@@ -7,29 +7,57 @@ This repository provides tools for performing data consistency checks with two m
 
 ## File Validations: Python Script
 
-The file validations are implemented in Python using the script `file_validations.py`. It focuses on basic consistency checks, including:
-- Validating data types
-- Checking for missing values
-- Identifying duplicate rows
-- Validating area-related columns
-- Table relations
+The file validations are implemented in Python using the script `file_validations.py`. This script performs basic consistency checks to ensure that the data meets the necessary quality standards. The validations include:
+
+- **Validating data types**: Ensures that each column contains the expected data type (e.g., string, integer, boolean).
+- **Checking for missing values**: Detects any missing or `null` values in the required columns.
+- **Identifying duplicate rows**: Identifies duplicate rows based on the specified columns (e.g., primary keys).
+- **Validating area-related columns**: Checks if area-related columns (e.g., total area) are in hectares and have up to four decimal places, ensuring their validity.
+
+Please see table specifications details in the [specifications](https://lpis.jrc.ec.europa.eu/assets/images/dataspecifications/specs_data_submission_nov_2023.pdf) document.
 
 ### How to Run File Validations
 
-You can run the file validations via the command line using `typer`.
+You can run the file validations via the command line using `argparse`. The command-line interface allows you to specify the input file, and the type of table being processed.
 
 ```bash
 python file_validations.py --input-file <path_to_file> --table-type <table_type>
 ```
 
-- `input-file`: The path to the file to be validated (e.g., CSV, GPKG, SHP).
-- `table-type`: The type of table being validated (e.g., `lpis`, `gsa`, etc.).
+#### Command-line Arguments:
+- `--input-file`: The path to the file to be validated (currently supports only CSV format).
+- `--table-type`: The type of table being validated. This is a required argument.
 
-Example:
+### Example Command
+
+Here’s an example command for running the script on a dataset from an LPIS population file:
 
 ```bash
 python file_validations.py --input-file ./data/lpis_data.csv --table-type lpis
 ```
+
+### Available Table Types
+
+The `--table-type` argument determines the specific validation rules applied to the data. Below are the available options for table types:
+
+| Table Type   | Description                     |
+|--------------|---------------------------------|
+| `gsa`        | GSA population                  |
+| `lpis`       | LPIS population                 |
+| `inter`      | List of interventions           |
+| `ua`         | GSA/units amount claimed        |
+
+Each table type has its own set of validation rules based on the structure and requirements of the data. Be sure to select the correct `table-type` for the dataset you are validating.
+
+### Supported File Formats
+
+- **CSV**: Currently, the script only supports CSV files. You must provide a `.csv` file for validation.
+
+  *Note*: More file formats such as Parquet, GPKG (GeoPackage) and SHP (Shapefile) will be supported in future updates.
+
+### Notes:
+- Make sure the `input-file` is in the supported format (currently only CSV) and contains the expected columns.
+- All validation results will be logged into separate log files, which will be created in the same directory as the input file.
 
 For more information on the Python script, refer to [file_validations.py in the repository](https://github.com/ec-jrc/cbm/tree/main/iacs_qa/data_validation).
 
