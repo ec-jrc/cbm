@@ -59,6 +59,10 @@ Each table type has its own set of validation rules based on the structure and r
 - Make sure the `input-file` is in the supported format (currently only CSV) and contains the expected columns.
 - All validation results will be logged into separate log files, which will be created in the same directory as the input file.
 
+### Future Development
+
+There is an ongoing investigation to replace `pandas` with newer Python libraries, such as `Polaris`, or other alternatives that may offer better performance for large datasets. This could improve the efficiency of file validations.
+
 For more information on the Python script, refer to [file_validations.py in the repository](https://github.com/ec-jrc/cbm/tree/main/iacs_qa/data_validation).
 
 ## Database Validations: SQL Script
