@@ -7,7 +7,7 @@ This repository provides tools for performing data consistency checks with two m
 
 ## File Validations: Python Script
 
-The file validations are implemented in Python using the script `file_validations.py`. This script performs basic consistency checks to ensure that the data meets the necessary quality standards. The validations include:
+The file validations are implemented in Python using the script `first_layer_file_validations.py`. This script performs basic consistency checks to ensure that the data meets the necessary quality standards. The validations include:
 
 - **Validating data types**: Ensures that each column contains the expected data type (e.g., string, integer, boolean).
 - **Checking for missing values**: Detects any missing or `null` values in the required columns.
@@ -21,19 +21,19 @@ Please see table specifications details in the [specifications](https://lpis.jrc
 You can run the file validations via the command line using `argparse`. The command-line interface allows you to specify the input file, and the type of table being processed.
 
 ```bash
-python file_validations.py --input-file <path_to_file> --table-type <table_type>
+python first_layer_file_validations.py --input-file <path_to_file> --table-type <table_type>
 ```
 
 #### Command-line Arguments:
 - `--input-file`: The path to the file to be validated (currently supports only CSV format).
 - `--table-type`: The type of table being validated. This is a required argument.
 
-### Example Command
+#### Example Command
 
 Here’s an example command for running the script on a dataset from an LPIS population file:
 
 ```bash
-python file_validations.py --input-file ./data/lpis_data.csv --table-type lpis
+python first_layer_file_validations.py --input-file ./data/lpis_data.csv --table-type lpis
 ```
 
 ### Available Table Types
@@ -63,7 +63,7 @@ Each table type has its own set of validation rules based on the structure and r
 
 There is an ongoing investigation to replace `pandas` with newer Python libraries, such as `Polaris`, or other alternatives that may offer better performance for large datasets. This could improve the efficiency of file validations.
 
-For more information on the Python script, refer to [file_validations.py in the repository](https://github.com/ec-jrc/cbm/tree/main/iacs_qa/data_validation).
+For more information on the Python script, refer to [first_layer_file_validations.py in the repository](https://github.com/ec-jrc/cbm/tree/main/iacs_qa/data_validation).
 
 ## Database Validations: SQL Script
 
@@ -78,7 +78,7 @@ The database validations are SQL-based and performed on a **PostgreSQL database*
 
 1. Ensure you have a **PostgreSQL** database with the **PostGIS** extension enabled.
 2. Create the required tables using the structure defined in the [specifications](https://lpis.jrc.ec.europa.eu/assets/images/dataspecifications/specs_data_submission_nov_2023.pdf).
-3. Run the SQL queries provided in `database_validations.sql` to perform the checks.
+3. Run the SQL queries provided in `second_layer_database_validations.sql` to perform the checks.
 
 To execute the SQL checks:
 
