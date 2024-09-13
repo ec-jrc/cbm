@@ -68,11 +68,23 @@ For more information on the Python script, refer to [first_layer_file_validation
 ## Database Validations: SQL Script
 
 The database validations are SQL-based and performed on a **PostgreSQL database** with **PostGIS** enabled. These checks include:
-- Geometry validity (well-formed and non-overlapping geometries)
-- Missing or empty geometries
-- Overlapping and duplicate geometries
-- Spatial relationships between LPIS and GSA parcels
-- Area consistency between declared and calculated values
+
+- if geometries of the LPIS and GSA parcels are well-formed and valid according to OGC standards.
+- if LPIS and GSA parcels have missing geometries, namely null values of the geometric attribute.
+- if LPIS and GSA parcels have empty geometries, namely parcels where the geometry is present but it is empty, having a zero value area.
+- if LPIS and GSA parcels have duplicated geometries. The queries return the number of parcels sharing the same geometry.
+- if LPIS and GSA parcels have geometries that overlap with surrounding geometries.
+- if area attributes declared in LPIS population have valid values, i.e. between zero and the declared total area value.
+- if LPIS parcels have invalid negative values of the total area attribute.
+- if LPIS parcels have invalid zero values of the total area attribute.
+- if LPIS parcels have values of the total area attribute equal or bigger than the sum of arable land, permanent crop and permanent grassland areas.
+- if the LPIS total area value declared is bigger than the geometric area calculated from the given LPIS polygon.
+- if the GSA claimed area attribute presents invalid negative or zero values.
+- if the GSA claimed area attribute is bigger than the geometric area calculated from the given GSA polygon.
+- for Unit Amounts declared but not claimed.
+- basic statistics (minimum, maximum, average values) on the number of Unit Amounts declared per Group of Unit Amounts.
+- basic statistics (minimum, maximum, average values) on the number of Groups of Unit Amounts declared per Interventions.
+
 
 ### How to Run Database Validations
 
