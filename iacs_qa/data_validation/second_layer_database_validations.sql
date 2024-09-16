@@ -1,13 +1,20 @@
-/* ********************************************************************************************
+/* **************************************************************************************************
+ADDITIONAL QUALITY CHECKS FOR THE IACS DATA DELIVERED IN NOVEMBER FOR THE QUALITY ASSESSMENT EXERCISE
+The SQL code below runs the quality checks used to verify the consistency of the data submitted (and accepted) in the QUAP platform.
+This is the code that is executed by the JRC to inform Member States of potential problems in their datasets. 
+Data will be accepted even if these checks detect suspicious situations. 
+These are just examples of possible checks and do not verify all possible data quality issues.
+It is up to the Member States to check the quality of their data sets. 
 
 REQUIREMENTS
 
-- Data structure is based on data specifications defined in document "IACS quality assessment data exchange in November 2023: Technical Specifications"
-available on QUAP at https://lpis.jrc.ec.europa.eu/assets/images/dataspecifications/specs_data_submission_nov_2023.pdf
+- These queries run assuming a data structure that is based onthe  data specifications defined in the document 
+"IACS quality assessment data exchange in November 2023: Technical Specifications" available on QUAP at
+https://lpis.jrc.ec.europa.eu/assets/images/dataspecifications/specs_data_submission_nov_2023.pdf
 
-- Data is organized in a PostgreSQL database having spatial PostGIS extension enabled.
+- Data is stored in a PostgreSQL database having spatial PostGIS extension enabled. To run the SQL code on other database systems might require adjustments.
 
-- The SQL queries are based on the following set of 5 tables:
+- The SQL queries are based on 5 tables (corresponding to the 5 files delivered on QUAP) and that can be generated with this SQL code:
 
 	CREATE TABLE lpis_population_2023 (
 		gsa_code TEXT NOT NULL,
@@ -69,7 +76,13 @@ available on QUAP at https://lpis.jrc.ec.europa.eu/assets/images/dataspecificati
 		CONSTRAINT interventions_2023_pkey PRIMARY KEY (gsa_code, ua)
 	);
 
-- NOTE: the additional field geom_3035, not described in the data specifications document, can be calculated from geom_4326 as geom_3035 = ST_Transform(geom_4326, 3035)
+-- NOTE: the additional field geom_3035, not described in the data specifications document, can be calculated from geom_4326 as: 
+
+        UPDATE TABLE lpis_population_2023 
+	SET geom_3035 = ST_Transform(geom_4326, 3035);
+
+        UPDATE TABLE gsa_population_2023 
+	SET geom_3035 = ST_Transform(geom_4326, 3035);
 
 ******************************************************************************************** */
 
@@ -93,6 +106,14 @@ WHERE NOT ST_IsValid(geom_4326);
 	FROM gsa_population_2023
 	WHERE NOT ST_IsValid(geom_4326);
 
+	-- We suggest to clear the trivial issues (self intersections) with the code:
+	UPDATE lpis_population_2023
+	set geom_4326 = ST_MakeValid(geom_4326)
+	WHERE NOT ST_IsValid(geom_4326);
+
+	UPDATE gsa_population_2023
+	set geom_4326 = ST_MakeValid(geom_4326)
+	WHERE NOT ST_IsValid(geom_4326);
 
 -- The following queries check LPIS and GSA parcels for missing geometries, namely null values of the geometric attribute.
 SELECT count(*) AS lpis_missing_geom_cnt
