@@ -55,7 +55,23 @@ The table with the information on the relationship between
 -  More file formats such as Parquet, GPKG (GeoPackage) and SHP (Shapefile) will be supported in future updates.
 
 ### Outputs
-*describe the outputs of the procedure (type, content, format, etc)*
+
+When you run the data validation script, several outputs are generated depending on the validation steps that are executed. These outputs are logged into files or displayed as part of the command-line interface. Here's a breakdown of the outputs:
+
+1. **Log File**:
+   - A log file named `<input_file_name>_log.txt` is created in the same directory as the input file. It contains details of the validation process, including errors, warnings, and execution time.
+
+2. **Duplicate Log**:
+   - If duplicates are found, they are logged in `<input_file_name>_duplicates_log.txt`.
+
+3. **Null Value Log**:
+   - If null values are detected, they are recorded in the main log file.
+
+4. **Area Validation Log**:
+   - If area values are incorrect (invalid format or negative/zero values), they are logged in `<input_file_name>_area_amount_log.txt`.
+
+5. **Terminal Output**:
+   - Progress updates and any errors encountered are printed in the terminal during execution, providing real-time feedback to the user.
 
 ### Notes:
 - Make sure the `input-file` is in the supported format (currently only CSV) and contains the expected columns.
