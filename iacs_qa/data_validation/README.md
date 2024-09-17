@@ -65,10 +65,6 @@ When you run the data validation script, several outputs are generated depending
 
 Progress updates and errors are also printed in the terminal during execution for real-time feedback.
 
-### Notes:
-- Make sure the `input-file` is in the supported format (currently only CSV) and contains the expected columns.
-- All validation results will be logged into separate log files, which will be created in the same directory as the input file.
-
 ### Future Developments
 
 There is an ongoing investigation to replace `pandas` with newer Python libraries, such as `Polaris`, or other alternatives that may offer better performance for large datasets. This could improve the efficiency of file validations.
