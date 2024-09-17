@@ -56,22 +56,14 @@ The table with the information on the relationship between
 
 ### Outputs
 
-When you run the data validation script, several outputs are generated depending on the validation steps that are executed. These outputs are logged into files or displayed as part of the command-line interface. Here's a breakdown of the outputs:
+When you run the data validation script, several outputs are generated depending on the validation steps executed. These outputs are logged into files or displayed in the command-line interface. Here's a breakdown:
 
-1. **Log File**:
-   - A log file named `<input_file_name>_log.txt` is created in the same directory as the input file. It contains details of the validation process, including errors, warnings, and execution time.
+- **Log File**: Records validation details, including errors and execution time, in `<input_file_name>_log.txt`.
+- **Duplicate Log**: Duplicates are logged in `<input_file_name>_duplicates_log.txt`.
+- **Null Value Log**: Null values are noted in the main log file.
+- **Area Validation Log**: Invalid area values are logged in `<input_file_name>_area_amount_log.txt`.
 
-2. **Duplicate Log**:
-   - If duplicates are found, they are logged in `<input_file_name>_duplicates_log.txt`.
-
-3. **Null Value Log**:
-   - If null values are detected, they are recorded in the main log file.
-
-4. **Area Validation Log**:
-   - If area values are incorrect (invalid format or negative/zero values), they are logged in `<input_file_name>_area_amount_log.txt`.
-
-5. **Terminal Output**:
-   - Progress updates and any errors encountered are printed in the terminal during execution, providing real-time feedback to the user.
+Progress updates and errors are also printed in the terminal during execution for real-time feedback.
 
 ### Notes:
 - Make sure the `input-file` is in the supported format (currently only CSV) and contains the expected columns.
