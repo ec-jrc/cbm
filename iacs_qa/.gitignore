@@ -1,3 +1,7 @@
 # itignore files
 *_log.txt
 *test.csv
+data_validation/*.csv
+data_validation/*.zip
+data_validation/*/*.csv
+data_validation/*/*.zip

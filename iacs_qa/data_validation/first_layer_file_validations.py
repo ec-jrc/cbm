@@ -513,11 +513,15 @@ def run_processor(
 
         if table_type is None:
             table_type = input("Please provide the table type: ")
+        if "inter" in table_type:
+            table_type = "interventions"
+        elif "ua" in table_type:
+            table_type = "gsa_ua_claimed"
 
         if table_type in ["gsa_lpis", "gsa_ua_claimed"]:
             if not relationship_table:
                 relationship_table = input(
-                    "Please provide the relationship table path: "
+                    "(optional) Please provide the relationship table path, default=None: "
                 )
 
         tables_columns_path = "./tables.json"
