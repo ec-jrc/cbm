@@ -13,6 +13,7 @@ The QUAP file/data validations are implemented in Python using the script `first
 - **Checking for missing values**: Detects any missing or `null` values in the required columns where a value is required.
 - **Identifying duplicate rows**: Identifies duplicate rows based on specific columns that must be unique (e.g., primary keys).
 - **Validating area-related columns**: Checks if area-related columns (e.g., total area) are in hectares and have up to four decimal places, ensuring their validity.
+- **Validating relationships between tables**: For the GSA/units amount claimed (ua) table, the script checks relational integrity by verifying that unique entries in the ua table exist in the interventions and GSA population tables.
 
 These controls materialise the requirements of [data specifications](https://lpis.jrc.ec.europa.eu/assets/images/dataspecifications/specs_data_submission_nov_2023.pdf) document published on the QUAP platform.
 
@@ -27,12 +28,20 @@ python first_layer_file_validations.py --input-file <path_to_file> --table-type 
 #### Command-line Arguments:
 - `--input-file`: The path to the file to be validated.
 - `--table-type`: The type of table being validated. This is a required argument.
+- `--interventions-file`: (Optional) Path to the interventions file. Required only when validating the `ua` table type.
+- `--gsa-population-file`: (Optional) Path to the GSA population file. Required only when validating the `ua` table type.
 
 #### Example Command
 Here is an example of a command to execute the script on a LPIS population file:
 
 ```bash
 python first_layer_file_validations.py --input-file ./data/lpis_data.csv --table-type lpis
+```
+
+This is an additional example for validating a `ua` table with the optional interventions and GSA population files:
+
+```bash
+python first_layer_file_validations.py --input-file ./data/ua_data.csv --table-type ua --interventions-file ./data/interventions_data.csv --gsa-population-file ./data/gsa_population_data.csv
 ```
 
 ### Available Table Types
@@ -62,6 +71,7 @@ When you run the data validation script, several outputs are generated depending
 - **Duplicate Log**: Duplicates are logged in `<input_file_name>_duplicates_log.txt`.
 - **Null Value Log**: Null values are noted in the main log file.
 - **Area Validation Log**: Invalid area values are logged in `<input_file_name>_area_amount_log.txt`.
+- **Relationship Validation Log**: If any relationship issues are detected (e.g., missing entries in the `ua` table that do not exist in the interventions or GSA population tables), they are logged in `<input_file_name>_relation_<column>_log.txt`.
 
 Progress updates and errors are also printed in the terminal during execution for real-time feedback.
 

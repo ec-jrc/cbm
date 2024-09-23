@@ -12,7 +12,7 @@ Modules and Functions:
 
 2. DataProcessor:
 - Class for handling data validation and processing.
-- __init__(self, input_file_path: str, relationship_table: Optional[str], table_type: str):
+- __init__(self, input_file_path: str, table_type: str), interventions_file: Optional[str], gsa_population_file: Optional[str]:
     Initializes the DataProcessor with the input file, relationship table, and table type.
 - validate_boolean_column(self, df: dd.DataFrame, column: str) -> bool:
     Validates if a column contains only boolean values.
@@ -29,7 +29,7 @@ Modules and Functions:
 - process(self, tables_columns: dict) -> None:
     Orchestrates the full data validation process.
 
-3. run_processor(input_file: Optional[str], table_type: Optional[str], relationship_table: Optional[str]) -> None:
+3. run_processor(input_file: Optional[str], table_type: Optional[str]) -> None:
 - Entry point for running the data processor. It loads column configurations from a JSON file,
     creates a DataProcessor instance, and runs the data validation process.
 
@@ -46,6 +46,7 @@ Usage:
     --table-type: The type of the table being processed (gsa, lpis, inter or ua).
 """
 
+import gc
 import os
 import time
 import json
@@ -88,10 +89,9 @@ def setup_logging(log_file: str):
 class DataProcessor:
 
     def __init__(
-        self, input_file_path: str, relationship_table: Optional[str], table_type: str
+        self, input_file_path: str, table_type: str, interventions_file: Optional[str], gsa_population_file: Optional[str]
     ):
         self.INPUT_FILE_FULLPATH = input_file_path
-        self.relationship_table = relationship_table
         self.TABLE_TYPE = table_type
         self.start_time = time.time()
         self.logger = logging.getLogger(__name__)
@@ -99,6 +99,8 @@ class DataProcessor:
         self.errors = 0
         self.area_tolerance = 0.20
         self.errors_limit = 2000
+        self.interventions_file = interventions_file
+        self.gsa_population_file = gsa_population_file
 
         # Log file creation
         log_file = os.path.splitext(self.INPUT_FILE_FULLPATH)[0] + "_log.txt"
@@ -437,13 +439,13 @@ class DataProcessor:
                     self.logger.info(message)
                 else:
                     message = f"All unique entries in '{column1}' from '{self.TABLE_TYPE}' table exist in '{tname}' table. Finished in {round((time.time() - self.start_time), 1)} sec."
-                    print(f"\n{message}")
+                    print(f"{message}")
                     self.logger.info(message)
 
             else:
                 self.errors += 1
                 message = f"Error: Column '{column1}' or '{column2}' not found in their respective tables."
-                print(f"\n{message}")
+                print(f"{message}")
                 self.logger.error(message)
 
         except Exception as e:
@@ -484,6 +486,15 @@ class DataProcessor:
                 self.validate_area_amount(
                     ddf, tables_columns["primary_keys"][self.TABLE_TYPE][0], "tot_area"
                 )
+            if self.TABLE_TYPE == "gsa_ua_claimed":
+                if self.interventions_file:
+                    file_reader_inter = FileReader(self.interventions_file, 'interventions')
+                    ddf_inter = file_reader_inter.read_file()
+                    self.validate_relation(ddf, ddf_inter, 'ua', tname='interventions')
+                if self.gsa_population_file:
+                    file_reader_gsa = FileReader(self.gsa_population_file, 'gsa')
+                    ddf_gsa = file_reader_gsa.read_file()
+                    self.validate_relation(ddf, ddf_gsa, 'gsa_par_id', tname='gsa')
 
             if self.errors > 0:
                 final_err_msg = f"{colors('FAIL')}There were {self.errors} errors in the validation, please check logs for ditails.{colors('ENDC')}"
@@ -505,7 +516,8 @@ class DataProcessor:
 def run_processor(
     input_file: Optional[str] = None,
     table_type: Optional[str] = None,
-    relationship_table: Optional[str] = None,
+    interventions_file: Optional[str] = None,
+    gsa_population_file: Optional[str] = None,
 ):
     try:
         if input_file is None:
@@ -513,22 +525,23 @@ def run_processor(
 
         if table_type is None:
             table_type = input("Please provide the table type: ")
+
         if "inter" in table_type:
             table_type = "interventions"
         elif "ua" in table_type:
             table_type = "gsa_ua_claimed"
+            # Ask for interventions and GSA population files
+            if interventions_file is None:
+                interventions_file = input("Please provide the interventions file path: ")
+            if gsa_population_file is None:
+                gsa_population_file = input("Please provide the GSA population file path: ")
 
-        if table_type in ["gsa_lpis", "gsa_ua_claimed"]:
-            if not relationship_table:
-                relationship_table = input(
-                    "(optional) Please provide the relationship table path, default=None: "
-                )
 
         tables_columns_path = "./tables.json"
         with open(tables_columns_path, "r") as f:
             tables_columns = json.load(f)
 
-        data_processor = DataProcessor(input_file, relationship_table, table_type)
+        data_processor = DataProcessor(input_file, table_type, interventions_file, gsa_population_file)
         data_processor.process(tables_columns)
 
     except Exception as e:
@@ -545,9 +558,14 @@ if __name__ == "__main__":
         help="The type of table being processed",
     )
     parser.add_argument(
-        "--relationship-table",
+        "--interventions-file",
         type=str,
-        help="Path to the relationship table (optional)",
+        help="Path to the interventions file (required for 'ua' table type)",
+    )
+    parser.add_argument(
+        "--gsa-population-file",
+        type=str,
+        help="Path to the GSA population file (required for 'ua' table type)",
     )
 
     args = parser.parse_args()
@@ -555,5 +573,6 @@ if __name__ == "__main__":
     run_processor(
         input_file=args.input_file,
         table_type=args.table_type,
-        relationship_table=args.relationship_table,
+        interventions_file=args.interventions_file,
+        gsa_population_file=args.gsa_population_file,
     )
