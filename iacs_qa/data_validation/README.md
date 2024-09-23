@@ -56,7 +56,6 @@ The `--table-type` argument determines the specific validation rules applied to 
 | `ua`         | GSA/units amount claimed        |
 
 Each table type has its own set of validation rules based on the structure and requirements of the data. Be sure to select the correct `table-type` for the dataset you are validating.
-The table with the information on the relationship between 
 
 ### Supported File Formats
 
