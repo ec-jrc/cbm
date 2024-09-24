@@ -40,6 +40,8 @@ To open and use this notebook, you will need an environment that supports Jupyte
 * Further speed increase
 
 ## Release log
+Using the latest version of QUASSA is strongly recommended. That said, all superseded versions of the tool are provided as zip packages in the [version_history](https://github.com/ec-jrc/cbm/tree/main/iacs_qa/sample_extraction/JRC_v2_notebook/version_history) directory.
+---
 **September 6th** - v2.7
 * **Holding level intervention selection** - the target selection UI now allows for selecting Holding Level interventions. Selecting one or more Holding Level interventions results in creating an additional output file, with the summary of all holdings related to the Holding Level interventions.
 * **Retain / filter out non-contributing parcels** - a new optional parameter that allows the user to decide if a highest-ranked parcel of a holding should be filtered out or retained, when all parcels of a recently completed bucket are filtered out from the parcel list.
