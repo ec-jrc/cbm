@@ -6,6 +6,8 @@ import json
 import zipfile
 import pandas as pd
 import dask.dataframe as dd
+import geopandas as gpd
+import dask_geopandas as dgpd
 
 
 tables_columns_json_path = "./tables.json"
@@ -69,11 +71,9 @@ class FileReader:
         if file_extension == ".csv":
             return self.read_csv_dask(datafile)
         elif file_extension == ".parquet":
-            return dd.read_parquet(datafile)
-        elif file_extension == ".shp":
-            return self.read_shapefile(datafile)
-        elif file_extension == ".gpkg":
-            return self.read_geopackage(datafile)
+            return self.read_parquet_dask(datafile)
+        elif file_extension in [".shp", ".gpkg"]:
+            return self.read_dgpd(datafile)
         else:
             raise Exception(f"Unsupported file format: {file_extension}")
 
@@ -119,18 +119,45 @@ class FileReader:
             )
         return dtype_dict
 
-    def read_shapefile(self, datafile) -> dd.DataFrame:
-        """Read a shapefile into a Dask DataFrame."""
-        gdf = gpd.read_file(datafile)
-        gdf[f"{self.table_type}_geom"] = gdf["geometry"].apply(
-            lambda x: x.wkt if x is not None else None
-        )
-        return dd.from_pandas(gdf.drop(columns=["geometry"]), chunksize=1000)
+    def read_parquet_dask(self, datafile) -> dd.DataFrame:
+        """Read a Parquet file into a Dask DataFrame."""
+        try:
+            return dd.read_parquet(datafile, engine='pyarrow')
+        except Exception as e:
+            raise Exception(f"Failed to read Parquet file: {str(e)}")
 
-    def read_geopackage(self, datafile) -> dd.DataFrame:
-        """Read a GeoPackage file into a Dask DataFrame."""
-        gdf = gpd.read_file(datafile)
-        return dd.from_pandas(gdf, chunksize=1000)
+    # def read_parquet_dask(self, datafile) -> dd.DataFrame:
+    #     """Read a Parquet file into a Dask DataFrame, dropping the geometry column if it exists."""
+    #     try:
+    #         ddf = dd.read_parquet(datafile, engine='pyarrow')
+    #
+    #         geometry_columns = ["geometry", "geom", f"{self.table_type}_geom"]
+    #         for geom_col in geometry_columns:
+    #             if geom_col in ddf.columns:
+    #                 ddf = ddf.drop(columns=[geom_col])
+    #                 break
+    #         return ddf
+    #
+    #     except Exception as e:
+    #         raise Exception(f"Failed to read Parquet file: {str(e)}")
+
+    def read_dgpd(self, datafile) -> dd.DataFrame:
+        """Read a shapefile or GeoPackage into a Dask GeoDataFrame, dropping the geometry column."""
+        try:
+            # gdf = dgpd.read_file(datafile, chunksize=1000)
+            gdf = gpd.read_file(datafile)
+
+            geometry_columns = ["geometry", "geom", f"{self.table_type}_geom"]
+            for geom_col in geometry_columns:
+                if geom_col in gdf.columns:
+                    gdf = gdf.drop(columns=[geom_col])
+                    break
+
+            # return gdf
+            return dd.from_pandas(gdf, chunksize=1000)
+
+        except Exception as e:
+            raise Exception(f"Failed to read shapefile: {str(e)}")
 
 
 def colors(color="ENDC"):

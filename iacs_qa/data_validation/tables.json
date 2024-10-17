@@ -75,13 +75,6 @@
         "type": [
           "bool"
         ]
-      },
-      "lpis_geom": {
-        "type": [
-          "string",
-          "geometry",
-          "object"
-        ]
       }
     },
     "gsa": {
@@ -113,13 +106,6 @@
       "organic": {
         "type": [
           "bool"
-        ]
-      },
-      "gsa_geom": {
-        "type": [
-          "string",
-          "geometry",
-          "object"
         ]
       }
     },
@@ -165,9 +151,14 @@
         "type": [
           "string"
         ]
+      },
+      "ua_grp_est": {
+        "type": [
+          "string"
+        ]
       }
     },
-    "gsa_ua_claimed": {
+    "ua_claimed": {
       "gsa_par_id": {
         "type": [
           "string"
@@ -181,6 +172,23 @@
       "claim_area": {
         "type": [
           "float64"
+        ]
+      }
+    },
+    "regions": {
+      "reg_code": {
+        "type": [
+          "string"
+        ]
+      },
+      "target_per": {
+        "type": [
+          "integer"
+        ]
+      },
+      "reg_geom": {
+        "type": [
+          "string"
         ]
       }
     },
@@ -198,7 +206,7 @@
       "interventions": [
         "ua"
       ],
-      "gsa_ua_claimed": [
+      "ua_claimed": [
         "gsa_par_id",
         "ua"
       ]
