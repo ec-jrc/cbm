@@ -15,7 +15,7 @@ The QUAP file/data validations are implemented in Python using the script `first
 - **Validating area-related columns**: Checks if area-related columns (e.g., total area) are in hectares and have up to four decimal places, ensuring their validity.
 - **Validating relationships between tables**: For the GSA/units amount claimed (ua) table, the script checks relational integrity by verifying that unique entries in the ua table exist in the interventions and GSA population tables.
 
-These controls materialise the requirements of [data specifications](https://lpis.jrc.ec.europa.eu/assets/images/dataspecifications/specs_data_submission_nov_2023.pdf) document published on the QUAP platform.
+These controls materialise the requirements of [data specifications](https://lpis.jrc.ec.europa.eu/assets/images/dataspecifications/specs_data_submission_nov_2024.pdf) document published on the QUAP platform.
 
 ### How to Run File Validations
 
@@ -83,7 +83,7 @@ For more information on the Python script, refer to [first_layer_file_validation
 ## Additional Quality Checks: SQL Scripts
 
 In addition to the compulsory validation checks that must be successfully passed to complete the data submission procedure, other data screening scripts are run to detect potential issues. These quality controls do not prevent MS from submitting their data and must be considered as tools to help improving the overall quality of the data submitted. These quality checks are implemented as SQL scripts in a database where submitted (and accepted) data are stored in the same structure as specified in the
-In addition to the mandatory validation checks that must be successfully passed to complete the data submission process, other data screening scripts are run to identify potential problems. These quality checks do not prevent Member States from submitting their data and should only be considered as optional tools to help improve the overall quality of the submitted data. These quality checks are implemented as SQL scripts. These must be run in a database where the submitted (and accepted) data are stored in the same structure specified in the [data specifications](https://lpis.jrc.ec.europa.eu/assets/images/dataspecifications/specs_data_submission_nov_2023.pdf). The SQL is developed on a **PostgreSQL database** with **PostGIS** enabled. The scripts will checks:
+In addition to the mandatory validation checks that must be successfully passed to complete the data submission process, other data screening scripts are run to identify potential problems. These quality checks do not prevent Member States from submitting their data and should only be considered as optional tools to help improve the overall quality of the submitted data. These quality checks are implemented as SQL scripts. These must be run in a database where the submitted (and accepted) data are stored in the same structure specified in the [data specifications](https://lpis.jrc.ec.europa.eu/assets/images/dataspecifications/specs_data_submission_nov_2024.pdf). The SQL is developed on a **PostgreSQL database** with **PostGIS** enabled. The scripts will checks:
 
 - if geometries of the LPIS and GSA parcels are well-formed and valid according to OGC standards
 - if LPIS and GSA parcels have missing geometries, namely null values of the geometric attribute
@@ -103,7 +103,7 @@ In addition to the mandatory validation checks that must be successfully passed 
 
 We provide a possible implementation using SQL code, but member States can easily adapt them to other languages if they like. We also include some SQL code to help data exploration. To run the scripts provided:
 1. Ensure you have a **PostgreSQL** database with the **PostGIS** extension enabled.
-2. Create the required tables using the structure defined in the [specifications](https://lpis.jrc.ec.europa.eu/assets/images/dataspecifications/specs_data_submission_nov_2023.pdf).
+2. Create the required tables using the structure defined in the [specifications](https://lpis.jrc.ec.europa.eu/assets/images/dataspecifications/specs_data_submission_nov_2024.pdf).
 3. Run the SQL queries provided in `second_layer_database_validations.sql` to perform the checks.
 
 To execute the SQL checks:
@@ -119,7 +119,7 @@ You can find the full list of checks in the SQL file.
 
 ### References
 
-- [Data Submission Specifications (November 2023)](https://lpis.jrc.ec.europa.eu/assets/images/dataspecifications/specs_data_submission_nov_2023.pdf)
+- [Data Submission Specifications (November 2023)](https://lpis.jrc.ec.europa.eu/assets/images/dataspecifications/specs_data_submission_nov_2024.pdf)
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
 - [PostGIS Documentation](https://postgis.net/documentation/)
 
