@@ -1,5 +1,6 @@
-/* **************************************************************************************************
+/****************************************************************************************************
 ADDITIONAL QUALITY CHECKS FOR THE IACS DATA DELIVERED IN NOVEMBER FOR THE QUALITY ASSESSMENT EXERCISE
+
 The SQL code below runs the quality checks used to verify the consistency of the data submitted (and accepted) in the QUAP platform.
 This is the code that is executed by the JRC to inform Member States of potential problems in their datasets. 
 Data will be accepted even if these checks detect suspicious situations. 
@@ -8,15 +9,15 @@ It is up to the Member States to check the quality of their data sets.
 
 REQUIREMENTS
 
-- These queries run assuming a data structure that is based onthe  data specifications defined in the document 
+- These queries run assuming a data structure that is based on the data specifications defined in the document 
 "IACS quality assessment data exchange in November 2023: Technical Specifications" available on QUAP at
 https://lpis.jrc.ec.europa.eu/assets/images/dataspecifications/specs_data_submission_nov_2023.pdf
 
-- Data is stored in a PostgreSQL database having spatial PostGIS extension enabled. To run the SQL code on other database systems might require adjustments.
+- Data is stored in a PostgreSQL database having spatial PostGIS extension enabled. Running the SQL code on other database systems might require adjustments.
 
-- The SQL queries are based on 5 tables (corresponding to the 5 files delivered on QUAP) and that can be generated with this SQL code:
+- The SQL queries are based on 5 tables (corresponding to the 5 files delivered on QUAP) that can be generated with the following SQL code:
 
-	CREATE TABLE lpis_population_2023 (
+	CREATE TABLE lpis_population (
 		gsa_code TEXT NOT NULL,
 		lpis_code TEXT NOT NULL,
 		lpis_rp_id TEXT NOT NULL,
@@ -33,10 +34,10 @@ https://lpis.jrc.ec.europa.eu/assets/images/dataspecifications/specs_data_submis
 		avail_area BOOLEAN,
 		geom_4326 GEOMETRY(MultiPolygon, 4326),
 		geom_3035 GEOMETRY(MultiPolygon, 3035),
-		CONSTRAINT lpis_population_2023_pkey PRIMARY KEY (gsa_code, lpis_code, lpis_rp_id)
+		CONSTRAINT lpis_population_pkey PRIMARY KEY (gsa_code, lpis_code, lpis_rp_id)
 	);
 
-	CREATE TABLE gsa_population_2023 (
+	CREATE TABLE gsa_population (
 		gsa_code TEXT NOT NULL,
 		gsa_par_id TEXT NOT NULL,
 		gsa_hol_id TEXT,
@@ -46,26 +47,26 @@ https://lpis.jrc.ec.europa.eu/assets/images/dataspecifications/specs_data_submis
 		organic BOOLEAN,
 		geom_4326 GEOMETRY(MultiPolygon, 4326),
 		geom_3035 GEOMETRY(MultiPolygon, 3035),
-		CONSTRAINT gsa_population_2023_pkey PRIMARY KEY (gsa_code, gsa_par_id)
+		CONSTRAINT gsa_population_pkey PRIMARY KEY (gsa_code, gsa_par_id)
 	);
 
-	CREATE TABLE gsa_lpis_relationship_2023 (
+	CREATE TABLE gsa_lpis_relationship (
 		gsa_code TEXT NOT NULL,
 		lpis_code TEXT NOT NULL,
 		lpis_rp_id TEXT NOT NULL,
 		gsa_par_id TEXT NOT NULL,
-		CONSTRAINT gsa_lpis_relationship_2023_pkey PRIMARY KEY (gsa_code, lpis_code, lpis_rp_id, gsa_par_id)
+		CONSTRAINT gsa_lpis_relationship_pkey PRIMARY KEY (gsa_code, lpis_code, lpis_rp_id, gsa_par_id)
 	);
 
-	CREATE TABLE gsa_ua_claimed_2023 (
+	CREATE TABLE gsa_ua_claimed (
 		gsa_code TEXT NOT NULL,
 		gsa_par_id TEXT NOT NULL,
 		ua TEXT NOT NULL,
 		claim_area NUMERIC NOT NULL,
-		CONSTRAINT gsa_ua_claimed_2023_pkey PRIMARY KEY (gsa_code, gsa_par_id, ua)
+		CONSTRAINT gsa_ua_claimed_pkey PRIMARY KEY (gsa_code, gsa_par_id, ua)
 	);
 
-	CREATE TABLE interventions_2023 (
+	CREATE TABLE interventions (
 		gsa_code TEXT NOT NULL,
 		ua TEXT NOT NULL,
 		ua_grp TEXT NOT NULL,
@@ -73,90 +74,98 @@ https://lpis.jrc.ec.europa.eu/assets/images/dataspecifications/specs_data_submis
 		interv_lev TEXT NOT NULL,
 		interv_typ TEXT NOT NULL,
 		ua_grp_id INTEGER,
-		CONSTRAINT interventions_2023_pkey PRIMARY KEY (gsa_code, ua)
+		CONSTRAINT interventions_pkey PRIMARY KEY (gsa_code, ua)
 	);
 
--- NOTE: the additional field geom_3035, not described in the data specifications document, can be calculated from geom_4326 as: 
+- We recommend creating spatial indexes to speed up queries:
 
-        UPDATE TABLE lpis_population_2023 
+	CREATE INDEX idx_lpis_population_geom_4326 ON lpis_population USING gist (geom_4326);
+	CREATE INDEX idx_lpis_population_geom_3035 ON lpis_population USING gist (geom_3035);
+	CREATE INDEX idx_gsa_population_geom_4326 ON gsa_population USING gist (geom_4326);
+	CREATE INDEX idx_gsa_population_geom_3035 ON gsa_population USING gist (geom_3035);
+
+- NOTE: the additional field geom_3035, not described in the data specifications document, can be calculated from geom_4326 as: 
+
+	UPDATE TABLE lpis_population
 	SET geom_3035 = ST_Transform(geom_4326, 3035);
 
-        UPDATE TABLE gsa_population_2023 
+	UPDATE TABLE gsa_population
 	SET geom_3035 = ST_Transform(geom_4326, 3035);
 
-******************************************************************************************** */
+****************************************************************************************************/
 
 
 -- The following queries check if geometries of the LPIS and GSA parcels are well-formed and valid according to the OGC Simple Features Implementation Specification for SQL 1.1
 -- (for a list of possible issues see https://postgis.net/docs/using_postgis_dbmanagement.html#OGC_Validity).
 SELECT count(*) AS lpis_notvalid_geom_cnt
-FROM lpis_population_2023
+FROM lpis_population
 WHERE NOT ST_IsValid(geom_4326);
 
 SELECT count(*) AS gsa_notvalid_geom_cnt
-FROM gsa_population_2023
+FROM gsa_population
 WHERE NOT ST_IsValid(geom_4326);
 
 	-- If the count of invalid geometries is positive, you can run the next queries to list the IDs of the LPIS and GSA parcels having invalid geometry, together with the reason of the invalidity.
 	SELECT lpis_rp_id, geom_4326, ST_IsValidReason(geom_4326)
-	FROM lpis_population_2023
+	FROM lpis_population
 	WHERE NOT ST_IsValid(geom_4326);
 	
 	SELECT gsa_par_id, geom_4326, ST_IsValidReason(geom_4326)
-	FROM gsa_population_2023
+	FROM gsa_population
 	WHERE NOT ST_IsValid(geom_4326);
 
-	-- We suggest to clear the trivial issues (self intersections) with the code:
-	UPDATE lpis_population_2023
-	set geom_4326 = ST_MakeValid(geom_4326)
+	-- We suggest to clear the trivial issues (i.e. self intersections) with the code:
+	UPDATE lpis_population
+	SET geom_4326 = ST_MakeValid(geom_4326)
 	WHERE NOT ST_IsValid(geom_4326);
 
-	UPDATE gsa_population_2023
-	set geom_4326 = ST_MakeValid(geom_4326)
+	UPDATE gsa_population
+	SET geom_4326 = ST_MakeValid(geom_4326)
 	WHERE NOT ST_IsValid(geom_4326);
+
 
 -- The following queries check LPIS and GSA parcels for missing geometries, namely null values of the geometric attribute.
 SELECT count(*) AS lpis_missing_geom_cnt
-FROM lpis_population_2023
+FROM lpis_population
 WHERE geom_4326 IS NULL;
 
 SELECT count(*) AS gsa_missing_geom_cnt
-FROM gsa_population_2023
+FROM gsa_population
 WHERE geom_4326 IS NULL;
 
 	-- If the count of missing geometries is positive, you can run the next queries to list the IDs of the LPIS and GSA parcels with no geometry.
 	SELECT lpis_rp_id
-	FROM lpis_population_2023
+	FROM lpis_population
 	WHERE geom_4326 IS NULL;
 
 	SELECT gsa_par_id
-	FROM gsa_population_2023
+	FROM gsa_population
 	WHERE geom_4326 IS NULL;
 
 
 -- The following queries check LPIS and GSA parcels for empty geometries, namely parcels where the geometry is present but it is empty, having a zero value area.
 SELECT count(*) AS lpis_empty_geom_cnt
-FROM lpis_population_2023
+FROM lpis_population
 WHERE ST_IsEmpty(geom_4326);
 
 SELECT count(*) AS gsa_empty_geom_cnt
-FROM gsa_population_2023
+FROM gsa_population
 WHERE ST_IsEmpty(geom_4326);
 
 	-- If the count of empty geometries is positive, you can run the next queries to list the IDs of the LPIS and GSA parcels having zero area geometry.
 	SELECT lpis_rp_id, ST_Area(geom_3035) AS area, ST_AsText(geom_4326) AS descr
-	FROM lpis_population_2023
+	FROM lpis_population
 	WHERE ST_IsEmpty(geom_4326);
 	
 	SELECT gsa_par_id, ST_Area(geom_3035) AS area, ST_AsText(geom_4326) AS descr
-	FROM gsa_population_2023
+	FROM gsa_population
 	WHERE ST_IsEmpty(geom_4326);
 
 
 -- The following queries check LPIS and GSA parcels for duplicated geometries. The queries return the number of parcels sharing the same geometry.
 WITH dc AS (
 	SELECT geom_4326, count(*)
-	FROM lpis_population_2023
+	FROM lpis_population
 	GROUP BY geom_4326
 	HAVING count(*) > 1
 )
@@ -165,7 +174,7 @@ FROM dc;
 
 WITH dc AS (
 	SELECT geom_4326, count(*)
-	FROM gsa_population_2023
+	FROM gsa_population
 	GROUP BY geom_4326
 	HAVING count(*) > 1
 )
@@ -176,14 +185,14 @@ FROM dc;
 	SELECT geom_4326,
 		count(*) AS geom_cnt,
 		string_agg(lpis_rp_id, ', ') AS lpis_dupl_id_list
-	FROM lpis_population_2023
+	FROM lpis_population
 	GROUP BY geom_4326
 	HAVING count(*) > 1;
 
 	SELECT geom_4326,
 		count(*) AS geom_cnt,
 		string_agg(gsa_par_id, ', ') AS gsa_dupl_id_list
-	FROM gsa_population_2023
+	FROM gsa_population
 	GROUP BY geom_4326
 	HAVING count(*) > 1;
 
@@ -191,7 +200,7 @@ FROM dc;
 -- The following queries check LPIS and GSA parcels for overlapping geometries. The queries select only the cases where the overlap between two valid polygons is also a polygon, and exclude the overlaps with area < 10 square meters (this threshold can be adapted according to needs).
 -- Please note that these queries may take a very long time to process.
 SELECT count(*) AS lpis_overlap_cnt
-FROM lpis_population_2023 a, lpis_population_2023 b 
+FROM lpis_population a, lpis_population b 
 WHERE a.geom_3035 && b.geom_3035
 AND ST_Overlaps(a.geom_3035, b.geom_3035)
 AND a.ctid != b.ctid
@@ -202,7 +211,7 @@ AND ST_IsValid(a.geom_3035)
 AND ST_IsValid(b.geom_3035);
 
 SELECT count(*) AS gsa_overlap_cnt
-FROM gsa_population_2023 a, gsa_population_2023 b 
+FROM gsa_population a, gsa_population b 
 WHERE a.geom_3035 && b.geom_3035
 AND ST_Overlaps(a.geom_3035, b.geom_3035)
 AND a.ctid != b.ctid
@@ -214,7 +223,7 @@ AND ST_IsValid(b.geom_3035);
 
 	-- If the count of overlapping geometries is positive, you can run the next queries to list the IDs of the LPIS and GSA parcels sharing part of the geometry.
 	SELECT ST_Collect(ARRAY[a.geom_3035, b.geom_3035, ST_Intersection(a.geom_3035, b.geom_3035)]), string_agg(a.lpis_rp_id || ', ' || b.lpis_rp_id, '') AS overlap_id_list
-	FROM lpis_population_2023 a, lpis_population_2023 b 
+	FROM lpis_population a, lpis_population b 
 	WHERE a.geom_3035 && b.geom_3035
 	AND ST_Overlaps(a.geom_3035, b.geom_3035)
 	AND a.ctid != b.ctid
@@ -226,7 +235,7 @@ AND ST_IsValid(b.geom_3035);
 	GROUP BY ST_Collect(ARRAY[a.geom_3035, b.geom_3035, ST_Intersection(a.geom_3035, b.geom_3035)]);
 
 	SELECT ST_Collect(ARRAY[a.geom_3035, b.geom_3035, ST_Intersection(a.geom_3035, b.geom_3035)]), string_agg(a.gsa_par_id || ', ' || b.gsa_par_id, '') AS overlap_id_list
-	FROM gsa_population_2023 a, gsa_population_2023 b 
+	FROM gsa_population a, gsa_population b 
 	WHERE a.geom_3035 && b.geom_3035
 	AND ST_Overlaps(a.geom_3035, b.geom_3035)
 	AND a.ctid != b.ctid
@@ -243,25 +252,25 @@ AND ST_IsValid(b.geom_3035);
 SELECT
 	SUM(CASE WHEN ((al_area < 0 OR round((al_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3)) AND (round((al_area - tot_area)::NUMERIC, 3) > 0.001)) THEN 1 ELSE 0 END) AS invalid_al_area,
 	SUM(CASE WHEN ((pc_area < 0 OR round((pc_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3)) AND (round((pc_area - tot_area)::NUMERIC, 3) > 0.001)) THEN 1 ELSE 0 END) AS invalid_pc_area,
-	SUM(CASE WHEN ((pg_area < 0 OR round((pg_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3))  AND (round((pg_area - tot_area)::NUMERIC, 3) > 0.001)) THEN 1 ELSE 0 END) AS invalid_pg_area,
-	SUM(CASE WHEN ((na_area < 0 OR round((na_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3))  AND (round((na_area - tot_area)::NUMERIC, 3) > 0.001)) THEN 1 ELSE 0 END) AS invalid_na_area,
-	SUM(CASE WHEN ((af_area < 0 OR round((af_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3))  AND (round((af_area - tot_area)::NUMERIC, 3) > 0.001)) THEN 1 ELSE 0 END) AS invalid_af_area,
-	SUM(CASE WHEN ((n2000_area < 0 OR round((n2000_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3))  AND (round((n2000_area - tot_area)::NUMERIC, 3) > 0.001)) THEN 1 ELSE 0 END) AS invalid_n2000_area,
-	SUM(CASE WHEN ((pw_area < 0 OR round((pw_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3))  AND (round((pw_area - tot_area)::NUMERIC, 3) > 0.001)) THEN 1 ELSE 0 END) AS invalid_pw_area,
-	SUM(CASE WHEN ((lf_area < 0 OR round((lf_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3))  AND (round((lf_area - tot_area)::NUMERIC, 3) > 0.001)) THEN 1 ELSE 0 END) AS invalid_lf_area,
-	SUM(CASE WHEN ((anc_area < 0 OR round((anc_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3))  AND (round((anc_area - tot_area)::NUMERIC, 3) > 0.001)) THEN 1 ELSE 0 END) AS invalid_anc_area
-FROM lpis_population_2023
+	SUM(CASE WHEN ((pg_area < 0 OR round((pg_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3)) AND (round((pg_area - tot_area)::NUMERIC, 3) > 0.001)) THEN 1 ELSE 0 END) AS invalid_pg_area,
+	SUM(CASE WHEN ((na_area < 0 OR round((na_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3)) AND (round((na_area - tot_area)::NUMERIC, 3) > 0.001)) THEN 1 ELSE 0 END) AS invalid_na_area,
+	SUM(CASE WHEN ((af_area < 0 OR round((af_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3)) AND (round((af_area - tot_area)::NUMERIC, 3) > 0.001)) THEN 1 ELSE 0 END) AS invalid_af_area,
+	SUM(CASE WHEN ((n2000_area < 0 OR round((n2000_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3)) AND (round((n2000_area - tot_area)::NUMERIC, 3) > 0.001)) THEN 1 ELSE 0 END) AS invalid_n2000_area,
+	SUM(CASE WHEN ((pw_area < 0 OR round((pw_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3)) AND (round((pw_area - tot_area)::NUMERIC, 3) > 0.001)) THEN 1 ELSE 0 END) AS invalid_pw_area,
+	SUM(CASE WHEN ((lf_area < 0 OR round((lf_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3)) AND (round((lf_area - tot_area)::NUMERIC, 3) > 0.001)) THEN 1 ELSE 0 END) AS invalid_lf_area,
+	SUM(CASE WHEN ((anc_area < 0 OR round((anc_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3)) AND (round((anc_area - tot_area)::NUMERIC, 3) > 0.001)) THEN 1 ELSE 0 END) AS invalid_anc_area
+FROM lpis_population
 WHERE tot_area > 0;
 	
 	-- If the count of invalid area is positive, you can run the next queries to list the IDs of the LPIS parcels with supposed invalid area.
-	-- The area values and their difference are also listed aside IDs. The results are finally sorted so that the cases where the area difference is largest are listed first.
+	-- The area values and their difference are also listed aside IDs. The results are finally sorted so that the cases where the area difference is larger are listed first.
 	
 	-- List of LPIS parcels with invalid_al_area.
 	SELECT lpis_rp_id,
 		round((al_area)::NUMERIC, 3) AS al_area,
 		round((tot_area)::NUMERIC, 3) AS tot_area,
 		round((al_area - tot_area)::NUMERIC, 3) AS area_diff
-	FROM lpis_population_2023
+	FROM lpis_population
 	WHERE (al_area < 0 OR round((al_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3))
 	AND round((al_area - tot_area)::NUMERIC, 3) > 0.001
 	AND tot_area > 0
@@ -272,7 +281,7 @@ WHERE tot_area > 0;
 		round((pc_area)::NUMERIC, 3) AS pc_area,
 		round((tot_area)::NUMERIC, 3) AS tot_area,
 		round((pc_area - tot_area)::NUMERIC, 3) AS area_diff
-	FROM lpis_population_2023
+	FROM lpis_population
 	WHERE (pc_area < 0 OR round((pc_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3))
 	AND round((pc_area - tot_area)::NUMERIC, 3) > 0.001
 	AND tot_area > 0
@@ -283,7 +292,7 @@ WHERE tot_area > 0;
 		round((pg_area)::NUMERIC, 3) AS pg_area,
 		round((tot_area)::NUMERIC, 3) AS tot_area,
 		round((pg_area - tot_area)::NUMERIC, 3) AS area_diff
-	FROM lpis_population_2023
+	FROM lpis_population
 	WHERE (pg_area < 0 OR round((pg_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3))
 	AND round((pg_area - tot_area)::NUMERIC, 3) > 0.001
 	AND tot_area > 0
@@ -294,7 +303,7 @@ WHERE tot_area > 0;
 		round((na_area)::NUMERIC, 3) AS na_area,
 		round((tot_area)::NUMERIC, 3) AS tot_area,
 		round((na_area - tot_area)::NUMERIC, 3) AS area_diff
-	FROM lpis_population_2023
+	FROM lpis_population
 	WHERE (na_area < 0 OR round((na_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3))
 	AND round((na_area - tot_area)::NUMERIC, 3) > 0.001
 	AND tot_area > 0
@@ -305,7 +314,7 @@ WHERE tot_area > 0;
 		round((af_area)::NUMERIC, 3) AS af_area,
 		round((tot_area)::NUMERIC, 3) AS tot_area,
 		round((af_area - tot_area)::NUMERIC, 3) AS area_diff
-	FROM lpis_population_2023
+	FROM lpis_population
 	WHERE (af_area < 0 OR round((af_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3))
 	AND round((af_area - tot_area)::NUMERIC, 3) > 0.001
 	AND tot_area > 0
@@ -316,7 +325,7 @@ WHERE tot_area > 0;
 		round((n2000_area)::NUMERIC, 3) AS n2000_area,
 		round((tot_area)::NUMERIC, 3) AS tot_area,
 		round((n2000_area - tot_area)::NUMERIC, 3) AS area_diff
-	FROM lpis_population_2023
+	FROM lpis_population
 	WHERE (n2000_area < 0 OR round((n2000_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3))
 	AND round((n2000_area - tot_area)::NUMERIC, 3) > 0.001
 	AND tot_area > 0
@@ -327,7 +336,7 @@ WHERE tot_area > 0;
 		round((pw_area)::NUMERIC, 3) AS pw_area,
 		round((tot_area)::NUMERIC, 3) AS tot_area,
 		round((pw_area - tot_area)::NUMERIC, 3) AS area_diff
-	FROM lpis_population_2023
+	FROM lpis_population
 	WHERE (pw_area < 0 OR round((pw_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3))
 	AND round((pw_area - tot_area)::NUMERIC, 3) > 0.001
 	AND tot_area > 0
@@ -338,7 +347,7 @@ WHERE tot_area > 0;
 		round((lf_area)::NUMERIC, 3) AS lf_area,
 		round((tot_area)::NUMERIC, 3) AS tot_area,
 		round((lf_area - tot_area)::NUMERIC, 3) AS area_diff
-	FROM lpis_population_2023
+	FROM lpis_population
 	WHERE (lf_area < 0 OR round((lf_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3))
 	AND round((lf_area - tot_area)::NUMERIC, 3) > 0.001
 	AND tot_area > 0
@@ -349,7 +358,7 @@ WHERE tot_area > 0;
 		round((anc_area)::NUMERIC, 3) AS anc_area,
 		round((tot_area)::NUMERIC, 3) AS tot_area,
 		round((anc_area - tot_area)::NUMERIC, 3) AS area_diff
-	FROM lpis_population_2023
+	FROM lpis_population
 	WHERE (anc_area < 0 OR round((anc_area)::NUMERIC, 3) > round((tot_area)::NUMERIC, 3))
 	AND round((anc_area - tot_area)::NUMERIC, 3) > 0.001
 	AND tot_area > 0
@@ -358,19 +367,19 @@ WHERE tot_area > 0;
 
 -- The following query checks if LPIS parcels have invalid negative values of the tot_area attribute.
 SELECT count(*) AS invalid_negative_tot_area
-FROM lpis_population_2023
+FROM lpis_population
 WHERE tot_area < 0;
 
 	-- If the count of parcels with invalid_negative_tot_area is positive, you can run the next query to list the IDs of the LPIS parcels with negative area.
 	SELECT lpis_rp_id,
 		tot_area
-	FROM lpis_population_2023
+	FROM lpis_population
 	WHERE tot_area < 0;
 
 
 -- The following query checks if LPIS parcels have invalid zero values of the tot_area attribute. The total area attribute can equal zero only when the value of non-agricultural eligible area is bigger than zero.
 SELECT count(*) AS invalid_zero_tot_area
-FROM lpis_population_2023
+FROM lpis_population
 WHERE tot_area = 0
 AND na_area <= 0;
 
@@ -378,14 +387,14 @@ AND na_area <= 0;
 	SELECT lpis_rp_id,
 		tot_area,
 		na_area
-	FROM lpis_population_2023
+	FROM lpis_population
 	WHERE tot_area = 0
 	AND na_area <= 0;
 
 
 -- The following query checks if LPIS parcels have values of the tot_area attribute equal or bigger than the sum of al_area, pc_area and pg_area. Values are rounded to 3 decimals and area differences less than 10 square meters are excluded (this threshold can be adapted according to needs).
 SELECT count(*) AS invalid_alpcpg_area
-FROM lpis_population_2023
+FROM lpis_population
 WHERE round(tot_area::NUMERIC, 3) < round((al_area + pc_area + pg_area)::NUMERIC, 3)
 AND tot_area > 0
 AND round((al_area + pc_area + pg_area - tot_area)::NUMERIC, 3) > 0.001;
@@ -396,16 +405,16 @@ AND round((al_area + pc_area + pg_area - tot_area)::NUMERIC, 3) > 0.001;
 		round((al_area + pc_area + pg_area)::NUMERIC, 3) AS alpcpg_area,
 		round(tot_area::NUMERIC, 3) AS tot_area,
 		round((al_area + pc_area + pg_area - tot_area)::NUMERIC, 3) AS area_diff
-	FROM lpis_population_2023
+	FROM lpis_population
 	WHERE round(tot_area::NUMERIC, 3) < round((al_area + pc_area + pg_area)::NUMERIC, 3)
 	AND round((al_area + pc_area + pg_area - tot_area)::NUMERIC, 3) > 0.001
 	AND tot_area > 0
 	ORDER BY area_diff DESC;
 
 
---  The following query checks if the LPIS tot_area value declared is bigger than the geometric area calculated from the given LPIS polygon.
+-- The following query checks if the LPIS tot_area value declared is bigger than the geometric area calculated from the given LPIS polygon.
 SELECT count(*) AS invalid_tot_area
-FROM lpis_population_2023
+FROM lpis_population
 WHERE tot_area > round(ST_Area(geom_3035)::NUMERIC, 4)
 AND tot_area > 0;
 
@@ -414,28 +423,28 @@ AND tot_area > 0;
 		tot_area,
 		round(ST_Area(geom_3035)::NUMERIC, 4) AS geom_area,
 		round((tot_area - ST_Area(geom_3035))::NUMERIC, 4) AS area_diff
-	FROM lpis_population_2023
+	FROM lpis_population
 	WHERE tot_area > round(ST_Area(geom_3035)::NUMERIC, 4)
 	AND tot_area > 0
 	ORDER BY area_diff DESC;
 
 
---  The following query checks if the GSA claimed area attribute presents invalid negative or zero values.
+-- The following query checks if the GSA claimed area attribute presents invalid negative or zero values.
 SELECT count(*) AS invalid_zero_claim_area
-FROM gsa_ua_claimed_2023
+FROM gsa_ua_claimed
 WHERE claim_area <= 0;
 
 	-- If the count of GSA parcels with invalid_zero_claim_area is positive, you can run the next query to list the IDs of the parcels where the claim_area is less or equal to zero.
 	SELECT gsa_par_id,
 		claim_area
-	FROM gsa_ua_claimed_2023
+	FROM gsa_ua_claimed
 	WHERE claim_area <= 0;
 
 
---  The following query checks if the GSA claimed area attribute is bigger than the geometric area calculated from the given GSA polygon.
+-- The following query checks if the GSA claimed area attribute is bigger than the geometric area calculated from the given GSA polygon.
 SELECT count(*) AS invalid_claim_area
-FROM gsa_ua_claimed_2023 ua
-JOIN gsa_population_2023 gp ON (ua.gsa_par_id = gp.gsa_par_id)
+FROM gsa_ua_claimed ua
+JOIN gsa_population gp ON (ua.gsa_par_id = gp.gsa_par_id)
 WHERE ua.claim_area > round(ST_Area(gp.geom_3035)::NUMERIC, 4)
 AND ua.claim_area > 0
 AND round(ST_Area(gp.geom_3035)::NUMERIC, 4) > 0;
@@ -445,31 +454,31 @@ AND round(ST_Area(gp.geom_3035)::NUMERIC, 4) > 0;
 		ua.claim_area,
 		round(ST_Area(gp.geom_3035)::NUMERIC, 4) AS geom_area,
 		round((claim_area - ST_Area(gp.geom_3035))::NUMERIC, 4) AS area_diff
-	FROM gsa_ua_claimed_2023 ua
-	JOIN gsa_population_2023 gp ON (ua.gsa_par_id = gp.gsa_par_id)
+	FROM gsa_ua_claimed ua
+	JOIN gsa_population gp ON (ua.gsa_par_id = gp.gsa_par_id)
 	WHERE ua.claim_area > round(ST_Area(gp.geom_3035)::NUMERIC, 4)
 	AND ua.claim_area > 0
 	AND round(ST_Area(gp.geom_3035)::NUMERIC, 4) > 0
 	ORDER BY area_diff DESC;
 
 
---  The following query checks for Unit Amounts declared but not claimed, namely the Unit Amounts declared in the interventions table but then not listed in the list of units amount/interventions claimed for each GSA parcel.
+-- The following query checks for Unit Amounts declared but not claimed, namely the Unit Amounts declared in the interventions table but then not listed in the list of units amount/interventions claimed for each GSA parcel.
 SELECT count(*) AS unclaimed_ua_cnt
-FROM interventions_2023 a
-LEFT JOIN gsa_ua_claimed_2023 b ON (a.ua = b.ua)
+FROM interventions a
+LEFT JOIN gsa_ua_claimed b ON (a.ua = b.ua)
 WHERE b.ua IS NULL;
 
 	-- If the count of unclaimed Unit Amounts is positive, you can run the next query to list them.
 	SELECT a.ua
-	FROM interventions_2023 a
-	LEFT JOIN gsa_ua_claimed_2023 b ON (a.ua = b.ua)
+	FROM interventions a
+	LEFT JOIN gsa_ua_claimed b ON (a.ua = b.ua)
 	WHERE b.ua IS NULL;
 
 
---  The following query performs some basic statistics (minimum, maximum, average values) on the number of Unit Amounts declared per Group of Unit Amounts.
+-- The following query performs some basic statistics (minimum, maximum, average values) on the number of Unit Amounts declared per Group of Unit Amounts.
 WITH uagrp AS (
 	SELECT ua_grp, count(*) AS ua_per_group
-	FROM interventions_2023
+	FROM interventions
 	GROUP BY ua_grp
 	ORDER BY ua_per_group DESC
 )
@@ -477,11 +486,11 @@ SELECT count(*) AS ua_grp_cnt, max(ua_per_group) AS max_ua_per_group, min(ua_per
 FROM uagrp;
 
 
---  The following query runs some basic statistics (minimum, maximum, average values) on the number of Groups of Unit Amounts declared per Interventions.
+-- The following query runs some basic statistics (minimum, maximum, average values) on the number of Groups of Unit Amounts declared per Interventions.
 WITH intgrp AS (
 	WITH uagrp AS (
 		SELECT interv, ua_grp, count(*) AS ua_grp_cnt
-		FROM interventions_2023
+		FROM interventions
 		GROUP BY interv, ua_grp
 		ORDER BY interv DESC, ua_grp_cnt DESC
 	)
