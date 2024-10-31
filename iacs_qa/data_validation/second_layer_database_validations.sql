@@ -429,6 +429,19 @@ AND tot_area > 0;
 	ORDER BY area_diff DESC;
 
 
+-- The following query checks if all parcels with claimed UA are present in GSA population
+SELECT count(DISTINCT A.gsa_par_id)
+FROM gsa_ua_claimed A
+LEFT JOIN gsa_population B USING (gsa_code, gsa_par_id)
+WHERE B.gsa_par_id IS NULL
+
+	-- list of parcels with claimed UA not present in GSA population
+	SELECT DISTINCT A.gsa_par_id
+	FROM gsa_ua_claimed A
+	LEFT JOIN gsa_population B USING (gsa_code, gsa_par_id)
+	WHERE B.gsa_par_id IS NULL
+
+
 -- The following query checks if the GSA claimed area attribute presents invalid negative or zero values.
 SELECT count(*) AS invalid_zero_claim_area
 FROM gsa_ua_claimed
