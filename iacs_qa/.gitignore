@@ -3,5 +3,9 @@
 *test.csv
 data_validation/*.csv
 data_validation/*.zip
+data_validation/*.gpkg
+data_validation/*.parquet
 data_validation/*/*.csv
 data_validation/*/*.zip
+data_validation/*/*.gpkg
+data_validation/*/*.parquet
