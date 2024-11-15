@@ -1,4 +1,3 @@
-
 """
 This script runs consistency data validations on large datasets using Dask DataFrames. It performs various
 validations such as datatype checks, null value identification, duplicate detection, area format validation,
@@ -24,8 +23,6 @@ Modules and Functions:
     Identifies null values in the specified columns.
 - validate_area_format(self, ddf: dd.DataFrame) -> None:
     Validates if the area columns are in hectares with 4 decimal precision.
-- validate_area_amount(self, ddf: dd.DataFrame, pkey: str, column: str) -> None:
-    Checks if the area values in the dataset are positive.
 - process(self, tables_columns: dict) -> None:
     Orchestrates the full data validation process.
 
@@ -89,7 +86,12 @@ def setup_logging(log_file: str):
 class DataProcessor:
 
     def __init__(
-        self, input_file_path: str, table_type: str, interventions_file: Optional[str], gsa_population_file: Optional[str], config: Optional[dict] = None
+        self,
+        input_file_path: str,
+        table_type: str,
+        interventions_file: Optional[str],
+        gsa_population_file: Optional[str],
+        config: Optional[dict] = None,
     ):
         self.INPUT_FILE_FULLPATH = input_file_path
         self.TABLE_TYPE = table_type
@@ -101,16 +103,19 @@ class DataProcessor:
         self.errors_limit = 2000
         self.interventions_file = interventions_file
         self.gsa_population_file = gsa_population_file
-        self.config = config if config else {
-            "validate_columns": {"enabled": True, "critical": True},
-            "validate_dtypes": {"enabled": True, "critical": False},
-            "check_duplicates": {"enabled": True, "critical": False},
-            "check_nulls": {"enabled": True, "critical": False},
-            "validate_area_format": {"enabled": True, "critical": False},
-            "validate_area_amount": {"enabled": True, "critical": True},
-            "validate_relation_interventions": {"enabled": True, "critical": False},
-            "validate_relation_gsa": {"enabled": True, "critical": False},
-        }
+        self.config = (
+            config
+            if config
+            else {
+                "validate_columns": {"enabled": True, "critical": True},
+                "validate_dtypes": {"enabled": True, "critical": False},
+                "check_duplicates": {"enabled": True, "critical": False},
+                "check_nulls": {"enabled": True, "critical": False},
+                "validate_area_format": {"enabled": True, "critical": False},
+                "validate_relation_interventions": {"enabled": True, "critical": False},
+                "validate_relation_gsa": {"enabled": True, "critical": False},
+            }
+        )
 
         # Log file creation
         log_file = os.path.splitext(self.INPUT_FILE_FULLPATH)[0] + "_log.txt"
@@ -283,7 +288,9 @@ class DataProcessor:
         for column in columns_to_check:
             if column in ddf.columns:
                 null_count = ddf[column].isnull().sum().compute()
-                custom_null_count = ddf[ddf[column].isin(custom_nulls)].shape[0].compute()
+                custom_null_count = (
+                    ddf[ddf[column].isin(custom_nulls)].shape[0].compute()
+                )
                 total_null_count = null_count + custom_null_count
 
                 if total_null_count > 0:
@@ -311,8 +318,16 @@ class DataProcessor:
     def validate_area_format(self, ddf: dd.DataFrame) -> tuple:
         """Validate if the area columns are in hectares with 4 decimal precision."""
         area_columns = [
-            "tot_area", "al_area", "pc_area", "pg_area", "na_area",
-            "af_area", "n2000_area", "pw_area", "lf_area", "anc_area"
+            "tot_area",
+            "al_area",
+            "pc_area",
+            "pg_area",
+            "na_area",
+            "af_area",
+            "n2000_area",
+            "pw_area",
+            "lf_area",
+            "anc_area",
         ]
         self.logger.info("Validating area format...")
         ddf.columns = list(map(str.lower, ddf.columns))  # Ensure columns are lowercase
@@ -339,14 +354,20 @@ class DataProcessor:
                     )
 
             progress += 1
-            progressbar(total=len(area_columns), progress=progress, label="Validating area format:")
+            progressbar(
+                total=len(area_columns),
+                progress=progress,
+                label="Validating area format:",
+            )
 
         duration = round((time.time() - self.start_time), 1)
 
         if validation_errors:
             self.errors += 1
             message = "Error: " + "; ".join(validation_errors)
-            log_file_path = f"{os.path.splitext(self.INPUT_FILE_FULLPATH)[0]}_area_format_log.txt"
+            log_file_path = (
+                f"{os.path.splitext(self.INPUT_FILE_FULLPATH)[0]}_area_format_log.txt"
+            )
             with open(log_file_path, "w") as log_file:
                 log_file.write(message)
                 for err in validation_errors:
@@ -359,45 +380,18 @@ class DataProcessor:
             self.logger.info(message)
             return (True, message, duration)
 
-    def validate_area_amount(self, ddf: dd.DataFrame, pkey: str, column: str) -> tuple:
-        """Validate that the area values in the specified column are positive."""
-        self.logger.info("Validating area amount...")
-        ddf.columns = list(map(str.lower, ddf.columns))
-        ddf = ddf[[pkey, column]]  # Filter the DataFrame for primary keys and the area column
-
-        progress = 0
-        progressbar(total=1, progress=progress, label="Validating area amount:")
-
-        # Query for parcels with zero or negative area
-        invalid_area_df = ddf.query(f"{column} <= 0").compute()
-        invalid_area_count = len(invalid_area_df)
-
-        progress += 1
-        progressbar(total=1, progress=progress, label="Validating area amount:")
-
-        duration = round((time.time() - self.start_time), 1)
-
-        if invalid_area_count > 0:
-            self.errors += 1
-            message = f"Error: Found {invalid_area_count} parcels with zero/negative area"
-
-            log_file_path = f"{os.path.splitext(self.INPUT_FILE_FULLPATH)[0]}_area_amount_log.txt"
-            with open(log_file_path, "w") as log_file:
-                log_file.write(message)
-                invalid_area_df.to_csv(log_file, sep=";", index=False)
-
-            self.logger.info(message)
-            return (False, message, duration)
-        else:
-            message = f"No parcels with zero/negative area. Finished in {duration} sec."
-            self.logger.info(message)
-            return (True, message, duration)
-
     def validate_relation(
-        self, df1: dd.DataFrame, df2: dd.DataFrame, column1: str, column2: str = None, tname: str = "second"
+        self,
+        df1: dd.DataFrame,
+        df2: dd.DataFrame,
+        column1: str,
+        column2: str = None,
+        tname: str = "second",
     ) -> tuple:
         """Validate that entries in `column1` of `df1` exist in `column2` of `df2`."""
-        self.logger.info(f"Validating if entries exist in both {self.TABLE_TYPE} and {tname} tables...")
+        self.logger.info(
+            f"Validating if entries exist in both {self.TABLE_TYPE} and {tname} tables..."
+        )
 
         df1.columns = list(map(str.lower, df1.columns))
         df2.columns = list(map(str.lower, df2.columns))
@@ -445,7 +439,11 @@ class DataProcessor:
             num_missing_entries = len(missing_entries)
 
             progress += 1
-            progressbar(total=total_steps, progress=progress, label=f"Validating relation for {column1}:")
+            progressbar(
+                total=total_steps,
+                progress=progress,
+                label=f"Validating relation for {column1}:",
+            )
 
             duration = round((time.time() - self.start_time), 1)
 
@@ -492,38 +490,77 @@ class DataProcessor:
 
             # Define the steps with critical and enabled properties from config
             steps = [
-                ("validate_columns", self.validate_columns, [ddf, tables_columns[self.TABLE_TYPE]]),
-                ("validate_dtypes", self.validate_dtypes, [ddf, tables_columns[self.TABLE_TYPE]]),
-                ("check_duplicates", self.check_for_duplicates, [ddf, tables_columns["primary_keys"][self.TABLE_TYPE]]),
-                ("check_nulls", self.check_for_nulls, [ddf, list(tables_columns[self.TABLE_TYPE].keys())])
+                (
+                    "validate_columns",
+                    self.validate_columns,
+                    [ddf, tables_columns[self.TABLE_TYPE]],
+                ),
+                (
+                    "validate_dtypes",
+                    self.validate_dtypes,
+                    [ddf, tables_columns[self.TABLE_TYPE]],
+                ),
+                (
+                    "check_duplicates",
+                    self.check_for_duplicates,
+                    [ddf, tables_columns["primary_keys"][self.TABLE_TYPE]],
+                ),
+                (
+                    "check_nulls",
+                    self.check_for_nulls,
+                    [ddf, list(tables_columns[self.TABLE_TYPE].keys())],
+                ),
             ]
 
             # LPIS Specific Validations
             if self.TABLE_TYPE == "lpis":
                 steps.append(("validate_area_format", self.validate_area_format, [ddf]))
-                steps.append(("validate_area_amount", self.validate_area_amount, [ddf, tables_columns["primary_keys"][self.TABLE_TYPE][0], "tot_area"]))
 
             # GSA_UA_CLAIMED Specific Validations
             if self.TABLE_TYPE == "ua_claimed":
-                if self.config.get("validate_relation_interventions", {}).get("enabled", True):
-                    file_reader_inter = FileReader(self.interventions_file, 'interventions')
+                if (
+                    self.config.get("validate_relation_interventions", {}).get(
+                        "enabled", True
+                    )
+                    and self.interventions_file
+                ):
+                    file_reader_inter = FileReader(
+                        self.interventions_file, "interventions"
+                    )
                     ddf_inter = file_reader_inter.read_file()
-                    steps.append(("validate_relation_interventions", self.validate_relation, [ddf, ddf_inter, 'ua', None, 'interventions']))
+                    steps.append(
+                        (
+                            "validate_relation_interventions",
+                            self.validate_relation,
+                            [ddf, ddf_inter, "ua", None, "interventions"],
+                        )
+                    )
 
-                if self.config.get("validate_relation_gsa", {}).get("enabled", True):
-                    file_reader_gsa = FileReader(self.gsa_population_file, 'gsa')
+                if (
+                    self.config.get("validate_relation_gsa", {}).get("enabled", True)
+                    and self.gsa_population_file
+                ):
+                    file_reader_gsa = FileReader(self.gsa_population_file, "gsa")
                     ddf_gsa = file_reader_gsa.read_file()
-                    steps.append(("validate_relation_gsa", self.validate_relation, [ddf, ddf_gsa, 'gsa_par_id', None, 'gsa']))
+                    steps.append(
+                        (
+                            "validate_relation_gsa",
+                            self.validate_relation,
+                            [ddf, ddf_gsa, "gsa_par_id", None, "gsa"],
+                        )
+                    )
 
             # Execute each step and yield the results
             for step_name, step_function, args in steps:
-                step_config = self.config.get(step_name, {"enabled": True, "critical": False})
+                step_config = self.config.get(
+                    step_name, {"enabled": True, "critical": False}
+                )
                 if step_config.get("enabled", True):
                     try:
                         result = step_function(*args)
                         success, message, duration = result
-                        nice_message = f"[{step_name.upper()}]: {'Success' if success else 'Failure'} - {message} (Duration: {duration}s)"
-                        yield (success, nice_message, duration)
+                        message = f"[{step_name.upper()}]: {'Success' if success else 'Failure'} - {message} (Duration: {duration}s)"
+                        yield (success, message, duration)
 
                         if not success and step_config.get("critical", False):
                             # Stop the process if the step fails and is marked as critical
@@ -573,15 +610,21 @@ def run_processor(
             table_type = "ua_claimed"
             # Ask for interventions and GSA population files
             if interventions_file is None:
-                interventions_file = input("Please provide the interventions file path: ")
+                interventions_file = input(
+                    "Please provide the interventions file path: "
+                )
             if gsa_population_file is None:
-                gsa_population_file = input("Please provide the GSA population file path: ")
+                gsa_population_file = input(
+                    "Please provide the GSA population file path: "
+                )
 
         tables_columns_path = "./tables.json"
         with open(tables_columns_path, "r") as f:
             tables_columns = json.load(f)
 
-        data_processor = DataProcessor(input_file, table_type, interventions_file, gsa_population_file)
+        data_processor = DataProcessor(
+            input_file, table_type, interventions_file, gsa_population_file
+        )
 
         # Iterate over the generator returned by process to print results to the terminal
         for success, message, duration in data_processor.process(tables_columns):
@@ -589,7 +632,6 @@ def run_processor(
 
     except Exception as e:
         print(f"Error: {str(e)}")
-
 
 
 if __name__ == "__main__":
