@@ -38,7 +38,7 @@ To open and use this notebook, you will need an environment that supports Jupyte
 ## Release log
 Using the latest version of QUASSA is strongly recommended. That said, all superseded versions of the tool are provided as zip packages in the [version_history](https://github.com/ec-jrc/cbm/tree/main/iacs_qa/sample_extraction/JRC_v2_notebook/version_history) directory.
 ---
-**December 6th** - v2.8
+**December 9th** - v2.8
 * Fixed a bug that caused incorrect processing of parcel IDs that started with "0".
 * Fixed a bug that caused crashing for input dasets where all parcels were not covered by VHR images. 
 
