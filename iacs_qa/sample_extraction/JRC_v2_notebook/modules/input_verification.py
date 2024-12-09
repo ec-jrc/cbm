@@ -75,63 +75,6 @@ def verify_and_report_parcel_df(parcel_df):
 
     return True
 
-def verify_and_clean_with_counting(parcel_df):
-    """
-    verify and clean but also print out total number of removed rows
-    """
-    requirements = {
-        "gsa_par_id": [("string", "string"), ("int64", "integer")],
-        "gsa_hol_id": [("int64", "integer"),],
-        "ua_grp_id": [("string", "string")],
-        "covered": [("int64", "integer")],
-        "ranking": [("int64", "integer")]
-    }
-
-    removed_rows = 0
-
-    for column, expected_types in requirements.items():
-        if column not in parcel_df.columns:
-            print(f"Column '{column}' not found in the dataframe. Removing rows with this issue.")
-            removed_rows += parcel_df[column].isnull().sum()
-            parcel_df = parcel_df.dropna(subset=[column])
-            continue
-        if parcel_df[column].isnull().any():
-            print(f"Column '{column}' contains empty values. Removing rows with this issue.")
-            removed_rows += parcel_df[column].isnull().sum()
-            parcel_df = parcel_df.dropna(subset=[column])
-        
-        actual_type = parcel_df[column].dtype
-
-        # Special check for the 'covered' column to ensure it's binary (0 or 1)
-        if column == "covered":
-            if not pd.api.types.is_integer_dtype(parcel_df[column]):
-                print(f"Column '{column}' has incorrect data type. Expected {expected_types}, got {actual_type}. Removing rows with this issue.")
-                removed_rows += parcel_df[column].isnull().sum()
-                parcel_df = parcel_df.dropna(subset=[column])
-            if not parcel_df[column].isin([0, 1]).all():
-                print(f"Column '{column}' should only contain 0s or 1s. Removing rows with this issue.")
-                removed_rows += parcel_df[column].isin([0, 1]).sum()
-                parcel_df = parcel_df[parcel_df[column].isin([0, 1])]
-        else:
-            type_matched = False
-            for expected_type_str, type_name in expected_types:
-                if expected_type_str == "string":
-                    if pd.api.types.is_string_dtype(parcel_df[column]) or actual_type == "object":
-                        type_matched = True
-                        break
-                else:
-                    if pd.api.types.is_dtype_equal(actual_type, expected_type_str):
-                        type_matched = True
-                        break
-            
-            if not type_matched:
-                print(f"Column '{column}' has incorrect data type. Expected {expected_types}, got {actual_type}. Removing rows with this issue.")
-
-                removed_rows += parcel_df[column].isnull().sum()
-                parcel_df = parcel_df.dropna(subset=[column])
-    
-    print(f"Total number of removed rows: {removed_rows}")
-    return parcel_df
 
 def verify_target_df(target_df):
     """

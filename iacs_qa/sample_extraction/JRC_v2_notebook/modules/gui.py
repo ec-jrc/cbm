@@ -146,7 +146,7 @@ def get_ua_groups_from_parcel_file(parcels_df, mode="ulm"):
                 default_target = 300
             ua_group_dict[group] = {"target" : default_target, "count" : ua_group_count[group], "desc" : create_ua_group_description(group, counter)}
             counter += 1
-        print("\nDefault targets set based on the values recommended by the Union level methodology.\n")
+        print("\nDefault targets set based on the values recommended by the ULM.\n")
 
     else:
         for group in ua_groups:
@@ -255,10 +255,10 @@ def load_parcel_file(entry_widget, output_area, datamanager):
         print("Verifying file. Please wait...\n")
         file_path = entry_widget.value 
         try:
-            df = pd.read_csv(file_path)
-            # verify_parcel_df(df)
-            # verify_parcel_df_and_save_report(df)
-            # verify_and_clean_with_counting(df)
+            try:
+                df = pd.read_csv(file_path, dtype={'gsa_par_id': str, 'gsa_hol_id': str, 'ua_grp_id': str})
+            except KeyError:
+                print("One of the following columns: 'gsa_par_id', 'gsa_hol_id' or 'ua_grp_id' not found in CSV file")
             verify_and_report_parcel_df(df)
             clear_output()
             datamanager.parcels_path = file_path

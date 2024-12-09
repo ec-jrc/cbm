@@ -45,8 +45,8 @@ def count_selected_covered_parcels(datamanager):
     noncovered_parcels = []
     for bucket in datamanager.final_bucket_state.values():
         for parcel in bucket["parcels"]:
+            unique_parcel_id = str(parcel["gsa_par_id"]) + "_" + str(parcel["gsa_hol_id"])
             if parcel["covered"] == 1:
-                unique_parcel_id = str(parcel["gsa_par_id"]) + "_" + str(parcel["gsa_hol_id"])
                 covered_parcels.append(unique_parcel_id)
             else:
                 noncovered_parcels.append(unique_parcel_id)
