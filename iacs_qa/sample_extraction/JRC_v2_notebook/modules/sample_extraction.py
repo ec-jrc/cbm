@@ -149,6 +149,157 @@ def reduce_holdings(parcel_df, added_holdings):
     """
     return parcel_df[parcel_df["gsa_hol_id"].isin(added_holdings)], parcel_df[~parcel_df["gsa_hol_id"].isin(added_holdings)]
 
+def print_buckets_table(buckets, max_bucket_len=30):
+    """
+    Print a quick console table listing each bucket, how many parcels it currently has,
+    the target, and whether or not the bucket is full, with simple ANSI color coding.
+    
+    :param buckets: dict with structure like:
+        {
+          "BID1": {"target": 20, "parcels": [...list of extracted rows...]},
+          "BID2": {...},
+          ...
+        }
+    :param max_bucket_len: (int) Maximum number of characters to show for bucket IDs.
+                           Longer IDs get truncated (with "...").
+    """
+    # ANSI color codes for console
+    GREEN  = "\033[92m"
+    YELLOW = "\033[93m"
+    RESET  = "\033[0m"
+    
+    # Prepare a list of (bucket_id, current_count, target_count, is_full)
+    table_rows = []
+    for bid, data in buckets.items():
+        current_count = len(data["parcels"])
+        target_count  = data["target"]
+        is_full       = (current_count >= target_count)
+        
+        # Truncate bucket ID if it's too long
+        if len(bid) > max_bucket_len:
+            truncated_bid = bid[:max_bucket_len - 3] + "..."
+        else:
+            truncated_bid = bid
+        
+        table_rows.append((truncated_bid, current_count, target_count, is_full))
+    
+    # Compute final widths for nice alignment:
+    # We'll base the first column width on max_bucket_len,
+    # and use some fixed widths for CURRENT, TARGET, and STATUS.
+    bucket_col_width = max_bucket_len
+    header = (f"{'BUCKET'.ljust(bucket_col_width)}  "
+              f"{'CURRENT'.rjust(7)}  "
+              f"{'TARGET'.rjust(6)}  STATUS")
+    separator = "-" * (bucket_col_width + 26)
+    
+    print(header)
+    print(separator)
+    
+    for (trunc_bid, ccount, tcount, is_full) in table_rows:
+        status_str = "FULL" if is_full else "NOT FULL"
+        # Build the line (without color first)
+        line = (f"{trunc_bid.ljust(bucket_col_width)}  "
+                f"{str(ccount).rjust(7)}  "
+                f"{str(tcount).rjust(6)}  "
+                f"{status_str}")
+        
+        # Apply color to the entire line based on whether it's full or not
+        if is_full:
+            line = GREEN + line + RESET
+        else:
+            line = YELLOW + line + RESET
+        
+        print(line)
+    print()  # Blank line at the end for spacing
+
+
+
+def intervention_loop_console(
+    parcel_df, 
+    buckets, 
+    checked_holdings, 
+    added_rows, 
+    added_holdings, 
+    full_buckets, 
+    dm,
+    report_interval=500
+):
+    """
+    Console version of intervention_loop.
+    Iterates over parcel_df, fills buckets, and prints a summary table whenever a bucket fills.
+    """
+    new_full_bucket = ""
+    holding_threshold_exceeded = False
+    total_rows = len(parcel_df)
+    rows_processed = 0
+
+    for index, row in parcel_df.iterrows():
+        rows_processed += 1
+
+        # If all buckets are full, we can bail out early.
+        if buckets_full(buckets):
+            break
+
+        # If this holding hasn't been processed yet, process the entire holding once.
+        if row["gsa_hol_id"] not in checked_holdings:
+            checked_holdings.add(row["gsa_hol_id"])
+            holding_group = parcel_df[parcel_df["gsa_hol_id"] == row["gsa_hol_id"]]
+            buckets, added_rows, added_holdings = check_holding_group(
+                holding_group, 
+                buckets, 
+                added_rows, 
+                added_holdings, 
+                dm.covered_priority
+            )
+        else:
+            # If we’ve already seen the holding, just check this single parcel.
+            parcel_group = parcel_df[parcel_df["gsa_par_id"] == row["gsa_par_id"]]
+            buckets, _, added_rows, added_holdings = check_parcel(
+                parcel_group, 
+                buckets, 
+                added_rows, 
+                added_holdings
+            )
+
+        # Check which buckets just got filled
+        new_full_buckets = get_full_bucket_ids(buckets)
+
+        # Check if we just hit the 3% rule threshold
+        if (
+            dm.param_3_percent 
+            and (len(added_holdings) >= dm.holding_3_percent_count) 
+            and (not dm.holdings_reduced)
+        ):
+            holding_threshold_exceeded = True
+            dm.holdings_reduced = True  # only do this once
+            print("3% holding limit reached. Will reduce the dataset for next step.")
+
+        # If a bucket newly filled
+        if len(new_full_buckets) != len(full_buckets):
+            # The difference is the newly-filled bucket
+            new_full_bucket = list(set(new_full_buckets) - set(full_buckets))[0]
+            print(f"\nBucket {new_full_bucket} was just filled.")
+            print("Progress summary below. The summary is displayed every time a new bucket is filled.")
+            # Show a “live” snapshot of all buckets so far
+            print_buckets_table(buckets)
+
+        # If we found a newly full bucket or triggered the 3% rule, exit this loop so the caller can respond
+        if new_full_bucket or holding_threshold_exceeded:
+            return buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, False
+
+        # Optionally, you could also print a quick progress line every N rows, e.g.:
+        if rows_processed % report_interval == 0:
+            completed_rows = sum(len(b['parcels']) for b in buckets.values())
+            print(
+                f"[Progress] {rows_processed} / {total_rows} rows processed, "
+                f"{completed_rows} parcels assigned so far."
+            )
+
+    # If we finish the entire parcel_df without filling all buckets or hitting 3% threshold
+    return buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, True
+
+
+
 
 def intervention_loop(parcel_df, buckets, checked_holdings, added_rows, added_holdings, full_buckets, dm, progress_widgets = None):
     new_full_bucket = ""
@@ -272,7 +423,10 @@ def iterate_over_interventions_fast(parcel_df, buckets, dm, progress_widgets=Non
 
     while not buckets_full(buckets) and not all_checked:
         parcel_df = set_phase(parcel_df, "first loop")
-        buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, all_checked = intervention_loop(parcel_df, buckets, checked_holdings, added_rows, added_holdings, full_buckets, dm, progress_widgets)
+        if progress_widgets == "console":
+            buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, all_checked = intervention_loop_console(parcel_df, buckets, checked_holdings, added_rows, added_holdings, full_buckets, dm)
+        else:
+            buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, all_checked = intervention_loop(parcel_df, buckets, checked_holdings, added_rows, added_holdings, full_buckets, dm, progress_widgets)
         if new_full_bucket != "":
             # remove rows associated with a recently completed bucket
             full_buckets.append(new_full_bucket)
@@ -311,7 +465,10 @@ def iterate_over_interventions_fast(parcel_df, buckets, dm, progress_widgets=Non
         checked_holdings = set()
 
         while not buckets_full(buckets) and not all_checked:
-            buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, all_checked = intervention_loop(parcel_df, buckets, checked_holdings, added_rows, added_holdings, full_buckets, dm, progress_widgets)
+            if progress_widgets == "console":
+                buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, all_checked = intervention_loop_console(parcel_df, buckets, checked_holdings, added_rows, added_holdings, full_buckets, dm)
+            else:
+                buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, all_checked = intervention_loop(parcel_df, buckets, checked_holdings, added_rows, added_holdings, full_buckets, dm, progress_widgets)
             if new_full_bucket != "":
                 # remove rows associated with a recently completed bucket
                 full_buckets.append(new_full_bucket)
@@ -325,7 +482,10 @@ def iterate_over_interventions_fast(parcel_df, buckets, dm, progress_widgets=Non
 
             all_checked = False
             while not buckets_full(buckets) and not all_checked:
-                buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, all_checked = intervention_loop(parcel_df, buckets, checked_holdings, added_rows, added_holdings, full_buckets, dm, progress_widgets)
+                if progress_widgets == "console":
+                    buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, all_checked = intervention_loop_console(parcel_df, buckets, checked_holdings, added_rows, added_holdings, full_buckets, dm)
+                else:
+                    buckets, new_full_bucket, holding_threshold_exceeded, added_holdings, all_checked = intervention_loop(parcel_df, buckets, checked_holdings, added_rows, added_holdings, full_buckets, dm, progress_widgets)
                 if new_full_bucket != "":
                     # remove rows associated with a recently completed bucket
                     full_buckets.append(new_full_bucket)
@@ -346,7 +506,9 @@ def iterate_over_interventions_fast(parcel_df, buckets, dm, progress_widgets=Non
             buckets, added_extra_holdings = find_one_holding_and_finish(all_the_rest_noncovered, buckets, added_rows, dm, progress_widgets)
             added_holdings = added_holdings.union(added_extra_holdings)
 
-    if progress_widgets:
+    if progress_widgets == "console":
+        print("Extraction finished.")
+    elif progress_widgets:
         gui.update_output_area(buckets, progress_widgets)
 
     dm.final_bucket_state = buckets
