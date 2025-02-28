@@ -10,13 +10,14 @@ def verify_and_report_parcel_df(parcel_df):
     """
     Fix this. This should collect all problems and throw them as a single exception.
     """
+    print("var")
 
     requirements = {
-        "gsa_par_id": [("string", "string"), ("int64", "integer"), ("float64", "float"),],
-        "gsa_hol_id": [("int64", "integer"), ("float64", "float"),("string", "string"),],
+        "gsa_par_id": [("string", "string")],#, ("int64", "integer"), ("float64", "float"),],
+        "gsa_hol_id": [("string", "string")],#[("int64", "integer"), ("float64", "float"),("string", "string"),],
         "ua_grp_id": [("string", "string")],
-        "covered": [("int64", "integer")],
-        "ranking": [("int64", "integer")]
+        "covered": [("int64", "integer"), ("int32", "integer")],
+        "ranking": [("int64", "integer"),("int32", "integer")]
     }
 
     issues_found = []

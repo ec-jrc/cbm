@@ -102,7 +102,7 @@ def create_ua_group_description(group_id, counter):
     return f"{counter}. {group_id}"
 
 
-def get_ua_groups_from_parcel_file(parcels_df, mode="ulm"):
+def get_ua_groups_from_parcel_file(parcels_df, mode="simple"):
     """
     Extract unique ua group identifiers from a parcel dataframe and update a global dictionary with default thresholds.
 
@@ -114,7 +114,7 @@ def get_ua_groups_from_parcel_file(parcels_df, mode="ulm"):
     ua_group_dict = {}
     counter = 1
     print(f"File loaded successfully. Number of rows: {len(parcels_df)}\n")
-    
+
 
     if mode == "ulm":
         for group in ua_groups:
@@ -148,23 +148,48 @@ def get_ua_groups_from_parcel_file(parcels_df, mode="ulm"):
             counter += 1
         print("\nDefault targets set based on the values recommended by the ULM.\n")
 
+    # else:
+    #     for group in ua_groups:
+    #         count_for_group = ua_group_count[group]
+    #         # print(f"{group}: {count_for_group} rows detected.")
+    #         if count_for_group >= 6000:
+    #             default_target = 300
+    #         elif count_for_group >= 20:
+    #             default_target = int(count_for_group * 0.05)
+    #         else:
+    #             default_target = 1
+    #         ua_group_dict[group] = {"target" : default_target, "count" : ua_group_count[group], "desc" : create_ua_group_description(group, counter)}
+    #         counter += 1
+    #     print("\nDefault targets set to 5% of the total number of rows for each UA group (max 300).\n")
+
     else:
         for group in ua_groups:
             count_for_group = ua_group_count[group]
-            # print(f"{group}: {count_for_group} rows detected.")
-            if count_for_group >= 6000:
-                default_target = 300
+            if count_for_group <= 6000:
+                default_target = round(count_for_group * 0.05)
             else:
-                default_target = int(count_for_group * 0.05)
+                default_target = 300
+        
+            if default_target == 0:
+                default_target = 1
+
             ua_group_dict[group] = {"target" : default_target, "count" : ua_group_count[group], "desc" : create_ua_group_description(group, counter)}
             counter += 1
-        print("\nDefault targets set to 5% of the total number of rows for each UA group.\n")
+    
+    return ua_group_dict
 
+def display_ua_grp_distribution_chart(ua_group_dict):
+    
     # draw a simple bar chart to visualize the distribution of ua groups
-    print(f"Detected {len(ua_groups)} unique UA groups:\n")
+    print(f"Detected {len(ua_group_dict)} unique UA groups:\n")
     fig = plt.figure(figsize=(10, 4))  # Reduced height from 5 to 3
     ax = fig.add_subplot(111)
 
+    # count the number of rows for each ua group
+    ua_group_count = {}
+    for group, info in ua_group_dict.items():
+        ua_group_count[info["desc"]] = info["count"]
+    
     bars = ax.bar(ua_group_count.keys(), ua_group_count.values(), color="#1daee3")
 
     plt.xlabel("UA Group ID")
@@ -184,7 +209,7 @@ def get_ua_groups_from_parcel_file(parcels_df, mode="ulm"):
 
     
 
-    return ua_group_dict
+    
         #PARAMETERS["ua_groups"][group] = {"target" : 300, "count" : ua_group_count[group]}
 
 def populate_target_values(target_df, widgets_list, datamanager):
@@ -259,10 +284,13 @@ def load_parcel_file(entry_widget, output_area, datamanager):
                 df = pd.read_csv(file_path, dtype={'gsa_par_id': str, 'gsa_hol_id': str, 'ua_grp_id': str})
             except KeyError:
                 print("One of the following columns: 'gsa_par_id', 'gsa_hol_id' or 'ua_grp_id' not found in CSV file")
+
             verify_and_report_parcel_df(df)
             clear_output()
             datamanager.parcels_path = file_path
             ua_group_dict = get_ua_groups_from_parcel_file(df)
+            print(len(ua_group_dict))
+            display_ua_grp_distribution_chart(ua_group_dict)
             datamanager.ua_groups = ua_group_dict
             print("Parcel file header preview: \n")
             print(df.head())

@@ -42,12 +42,13 @@ def generate_supplementary_output(datamanager):
     # noncovered_parcels 23
     # bucket_stats {'E5': {'label': '1. E5', 'selected': 271, 'total': 5145, 'target': 300}, 'ANC': {'label': '2. 
 
-    with open(summary_path, 'w') as f:
+    with open(summary_path, 'w', encoding="utf-8") as f:
         f.write(f"QUASSA Extraction Summary (ID: {prefix})\n")
         f.write(f"Timestamp: {timestamp}\n\n")
         f.write(f"Parameters:\n")
         f.write(f"- 3% holding limit: {'Yes' if param_3_percent else 'No'}\n")
-        f.write(f"- Covered Priority: {covered_priority_label}\n\n")
+        f.write(f"- Covered Priority: {covered_priority_label}\n")
+        f.write(f"- Non-contributing, highest ranked parcel of each holding: {'Retain when a bucket is filled' if datamanager.noncontributing_filtering == 1 else 'Filter out when a bucket is filled'}\n\n")
         f.write(f"- Selected holding level interventions: {datamanager.holding_level_interventions if datamanager.holding_level_interventions != [] else 'none.'}\n\n")
         f.write(f"Bucket Summary:\n")
         f.write(f"--------------------------------------\n")

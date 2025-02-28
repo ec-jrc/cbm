@@ -11,3 +11,4 @@ compare_outputs.py
 anonymizer.py
 test_tools.py
 .vscode/
+testing_notebook.ipynb
