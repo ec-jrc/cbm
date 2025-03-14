@@ -4,6 +4,7 @@ import datetime
 import uuid
 import pickle
 from modules.stats import calculate_summary_stats
+from collections import defaultdict
 
 def generate_supplementary_output(datamanager):
     param_3_percent = datamanager.param_3_percent
@@ -21,7 +22,7 @@ def generate_supplementary_output(datamanager):
     output_dir = "output"
     os.makedirs(output_dir, exist_ok=True)
     
-    summary_filename = f"{prefix}_{timestamp}.txt"
+    summary_filename = f"{prefix}_summary_{timestamp}.txt"
     summary_path = os.path.join(output_dir, summary_filename)
 
     summary_stats = calculate_summary_stats(datamanager)
@@ -66,15 +67,78 @@ def generate_supplementary_output(datamanager):
         f.write(f"- Selected parcels covered by VHR images: {summary_stats['covered_parcels']}\n")
         f.write(f"- Selected parcels not covered by VHR images: {summary_stats['noncovered_parcels']}\n")
 
-
-    
-
-
     return prefix, summary_path, timestamp
 
+def generate_parcel_centric_output(buckets, prefix, timestamp, debug=False):
+    """
+    Generates xlsx and csv files with parcel-centric data structure.
+    Each row represents a unique parcel with the following columns:
+    - gsa_par_id
+    - gsa_hol_id
+    - ranking
+    - covered
+    - buckets (list of bucket IDs related to that parcel)
+    - bucket_count (number of unique bucket IDs related to that parcel)
+    """
+    
+    
+    output_dir = "output"
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Create a dictionary to store parcel information
+    parcel_dict = defaultdict(lambda: {
+        'gsa_hol_id': None,
+        'ranking': None,
+        'covered': None,
+        'buckets': set()
+    })
+    
+    # Iterate through buckets and their parcels to collect information
+    for bucket_id, bucket in buckets.items():
+        for parcel in bucket['parcels']:
+            parcel_id = parcel['gsa_par_id']
+            parcel_info = parcel_dict[parcel_id]
+            
+            # Add the bucket to the set of buckets for this parcel
+            parcel_info['buckets'].add(bucket_id)
+            
+            parcel_info['gsa_hol_id'] = parcel['gsa_hol_id']
+            parcel_info['ranking'] = parcel['ranking']
+            parcel_info['covered'] = parcel['covered']
+    
+    # Convert the dictionary to a list of rows for the dataframe
+    output_rows = []
+    for parcel_id, info in parcel_dict.items():
+        buckets_list = sorted(list(info['buckets']))  # Convert set to sorted list
+        output_rows.append({
+            'gsa_par_id': parcel_id,
+            'gsa_hol_id': info['gsa_hol_id'],
+            'ranking': info['ranking'],
+            'covered': info['covered'],
+            'buckets': ','.join(f'[{bucket}]' for bucket in buckets_list),  # Join bucket IDs with commas, each in square brackets
+            'bucket_count': len(info['buckets'])
+        })
+    
+    # Create dataframe
+    parcel_df = pd.DataFrame(output_rows)
+    
+    # Define output paths
+    output_path_excel = os.path.join(output_dir, f"{prefix}_parcel_centric_{timestamp}.xlsx")
+    output_path_csv = os.path.join(output_dir, f"{prefix}_parcel_centric_{timestamp}.csv")
+    
+    # Save as Excel and CSV
+    parcel_df.to_excel(output_path_excel, index=False)
+    parcel_df.to_csv(output_path_csv, index=False)
+    
+    if debug:
+        print(f"Generated parcel-centric output with {len(parcel_df)} unique parcels.")
+        print(f"Files saved to: {output_path_excel} and {output_path_csv}")
+    
+    return output_path_excel, output_path_csv
 
 
-def generate_output(buckets, prefix, timestamp, debug=False):
+
+def generate_main_output(buckets, prefix, timestamp, debug=False):
     """
     Generates xlsx and csv files with the following columns:
     - bucket_id
@@ -102,14 +166,14 @@ def generate_output(buckets, prefix, timestamp, debug=False):
     # save output_df as pickle
     if debug:
         print("Saving output_df as pickle...")
-        output_pickle_path = os.path.join(output_dir, f"{prefix}_{timestamp}.pkl")
+        output_pickle_path = os.path.join(output_dir, f"{prefix}_extracted_sample_{timestamp}.pkl")
         with open(output_pickle_path, 'wb') as f:
             pickle.dump(output_df, f)
     
 
 
-    output_path_excel = os.path.join(output_dir, f"{prefix}_{timestamp}.xlsx")
-    output_path_csv = os.path.join(output_dir, f"{prefix}_{timestamp}.csv")
+    output_path_excel = os.path.join(output_dir, f"{prefix}_extracted_sample_{timestamp}.xlsx")
+    output_path_csv = os.path.join(output_dir, f"{prefix}_extracted_sample_{timestamp}.csv")
 
     output_df.to_excel(output_path_excel, index=False)
     output_df.to_csv(output_path_csv, index=False)
@@ -124,7 +188,10 @@ def generate_samples_extract_output(buckets, datamanager, debug=False):
     prefix, summary_path, timestamp = generate_supplementary_output(datamanager)
 
     print("Generating extracted parcel lists...")
-    excel_path, csv_path = generate_output(buckets, prefix, timestamp, debug)
+    excel_path, csv_path = generate_main_output(buckets, prefix, timestamp, debug)
+
+    print("Generating parcel-centric output...")
+    parcel_centric_excel_path, parcel_centric_csv_path = generate_parcel_centric_output(buckets, prefix, timestamp, debug)
 
     hl_output_path_csv = None
     hl_output_path_excel = None
@@ -132,7 +199,7 @@ def generate_samples_extract_output(buckets, datamanager, debug=False):
     if datamanager.holding_level_interventions != []:
         hl_output_path_csv, hl_output_path_excel = generate_holding_level_intervention_file(datamanager, prefix, timestamp)
         
-    return prefix, summary_path, excel_path, csv_path, hl_output_path_csv, hl_output_path_excel
+    return prefix, summary_path, excel_path, csv_path, hl_output_path_csv, hl_output_path_excel, parcel_centric_excel_path, parcel_centric_csv_path
 
 
 def generate_holding_level_intervention_file(datamanager, prefix, timestamp):
@@ -164,8 +231,8 @@ def generate_holding_level_intervention_file(datamanager, prefix, timestamp):
     output_dir = "output"
     os.makedirs(output_dir, exist_ok=True)
 
-    hl_output_path_csv = os.path.join(output_dir, f"{prefix}_{timestamp}_holding_level_interventions.csv")
-    hl_output_path_excel = os.path.join(output_dir, f"{prefix}_{timestamp}_holding_level_interventions.xlsx")
+    hl_output_path_csv = os.path.join(output_dir, f"{prefix}_HL_interventions_{timestamp}.csv")
+    hl_output_path_excel = os.path.join(output_dir, f"{prefix}_HL_interventions_{timestamp}.xlsx")
 
     hl_parcels_df.to_csv(hl_output_path_csv, index=False)
     hl_parcels_df.to_excel(hl_output_path_excel, index=False)

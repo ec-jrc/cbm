@@ -16,9 +16,8 @@ Authors: Mateusz Dobrychłop (mateusz.dobrychlop@ext.ec.europa.eu), Fernando Fah
 **Version 2 (Jupyter Notebook)**
 
 ---
-**Latest update: February 28th 2025** - v2.9
-* Default bucket target values are now set to values recommended by the new ULM (5% for lot size smaller than 6000 parcels; 300 for lot size larger than 6000 parcels).
-* Added a script that runs QUASSA outside the notebook (see the **No-notebook script** section below)
+**Latest update: March 14th 2025** - v2.91
+* Added a new output file – a parcel-centric list of extracted parcels, ordering the data by parcels to give the users a quick overview of the type and number of buckets each parcel was assigned to.
 
 
 ## Jupyter Notebook
@@ -97,6 +96,9 @@ This command executes the extraction process with:
 
 ## Release log
 Using the latest version of QUASSA is strongly recommended. That said, all superseded versions of the tool are provided as zip packages in the [version_history](https://github.com/ec-jrc/cbm/tree/main/iacs_qa/sample_extraction/JRC_v2_notebook/version_history) directory.
+---
+**March 14th 2025** - v2.91
+* Added a new output file – a parcel-centric list of extracted parcels, ordering the data by parcels to give the users a quick overview of the type and number of buckets each parcel was assigned to.
 ---
 **February 28th 2025** - v2.9
 * Default bucket target values are now set to values recommended by the new ULM (5% for lot size smaller than 6000 parcels; 300 for lot size larger than 6000 parcels).
