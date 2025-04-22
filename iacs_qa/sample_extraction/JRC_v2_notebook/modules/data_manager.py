@@ -29,3 +29,5 @@ class DataManager:
         self.final_bucket_state = None
 
         self.holding_level_interventions = []
+
+        self.disable_holding_loop = False

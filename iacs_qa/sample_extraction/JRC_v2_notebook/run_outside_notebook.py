@@ -59,7 +59,7 @@ def parse_args():
     return final_params
 
 
-def main():
+def main(extract_targets=False):
     # 1. Parse CLI args
     params = parse_args()
 
@@ -148,7 +148,8 @@ def main():
 
     # 6. Generate outputs
     print("Generating output files...")
-    prefix, summary_path, excel_path, csv_path, hl_csv, hl_excel = generate_samples_extract_output(final_buckets, dm)
+    prefix, summary_path, excel_path, csv_path, hl_csv, hl_excel, par_xlsx, par_csv = generate_samples_extract_output(final_buckets, dm)
+
 
     print("")
     print("Extraction finished.")

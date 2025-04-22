@@ -222,7 +222,7 @@ def intervention_loop_console(
     added_holdings, 
     full_buckets, 
     dm,
-    report_interval=500
+    report_interval=100
 ):
     """
     Console version of intervention_loop.
@@ -236,12 +236,13 @@ def intervention_loop_console(
     for index, row in parcel_df.iterrows():
         rows_processed += 1
 
+
         # If all buckets are full, we can bail out early.
         if buckets_full(buckets):
             break
 
         # If this holding hasn't been processed yet, process the entire holding once.
-        if row["gsa_hol_id"] not in checked_holdings:
+        if row["gsa_hol_id"] not in checked_holdings and dm.disable_holding_loop == False:
             checked_holdings.add(row["gsa_hol_id"])
             holding_group = parcel_df[parcel_df["gsa_hol_id"] == row["gsa_hol_id"]]
             buckets, added_rows, added_holdings = check_holding_group(
@@ -306,6 +307,7 @@ def intervention_loop(parcel_df, buckets, checked_holdings, added_rows, added_ho
     holding_threshold_exceeded = False
     counter_for_refreshing = 0
     for index, row in parcel_df.iterrows():
+        
         if buckets_full(buckets):
             break
         if row["gsa_hol_id"] not in checked_holdings:
@@ -391,6 +393,9 @@ def find_one_holding_and_finish(parcel_df, buckets, added_rows, dm, progress_wid
 def some_buckets_empty(buckets):
     return any(len(bucket['parcels']) == 0 and bucket['target'] > 0 for bucket in buckets.values())
 
+def some_buckets_still_not_full(buckets):
+    return any(len(bucket['parcels']) < bucket['target'] and bucket['target'] > 0 for bucket in buckets.values())
+
 def divide_into_covered_and_non_covered(parcel_df):
     covered = parcel_df[parcel_df["covered"] == 1]
     non_covered = parcel_df[parcel_df["covered"] == 0]
@@ -452,10 +457,13 @@ def iterate_over_interventions_fast(parcel_df, buckets, dm, progress_widgets=Non
     # - if 3% rule is selected and "prioritize covered" is not selected: all parcels in 3% were checked
     # ---> if some buckets are still not full, go through the rest of parcels
     #
- 
-    if dm.covered_priority == 1 and some_buckets_empty(buckets):
+
+    #if dm.covered_priority == 1 and some_buckets_empty(buckets):
+    if dm.covered_priority == 1 and some_buckets_still_not_full(buckets):
+        print("All covered parcels were checked. Some buckets are still empty. Moving on to non-covered parcels.")
         all_checked = False
         parcel_df, all_the_rest_noncovered = reduce_holdings(non_covered, added_holdings)
+
         #print("setting phase to noncovered belonging to added holdings")
         parcel_df = set_phase(parcel_df, "noncovered belonging to added holdings")
         for bucket_id in full_buckets:
@@ -475,9 +483,13 @@ def iterate_over_interventions_fast(parcel_df, buckets, dm, progress_widgets=Non
                 parcel_df = reduce_parcel_dataframe(parcel_df, new_full_bucket)
         # at this point all covered were checked, and non-covered that are in added holdings were checked
         # now we have to check the rest of non-covered
-        if some_buckets_empty(buckets) and not dm.param_3_percent:
+
+        #if some_buckets_empty(buckets) and not dm.param_3_percent:
+        if some_buckets_still_not_full(buckets) and not dm.param_3_percent:
+
             #print("setting phase to noncovered not in added holdings")
             parcel_df = all_the_rest_noncovered
+
             parcel_df = set_phase(parcel_df, "noncovered not in added holdings")
 
             all_checked = False
@@ -496,12 +508,12 @@ def iterate_over_interventions_fast(parcel_df, buckets, dm, progress_widgets=Non
     # has to only consider the holdings already added to the sample.
 
     if dm.holdings_reduced and some_buckets_empty(buckets):
-        #print("Searching through the 3% of holdings finished. Some buckets are still empty. Trying to add one parcel to each of them, using the remaining data.")
+        print("Searching through the 3% of holdings finished. Some buckets are still empty. Trying to add one parcel to each of them, using the remaining data.")
         all_the_rest_df = set_phase(all_the_rest_df, "covered or non-covered outside 3%, single holding for empty bucket check")
         buckets, added_extra_holdings = find_one_holding_and_finish(all_the_rest_df, buckets, added_rows, dm, progress_widgets)
         added_holdings = added_holdings.union(added_extra_holdings)
         if dm.covered_priority == 1 and some_buckets_empty(buckets):
-            #print("Some buckets are still empty. Trying to add one parcel to each of them, using the remaining non-covered parcels.")
+            print("Some buckets are still empty. Trying to add one parcel to each of them, using the remaining non-covered parcels.")
             all_the_rest_noncovered = set_phase(all_the_rest_noncovered, "non-covered outside 3%, single holding for empty bucket check")
             buckets, added_extra_holdings = find_one_holding_and_finish(all_the_rest_noncovered, buckets, added_rows, dm, progress_widgets)
             added_holdings = added_holdings.union(added_extra_holdings)

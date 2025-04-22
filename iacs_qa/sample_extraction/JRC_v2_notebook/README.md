@@ -16,8 +16,11 @@ Authors: Mateusz Dobrychłop (mateusz.dobrychlop@ext.ec.europa.eu), Fernando Fah
 **Version 2 (Jupyter Notebook)**
 
 ---
-**Latest update: March 14th 2025** - v2.91
-* Added a new output file – a parcel-centric list of extracted parcels, ordering the data by parcels to give the users a quick overview of the type and number of buckets each parcel was assigned to.
+**Latest update: April 22nd 2025** - (bug fix to v2.91)
+
+* Fixed a bug related to the "Prioritize parcels covered by VHR images (beta)" parameter, where sometimes the parcels not covered by VHR images would not be extracted at all.
+
+* Fixed an output file bug in the command-line version of the tool.
 
 
 ## Jupyter Notebook

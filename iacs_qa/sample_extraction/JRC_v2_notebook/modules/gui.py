@@ -144,25 +144,45 @@ def get_ua_groups_from_parcel_file(parcels_df, mode="simple"):
                 default_target = 230
             else: # more than 1200
                 default_target = 300
+
             ua_group_dict[group] = {"target" : default_target, "count" : ua_group_count[group], "desc" : create_ua_group_description(group, counter)}
             counter += 1
         print("\nDefault targets set based on the values recommended by the ULM.\n")
 
-    # else:
-    #     for group in ua_groups:
-    #         count_for_group = ua_group_count[group]
-    #         # print(f"{group}: {count_for_group} rows detected.")
-    #         if count_for_group >= 6000:
-    #             default_target = 300
-    #         elif count_for_group >= 20:
-    #             default_target = int(count_for_group * 0.05)
-    #         else:
-    #             default_target = 1
-    #         ua_group_dict[group] = {"target" : default_target, "count" : ua_group_count[group], "desc" : create_ua_group_description(group, counter)}
-    #         counter += 1
-    #     print("\nDefault targets set to 5% of the total number of rows for each UA group (max 300).\n")
+    elif mode == "ulm_minimal":
+        for group in ua_groups:
+            count_for_group = ua_group_count[group]
+            # print(f"{group}: {count_for_group} rows detected.")
+            if 0 <= count_for_group <= 50:
+                default_target = count_for_group
+            elif 51 <= count_for_group <= 100:
+                default_target = 50
+            elif 101 <= count_for_group <= 200:
+                default_target = 50
+            elif 201 <= count_for_group <= 300:
+                default_target = 55
+            elif 301 <= count_for_group <= 400:
+                default_target = 60
+            elif 401 <= count_for_group <= 500:
+                default_target = 60
+            elif 501 <= count_for_group <= 600:
+                default_target = 60
+            elif 601 <= count_for_group <= 700:
+                default_target = 60
+            elif 701 <= count_for_group <= 800:
+                default_target = 60
+            elif 801 <= count_for_group <= 900:
+                default_target = 60
+            elif 901 <= count_for_group <= 1200:
+                default_target = 60
+            else: # more than 1200
+                default_target = 60
 
-    else:
+            ua_group_dict[group] = {"target" : default_target, "count" : ua_group_count[group], "desc" : create_ua_group_description(group, counter)}
+            counter += 1
+        print("\nDefault targets set based on 2024 ULM minimal values .\n")
+
+    elif mode=="simple" or mode=="buffer":
         for group in ua_groups:
             count_for_group = ua_group_count[group]
             if count_for_group <= 6000:
@@ -172,9 +192,28 @@ def get_ua_groups_from_parcel_file(parcels_df, mode="simple"):
         
             if default_target == 0:
                 default_target = 1
+            
+            if mode == "buffer":
+                default_target = round(default_target * 1.2)
 
             ua_group_dict[group] = {"target" : default_target, "count" : ua_group_count[group], "desc" : create_ua_group_description(group, counter)}
             counter += 1
+
+    elif mode=="minimal":
+        for group in ua_groups:
+            count_for_group = ua_group_count[group]
+            if count_for_group <= 1200:
+                default_target = round(count_for_group * 0.05)
+            else:
+                default_target = 60
+        
+            if default_target == 0:
+                default_target = 1
+            
+            ua_group_dict[group] = {"target" : default_target, "count" : ua_group_count[group], "desc" : create_ua_group_description(group, counter)}
+            counter += 1
+
+
     
     return ua_group_dict
 
