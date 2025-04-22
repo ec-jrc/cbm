@@ -12,3 +12,9 @@ anonymizer.py
 test_tools.py
 .vscode/
 testing_notebook.ipynb
+run_outside_notebook_2.py
+run_bulk_analysis.py
+march2025_analysis.py
+combine_rankings.py
+report_analysis.py
+analytics/
