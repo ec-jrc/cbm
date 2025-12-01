@@ -16,7 +16,7 @@ Authors: Mateusz Dobrychłop (mateusz.dobrychlop@ext.ec.europa.eu), Fernando Fah
 **Version 2 (Jupyter Notebook)**
 
 ---
-**Latest update: Dcember 1st 2025** - (v2.10)
+**Latest update: December 1st 2025** - (v2.10)
 
 * Added a new column to the Holding Level output file, that indicates which parcels are included in the main extracted sample
 
