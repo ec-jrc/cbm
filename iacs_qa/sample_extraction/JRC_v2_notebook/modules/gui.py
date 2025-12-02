@@ -324,6 +324,10 @@ def load_parcel_file(entry_widget, output_area, datamanager):
             except KeyError:
                 print("One of the following columns: 'gsa_par_id', 'gsa_hol_id' or 'ua_grp_id' not found in CSV file")
 
+            dups = df.duplicated()
+            if dups.any():
+                raise ValueError(f"Parcel file contains {dups.sum()} duplicated rows.")
+
             verify_and_report_parcel_df(df)
             clear_output()
             datamanager.parcels_path = file_path

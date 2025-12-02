@@ -16,11 +16,12 @@ Authors: Mateusz Dobrychłop (mateusz.dobrychlop@ext.ec.europa.eu), Fernando Fah
 **Version 2 (Jupyter Notebook)**
 
 ---
-**Latest update: April 22nd 2025** - (bug fix to v2.91)
+**Latest update: December 1st 2025** - (v2.10)
 
-* Fixed a bug related to the "Prioritize parcels covered by VHR images (beta)" parameter, where sometimes the parcels not covered by VHR images would not be extracted at all.
+* Added a new column to the Holding Level output file, that indicates which parcels are included in the main extracted sample
 
-* Fixed an output file bug in the command-line version of the tool.
+* Input file with parcel list is now searched for duplicates. If duplicate rows are detected, a warning is displayed.
+---
 
 
 ## Jupyter Notebook
@@ -99,6 +100,12 @@ This command executes the extraction process with:
 
 ## Release log
 Using the latest version of QUASSA is strongly recommended. That said, all superseded versions of the tool are provided as zip packages in the [version_history](https://github.com/ec-jrc/cbm/tree/main/iacs_qa/sample_extraction/JRC_v2_notebook/version_history) directory.
+---
+**April 22nd 2025** - (bug fix to v2.91)
+
+* Fixed a bug related to the "Prioritize parcels covered by VHR images (beta)" parameter, where sometimes the parcels not covered by VHR images would not be extracted at all.
+
+* Fixed an output file bug in the command-line version of the tool.
 ---
 **March 14th 2025** - v2.91
 * Added a new output file – a parcel-centric list of extracted parcels, ordering the data by parcels to give the users a quick overview of the type and number of buckets each parcel was assigned to.

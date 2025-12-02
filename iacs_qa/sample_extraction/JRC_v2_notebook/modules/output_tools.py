@@ -197,12 +197,35 @@ def generate_samples_extract_output(buckets, datamanager, debug=False):
     hl_output_path_excel = None
 
     if datamanager.holding_level_interventions != []:
-        hl_output_path_csv, hl_output_path_excel = generate_holding_level_intervention_file(datamanager, prefix, timestamp)
+        hl_output_path_csv, hl_output_path_excel = generate_holding_level_intervention_file(datamanager, prefix, timestamp, debug=debug)
         
     return prefix, summary_path, excel_path, csv_path, hl_output_path_csv, hl_output_path_excel, parcel_centric_excel_path, parcel_centric_csv_path
 
+def mark_selected_hl(d, df):
+    # build a dataframe of selected triples from the bucket dict
+    rows = []
+    for ua_grp_id, info in d.items():
+        for p in info["parcels"]:
+            rows.append([ua_grp_id, p["gsa_par_id"], p["gsa_hol_id"]])
 
-def generate_holding_level_intervention_file(datamanager, prefix, timestamp):
+    df_sel = pd.DataFrame(rows, columns=["ua_grp_id", "gsa_par_id", "gsa_hol_id"])
+
+    # ensure consistent types
+    df["gsa_hol_id"] = df["gsa_hol_id"].astype(str)
+    df_sel["gsa_hol_id"] = df_sel["gsa_hol_id"].astype(str)
+
+    # use a MultiIndex for fast membership check
+    idx_sel = pd.MultiIndex.from_frame(df_sel)
+
+    df["selected"] = (
+        pd.MultiIndex.from_frame(df[["ua_grp_id", "gsa_par_id", "gsa_hol_id"]])
+        .isin(idx_sel)
+        .astype(int)
+    )
+
+    return df
+
+def generate_holding_level_intervention_file(datamanager, prefix, timestamp, debug=False):
 
     print("Generating holding level intervention file...")
 
@@ -214,10 +237,11 @@ def generate_holding_level_intervention_file(datamanager, prefix, timestamp):
     for bucket_id, bucket in final_buckets.items():
         if bucket_id in hl_ua_group_list:
             for parcel in bucket['parcels']:
-                hl_holding_ids.append(parcel['gsa_hol_id'])
+                hl_holding_ids.append(parcel['gsa_hol_id']) # this contains duplicated holding IDs, but it's just ids so should be fine?
 
     # use the original parcels_df, filter it down to only the holdings from step 1
     parcels_df = datamanager.parcels_df
+
     hl_holdings_df = parcels_df[parcels_df['gsa_hol_id'].isin(hl_holding_ids)]
 
     # if defined by user, filter down to only covered
@@ -227,6 +251,9 @@ def generate_holding_level_intervention_file(datamanager, prefix, timestamp):
     # filter these down to only the ua_group_ids from the hl_ua_group_list
     hl_parcels_df = hl_holdings_df[hl_holdings_df['ua_grp_id'].isin(hl_ua_group_list)]
 
+    # mark selected parcels
+    hl_parcels_df_with_selected = mark_selected_hl(final_buckets, hl_parcels_df)
+
 
     output_dir = "output"
     os.makedirs(output_dir, exist_ok=True)
@@ -234,8 +261,8 @@ def generate_holding_level_intervention_file(datamanager, prefix, timestamp):
     hl_output_path_csv = os.path.join(output_dir, f"{prefix}_HL_interventions_{timestamp}.csv")
     hl_output_path_excel = os.path.join(output_dir, f"{prefix}_HL_interventions_{timestamp}.xlsx")
 
-    hl_parcels_df.to_csv(hl_output_path_csv, index=False)
-    hl_parcels_df.to_excel(hl_output_path_excel, index=False)
+    hl_parcels_df_with_selected.to_csv(hl_output_path_csv, index=False)
+    hl_parcels_df_with_selected.to_excel(hl_output_path_excel, index=False)
 
     return hl_output_path_csv, hl_output_path_excel
         
