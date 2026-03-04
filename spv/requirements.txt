@@ -1,0 +1,14 @@
+leafmap
+ipywidgets
+IPython
+geopandas
+ipyleaflet
+numpy
+tqdm
+pandas
+xarray<2025.01.2
+rioxarray
+netcdf4
+h5netcdf
+openeo
+rich
