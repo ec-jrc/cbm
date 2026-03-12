@@ -6,7 +6,7 @@ Created on Wed Jan 21 09:41:40 2026
 """
 #%% Import Libraries
 import geopandas as gpd
-from shapely.geometry import box
+from shapely.geometry import box, shape
 import os
 import shutil
 import json
@@ -18,18 +18,21 @@ import time
 import datetime as dt
 
 import leafmap
-from ipyleaflet import Popup
+from ipyleaflet import DrawControl, GeoJSON, Marker, DivIcon, LayerGroup, Popup
 
 import xarray as xr
 import base64
 
 import io
-from IPython.display import clear_output
+from IPython.display import display, clear_output, HTML
 
 from openeo.extra.spectral_indices.spectral_indices import append_indices
 
 import ipywidgets as widgets
 from ipywidgets import HTML 
+
+import uuid
+from datetime import datetime
 
 #%% Custom libraries
 import netcdf_utils as nu
@@ -122,6 +125,27 @@ def get_spatial_extent(gdf : gpd.GeoDataFrame) -> dict :
     }
     
     return spatial_extent
+
+def features_fc_to_gdf(features_fc, crs="EPSG:4326"):
+    """
+    Convert a GeoJSON FeatureCollection (as used by ipyleaflet) 
+    into a GeoDataFrame while preserving properties (e.g. aoi_id).
+    """
+
+    records = []
+
+    for f in features_fc["features"]:
+
+        geom = shape(f["geometry"])
+        props = f.get("properties", {}).copy()
+
+        props["geometry"] = geom
+
+        records.append(props)
+
+    gdf = gpd.GeoDataFrame(records, geometry="geometry", crs=crs)
+
+    return gdf
 
 def download_netcdf(polygons_gdf : gpd.GeoDataFrame, output_folder : str, id_column : str, \
                     start_date : str, end_date : str, connection ) :
@@ -395,7 +419,59 @@ def download_netcdf_ext(polygons_gdf : gpd.GeoDataFrame, output_folder : str, id
                     
        
     print("Processing of dataset completed")
-    
+
+#class for selecting interface modes: loading existing dataset or drawind polygons on the map
+class ModeSelectorDashboard(widgets.VBox):
+
+    def __init__(self, connection):
+
+        super().__init__()
+
+        self.connection = connection
+
+        # Buttons
+        self.btn_dataset = widgets.Button(
+            description="Load existing dataset",
+            button_style="primary",
+            icon="folder-open"
+        )
+
+        self.btn_draw = widgets.Button(
+            description="Draw polygons on the map",
+            button_style="success",
+            icon="pencil"
+        )
+
+        # container where the selected interface appears
+        self.content = widgets.Output()
+
+        # Layout
+        self.children = [
+            widgets.HTML("<h2>Sentinel-2 Processing Interface</h2>"),
+            widgets.HBox([self.btn_dataset, self.btn_draw]),
+            self.content
+        ]
+
+        # Bind events
+        self.btn_dataset.on_click(self._show_dataset_interface)
+        self.btn_draw.on_click(self._show_draw_interface)
+
+    def _show_dataset_interface(self, b):
+
+        with self.content:
+            clear_output()
+
+            self.dataset_dashboard = OpenEODashboard(self.connection)
+            display(self.dataset_dashboard)
+
+    def _show_draw_interface(self, b):
+
+        with self.content:
+            clear_output()
+
+            self.draw_dashboard = DrawPolygonDashboard(self.connection)
+
+            display(self.draw_dashboard)
     
 class OpenEODashboard(widgets.VBox):
     """
@@ -434,6 +510,18 @@ class OpenEODashboard(widgets.VBox):
             description='Run Process', 
             button_style='success', 
             icon='play'
+        )
+
+        self.choose_load = widgets.Button(
+            description='Load dataset', 
+            button_style='primary', 
+            icon='check'
+        )
+
+        self.choose_draw = widgets.Button(
+            description='Draw polygons', 
+            button_style='primary', 
+            icon='check'
         )
 
         # Parameters for verification
@@ -758,6 +846,8 @@ class OpenEODashboard(widgets.VBox):
     
                 # Recover the parcel ID
                 id_column = self.col_dropdown.value
+                self.id_column = id_column
+                self.output_folder = output_folder
                 
                 print(f"🗺️ Processing file: {filename}...")
                 
@@ -765,11 +855,296 @@ class OpenEODashboard(widgets.VBox):
                 # Ensure your function signature is: process_data(gdf, filename, start_date, end_date)
                 download_netcdf(self.gdf, output_folder, id_column, start_str, end_str, self.connection)
                 
+                print("Processing finished. Opening map viewer...")
+                map_widget = MapAndPlotWidget(self)
+                display(map_widget)
+                
             except Exception as e:
                 print(f"❌ Processing Error: {e}")
 
+class DrawPolygonDashboard(widgets.VBox):
+    """
+    Dashboard for manually drawing polygons on a map, processing them with openEO,
+    and then reusing the same map for parcel visualization.
+    """
+
+    def __init__(self, connection):
+
+        super().__init__()
+
+        self.connection = connection
+        self.session_id = self._generate_session_id()
+
+        # Attributes expected later by MapAndPlotWidget
+        self.gdf = None
+        self.id_column = "aoi_id"
+        self.output_folder = None
+        self.geojson_path = None
+
+        # Date pickers
+        self.start_date = widgets.DatePicker(
+            description="Start date:",
+            style={"description_width": "initial"}
+        )
+
+        self.end_date = widgets.DatePicker(
+            description="End date:",
+            style={"description_width": "initial"}
+        )
+        
+        # Run button
+        self.run_button = widgets.Button(
+            description="Run Process",
+            button_style="success",
+            icon="play"
+        )
+
+        # Output
+        self.output = widgets.Output()
+
+        # Map
+        self.m = leafmap.Map(center=(45.78, 8.62), zoom=15)
+
+        # Make leaflet edit vertices more visible
+        self._set_leaflet_vertex_size(px=8)
+
+        # Setup drawing system
+        self._setup_draw_control()
+
+        # Layout
+        self.controls_top = widgets.HBox([
+            self.start_date,
+            self.end_date,
+            self.run_button
+        ])
+
+        self.children = [
+            self.m,
+            self.controls_top,
+            self.output
+        ]
+
+        # Events
+        self.run_button.on_click(self._run_process)
+
+    def _generate_session_id(self):
+        t = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
+        u = str(uuid.uuid4())[:6]
+        return f"{t}_{u}"
+
+    def _set_leaflet_vertex_size(self, px=6, border_px=1):
+        from IPython.display import display
+        from ipywidgets import HTML
+
+        half = px / 2
+        display(HTML(f"""
+        <style>
+        .leaflet-div-icon.leaflet-editing-icon {{
+          width: {px}px !important;
+          height: {px}px !important;
+          margin-left: -{half}px !important;
+          margin-top: -{half}px !important;
+          border-width: {border_px}px !important;
+        }}
+        </style>
+        """))
+
+    def _setup_draw_control(self):
+        # Remove leafmap default draw control if present
+        try:
+            self.m.remove_control(self.m.draw_control)
+        except Exception:
+            pass
+
+        self.dc = DrawControl(
+            polygon={
+                "shapeOptions": {
+                    "color": "red",
+                    "fillColor": "red",
+                    "fillOpacity": 0.2,
+                    "weight": 2,
+                    "dashArray": "6,4"
+                }
+            },
+            polyline={},
+            rectangle={},
+            circlemarker={},
+            marker={},
+            edit=True,
+            remove=True,
+        )
+
+        self.m.add_control(self.dc)
+
+        # Storage for polygons
+        self.features_fc = {"type": "FeatureCollection", "features": []}
+        self.next_id = {"val": 1}
+
+        # Polygon layer
+        self.polys_layer = GeoJSON(
+            data=self.features_fc,
+            style={
+                "color": "red",
+                "weight": 2,
+                "fillColor": "red",
+                "fillOpacity": 0.2
+            },
+            hover_style={
+                "color": "yellow",
+                "weight": 3,
+                "fillOpacity": 0.3
+            }
+        )
+        self.m.add_layer(self.polys_layer)
+
+        # Dedicated label layer
+        self.labels_group = LayerGroup(layers=[])
+        self.m.add_layer(self.labels_group)
+
+        # Bind draw callback
+        self.dc.on_draw(self._on_draw)
+
+    def _refresh_polygons_layer(self):
+        self.polys_layer.data = {
+            "type": "FeatureCollection",
+            "features": list(self.features_fc["features"])
+        }
+
+    def add_plain_number_label(self, lat, lon, text):
+        icon = DivIcon(
+            html=f"""
+            <div style="
+                color: #000;
+                font-size: 16px;
+                font-weight: 700;
+                line-height: 1;
+                text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff,
+                             -1px  1px 0 #fff, 1px  1px 0 #fff;
+                pointer-events: none;
+            ">{text}</div>
+            """,
+            icon_size=(0, 0),
+            icon_anchor=(0, 0),
+        )
+        mk = Marker(location=(lat, lon), icon=icon)
+        self.labels_group.layers = tuple(list(self.labels_group.layers) + [mk])
+
+    def rebuild_labels(self):
+        self.labels_group.layers = tuple()
+
+        for f in self.features_fc["features"]:
+            geom = shape(f["geometry"])
+            c = geom.centroid
+            aoi_id = f.get("properties", {}).get("aoi_id")
+            if aoi_id is not None:
+                self.add_plain_number_label(c.y, c.x, str(aoi_id))
+
+    def _on_draw(self, target, action, geo_json):
+        """
+        Handles polygon create / delete / edit.
+        """
+
+        if action == "created":
+            aoi_id = self.next_id["val"]
+            self.next_id["val"] += 1
+
+            geo_json.setdefault("properties", {})
+            geo_json["properties"]["aoi_id"] = aoi_id
+
+            self.features_fc["features"].append(geo_json)
+
+            self._refresh_polygons_layer()
+            self.rebuild_labels()
+
+        elif action == "deleted":
+            deleted_geom = shape(geo_json["geometry"])
+
+            kept = []
+            deleted = False
+
+            for f in self.features_fc["features"]:
+                geom = shape(f["geometry"])
+                if (not deleted) and geom.equals(deleted_geom):
+                    deleted = True
+                    continue
+                kept.append(f)
+
+            self.features_fc["features"] = kept
+
+            self._refresh_polygons_layer()
+            self.rebuild_labels()
+
+        elif action == "edited":
+            edited_props = geo_json.get("properties", {})
+            edited_id = edited_props.get("aoi_id")
+
+            if edited_id is not None:
+                for i, f in enumerate(self.features_fc["features"]):
+                    if f.get("properties", {}).get("aoi_id") == edited_id:
+                        self.features_fc["features"][i] = geo_json
+                        break
+
+            self._refresh_polygons_layer()
+            self.rebuild_labels()
+
+    def _run_process(self, b):
+        with self.output:
+            clear_output()
+
+            if not self.features_fc["features"]:
+                print("No polygons drawn.")
+                return
+
+            if self.start_date.value is None or self.end_date.value is None:
+                print("Please select both start and end dates.")
+                return
+
+            if self.end_date.value < self.start_date.value:
+                print("End date cannot be earlier than start date.")
+                return
+
+            # Convert drawn polygons to GeoDataFrame
+            self.gdf = features_fc_to_gdf(self.features_fc)
+
+            # Save session outputs
+            self.output_folder = f"output/S2/manual_parcel/session_{self.session_id}"
+            os.makedirs(self.output_folder, exist_ok=True)
+
+            # Save GeoJSON for reproducibility
+            self.geojson_path = os.path.join(self.output_folder, "polygons.geojson")
+            self.gdf.to_file(self.geojson_path, driver="GeoJSON")
+
+            # Dates for API
+            start_api = self.start_date.value.strftime("%Y-%m-%d")
+            end_api = self.end_date.value.strftime("%Y-%m-%d")
+
+            print(f"Session ID: {self.session_id}")
+            print(f"Saved polygons: {self.geojson_path}")
+            print(f"Running process for {len(self.gdf)} polygon(s)...")
+
+            # Download NetCDFs
+            download_netcdf(
+                self.gdf,
+                self.output_folder,
+                self.id_column,
+                start_api,
+                end_api,
+                self.connection
+            )
+
+            print("Processing finished.")
+
+            # Reuse the same map and append visualization controls below it
+            viewer = MapAndPlotWidget(self)
+
+            self.children = [
+                self.m,
+                viewer.controls_box,
+                viewer.output_log
+            ]
+
 def getInterface(connection):
-    return OpenEODashboard(connection)
+    return ModeSelectorDashboard(connection)
 
 #%% Map and plot widget
 class MapAndPlotWidget(widgets.VBox):
@@ -780,20 +1155,23 @@ class MapAndPlotWidget(widgets.VBox):
         super().__init__() # Initialize the parent VBox
         
         # Member objects
-        self.m = leafmap.Map(center=[0, 0], zoom=2)
         self.gdf = openDashboard.gdf
-        self.id_column = openDashboard.col_dropdown.value
-
+        self.id_column = openDashboard.id_column
+        self.output_folder = openDashboard.output_folder
+        
         self.output_log = widgets.Output()
-        self.base_folder = "output/S2"
-
-        # Prefix & File Info
+        
         start_date = openDashboard.start_date.value.strftime('%Y-%m-%d')
         end_date = openDashboard.end_date.value.strftime('%Y-%m-%d')
         self.netcdf_prefix = f"S2_extract_{start_date}_{end_date}_parcelid_"
         
-        file_info = openDashboard.uploader.value[0]
-        self.filename = file_info['name']
+        # Reuse existing map if provided, otherwise create one
+        if hasattr(openDashboard, "map"):
+            self.m = openDashboard.map
+        elif hasattr(openDashboard, "m"):
+            self.m = openDashboard.m
+        else:
+            self.m = leafmap.Map(center=[0, 0], zoom=2)
 
         self._id_ok = True
         self._plot_type_ok = False
@@ -836,12 +1214,18 @@ class MapAndPlotWidget(widgets.VBox):
                     )
                         
         # Interface Layout
-        self.children = [self.m, 
-                         widgets.HBox([self.id_dropdown, 
-                                       self.dd_plot_type,
-                                       self.dd_plot_param, 
-                                       self.btn_display]), 
-                         self.output_log]
+        self.controls_box = widgets.HBox([
+            self.id_dropdown,
+            self.dd_plot_type,
+            self.dd_plot_param,
+            self.btn_display
+        ])
+        
+        self.children = [
+            self.m,
+            self.controls_box,
+            self.output_log
+        ]
         
         # Bind Events
         self.id_dropdown.observe(self._on_id_change, names='value')
@@ -893,8 +1277,7 @@ class MapAndPlotWidget(widgets.VBox):
             # get the parcel ID
             parcel_id = self.id_dropdown.value
     
-            folder_name = os.path.splitext(self.filename)[0]
-            output_path = os.path.join(self.base_folder, folder_name)
+            output_path = self.output_folder
             netcdf_path = os.path.join(output_path, f"{self.netcdf_prefix}{parcel_id}.nc")
                 
             # check if the csv with the summary statistics is available
@@ -903,8 +1286,7 @@ class MapAndPlotWidget(widgets.VBox):
                 return
     
             # if here, the netcdf file is available. Check if the parcel statistics have been already extracted
-            #stat_dir = output_path + 'band_stats'
-            stat_dir = os.path.join(output_path, 'band_stats')
+            stat_dir = os.path.join(output_path, "band_stats")
             
             if not os.path.exists(stat_dir) :
                 os.makedirs(stat_dir)
@@ -1024,8 +1406,9 @@ class MapAndPlotWidget(widgets.VBox):
             self._set_dropdown_silently(parcel_id)
                  
             # 2. Path Logic
-            folder_name = os.path.splitext(self.filename)[0]
-            output_path = os.path.join(self.base_folder, folder_name)
+            #folder_name = os.path.splitext(self.filename)[0]
+            #output_path = os.path.join(self.base_folder, folder_name)
+            output_path = self.output_folder
             netcdf_path = os.path.join(output_path, f"{self.netcdf_prefix}{parcel_id}.nc")
              
             if os.path.exists(netcdf_path):
@@ -1093,121 +1476,108 @@ class MapAndPlotWidget(widgets.VBox):
         """ 
         Function to generate the line plot
         """
-        if self.dd_plot_param.value == None :
+        if self.dd_plot_param.value is None:
             return None
     
         parcel_id = self.id_dropdown.value
-        
-        folder_name = os.path.splitext(self.filename)[0]
-        output_path = os.path.join(self.base_folder, folder_name)
+    
+        output_path = self.output_folder
         netcdf_path = os.path.join(output_path, f"{self.netcdf_prefix}{parcel_id}.nc")
-
-        # check if the netcdf file is available
-        if not os.path.exists(netcdf_path) :
-            print('Extract the data first')
+    
+        if not os.path.exists(netcdf_path):
+            print("Extract the data first")
             return None
     
-        # if here, the netcdf file is available. Check if the parcel statistics have been already extracted
-        stat_dir = os.path.join(output_path, 'band_stats')
-        #stat_dir = output_path + 'band_stats'
-        
-        if not os.path.exists(stat_dir) :
+        stat_dir = os.path.join(output_path, "band_stats")
+        if not os.path.exists(stat_dir):
             os.makedirs(stat_dir)
     
-        csv_filename = stat_dir + '/' + str(parcel_id) + '_stats.csv'
-        if not os.path.exists(csv_filename) :
-            # Compute the band statistics
+        csv_filename = os.path.join(stat_dir, f"{parcel_id}_stats.csv")
     
+        if not os.path.exists(csv_filename):
             parcel = self.gdf[self.gdf[self.id_column] == parcel_id]
-     
-            with xr.open_dataset(netcdf_path) as ds:
-                # assign the crs
-                crs_wkt = ds["crs"].attrs.get("crs_wkt")
-                ds = ds.rio.write_crs(crs_wkt)    
-        
-                nu.ds_statistics_to_parcel_csv(ds, parcel, parcel_id, out_dir = stat_dir,\
-                                               scl_list = [0, 1, 3, 8, 9, 11])
     
-        # Read the csv as dataframe
-        fig, ax = cgu.plot_csv_parcel(csv_filename, band_to_plot = self.dd_plot_param.value, to_file = False)
+            with xr.open_dataset(netcdf_path) as ds:
+                crs_wkt = ds["crs"].attrs.get("crs_wkt")
+                ds = ds.rio.write_crs(crs_wkt)
+    
+                nu.ds_statistics_to_parcel_csv(
+                    ds,
+                    parcel,
+                    parcel_id,
+                    out_dir=stat_dir,
+                    scl_list=[0, 1, 3, 8, 9, 11]
+                )
+    
+        fig, ax = cgu.plot_csv_parcel(
+            csv_filename,
+            band_to_plot=self.dd_plot_param.value,
+            to_file=False
+        )
     
         return fig, ax
 
-    def get_calendar_view(self, stretch_table = None) :
+    def get_calendar_view(self, stretch_table=None):
         """ 
         Function to generate the calendar view with the imagettes
         """
-        if self.dd_plot_param.value == None :
+        if self.dd_plot_param.value is None:
             return None
-
-        if self.dd_plot_param.value == 'NIR-SWIR-RED' :
-            stretch_table =  {'B08' : [1200, 5700],
-                                'B11' : [800, 4100],
-                                'B04' : [150, 2800]}
-
-        if self.dd_plot_param.value == 'RED-GREEN-BLUE' :
     
-            stretch_table = {'B04' : [0, 1500],
-                             'B03' : [0, 1500],
-                             'B02' : [0, 1500]
-                            }
-        # Other stretching tables could be defined depending on the specified composition
-        
-        # Check if the netcdf exists
+        if self.dd_plot_param.value == 'NIR-SWIR-RED':
+            stretch_table = {
+                'B08': [1200, 5700],
+                'B11': [800, 4100],
+                'B04': [150, 2800]
+            }
+    
+        elif self.dd_plot_param.value == 'RED-GREEN-BLUE':
+            stretch_table = {
+                'B04': [0, 1500],
+                'B03': [0, 1500],
+                'B02': [0, 1500]
+            }
+    
         parcel_id = self.id_dropdown.value
-        
-        folder_name = os.path.splitext(self.filename)[0]
-        output_path = os.path.join(self.base_folder, folder_name)
+    
+        output_path = self.output_folder
         netcdf_path = os.path.join(output_path, f"{self.netcdf_prefix}{parcel_id}.nc")
     
-        # check if the netcdf file is available
-        if not os.path.exists(netcdf_path) :
-            print('Extract the data first')
+        if not os.path.exists(netcdf_path):
+            print("Extract the data first")
             return None
     
-        # Check if the figure was already generated
         cview_dir = os.path.join(output_path, 'cview')
-        #cview_dir = output_path + 'cview'
-        
-        if not os.path.exists(cview_dir) :
+        if not os.path.exists(cview_dir):
             os.makedirs(cview_dir)
     
         bandlist = list(stretch_table.keys())
-        cview_filename = cview_dir + '/' + str(parcel_id) + '_' + "".join(bandlist) + '.pickle'
+        cview_filename = os.path.join(cview_dir, f"{parcel_id}_{''.join(bandlist)}.pickle")
     
-        if not os.path.exists(cview_filename) :
-            
+        if not os.path.exists(cview_filename):
             parcel = self.gdf[self.gdf[self.id_column] == parcel_id]
-     
-            with xr.open_dataset(netcdf_path) as ds:
     
-                # assign the crs
+            with xr.open_dataset(netcdf_path) as ds:
                 crs_wkt = ds["crs"].attrs.get("crs_wkt")
-                ds = ds.rio.write_crs(crs_wkt)    
-        
-                print('Computing Calendar View - Be patient')
-                '''
-
-                def calendar_view_half_weekly(ds, parcel = None, name_cols = None, band_list = None, \
-                              out_tif_folder_base = "./", 
-                              stretch_table = None, buffer_size_meter = 50, \
-                              vector_color = "black", image_resolution = 100 ) 
-                '''
-                
-                # Now make the calendar view
-                fig, ax = ngu.calendar_view_half_weekly(ds, parcel, [self.id_column], bandlist, out_tif_folder_base = cview_dir, stretch_table = stretch_table)
-                print('Done!')
-            
-        else :
-            # If it exists, it can be laoded from file
+                ds = ds.rio.write_crs(crs_wkt)
+    
+                print("Computing Calendar View - Be patient")
+                fig, ax = ngu.calendar_view_half_weekly(
+                    ds,
+                    parcel,
+                    [self.id_column],
+                    bandlist,
+                    out_tif_folder_base=cview_dir,
+                    stretch_table=stretch_table
+                )
+                print("Done!")
+        else:
             with open(cview_filename, 'rb') as f:
                 fig = pickle.load(f)
-    
             ax = fig.axes
-        
+    
         return fig, ax
 
-    
 
 def getIntMap(dashboard):
     return MapAndPlotWidget(dashboard)
