@@ -274,10 +274,12 @@ def plot_csv_parcel(csv_filename, output_folder : str = "./", \
     """ 
     
     # Infer the index from the CSV file
-    index_name = csv_filename.split('.')[-2].split('_')[-1]
+    #index_name = csv_filename.split('.')[-2].split('_')[-1]
+
+    filename = os.path.basename(csv_filename)
     
-    if index_name != "stats" :
-        raise ValueError("Suffix stats expected in the csv filename")
+    if not filename.endswith(".csv"):
+        raise ValueError("Not a correct csv file")        
     
     # First read the CSV file as data frame
     df = pd.read_csv(csv_filename)
