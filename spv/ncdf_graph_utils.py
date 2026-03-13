@@ -302,7 +302,7 @@ def calendar_view_half_weekly_scatter(ds, parcel = None, name_cols = None, \
 
         
     # output folder
-    output_jpg_folder = out_tif_folder_base + "/scatter_half_weekly"
+    output_jpg_folder = out_tif_folder_base
     
     if not os.path.exists(output_jpg_folder):
         os.makedirs(output_jpg_folder)
@@ -396,12 +396,10 @@ def calendar_view_half_weekly_scatter(ds, parcel = None, name_cols = None, \
             if act_row != num_rows - 1 :
                 a[act_row][act_col].get_xaxis().set_visible(False)
 
-            print(acq_date)
 
     output_jpg_file = output_jpg_folder + "/" + str(parcel_name) + "_" + sc_dict["x"] + "_" + sc_dict["y"] + "_scatter.png"
     fig.savefig(output_jpg_file, dpi = image_resolution, bbox_inches='tight')  
-    plt.close(fig)
-    
+
     return fig, a
 
 def plot_scatter(data, parcel, cum_info, sc_dict, ax) :

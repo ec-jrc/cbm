@@ -24,6 +24,7 @@ import xarray as xr
 import base64
 
 import io
+import hashlib
 from IPython.display import display, clear_output, HTML
 
 from openeo.extra.spectral_indices.spectral_indices import append_indices
@@ -33,6 +34,20 @@ from ipywidgets import HTML
 
 import uuid
 from datetime import datetime
+
+
+def _safe_stem(path_or_name: str) -> str:
+    return os.path.splitext(os.path.basename(path_or_name))[0]
+
+
+def _build_dataset_hash(content_bytes: bytes) -> str:
+    return hashlib.md5(content_bytes).hexdigest()[:10]
+
+
+def _build_dataset_tag(start_date: str, end_date: str, upload_hash: str | None = None) -> str:
+    base = f"{start_date}_{end_date}"
+    return f"{base}_{upload_hash}" if upload_hash else base
+
 
 #%% Custom libraries
 import netcdf_utils as nu
@@ -428,18 +443,21 @@ class ModeSelectorDashboard(widgets.VBox):
         super().__init__()
 
         self.connection = connection
+        self.active_dashboard = None
 
         # Buttons
         self.btn_dataset = widgets.Button(
             description="Load existing dataset",
             button_style="primary",
-            icon="folder-open"
+            icon="folder-open",
+            layout=widgets.Layout(width="260px", height="40px")
         )
 
         self.btn_draw = widgets.Button(
             description="Draw polygons on the map",
             button_style="success",
-            icon="pencil"
+            icon="pencil",
+            layout=widgets.Layout(width="260px", height="40px")
         )
 
         # container where the selected interface appears
@@ -456,12 +474,17 @@ class ModeSelectorDashboard(widgets.VBox):
         self.btn_dataset.on_click(self._show_dataset_interface)
         self.btn_draw.on_click(self._show_draw_interface)
 
+    def set_mode_buttons_disabled(self, disabled=True):
+        self.btn_dataset.disabled = disabled
+        self.btn_draw.disabled = disabled
+
     def _show_dataset_interface(self, b):
 
         with self.content:
             clear_output()
 
-            self.dataset_dashboard = OpenEODashboard(self.connection)
+            self.dataset_dashboard = OpenEODashboard(self.connection, mode_selector=self)
+            self.active_dashboard = self.dataset_dashboard
             display(self.dataset_dashboard)
 
     def _show_draw_interface(self, b):
@@ -469,8 +492,8 @@ class ModeSelectorDashboard(widgets.VBox):
         with self.content:
             clear_output()
 
-            self.draw_dashboard = DrawPolygonDashboard(self.connection)
-
+            self.draw_dashboard = DrawPolygonDashboard(self.connection, mode_selector=self)
+            self.active_dashboard = self.draw_dashboard
             display(self.draw_dashboard)
     
 class OpenEODashboard(widgets.VBox):
@@ -478,14 +501,19 @@ class OpenEODashboard(widgets.VBox):
     Class incapsulating the different functionalities for downloading Sentinel-2
     data
     """
-    def __init__(self, connection):
+    def __init__(self, connection, mode_selector=None):
         
         super().__init__()
         
         # 1. Store Members (The "State")
         self.connection = connection
+        self.mode_selector = mode_selector
         self.gdf = None
         self.job_results = None
+        self._is_running = False
+        self.upload_filename = None
+        self.upload_hash = None
+        self.dataset_tag = None
 
         # 2. Initialize UI Components
         self.uploader = widgets.FileUpload(
@@ -575,7 +603,20 @@ class OpenEODashboard(widgets.VBox):
         self.run_button.on_click(self._on_run_clicked)
 
     def _update_run_button(self):
-        self.run_button.disabled = not (self._ok_upload and self._ok_id and self._ok_dates)
+        self.run_button.disabled = self._is_running or not (self._ok_upload and self._ok_id and self._ok_dates)
+
+    def _set_running_state(self, is_running):
+        self._is_running = is_running
+
+        self.uploader.disabled = is_running
+        self.start_date.disabled = is_running
+        self.end_date.disabled = is_running
+        self.col_dropdown.disabled = is_running or not self._ok_upload
+
+        self._update_run_button()
+
+        if self.mode_selector is not None:
+            self.mode_selector.set_mode_buttons_disabled(is_running)
 
     def _read_upload_bytes(self):
         """Return (filename, content_bytes). Raise ValueError on basic issues."""
@@ -690,9 +731,14 @@ class OpenEODashboard(widgets.VBox):
 
             self._ok_upload = False
             self.gdf = None
+            self.upload_filename = None
+            self.upload_hash = None
+            self.dataset_tag = None
 
             try:
                 filename, content = self._read_upload_bytes()
+                self.upload_filename = filename
+                self.upload_hash = _build_dataset_hash(content)
 
                 # parse + basic structure checks (you don’t use obj yet, but it’s still a good early gate)
                 _ = self._validate_geojson_text(content)
@@ -758,16 +804,12 @@ class OpenEODashboard(widgets.VBox):
                 print(f"❌ Start date ({s}) cannot be in the future.")
                 self._update_run_button()
                 return
-            
-            # Arbitrary date selected for now
+
             MIN_DATE = self.min_date
             if s < MIN_DATE:
-                print(f"⚠️ Very early start date; Data availability may be limited.")
-                self._update_run_button()
-                return
-        
+                print("⚠️ Very early start date; Data availability may be limited.")
+
         # Validate end date manages the relationship between start and end date
-        # therefore we run it when the start date is changed
         self._validate_end_date({"new": self.end_date.value})
 
     def _validate_end_date(self, change):
@@ -784,9 +826,9 @@ class OpenEODashboard(widgets.VBox):
                 self._update_run_button()
                 return
 
-            if e > today:
+            if s > today:
                 self._ok_dates = False
-                print(f"❌ End date ({e}) cannot be in the future.")
+                print(f"❌ Start date ({s}) cannot be in the future.")
                 self._update_run_button()
                 return
 
@@ -796,25 +838,26 @@ class OpenEODashboard(widgets.VBox):
                 self._update_run_button()
                 return
 
-            # Range warnings
-            # Arbitrary ranges selected for now
             span = (e - s).days
 
             MAX_SPAN_DAYS = self.max_date_span_years * 365
             MIN_SPAN_DAYS = self.min_date_span_days
             RECENT_THRESHOLD_DAYS = self.recent_date_threshold_days
-            
+
+            if s < self.min_date:
+                print("⚠️ Very early start date; Data availability may be limited.")
+            if e > today:
+                print(f"⚠️ End date ({e}) is in the future. This is accepted, but the most recent data may not yet be available.")
             if span > MAX_SPAN_DAYS:
                 print(f"⚠️ Large date range ({span} days); Processing may take longer.")
             if span < MIN_SPAN_DAYS:
                 print(f"⚠️ Very short date range ({span} days); Data availability may be limited.")
-            if (today - e).days < RECENT_THRESHOLD_DAYS:
-                print(f"⚠️ Recent end date; Data availability may be limited.")
-            
+            if e <= today and (today - e).days < RECENT_THRESHOLD_DAYS:
+                print("⚠️ Recent end date; Data availability may be limited.")
+
             self._ok_dates = True
-        
-        self._update_run_button()
-                
+
+        self._update_run_button()                
 
     def _on_run_clicked(self, b):
         with self.main_output:
@@ -835,21 +878,29 @@ class OpenEODashboard(widgets.VBox):
                 # Extract data from uploader
                 file_info = self.uploader.value[0]
                 filename = file_info['name']
-    
-                # Build the output folder
-                fname = filename.split("/")[-1].split(".")[0]
-                output_folder = f"output/S2/{fname}"
-                
+
                 # Format dates to string
                 start_str = self.start_date.value.strftime('%Y-%m-%d')
                 end_str = self.end_date.value.strftime('%Y-%m-%d')
-    
+
+                # Build a dataset-specific folder.
+                # This avoids cache collisions when a new file is uploaded with the same name.
+                fname = _safe_stem(filename)
+                upload_hash = self.upload_hash
+                if upload_hash is None:
+                    upload_hash = _build_dataset_hash(bytes(file_info.get('content', b'')))
+                    self.upload_hash = upload_hash
+                self.dataset_tag = _build_dataset_tag(start_str, end_str, upload_hash)
+                output_folder = f"output/S2/{fname}__{upload_hash}"
+
                 # Recover the parcel ID
                 id_column = self.col_dropdown.value
                 self.id_column = id_column
                 self.output_folder = output_folder
-                
+
                 print(f"🗺️ Processing file: {filename}...")
+                print(f"Dataset hash: {upload_hash}")
+                print(f"Date range: {start_str} → {end_str}")
                 
                 # Call your external function
                 # Ensure your function signature is: process_data(gdf, filename, start_date, end_date)
@@ -868,18 +919,32 @@ class DrawPolygonDashboard(widgets.VBox):
     and then reusing the same map for parcel visualization.
     """
 
-    def __init__(self, connection):
+    def __init__(self, connection, mode_selector=None):
 
         super().__init__()
 
         self.connection = connection
+        self.mode_selector = mode_selector
         self.session_id = self._generate_session_id()
+        self._is_running = False
+        self.upload_filename = None
+        self.upload_hash = None
+        self.dataset_tag = None
 
         # Attributes expected later by MapAndPlotWidget
         self.gdf = None
         self.id_column = "aoi_id"
         self.output_folder = None
         self.geojson_path = None
+
+        # Date limits
+        self.min_date = dt.date(2015, 1, 1)
+        self.max_date_span_years = 3
+        self.min_date_span_days = 3
+        self.recent_date_threshold_days = 7
+
+        # Validation flag
+        self._ok_dates = False
 
         # Date pickers
         self.start_date = widgets.DatePicker(
@@ -896,10 +961,12 @@ class DrawPolygonDashboard(widgets.VBox):
         self.run_button = widgets.Button(
             description="Run Process",
             button_style="success",
-            icon="play"
+            icon="play",
+            disabled=True
         )
 
         # Output
+        self.date_output = widgets.Output()
         self.output = widgets.Output()
 
         # Map
@@ -925,6 +992,8 @@ class DrawPolygonDashboard(widgets.VBox):
         ]
 
         # Events
+        self.start_date.observe(self._validate_start_date, names="value")
+        self.end_date.observe(self._validate_end_date, names="value")
         self.run_button.on_click(self._run_process)
 
     def _generate_session_id(self):
@@ -932,6 +1001,94 @@ class DrawPolygonDashboard(widgets.VBox):
         u = str(uuid.uuid4())[:6]
         return f"{t}_{u}"
 
+    def _update_run_button(self):
+        self.run_button.disabled = self._is_running or not self._ok_dates
+
+    def _set_running_state(self, is_running):
+        self._is_running = is_running
+
+        self.start_date.disabled = is_running
+        self.end_date.disabled = is_running
+        self.dc.edit = not is_running
+        self.dc.remove = not is_running
+
+        self._update_run_button()
+
+        if self.mode_selector is not None:
+            self.mode_selector.set_mode_buttons_disabled(is_running)
+
+    def _validate_start_date(self, change):
+        with self.date_output:
+            clear_output()
+
+            s = self.start_date.value
+            e = self.end_date.value
+            today = dt.date.today()
+
+            if s is None or e is None:
+                self._ok_dates = False
+                print("⚠️ Please select both Start and End dates.")
+                self._update_run_button()
+                return
+
+            if s > today:
+                self._ok_dates = False
+                print(f"❌ Start date ({s}) cannot be in the future.")
+                self._update_run_button()
+                return
+
+            if s < self.min_date:
+                print("⚠️ Very early start date; Data availability may be limited.")
+
+        self._validate_end_date({"new": self.end_date.value})
+
+    def _validate_end_date(self, change):
+        with self.date_output:
+            clear_output()
+
+            s = self.start_date.value
+            e = self.end_date.value
+            today = dt.date.today()
+
+            if s is None or e is None:
+                self._ok_dates = False
+                print("⚠️ Please select both Start and End dates.")
+                self._update_run_button()
+                return
+
+            if s > today:
+                self._ok_dates = False
+                print(f"❌ Start date ({s}) cannot be in the future.")
+                self._update_run_button()
+                return
+
+            if e < s:
+                self._ok_dates = False
+                print(f"❌ End date ({e}) cannot be earlier than Start date ({s}).")
+                self._update_run_button()
+                return
+
+            span = (e - s).days
+
+            MAX_SPAN_DAYS = self.max_date_span_years * 365
+            MIN_SPAN_DAYS = self.min_date_span_days
+            RECENT_THRESHOLD_DAYS = self.recent_date_threshold_days
+
+            if s < self.min_date:
+                print("⚠️ Very early start date; Data availability may be limited.")
+            if e > today:
+                print(f"⚠️ End date ({e}) is in the future. This is accepted, but the most recent data may not yet be available.")
+            if span > MAX_SPAN_DAYS:
+                print(f"⚠️ Large date range ({span} days); Processing may take longer.")
+            if span < MIN_SPAN_DAYS:
+                print(f"⚠️ Very short date range ({span} days); Data availability may be limited.")
+            if e <= today and (today - e).days < RECENT_THRESHOLD_DAYS:
+                print("⚠️ Recent end date; Data availability may be limited.")
+
+            self._ok_dates = True
+
+        self._update_run_button()
+    
     def _set_leaflet_vertex_size(self, px=6, border_px=1):
         from IPython.display import display
         from ipywidgets import HTML
@@ -1099,49 +1256,59 @@ class DrawPolygonDashboard(widgets.VBox):
                 print("Please select both start and end dates.")
                 return
 
-            if self.end_date.value < self.start_date.value:
-                print("End date cannot be earlier than start date.")
+            if not self._ok_dates:
+                print("Please correct the date selection before running.")
                 return
 
-            # Convert drawn polygons to GeoDataFrame
-            self.gdf = features_fc_to_gdf(self.features_fc)
+            self._set_running_state(True)
 
-            # Save session outputs
-            self.output_folder = f"output/S2/manual_parcel/session_{self.session_id}"
-            os.makedirs(self.output_folder, exist_ok=True)
+            try:
+                # Convert drawn polygons to GeoDataFrame
+                self.gdf = features_fc_to_gdf(self.features_fc)
 
-            # Save GeoJSON for reproducibility
-            self.geojson_path = os.path.join(self.output_folder, "polygons.geojson")
-            self.gdf.to_file(self.geojson_path, driver="GeoJSON")
+                # Save session outputs
+                self.output_folder = f"output/S2/manual_parcel/session_{self.session_id}"
+                os.makedirs(self.output_folder, exist_ok=True)
 
-            # Dates for API
-            start_api = self.start_date.value.strftime("%Y-%m-%d")
-            end_api = self.end_date.value.strftime("%Y-%m-%d")
+                # Save GeoJSON for reproducibility
+                self.geojson_path = os.path.join(self.output_folder, "polygons.geojson")
+                self.gdf.to_file(self.geojson_path, driver="GeoJSON")
 
-            print(f"Session ID: {self.session_id}")
-            print(f"Saved polygons: {self.geojson_path}")
-            print(f"Running process for {len(self.gdf)} polygon(s)...")
+                # Dates for API
+                start_api = self.start_date.value.strftime("%Y-%m-%d")
+                end_api = self.end_date.value.strftime("%Y-%m-%d")
+                self.dataset_tag = _build_dataset_tag(start_api, end_api, self.session_id)
 
-            # Download NetCDFs
-            download_netcdf(
-                self.gdf,
-                self.output_folder,
-                self.id_column,
-                start_api,
-                end_api,
-                self.connection
-            )
+                print(f"Session ID: {self.session_id}")
+                print(f"Saved polygons: {self.geojson_path}")
+                print(f"Running process for {len(self.gdf)} polygon(s)...")
 
-            print("Processing finished.")
+                # Download NetCDFs
+                download_netcdf(
+                    self.gdf,
+                    self.output_folder,
+                    self.id_column,
+                    start_api,
+                    end_api,
+                    self.connection
+                )
 
-            # Reuse the same map and append visualization controls below it
-            viewer = MapAndPlotWidget(self)
+                print("Processing finished.")
 
-            self.children = [
-                self.m,
-                viewer.controls_box,
-                viewer.output_log
-            ]
+                # Reuse the same map and append visualization controls below it
+                viewer = MapAndPlotWidget(self)
+
+                self.children = [
+                    self.m,
+                    viewer.controls_box,
+                    viewer.output_log
+                ]
+
+            except Exception as e:
+                print(f"❌ Processing Error: {e}")
+
+            finally:
+                self._set_running_state(False)
 
 def getInterface(connection):
     return ModeSelectorDashboard(connection)
@@ -1163,6 +1330,7 @@ class MapAndPlotWidget(widgets.VBox):
         
         start_date = openDashboard.start_date.value.strftime('%Y-%m-%d')
         end_date = openDashboard.end_date.value.strftime('%Y-%m-%d')
+        self.dataset_tag = getattr(openDashboard, 'dataset_tag', _build_dataset_tag(start_date, end_date))
         self.netcdf_prefix = f"S2_extract_{start_date}_{end_date}_parcelid_"
         
         # Reuse existing map if provided, otherwise create one
@@ -1189,7 +1357,7 @@ class MapAndPlotWidget(widgets.VBox):
         # Define the data mapping for the dropdowns
         self.plot_options = {
             'stat summary': [],
-            'imagettes': ['NIR-SWIR-RED', 'RED-GREEN-BLUE']
+            'Calendar View': ['NIR-SWIR-RED', 'RED-GREEN-BLUE', 'Scatter B04-B08', 'NDVI']
         }
         
         self.dd_plot_type = widgets.Dropdown(
@@ -1239,6 +1407,41 @@ class MapAndPlotWidget(widgets.VBox):
         # Initialize map layers
         self._on_start()
 
+    def _get_netcdf_path(self, parcel_id):
+        return os.path.join(self.output_folder, f"{self.netcdf_prefix}{parcel_id}.nc")
+
+    def _get_stats_csv_path(self, parcel_id):
+        stat_dir = os.path.join(self.output_folder, "band_stats")
+        os.makedirs(stat_dir, exist_ok=True)
+        return os.path.join(stat_dir, f"{parcel_id}_stats_{self.dataset_tag}.csv")
+
+    def _get_ndvi_plot_path(self, parcel_id):
+        ndvi_dir = os.path.join(self.output_folder, 'ndvi')
+        os.makedirs(ndvi_dir, exist_ok=True)
+        return os.path.join(ndvi_dir, f"{parcel_id}_NDVI_{self.dataset_tag}.png")
+
+    def _get_cview_pickle_path(self, parcel_id, suffix):
+        cview_dir = os.path.join(self.output_folder, 'cview')
+        os.makedirs(cview_dir, exist_ok=True)
+        return os.path.join(cview_dir, f"{parcel_id}_{suffix}_{self.dataset_tag}.pickle")
+
+    def _compute_stats_csv(self, parcel_id, netcdf_path, csv_filename):
+        parcel = self.gdf[self.gdf[self.id_column] == parcel_id]
+        out_dir = os.path.dirname(csv_filename)
+        default_csv = os.path.join(out_dir, f"{parcel_id}_stats.csv")
+        if os.path.exists(default_csv):
+            os.remove(default_csv)
+        with xr.open_dataset(netcdf_path) as ds:
+            crs_wkt = ds["crs"].attrs.get("crs_wkt")
+            if crs_wkt:
+                ds = ds.rio.write_crs(crs_wkt)
+            nu.ds_statistics_to_parcel_csv(ds, parcel, parcel_id, out_dir=out_dir,
+                                           scl_list=[0, 1, 3, 8, 9, 11])
+        if os.path.exists(default_csv) and default_csv != csv_filename:
+            if os.path.exists(csv_filename):
+                os.remove(csv_filename)
+            os.replace(default_csv, csv_filename)
+
     def _update_display_button(self):
         """Only update the Display button when all required selections are made."""
         self.btn_display.disabled = not (self._id_ok and self._plot_type_ok and self._plot_options_ok)
@@ -1278,7 +1481,7 @@ class MapAndPlotWidget(widgets.VBox):
             parcel_id = self.id_dropdown.value
     
             output_path = self.output_folder
-            netcdf_path = os.path.join(output_path, f"{self.netcdf_prefix}{parcel_id}.nc")
+            netcdf_path = self._get_netcdf_path(parcel_id)
                 
             # check if the csv with the summary statistics is available
             if not os.path.exists(netcdf_path) :
@@ -1286,24 +1489,9 @@ class MapAndPlotWidget(widgets.VBox):
                 return
     
             # if here, the netcdf file is available. Check if the parcel statistics have been already extracted
-            stat_dir = os.path.join(output_path, "band_stats")
-            
-            if not os.path.exists(stat_dir) :
-                os.makedirs(stat_dir)
-    
-            csv_filename = stat_dir + '/' + str(parcel_id) + '_stats.csv'
-            if not os.path.exists(csv_filename) :
-                # Compute the band statistics
-    
-                parcel = self.gdf[self.gdf[self.id_column] == parcel_id]
-         
-                with xr.open_dataset(netcdf_path) as ds:
-                    # assign the crs
-                    crs_wkt = ds["crs"].attrs.get("crs_wkt")
-                    ds = ds.rio.write_crs(crs_wkt)    
-        
-                    nu.ds_statistics_to_parcel_csv(ds, parcel, parcel_id, out_dir = stat_dir,\
-                                                   scl_list = [0, 1, 3, 8, 9, 11])
+            csv_filename = self._get_stats_csv_path(parcel_id)
+            if not os.path.exists(csv_filename):
+                self._compute_stats_csv(parcel_id, netcdf_path, csv_filename)
     
             # Read the csv as dataframe
             stat_f = pd.read_csv(csv_filename)
@@ -1313,8 +1501,24 @@ class MapAndPlotWidget(widgets.VBox):
     
             self.dd_plot_param.options = bands
         
-        elif plot_type == 'imagettes': 
-            self.dd_plot_param.options = ['NIR-SWIR-RED', 'RED-GREEN-BLUE']
+        elif plot_type == 'Calendar View': 
+            # Base options always available for calendar view
+            options = ['NIR-SWIR-RED', 'RED-GREEN-BLUE', 'Scatter B04-B08']
+
+            # Add NDVI only if it exists in the selected dataset
+            parcel_id = self.id_dropdown.value
+            if parcel_id is not None:
+                output_path = self.output_folder
+                netcdf_path = self._get_netcdf_path(parcel_id)
+                if os.path.exists(netcdf_path):
+                    try:
+                        with xr.open_dataset(netcdf_path) as ds:
+                            if 'NDVI' in ds.data_vars:
+                                options.append('NDVI')
+                    except Exception:
+                        pass
+
+            self.dd_plot_param.options = options
 
         # enable param dropdown if we actually have options
         if self.dd_plot_param.options:
@@ -1344,7 +1548,7 @@ class MapAndPlotWidget(widgets.VBox):
             if selected_type == 'stat summary':
                 out = self.get_line_plot()
     
-            elif selected_type == 'imagettes':
+            elif selected_type == 'Calendar View':
                 out = self.get_calendar_view()
 
             else:
@@ -1409,35 +1613,18 @@ class MapAndPlotWidget(widgets.VBox):
             #folder_name = os.path.splitext(self.filename)[0]
             #output_path = os.path.join(self.base_folder, folder_name)
             output_path = self.output_folder
-            netcdf_path = os.path.join(output_path, f"{self.netcdf_prefix}{parcel_id}.nc")
+            netcdf_path = self._get_netcdf_path(parcel_id)
              
             if os.path.exists(netcdf_path):
-                stat_dir = os.path.join(output_path, 'band_stats')
-                if not os.path.exists(stat_dir):
-                    os.makedirs(stat_dir)
-     
-                csv_filename = os.path.join(stat_dir, f"{parcel_id}_stats.csv")
-                
-                # Compute stats if CSV doesn't exist
+                csv_filename = self._get_stats_csv_path(parcel_id)
                 if not os.path.exists(csv_filename):
-                    parcel = self.gdf[self.gdf[self.id_column] == parcel_id]
-                    with xr.open_dataset(netcdf_path) as ds:
-                        # Handle CRS
-                        crs_wkt = ds["crs"].attrs.get("crs_wkt")
-                        if crs_wkt:
-                            ds = ds.rio.write_crs(crs_wkt)
-                  
-                        nu.ds_statistics_to_parcel_csv(ds, parcel, parcel_id, out_dir=stat_dir,
-                                                       scl_list=[0, 1, 3, 8, 9, 11])
-     
-                # Handle NDVI Plotting
-                ndvi_dir = os.path.join(output_path, 'ndvi')
-                if not os.path.exists(ndvi_dir):
-                    os.makedirs(ndvi_dir)
-     
-                ndvi_image_path = os.path.join(ndvi_dir, f"{parcel_id}_NDVI.png")
+                    self._compute_stats_csv(parcel_id, netcdf_path, csv_filename)
+
+                ndvi_image_path = self._get_ndvi_plot_path(parcel_id)
                 if not os.path.exists(ndvi_image_path):
-                    cgu.plot_csv_parcel(csv_filename, output_folder=ndvi_dir, band_to_plot="NDVI")
+                    fig_ndvi, _ = cgu.plot_csv_parcel(csv_filename, band_to_plot="NDVI", to_file=False)
+                    fig_ndvi.savefig(ndvi_image_path, bbox_inches='tight', dpi=100)
+                    plt.close(fig_ndvi)
                 
                 # Prepare HTML for Popup
                 if os.path.exists(ndvi_image_path):
@@ -1482,32 +1669,16 @@ class MapAndPlotWidget(widgets.VBox):
         parcel_id = self.id_dropdown.value
     
         output_path = self.output_folder
-        netcdf_path = os.path.join(output_path, f"{self.netcdf_prefix}{parcel_id}.nc")
+        netcdf_path = self._get_netcdf_path(parcel_id)
     
         if not os.path.exists(netcdf_path):
             print("Extract the data first")
             return None
     
-        stat_dir = os.path.join(output_path, "band_stats")
-        if not os.path.exists(stat_dir):
-            os.makedirs(stat_dir)
-    
-        csv_filename = os.path.join(stat_dir, f"{parcel_id}_stats.csv")
-    
+        csv_filename = self._get_stats_csv_path(parcel_id)
+
         if not os.path.exists(csv_filename):
-            parcel = self.gdf[self.gdf[self.id_column] == parcel_id]
-    
-            with xr.open_dataset(netcdf_path) as ds:
-                crs_wkt = ds["crs"].attrs.get("crs_wkt")
-                ds = ds.rio.write_crs(crs_wkt)
-    
-                nu.ds_statistics_to_parcel_csv(
-                    ds,
-                    parcel,
-                    parcel_id,
-                    out_dir=stat_dir,
-                    scl_list=[0, 1, 3, 8, 9, 11]
-                )
+            self._compute_stats_csv(parcel_id, netcdf_path, csv_filename)
     
         fig, ax = cgu.plot_csv_parcel(
             csv_filename,
@@ -1519,7 +1690,7 @@ class MapAndPlotWidget(widgets.VBox):
 
     def get_calendar_view(self, stretch_table=None):
         """ 
-        Function to generate the calendar view with the imagettes
+        Function to generate the calendar view for RGB/false-color or single-band NDVI.
         """
         if self.dd_plot_param.value is None:
             return None
@@ -1530,6 +1701,9 @@ class MapAndPlotWidget(widgets.VBox):
                 'B11': [800, 4100],
                 'B04': [150, 2800]
             }
+            bandlist = list(stretch_table.keys())
+            sc_dict = None
+            is_scatter = False
     
         elif self.dd_plot_param.value == 'RED-GREEN-BLUE':
             stretch_table = {
@@ -1537,22 +1711,50 @@ class MapAndPlotWidget(widgets.VBox):
                 'B03': [0, 1500],
                 'B02': [0, 1500]
             }
+            bandlist = list(stretch_table.keys())
+            sc_dict = None
+            is_scatter = False
+
+        elif self.dd_plot_param.value == 'NDVI':
+            stretch_table = None
+            bandlist = ['NDVI']
+            sc_dict = None
+            is_scatter = False
+
+        elif self.dd_plot_param.value == 'Scatter B04-B08':
+            stretch_table = None
+            bandlist = None
+            sc_dict = {
+                'x': 'B04',
+                'y': 'B08',
+                'xmax': 6000,
+                'ymax': 6000,
+                'cumulative': True,
+                'color': 'red',
+                'cumulative_color': 'blue'
+            }
+            is_scatter = True
+
+        else:
+            print(f"Unsupported calendar view option: {self.dd_plot_param.value}")
+            return None
     
         parcel_id = self.id_dropdown.value
     
         output_path = self.output_folder
-        netcdf_path = os.path.join(output_path, f"{self.netcdf_prefix}{parcel_id}.nc")
+        netcdf_path = self._get_netcdf_path(parcel_id)
     
         if not os.path.exists(netcdf_path):
             print("Extract the data first")
             return None
     
         cview_dir = os.path.join(output_path, 'cview')
-        if not os.path.exists(cview_dir):
-            os.makedirs(cview_dir)
-    
-        bandlist = list(stretch_table.keys())
-        cview_filename = os.path.join(cview_dir, f"{parcel_id}_{''.join(bandlist)}.pickle")
+        os.makedirs(cview_dir, exist_ok=True)
+
+        if is_scatter:
+            cview_filename = self._get_cview_pickle_path(parcel_id, f"{sc_dict['x']}_{sc_dict['y']}_scatter")
+        else:
+            cview_filename = self._get_cview_pickle_path(parcel_id, ''.join(bandlist))
     
         if not os.path.exists(cview_filename):
             parcel = self.gdf[self.gdf[self.id_column] == parcel_id]
@@ -1562,14 +1764,25 @@ class MapAndPlotWidget(widgets.VBox):
                 ds = ds.rio.write_crs(crs_wkt)
     
                 print("Computing Calendar View - Be patient")
-                fig, ax = ngu.calendar_view_half_weekly(
-                    ds,
-                    parcel,
-                    [self.id_column],
-                    bandlist,
-                    out_tif_folder_base=cview_dir,
-                    stretch_table=stretch_table
-                )
+                if is_scatter:
+                    fig, ax = ngu.calendar_view_half_weekly_scatter(
+                        ds,
+                        parcel,
+                        [self.id_column],
+                        out_tif_folder_base=cview_dir,
+                        sc_dict=sc_dict
+                    )
+                else:
+                    fig, ax = ngu.calendar_view_half_weekly(
+                        ds,
+                        parcel,
+                        [self.id_column],
+                        bandlist,
+                        out_tif_folder_base=cview_dir,
+                        stretch_table=stretch_table
+                    )
+                with open(cview_filename, 'wb') as f:
+                    pickle.dump(fig, f)
                 print("Done!")
         else:
             with open(cview_filename, 'rb') as f:
@@ -1581,5 +1794,3 @@ class MapAndPlotWidget(widgets.VBox):
 
 def getIntMap(dashboard):
     return MapAndPlotWidget(dashboard)
-
-    
