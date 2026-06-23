@@ -1767,11 +1767,14 @@ class MapAndPlotWidget(widgets.VBox):
         self._plot_type_ok = False
         self._plot_options_ok = False
 
-        # ID dropdown setup: use normalized IDs only
+        # ID combobox setup: use normalized IDs only
         unique_vals = sorted(self.gdf[self.norm_id_column].dropna().unique().tolist())
-        self.id_dropdown = widgets.Dropdown(
+        self.id_dropdown = widgets.Combobox(
             description="Parcel ID:",
             options=unique_vals,
+            value=unique_vals[0] if unique_vals else "",
+            placeholder="Type to search a parcel…",
+            ensure_option=True,
             style={'description_width': 'initial'}
         )
         
